@@ -218,8 +218,8 @@ export default function ApplyPage() {
 
 
                             <div className="md:col-span-2 rounded-[1.5rem] border border-[#ead8df] bg-[#fffaf7] p-6 md:p-8">
-                                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                                    <span className="text-sm font-semibold uppercase tracking-[0.12em] text-[#8f425a]">
+                                <div className="mb-6">
+                                    <span className="block text-sm font-semibold uppercase tracking-[0.12em] text-[#8f425a]">
                                         Fotos para análise
                                     </span>
 
@@ -227,7 +227,7 @@ export default function ApplyPage() {
                                         href="/como-compartilhar-google-photos"
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="text-sm font-semibold text-[#b85f79] underline decoration-[#d8a6b4] underline-offset-4 transition hover:text-[#8f425a]"
+                                        className="mt-3 inline-flex w-full items-center justify-center rounded-xl border border-[#d8a6b4] bg-[#f4e5e8] px-4 py-3 text-center text-sm font-semibold leading-5 text-[#9d4861] transition hover:bg-[#ead4db] hover:text-[#7f354c] sm:w-auto"
                                     >
                                         Não sabe criar o link? Veja as instruções
                                     </a>
