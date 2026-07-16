@@ -218,9 +218,20 @@ export default function ApplyPage() {
 
 
                             <div className="md:col-span-2 rounded-[1.5rem] border border-[#ead8df] bg-[#fffaf7] p-6 md:p-8">
-                                <span className="text-sm font-semibold uppercase tracking-[0.12em] text-[#8f425a]">
-                                    Fotos para análise
-                                </span>
+                                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                                    <span className="text-sm font-semibold uppercase tracking-[0.12em] text-[#8f425a]">
+                                        Fotos para análise
+                                    </span>
+
+                                    <a
+                                        href="/como-compartilhar-google-photos"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="text-sm font-semibold text-[#b85f79] underline decoration-[#d8a6b4] underline-offset-4 transition hover:text-[#8f425a]"
+                                    >
+                                        Não sabe criar o link? Veja as instruções
+                                    </a>
+                                </div>
 
                                 <p className="mt-3 leading-7 text-[#75656c]">
                                     Crie quatro álbuns compartilhados ou quatro links no Google Photos, com as
