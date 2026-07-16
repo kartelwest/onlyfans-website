@@ -326,11 +326,11 @@ export default function FAQPage() {
           </p>
 
           <h2 className="mt-5 font-serif text-4xl leading-tight md:text-5xl">
-            Converse com nossa equipe antes de tomar sua decisão.
+            Converse com nossa equipe antes de tomar sua decisão. 
           </h2>
 
           <p className="mx-auto mt-6 max-w-2xl text-lg leading-8 text-[#75656c]">
-            Queremos que você compreenda completamente como a parceria funciona
+            Queremos que você compreenda totalmente como a parceria funciona
             antes de assumir qualquer compromisso.
           </p>
 
