@@ -9,7 +9,7 @@ export default function ApplyPage() {
             <section className="bg-[#412a34] px-6 pb-20 pt-56 text-white lg:px-12 lg:pt-64">
                 <div className="mx-auto max-w-[1100px]">
                     <p className="text-sm font-semibold uppercase tracking-[0.3em] text-[#e9a5b8]">
-                        Candidatura KARRAY Models
+                        Candidatura KARAY Models
                     </p>
 
                     <h1 className="mt-5 max-w-4xl font-serif text-5xl leading-tight md:text-7xl">
@@ -196,7 +196,7 @@ export default function ApplyPage() {
 
                             <label className="block md:col-span-2">
                                 <span className="text-sm font-semibold uppercase tracking-[0.12em] text-[#8f425a]">
-                                    Quem indicou você para a KARRAY Models?
+                                    Quem indicou você para a KARAY Models?
                                 </span>
 
                                 <select
@@ -352,7 +352,7 @@ export default function ApplyPage() {
                                         />
 
                                         <span className="leading-7 text-[#5f5056]">
-                                            Entendo que a KARRAY Models precisará criar e administrar uma nova conta
+                                            Entendo que a KARAY Models precisará criar e administrar uma nova conta
                                             principal do OnlyFans, mesmo que eu já possua uma conta.
                                         </span>
                                     </label>
@@ -367,7 +367,7 @@ export default function ApplyPage() {
                                                 Podemos publicar nela o mesmo conteúdo utilizado na conta principal e
                                                 administrar suas mensagens e operação diária. Esse serviço custa um
                                                 adicional de 5% sobre o percentual padrão da agência. O marketing
-                                                permanecerá concentrado na nova conta principal criada pela KARRAY.
+                                                permanecerá concentrado na nova conta principal criada pela KARAY.
                                             </p>
 
                                             <select
@@ -467,7 +467,7 @@ export default function ApplyPage() {
                             />
 
                             <span className="text-sm leading-6 text-[#6f6066]">
-                                Confirmo que tenho pelo menos 18 anos e autorizo a KARRAY Models
+                                Confirmo que tenho pelo menos 18 anos e autorizo a KARAY Models
                                 a entrar em contato comigo sobre esta candidatura.
                             </span>
                         </label>

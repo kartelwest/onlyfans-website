@@ -12,7 +12,7 @@ const iphoneSteps = [
   {
     number: "03",
     title: "Crie um álbum",
-    text: 'Toque em “Adicionar a” ou no símbolo de “+” e escolha “Álbum”. Dê ao álbum o nome “Candidatura KARRAY Models”.',
+    text: 'Toque em “Adicionar a” ou no símbolo de “+” e escolha “Álbum”. Dê ao álbum o nome “Candidatura KARAY Models”.',
   },
   {
     number: "04",
@@ -27,7 +27,7 @@ const iphoneSteps = [
   {
     number: "06",
     title: "Copie o link",
-    text: "Copie o link criado pelo Google Photos e volte ao formulário da KARRAY Models.",
+    text: "Copie o link criado pelo Google Photos e volte ao formulário da KARAY Models.",
   },
   {
     number: "07",
@@ -50,7 +50,7 @@ const androidSteps = [
   {
     number: "03",
     title: "Crie um álbum",
-    text: 'Toque em “Adicionar a”, “+” ou “Novo” e selecione “Álbum”. Nomeie o álbum como “Candidatura KARRAY Models”.',
+    text: 'Toque em “Adicionar a”, “+” ou “Novo” e selecione “Álbum”. Nomeie o álbum como “Candidatura KARAY Models”.',
   },
   {
     number: "04",
@@ -155,7 +155,7 @@ export default function GooglePhotosInstructionsPage() {
           <p className="mt-7 max-w-3xl text-lg leading-8 text-white/75">
             Crie um álbum contendo duas fotos verticais e duas fotos
             horizontais. Depois, copie o link compartilhável e cole-o no
-            formulário da KARRAY Models.
+            formulário da KARAY Models.
           </p>
         </div>
       </section>
