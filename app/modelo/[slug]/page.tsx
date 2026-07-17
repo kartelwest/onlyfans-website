@@ -1,6 +1,7 @@
 import { cookies } from "next/headers";
 import { notFound, redirect } from "next/navigation";
 import { getModelBySlug } from "@/lib/models";
+import { logoutModel } from "../actions";
 
 type ModelPageProps = {
   params: Promise<{
@@ -48,8 +49,19 @@ export default async function ModelPage({ params }: ModelPageProps) {
   ];
 
   return (
-    <main className="min-h-screen bg-[#0b0b0d] px-6 pb-20 pt-44 text-white lg:pt-52">
+    <main className="min-h-screen bg-[#0b0b0d] px-6 pb-20 pt-36 text-white lg:pt-44">
       <section className="mx-auto max-w-6xl">
+        <div className="relative z-[100] mb-10 flex justify-end">
+          <form action={logoutModel}>
+            <button
+              type="submit"
+              className="rounded-full border border-[#d88ca4] px-6 py-3 text-sm font-bold uppercase tracking-[0.14em] text-[#e9a5b8] transition hover:bg-[#d88ca4] hover:text-black"
+            >
+              Sair
+            </button>
+          </form>
+        </div>
+
         <div className="mb-16 text-center">
           <h1 className="text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl">
             Envio de conteúdo
