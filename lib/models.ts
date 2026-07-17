@@ -13,22 +13,22 @@ export type Model = {
 };
 
 export const models: Model[] = [
- {
-  id: 1,
-  slug: "raissa",
-  name: "Raíssa",
-  active: true,
-  folders: {
-    onlyfans:
-      "https://drive.google.com/drive/folders/15o1JTc0sGvzehnpE04fOBenb0km10uoJ",
+  {
+    id: 1,
+    slug: "raissa",
+    name: "Raíssa",
+    active: true,
+    folders: {
+      onlyfans:
+        "https://drive.google.com/drive/folders/15o1JTc0sGvzehnpE04fOBenb0km10uoJ",
 
-    instagram:
-      "https://drive.google.com/drive/folders/1IsMzDFRfAIuw8MPyp03TKlwrRqt38Off",
+      instagram:
+        "https://drive.google.com/drive/folders/1IsMzDFRfAIuw8MPyp03TKlwrRqt38Off",
 
-    twitter:
-      "https://drive.google.com/drive/folders/1I9TrGXlzExZnuJgiGtRHs2VaLJFNJ2qC",
+      twitter:
+        "https://drive.google.com/drive/folders/1I9TrGXlzExZnuJgiGtRHs2VaLJFNJ2qC",
+    },
   },
-},
 
   {
     id: 2,
@@ -44,9 +44,9 @@ export const models: Model[] = [
 
   {
     id: 3,
-    slug: "model-3",
-    name: "Model 3",
-    active: false,
+    slug: "dani",
+    name: "Dani",
+    active: true,
     folders: {
       onlyfans: "",
       instagram: "",
@@ -194,7 +194,7 @@ export const models: Model[] = [
     folders: {
       onlyfans: "",
       instagram: "",
-     twitter: "",
+      twitter: "",
     },
   },
 

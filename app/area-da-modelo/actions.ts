@@ -3,30 +3,44 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
-type LoginAccount = {
+type ModelAccount = {
   username: string;
   password: string;
   slug: string;
 };
 
 export async function loginModel(formData: FormData) {
-  const username = String(formData.get("username") ?? "")
+  const submittedUsername = String(formData.get("username") ?? "")
     .trim()
     .toLowerCase();
 
-  const password = String(formData.get("password") ?? "").trim();
+  const submittedPassword = String(formData.get("password") ?? "").trim();
 
-  const accounts: LoginAccount[] = JSON.parse(
-    process.env.MODEL_ACCOUNTS ?? "[]",
-  );
+  const accounts: ModelAccount[] = [
+    {
+      username: process.env.RAISSA_USERNAME ?? "",
+      password: process.env.RAISSA_PASSWORD ?? "",
+      slug: process.env.RAISSA_SLUG ?? "",
+    },
+    {
+      username: process.env.GRACE_USERNAME ?? "",
+      password: process.env.GRACE_PASSWORD ?? "",
+      slug: process.env.GRACE_SLUG ?? "",
+    },
+    {
+      username: process.env.DANI_USERNAME ?? "",
+      password: process.env.DANI_PASSWORD ?? "",
+      slug: process.env.DANI_SLUG ?? "",
+    },
+  ];
 
   const account = accounts.find(
-    (a) =>
-      a.username.toLowerCase() === username &&
-      a.password === password,
+    (item) =>
+      item.username.toLowerCase() === submittedUsername &&
+      item.password === submittedPassword,
   );
 
-  if (!account) {
+  if (!account || !account.slug) {
     redirect("/area-da-modelo?erro=credenciais");
   }
 
