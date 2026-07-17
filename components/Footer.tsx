@@ -9,7 +9,7 @@ export default function Footer() {
           <div>
             <Image
               src="/images/karray-logo.png"
-              alt="KARRAY Models"
+              alt="KARAY Models"
               width={330}
               height={130}
               className="h-auto w-[230px] object-contain"
@@ -20,7 +20,7 @@ export default function Footer() {
             </h2>
 
             <p className="mt-5 max-w-xl leading-8 text-white/70">
-              A KARRAY Models é uma agência especializada na gestão completa de
+              KARAY Models é uma agência especializada na gestão completa de
               criadoras de conteúdo. Nosso objetivo é transformar talento em um
               negócio lucrativo através de estratégias profissionais de
               marketing, posicionamento de marca, gerenciamento de contas,
@@ -107,7 +107,7 @@ export default function Footer() {
                   target="_blank"
                   rel="noopener noreferrer"
                   className="mt-2 inline-flex items-center gap-2 transition hover:text-[#e9a5b8]"
-                  aria-label="Falar com a KARRAY Models pelo WhatsApp"
+                  aria-label="Falar com a KARAY Models pelo WhatsApp"
                 >
                   +1 (312) 470-2299 (WhatsApp)
                 </a>
@@ -127,7 +127,7 @@ export default function Footer() {
 
         {/* COPYRIGHT */}
         <div className="flex flex-col gap-4 pt-8 text-sm text-white/50 sm:flex-row sm:items-center sm:justify-between">
-          <p>© KARRAY Models. Todos os direitos reservados.</p>
+          <p>© KARAY Models. Todos os direitos reservados.</p>
 
           <div className="flex flex-wrap gap-x-6 gap-y-2">
             <a
