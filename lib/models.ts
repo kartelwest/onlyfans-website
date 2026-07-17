@@ -48,9 +48,12 @@ export const models: Model[] = [
     name: "Dani",
     active: true,
     folders: {
-      onlyfans: "",
-      instagram: "",
-      twitter: "",
+      onlyfans:
+        "https://drive.google.com/drive/folders/15o1JTc0sGvzehnpE04fOBenb0km10uoJ",
+      instagram:
+        "https://drive.google.com/drive/folders/1IsMzDFRfAIuw8MPyp03TKlwrRqt38Off",
+      twitter:
+        "https://drive.google.com/drive/folders/1I9TrGXlzExZnuJgiGtRHs2VaLJFNJ2qC",
     },
   },
 
