@@ -33,7 +33,7 @@ const menuLinks = [
   { name: "Início", href: "/" },
   { name: "Por Que Nós", href: "/por-que-nos" },
   { name: "FAQ", href: "/faq" },
-  { name: "Contato", href: "/contato" },
+  { name: "Área da Modelo", href: "/modelo/raissa" },
 ];
 
 export default function Navbar() {
@@ -92,21 +92,18 @@ export default function Navbar() {
 
           <div className="flex w-6 flex-col gap-[5px]">
             <span
-              className={`h-[2px] w-full bg-white transition duration-300 ${
-                menuOpen ? "translate-y-[7px] rotate-45" : ""
-              }`}
+              className={`h-[2px] w-full bg-white transition duration-300 ${menuOpen ? "translate-y-[7px] rotate-45" : ""
+                }`}
             />
 
             <span
-              className={`h-[2px] w-full bg-white transition duration-300 ${
-                menuOpen ? "opacity-0" : ""
-              }`}
+              className={`h-[2px] w-full bg-white transition duration-300 ${menuOpen ? "opacity-0" : ""
+                }`}
             />
 
             <span
-              className={`h-[2px] w-full bg-white transition duration-300 ${
-                menuOpen ? "-translate-y-[7px] -rotate-45" : ""
-              }`}
+              className={`h-[2px] w-full bg-white transition duration-300 ${menuOpen ? "-translate-y-[7px] -rotate-45" : ""
+                }`}
             />
           </div>
         </button>
@@ -114,11 +111,10 @@ export default function Navbar() {
 
       {/* MOBILE MENU */}
       <div
-        className={`fixed inset-0 z-40 bg-[#2f1d25]/98 px-6 pt-32 text-white backdrop-blur-xl transition duration-300 lg:hidden ${
-          menuOpen
+        className={`fixed inset-0 z-40 bg-[#2f1d25]/98 px-6 pt-32 text-white backdrop-blur-xl transition duration-300 lg:hidden ${menuOpen
             ? "visible translate-x-0 opacity-100"
             : "invisible translate-x-full opacity-0"
-        }`}
+          }`}
       >
         <nav className="flex flex-col items-center gap-3">
           {menuLinks.map((link) => (

@@ -73,7 +73,7 @@ export default function Footer() {
                 href="/contato"
                 className="transition hover:translate-x-1 hover:text-[#e9a5b8]"
               >
-                Contato
+                 Área da Modelo
               </a>
             </nav>
           </div>
