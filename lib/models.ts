@@ -1,7 +1,6 @@
 export type UploadFolders = {
   onlyfans: string;
   instagram: string;
-  twitter: string;
 };
 
 export type Model = {
@@ -21,12 +20,8 @@ export const models: Model[] = [
     folders: {
       onlyfans:
         "https://drive.google.com/drive/folders/15o1JTc0sGvzehnpE04fOBenb0km10uoJ",
-
       instagram:
         "https://drive.google.com/drive/folders/1IsMzDFRfAIuw8MPyp03TKlwrRqt38Off",
-
-      twitter:
-        "https://drive.google.com/drive/folders/1I9TrGXlzExZnuJgiGtRHs2VaLJFNJ2qC",
     },
   },
 
@@ -38,22 +33,19 @@ export const models: Model[] = [
     folders: {
       onlyfans: "",
       instagram: "",
-      twitter: "",
     },
   },
 
   {
     id: 3,
-    slug: "model-3",
-    name: "Model 3",
-    active: false,
+    slug: "dani",
+    name: "Dani",
+    active: true,
     folders: {
       onlyfans:
         "https://drive.google.com/drive/folders/15o1JTc0sGvzehnpE04fOBenb0km10uoJ",
       instagram:
         "https://drive.google.com/drive/folders/1IsMzDFRfAIuw8MPyp03TKlwrRqt38Off",
-      twitter:
-        "https://drive.google.com/drive/folders/1I9TrGXlzExZnuJgiGtRHs2VaLJFNJ2qC",
     },
   },
 
@@ -65,7 +57,6 @@ export const models: Model[] = [
     folders: {
       onlyfans: "",
       instagram: "",
-      twitter: "",
     },
   },
 
@@ -77,7 +68,6 @@ export const models: Model[] = [
     folders: {
       onlyfans: "",
       instagram: "",
-      twitter: "",
     },
   },
 
@@ -89,7 +79,6 @@ export const models: Model[] = [
     folders: {
       onlyfans: "",
       instagram: "",
-      twitter: "",
     },
   },
 
@@ -101,7 +90,6 @@ export const models: Model[] = [
     folders: {
       onlyfans: "",
       instagram: "",
-      twitter: "",
     },
   },
 
@@ -113,7 +101,6 @@ export const models: Model[] = [
     folders: {
       onlyfans: "",
       instagram: "",
-      twitter: "",
     },
   },
 
@@ -125,7 +112,6 @@ export const models: Model[] = [
     folders: {
       onlyfans: "",
       instagram: "",
-      twitter: "",
     },
   },
 
@@ -137,7 +123,6 @@ export const models: Model[] = [
     folders: {
       onlyfans: "",
       instagram: "",
-      twitter: "",
     },
   },
 
@@ -149,7 +134,6 @@ export const models: Model[] = [
     folders: {
       onlyfans: "",
       instagram: "",
-      twitter: "",
     },
   },
 
@@ -161,7 +145,6 @@ export const models: Model[] = [
     folders: {
       onlyfans: "",
       instagram: "",
-      twitter: "",
     },
   },
 
@@ -173,7 +156,6 @@ export const models: Model[] = [
     folders: {
       onlyfans: "",
       instagram: "",
-      twitter: "",
     },
   },
 
@@ -185,7 +167,6 @@ export const models: Model[] = [
     folders: {
       onlyfans: "",
       instagram: "",
-      twitter: "",
     },
   },
 
@@ -197,7 +178,6 @@ export const models: Model[] = [
     folders: {
       onlyfans: "",
       instagram: "",
-      twitter: "",
     },
   },
 
@@ -209,7 +189,6 @@ export const models: Model[] = [
     folders: {
       onlyfans: "",
       instagram: "",
-      twitter: "",
     },
   },
 
@@ -221,7 +200,6 @@ export const models: Model[] = [
     folders: {
       onlyfans: "",
       instagram: "",
-      twitter: "",
     },
   },
 
@@ -233,7 +211,6 @@ export const models: Model[] = [
     folders: {
       onlyfans: "",
       instagram: "",
-      twitter: "",
     },
   },
 
@@ -245,7 +222,6 @@ export const models: Model[] = [
     folders: {
       onlyfans: "",
       instagram: "",
-      twitter: "",
     },
   },
 
@@ -257,7 +233,6 @@ export const models: Model[] = [
     folders: {
       onlyfans: "",
       instagram: "",
-      twitter: "",
     },
   },
 
@@ -269,7 +244,6 @@ export const models: Model[] = [
     folders: {
       onlyfans: "",
       instagram: "",
-      twitter: "",
     },
   },
 
@@ -281,7 +255,6 @@ export const models: Model[] = [
     folders: {
       onlyfans: "",
       instagram: "",
-      twitter: "",
     },
   },
 
@@ -293,7 +266,6 @@ export const models: Model[] = [
     folders: {
       onlyfans: "",
       instagram: "",
-      twitter: "",
     },
   },
 
@@ -305,7 +277,6 @@ export const models: Model[] = [
     folders: {
       onlyfans: "",
       instagram: "",
-      twitter: "",
     },
   },
 
@@ -317,7 +288,6 @@ export const models: Model[] = [
     folders: {
       onlyfans: "",
       instagram: "",
-      twitter: "",
     },
   },
 
@@ -329,7 +299,6 @@ export const models: Model[] = [
     folders: {
       onlyfans: "",
       instagram: "",
-      twitter: "",
     },
   },
 
@@ -341,7 +310,6 @@ export const models: Model[] = [
     folders: {
       onlyfans: "",
       instagram: "",
-      twitter: "",
     },
   },
 
@@ -353,7 +321,6 @@ export const models: Model[] = [
     folders: {
       onlyfans: "",
       instagram: "",
-      twitter: "",
     },
   },
 
@@ -365,7 +332,6 @@ export const models: Model[] = [
     folders: {
       onlyfans: "",
       instagram: "",
-      twitter: "",
     },
   },
 
@@ -377,7 +343,6 @@ export const models: Model[] = [
     folders: {
       onlyfans: "",
       instagram: "",
-      twitter: "",
     },
   },
 ];

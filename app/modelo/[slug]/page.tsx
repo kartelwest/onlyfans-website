@@ -39,13 +39,6 @@ export default async function ModelPage({ params }: ModelPageProps) {
         "Envie aqui fotos, vídeos, Reels, Stories e outros conteúdos destinados ao Instagram.",
       href: model.folders.instagram,
     },
-    {
-      title: "X / Twitter",
-      abbreviation: "X",
-      description:
-        "Envie aqui as fotos, os vídeos e os demais materiais destinados ao X / Twitter.",
-      href: model.folders.twitter,
-    },
   ];
 
   return (
@@ -73,7 +66,7 @@ export default async function ModelPage({ params }: ModelPageProps) {
           </p>
         </div>
 
-        <div className="grid gap-6 lg:grid-cols-3">
+        <div className="mx-auto grid max-w-4xl gap-6 md:grid-cols-2">
           {folders.map((folder) => {
             const isConnected = folder.href.trim().length > 0;
 
