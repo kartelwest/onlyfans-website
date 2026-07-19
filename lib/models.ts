@@ -43,9 +43,9 @@ export const models: Model[] = [
     active: true,
     folders: {
       onlyfans:
-        "https://drive.google.com/drive/folders/1PLTjxhz9inQBz5cbJ24G8-PnifYKtGw9?usp=drive_link",
+        "https://drive.google.com/drive/folders/1PLTjxhz9inQBz5cbJ24G8-PnifYKtGw9?usp=sharing",
       instagram:
-        "https://drive.google.com/drive/folders/1mqpLoiEIMDlCHt11-nQHDec59vY6lMwc?usp=drive_link",
+        "https://drive.google.com/drive/folders/1mqpLoiEIMDlCHt11-nQHDec59vY6lMwc?usp=sharing",
     },
   },
 
