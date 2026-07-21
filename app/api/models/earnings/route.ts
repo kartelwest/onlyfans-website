@@ -2,19 +2,57 @@ import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
-export async function GET(request: NextRequest) {
+async function requireManagerProfile() {
   const supabase = await createClient();
 
   const {
     data: { user },
+    error: userError,
   } = await supabase.auth.getUser();
 
-  if (!user) {
-    return NextResponse.json(
-      { error: "Unauthorized" },
-      { status: 401 },
-    );
+  if (userError || !user) {
+    return {
+      response: NextResponse.json(
+        { error: "Unauthorized" },
+        { status: 401 },
+      ),
+    };
   }
+
+  const admin = createAdminClient();
+
+  const { data: profile, error: profileError } =
+    await admin
+      .from("profiles")
+      .select("role, active")
+      .eq("id", user.id)
+      .maybeSingle();
+
+  if (
+    profileError ||
+    !profile ||
+    !profile.active ||
+    !["owner", "administrator"].includes(profile.role)
+  ) {
+    return {
+      response: NextResponse.json(
+        { error: "Forbidden" },
+        { status: 403 },
+      ),
+    };
+  }
+
+  return { user, admin };
+}
+
+export async function GET(request: NextRequest) {
+  const auth = await requireManagerProfile();
+
+  if ("response" in auth) {
+    return auth.response;
+  }
+
+  const { admin } = auth;
 
   const modelId =
     request.nextUrl.searchParams.get("modelId");
@@ -25,8 +63,6 @@ export async function GET(request: NextRequest) {
       { status: 400 },
     );
   }
-
-  const admin = createAdminClient();
 
   const { data, error } = await admin
     .from("model_earnings_reports")
@@ -97,23 +133,25 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const supabase = await createClient();
+  const auth = await requireManagerProfile();
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    return NextResponse.json(
-      { error: "Unauthorized" },
-      { status: 401 },
-    );
+  if ("response" in auth) {
+    return auth.response;
   }
 
-  const admin = createAdminClient();
+  const { user, admin } = auth;
 
   const formData =
     await request.formData();
+
+  const modelId = formData.get("modelId");
+
+  if (typeof modelId !== "string" || !modelId.trim()) {
+    return NextResponse.json(
+      { error: "modelId is required." },
+      { status: 400 },
+    );
+  }
 
   const image =
     formData.get("image") as File | null;
@@ -127,9 +165,7 @@ export async function POST(request: NextRequest) {
 
   const fileName = `${crypto.randomUUID()}-${image.name}`;
 
-  const path = `${formData.get(
-    "modelId",
-  )}/${fileName}`;
+  const path = `${modelId}/${fileName}`;
 
   const upload =
     await admin.storage
@@ -152,6 +188,13 @@ export async function POST(request: NextRequest) {
     formData.get("grossRevenue"),
   );
 
+  if (!Number.isFinite(gross) || gross < 0) {
+    return NextResponse.json(
+      { error: "grossRevenue must be a valid number." },
+      { status: 400 },
+    );
+  }
+
   const modelShare =
     gross * 0.6;
 
@@ -168,7 +211,7 @@ export async function POST(request: NextRequest) {
       )
       .insert({
         model_id:
-          formData.get("modelId"),
+          modelId,
         platform:
           formData.get("platform"),
         period:
