@@ -33,7 +33,7 @@ const menuLinks = [
   { name: "Início", href: "/" },
   { name: "Por Que Nós", href: "/por-que-nos" },
   { name: "FAQ", href: "/faq" },
-  { name: "Área da Modelo", href: "/modelo/raissa" },
+  { name: "Login", href: "/login" },
 ];
 
 export default function Navbar() {
@@ -46,7 +46,7 @@ export default function Navbar() {
           <a href="/" className="relative z-50 flex items-center">
             <Image
               src="/images/karray-logo.png"
-              alt="KARAY Models"
+              alt="KARRAY Models"
               width={360}
               height={140}
               priority
@@ -82,7 +82,7 @@ export default function Navbar() {
           {/* MOBILE HAMBURGER BUTTON */}
           <button
             type="button"
-            onClick={() => setMenuOpen(!menuOpen)}
+            onClick={() => setMenuOpen((current) => !current)}
             aria-label={menuOpen ? "Fechar menu" : "Abrir menu"}
             aria-expanded={menuOpen}
             className="relative z-50 flex h-12 w-12 items-center justify-center rounded-full border border-white/40 bg-[#412a34]/75 text-white backdrop-blur-md lg:hidden"
@@ -147,8 +147,6 @@ export default function Navbar() {
           </nav>
         </div>
       </header>
-
-    
     </>
   );
 }
