@@ -87,14 +87,10 @@ export default function ModelAdminClient({
   checklist,
   currentUserRole,
 }: ModelAdminClientProps) {
-  const [activeTab, setActiveTab] =
-    useState<TabId>("summary");
+  const [activeTab, setActiveTab] = useState<TabId>("summary");
 
   const onboardingPercentage = Math.min(
-    Math.max(
-      checklist.onboardingPercentage ?? 0,
-      0,
-    ),
+    Math.max(checklist.onboardingPercentage ?? 0, 0),
     100,
   );
 
@@ -140,8 +136,7 @@ export default function ModelAdminClient({
                   </p>
 
                   <p className="mt-1 text-sm text-white/50">
-                    Modelo #
-                    {model.modelNumber ?? "—"}
+                    Modelo #{model.modelNumber ?? "—"}
                   </p>
                 </div>
               </div>
@@ -149,16 +144,8 @@ export default function ModelAdminClient({
               <div className="grid gap-3 sm:grid-cols-3">
                 <HeaderStatusCard
                   label="Status"
-                  value={
-                    model.active
-                      ? "Ativa"
-                      : "Inativa"
-                  }
-                  status={
-                    model.active
-                      ? "completed"
-                      : "inactive"
-                  }
+                  value={model.active ? "Ativa" : "Inativa"}
+                  status={model.active ? "completed" : "inactive"}
                 />
 
                 <HeaderStatusCard
@@ -175,9 +162,7 @@ export default function ModelAdminClient({
 
                 <HeaderStatusCard
                   label="Acesso atual"
-                  value={roleLabel(
-                    currentUserRole,
-                  )}
+                  value={roleLabel(currentUserRole)}
                   status="neutral"
                 />
               </div>
@@ -187,16 +172,13 @@ export default function ModelAdminClient({
           <nav className="border-b border-white/10 bg-black/20 px-4 pt-4 sm:px-6">
             <div className="flex gap-2 overflow-x-auto pb-4">
               {tabs.map((tab) => {
-                const selected =
-                  activeTab === tab.id;
+                const selected = activeTab === tab.id;
 
                 return (
                   <button
                     key={tab.id}
                     type="button"
-                    onClick={() =>
-                      setActiveTab(tab.id)
-                    }
+                    onClick={() => setActiveTab(tab.id)}
                     className={`whitespace-nowrap rounded-xl border px-4 py-2.5 text-sm font-semibold transition ${
                       selected
                         ? "border-pink-400/50 bg-pink-500/20 text-pink-200"
@@ -215,9 +197,7 @@ export default function ModelAdminClient({
               <OverviewTab
                 model={model}
                 checklist={checklist}
-                currentUserRole={
-                  currentUserRole
-                }
+                currentUserRole={currentUserRole}
               />
             )}
 
@@ -225,54 +205,42 @@ export default function ModelAdminClient({
               <ChecklistTab
                 modelId={model.id}
                 checklist={checklist}
-                currentUserRole={
-                  currentUserRole
-                }
+                currentUserRole={currentUserRole}
               />
             )}
 
             {activeTab === "platforms" && (
               <PlatformsTab
                 model={model}
-                currentUserRole={
-                  currentUserRole
-                }
+                currentUserRole={currentUserRole}
               />
             )}
 
             {activeTab === "onlyfans" && (
               <OnlyFansTab
                 model={model}
-                currentUserRole={
-                  currentUserRole
-                }
+                currentUserRole={currentUserRole}
               />
             )}
 
             {activeTab === "fansly" && (
               <FanslyTab
                 model={model}
-                currentUserRole={
-                  currentUserRole
-                }
+                currentUserRole={currentUserRole}
               />
             )}
 
             {activeTab === "drive" && (
               <DriveTab
                 model={model}
-                currentUserRole={
-                  currentUserRole
-                }
+                currentUserRole={currentUserRole}
               />
             )}
 
             {activeTab === "documents" && (
               <DocumentsTab
                 model={model}
-                currentUserRole={
-                  currentUserRole
-                }
+                currentUserRole={currentUserRole}
               />
             )}
 
@@ -286,18 +254,16 @@ export default function ModelAdminClient({
 
             {activeTab === "notes" && (
               <NotesTab
-                model={model}
-                currentUserRole={
-                  currentUserRole
-                }
+                modelId={model.id}
+                currentUserRole={currentUserRole}
               />
             )}
 
             {activeTab === "history" && (
-              <TemporarySection
-                eyebrow="Auditoria"
-                title="Histórico"
-                description="Registro completo e permanente das atividades e alterações realizadas para esta modelo."
+              <NotesTab
+                modelId={model.id}
+                currentUserRole={currentUserRole}
+                historyOnly
               />
             )}
           </div>
@@ -322,9 +288,7 @@ function TemporarySection({
         {eyebrow}
       </p>
 
-      <h2 className="mt-3 text-2xl font-bold">
-        {title}
-      </h2>
+      <h2 className="mt-3 text-2xl font-bold">{title}</h2>
 
       <p className="mt-3 max-w-2xl text-sm leading-6 text-white/55">
         {description}
@@ -372,9 +336,7 @@ function HeaderStatusCard({
         {label}
       </p>
 
-      <p className="mt-1 text-sm font-bold">
-        {value}
-      </p>
+      <p className="mt-1 text-sm font-bold">{value}</p>
     </div>
   );
 }
@@ -386,18 +348,11 @@ function getInitial(value: string) {
     return "?";
   }
 
-  return cleanedValue
-    .charAt(0)
-    .toUpperCase();
+  return cleanedValue.charAt(0).toUpperCase();
 }
 
-function roleLabel(
-  role: ManagementRole,
-) {
-  const labels: Record<
-    ManagementRole,
-    string
-  > = {
+function roleLabel(role: ManagementRole) {
+  const labels: Record<ManagementRole, string> = {
     owner: "Proprietário",
     administrator: "Administrador",
     representative: "Representante",
