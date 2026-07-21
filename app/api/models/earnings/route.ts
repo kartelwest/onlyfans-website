@@ -1,19 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { createClient } from "@/lib/supabase/server";
+import { authenticateUser } from "@/lib/api/auth";
+import { mapEarningsReport } from "@/lib/models/earnings";
 
 export async function GET(request: NextRequest) {
-  const supabase = await createClient();
+  const auth = await authenticateUser({
+    unauthenticated: "Unauthorized",
+  });
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    return NextResponse.json(
-      { error: "Unauthorized" },
-      { status: 401 },
-    );
+  if (!auth.ok) {
+    return auth.response;
   }
 
   const modelId =
@@ -61,33 +57,7 @@ export async function GET(request: NextRequest) {
         }
       }
 
-      return {
-        id: report.id,
-        modelId: report.model_id,
-        platform: report.platform,
-        period: report.period,
-        grossRevenue:
-          report.gross_revenue,
-        modelShare:
-          report.model_share,
-        agencyShare:
-          report.agency_share,
-        marketingShare:
-          report.marketing_share,
-        reportDate:
-          report.report_date,
-        visibleToModel:
-          report.visible_to_model,
-        adminNote:
-          report.admin_note,
-        imagePath:
-          report.image_path,
-        imageUrl,
-        createdAt:
-          report.created_at,
-        updatedAt:
-          report.updated_at,
-      };
+      return mapEarningsReport(report, imageUrl);
     }),
   );
 
@@ -97,18 +67,15 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const supabase = await createClient();
+  const auth = await authenticateUser({
+    unauthenticated: "Unauthorized",
+  });
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    return NextResponse.json(
-      { error: "Unauthorized" },
-      { status: 401 },
-    );
+  if (!auth.ok) {
+    return auth.response;
   }
+
+  const { user } = auth;
 
   const admin = createAdminClient();
 
@@ -218,46 +185,9 @@ export async function POST(request: NextRequest) {
       );
 
   return NextResponse.json({
-    report: {
-      id: insert.data.id,
-      modelId:
-        insert.data.model_id,
-      platform:
-        insert.data.platform,
-      period:
-        insert.data.period,
-      grossRevenue:
-        insert.data
-          .gross_revenue,
-      modelShare:
-        insert.data
-          .model_share,
-      agencyShare:
-        insert.data
-          .agency_share,
-      marketingShare:
-        insert.data
-          .marketing_share,
-      reportDate:
-        insert.data
-          .report_date,
-      visibleToModel:
-        insert.data
-          .visible_to_model,
-      adminNote:
-        insert.data
-          .admin_note,
-      imagePath:
-        insert.data.image_path,
-      imageUrl:
-        signed.data
-          ?.signedUrl ?? null,
-      createdAt:
-        insert.data
-          .created_at,
-      updatedAt:
-        insert.data
-          .updated_at,
-    },
+    report: mapEarningsReport(
+      insert.data,
+      signed.data?.signedUrl ?? null,
+    ),
   });
 }

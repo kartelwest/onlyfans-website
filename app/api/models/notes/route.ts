@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { createAdminClient } from "@/lib/supabase/admin";
-import { createClient } from "@/lib/supabase/server";
+import { authenticateManagementRequest } from "@/lib/api/auth";
 
 type ManagementRole =
     | "owner"
@@ -1054,87 +1054,33 @@ async function getAuthenticatedProfile(): Promise<
           response: NextResponse;
       }
 > {
-    const supabase = await createClient();
+    const auth =
+        await authenticateManagementRequest({
+            allowedRoles,
+            fullNameFallback: "Usuário",
+            messages: {
+                unauthenticated:
+                    "Sua sessão expirou. Entre novamente.",
+                inactiveProfile:
+                    "Seu perfil não está ativo.",
+                forbidden:
+                    "Você não tem acesso às notas administrativas.",
+            },
+        });
 
-    const {
-        data: { user },
-        error: userError,
-    } = await supabase.auth.getUser();
-
-    if (userError || !user) {
+    if (!auth.ok) {
         return {
             ok: false,
-            response:
-                NextResponse.json(
-                    {
-                        error:
-                            "Sua sessão expirou. Entre novamente.",
-                    },
-                    {
-                        status: 401,
-                    },
-                ),
-        };
-    }
-
-    const {
-        data: profile,
-        error: profileError,
-    } = await supabase
-        .from("profiles")
-        .select(
-            "id, full_name, role, active",
-        )
-        .eq("id", user.id)
-        .single();
-
-    if (
-        profileError ||
-        !profile ||
-        !profile.active
-    ) {
-        return {
-            ok: false,
-            response:
-                NextResponse.json(
-                    {
-                        error:
-                            "Seu perfil não está ativo.",
-                    },
-                    {
-                        status: 403,
-                    },
-                ),
-        };
-    }
-
-    const role =
-        profile.role as ManagementRole;
-
-    if (!allowedRoles.includes(role)) {
-        return {
-            ok: false,
-            response:
-                NextResponse.json(
-                    {
-                        error:
-                            "Você não tem acesso às notas administrativas.",
-                    },
-                    {
-                        status: 403,
-                    },
-                ),
+            response: auth.response,
         };
     }
 
     return {
         ok: true,
         profile: {
-            id: profile.id,
-            fullName:
-                profile.full_name ||
-                "Usuário",
-            role,
+            id: auth.profile.id,
+            fullName: auth.profile.fullName,
+            role: auth.profile.role,
         },
     };
 }

@@ -1,9 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { createAdminClient } from "@/lib/supabase/admin";
-import { createClient } from "@/lib/supabase/server";
-
-import type { ManagementRole } from "@/types/model";
+import { authenticateManagementRequest } from "@/lib/api/auth";
 
 const allowedModelFields = {
   displayName: "display_name",
@@ -49,64 +47,21 @@ export async function PATCH(
   request: Request,
 ) {
   try {
-    const supabase =
-      await createClient();
-
-    const {
-      data: { user },
-      error: userError,
-    } = await supabase.auth.getUser();
-
-    if (userError || !user) {
-      return NextResponse.json(
-        {
-          error: "Não autenticado.",
+    const auth =
+      await authenticateManagementRequest({
+        allowedRoles: [
+          "owner",
+          "administrator",
+        ],
+        messages: {
+          unauthenticated: "Não autenticado.",
+          inactiveProfile: "Perfil inválido.",
+          forbidden: "Sem permissão.",
         },
-        {
-          status: 401,
-        },
-      );
-    }
+      });
 
-    const {
-      data: profile,
-      error: profileError,
-    } = await supabase
-      .from("profiles")
-      .select("role, active")
-      .eq("id", user.id)
-      .maybeSingle();
-
-    if (
-      profileError ||
-      !profile ||
-      !profile.active
-    ) {
-      return NextResponse.json(
-        {
-          error: "Perfil inválido.",
-        },
-        {
-          status: 403,
-        },
-      );
-    }
-
-    const role =
-      profile.role as ManagementRole;
-
-    if (
-      role !== "owner" &&
-      role !== "administrator"
-    ) {
-      return NextResponse.json(
-        {
-          error: "Sem permissão.",
-        },
-        {
-          status: 403,
-        },
-      );
+    if (!auth.ok) {
+      return auth.response;
     }
 
     const body =

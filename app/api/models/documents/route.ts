@@ -3,9 +3,7 @@ import { randomUUID } from "crypto";
 import { NextResponse } from "next/server";
 
 import { createAdminClient } from "@/lib/supabase/admin";
-import { createClient } from "@/lib/supabase/server";
-
-import type { ManagementRole } from "@/types/model";
+import { authenticateManagementRequest } from "@/lib/api/auth";
 
 const BUCKET_NAME = "model-documents";
 const MAX_DOCUMENTS = 10;
@@ -23,56 +21,20 @@ type DocumentRecord = {
   updated_at: string;
 };
 
-type ProfileRecord = {
-  role: ManagementRole;
-  active: boolean;
-};
-
 export async function GET(
   request: Request,
 ) {
   try {
-    const supabase =
-      await createClient();
-
-    const {
-      data: { user },
-      error: userError,
-    } = await supabase.auth.getUser();
-
-    if (userError || !user) {
-      return NextResponse.json(
-        {
-          error: "Não autenticado.",
+    const auth =
+      await authenticateManagementRequest({
+        messages: {
+          unauthenticated: "Não autenticado.",
+          inactiveProfile: "Perfil inválido.",
         },
-        {
-          status: 401,
-        },
-      );
-    }
+      });
 
-    const {
-      data: profile,
-      error: profileError,
-    } = await supabase
-      .from("profiles")
-      .select("role, active")
-      .eq("id", user.id)
-      .maybeSingle<ProfileRecord>();
-
-    if (
-      profileError ||
-      !profile ||
-      !profile.active
-    ) {
-      return NextResponse.json(
-        {
-          error: "Perfil inválido.",
-        },
-        {
-          status: 403,
-        },
-      );
+    if (!auth.ok) {
+      return auth.response;
     }
 
     const url =
@@ -187,61 +149,18 @@ export async function POST(
   request: Request,
 ) {
   try {
-    const supabase =
-      await createClient();
+    const auth =
+      await authenticateManagementRequest({
+        allowedRoles: ["owner", "administrator"],
+        messages: {
+          unauthenticated: "Não autenticado.",
+          inactiveProfile: "Perfil inválido.",
+          forbidden: "Sem permissão.",
+        },
+      });
 
-    const {
-      data: { user },
-      error: userError,
-    } = await supabase.auth.getUser();
-
-    if (userError || !user) {
-      return NextResponse.json(
-        {
-          error: "Não autenticado.",
-        },
-        {
-          status: 401,
-        },
-      );
-    }
-
-    const {
-      data: profile,
-      error: profileError,
-    } = await supabase
-      .from("profiles")
-      .select("role, active")
-      .eq("id", user.id)
-      .maybeSingle<ProfileRecord>();
-
-    if (
-      profileError ||
-      !profile ||
-      !profile.active
-    ) {
-      return NextResponse.json(
-        {
-          error: "Perfil inválido.",
-        },
-        {
-          status: 403,
-        },
-      );
-    }
-
-    if (
-      profile.role !== "owner" &&
-      profile.role !== "administrator"
-    ) {
-      return NextResponse.json(
-        {
-          error: "Sem permissão.",
-        },
-        {
-          status: 403,
-        },
-      );
+    if (!auth.ok) {
+      return auth.response;
     }
 
     const formData =
