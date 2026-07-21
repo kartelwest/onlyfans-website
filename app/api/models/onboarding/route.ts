@@ -1,14 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { createAdminClient } from "@/lib/supabase/admin";
-import { createClient } from "@/lib/supabase/server";
-
-import type { ManagementRole } from "@/types/model";
-
-type ProfileRecord = {
-  role: ManagementRole;
-  active: boolean;
-};
+import { authenticateManagementRequest } from "@/lib/api/auth";
 
 type OnboardingItemRecord = {
   id: string;
@@ -37,68 +30,20 @@ type PatchBody = {
   notes?: string;
 };
 
-async function getAuthenticatedProfile() {
-  const supabase = await createClient();
-
-  const {
-    data: { user },
-    error: userError,
-  } = await supabase.auth.getUser();
-
-  if (userError || !user) {
-    return {
-      error: NextResponse.json(
-        {
-          error: "Não autenticado.",
-        },
-        {
-          status: 401,
-        },
-      ),
-    };
-  }
-
-  const {
-    data: profile,
-    error: profileError,
-  } = await supabase
-    .from("profiles")
-    .select("role, active")
-    .eq("id", user.id)
-    .maybeSingle<ProfileRecord>();
-
-  if (
-    profileError ||
-    !profile ||
-    !profile.active
-  ) {
-    return {
-      error: NextResponse.json(
-        {
-          error: "Perfil inválido.",
-        },
-        {
-          status: 403,
-        },
-      ),
-    };
-  }
-
-  return {
-    user,
-    profile,
-  };
-}
-
 export async function GET(
   request: Request,
 ) {
   try {
     const auth =
-      await getAuthenticatedProfile();
+      await authenticateManagementRequest({
+        messages: {
+          unauthenticated: "Não autenticado.",
+          inactiveProfile: "Perfil inválido.",
+        },
+      });
 
-    if ("error" in auth) {
-      return auth.error;
+    if (!auth.ok) {
+      return auth.response;
     }
 
     const url = new URL(request.url);
@@ -228,10 +173,15 @@ export async function PATCH(
 ) {
   try {
     const auth =
-      await getAuthenticatedProfile();
+      await authenticateManagementRequest({
+        messages: {
+          unauthenticated: "Não autenticado.",
+          inactiveProfile: "Perfil inválido.",
+        },
+      });
 
-    if ("error" in auth) {
-      return auth.error;
+    if (!auth.ok) {
+      return auth.response;
     }
 
     if (

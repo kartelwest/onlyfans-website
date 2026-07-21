@@ -1,12 +1,9 @@
 import { NextResponse } from "next/server";
 
 import { createAdminClient } from "@/lib/supabase/admin";
-import { createClient } from "@/lib/supabase/server";
+import { authenticateManagementRequest } from "@/lib/api/auth";
 
-import type {
-  ChecklistStatus,
-  ManagementRole,
-} from "@/types/model";
+import type { ChecklistStatus } from "@/types/model";
 
 const allowedStatuses: ChecklistStatus[] = [
   "not_started",
@@ -58,64 +55,18 @@ const databaseChecklistFields = Object.values(
 
 export async function PATCH(request: Request) {
   try {
-    const supabase = await createClient();
+    const auth = await authenticateManagementRequest({
+      allowedRoles: ["owner", "administrator"],
+      messages: {
+        unauthenticated: "Usuário não autenticado.",
+        inactiveProfile: "Perfil inválido ou inativo.",
+        forbidden:
+          "Você não tem permissão para alterar este checklist.",
+      },
+    });
 
-    const {
-      data: { user },
-      error: userError,
-    } = await supabase.auth.getUser();
-
-    if (userError || !user) {
-      return NextResponse.json(
-        {
-          error: "Usuário não autenticado.",
-        },
-        {
-          status: 401,
-        },
-      );
-    }
-
-    const {
-      data: profile,
-      error: profileError,
-    } = await supabase
-      .from("profiles")
-      .select("id, role, active")
-      .eq("id", user.id)
-      .maybeSingle();
-
-    if (
-      profileError ||
-      !profile ||
-      !profile.active
-    ) {
-      return NextResponse.json(
-        {
-          error: "Perfil inválido ou inativo.",
-        },
-        {
-          status: 403,
-        },
-      );
-    }
-
-    const currentUserRole =
-      profile.role as ManagementRole;
-
-    if (
-      currentUserRole !== "owner" &&
-      currentUserRole !== "administrator"
-    ) {
-      return NextResponse.json(
-        {
-          error:
-            "Você não tem permissão para alterar este checklist.",
-        },
-        {
-          status: 403,
-        },
-      );
+    if (!auth.ok) {
+      return auth.response;
     }
 
     const body =

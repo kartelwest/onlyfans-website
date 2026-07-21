@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { createAdminClient } from "@/lib/supabase/admin";
-import { createClient } from "@/lib/supabase/server";
+import { authenticateManagementRequest } from "@/lib/api/auth";
 
 type RouteContext = {
   params: Promise<{
@@ -15,42 +15,20 @@ export async function DELETE(
 ) {
   const { reportId } = await context.params;
 
-  const supabase = await createClient();
+  const auth = await authenticateManagementRequest({
+    allowedRoles: ["owner", "administrator"],
+    messages: {
+      unauthenticated: "Unauthorized",
+      inactiveProfile: "Forbidden",
+      forbidden: "Forbidden",
+    },
+  });
 
-  const {
-    data: { user },
-    error: userError,
-  } = await supabase.auth.getUser();
-
-  if (userError || !user) {
-    return NextResponse.json(
-      { error: "Unauthorized" },
-      { status: 401 },
-    );
+  if (!auth.ok) {
+    return auth.response;
   }
 
   const admin = createAdminClient();
-
-  const { data: profile, error: profileError } =
-    await admin
-      .from("profiles")
-      .select("role, active")
-      .eq("id", user.id)
-      .maybeSingle();
-
-  if (
-    profileError ||
-    !profile ||
-    !profile.active ||
-    !["owner", "administrator"].includes(
-      profile.role,
-    )
-  ) {
-    return NextResponse.json(
-      { error: "Forbidden" },
-      { status: 403 },
-    );
-  }
 
   const { data: report, error: reportError } =
     await admin
