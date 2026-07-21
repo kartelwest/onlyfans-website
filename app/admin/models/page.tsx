@@ -97,6 +97,24 @@ export default async function AdminModelsPage() {
 
   if (modelsError) {
     console.error("Erro ao carregar modelos:", modelsError);
+
+    return (
+      <main className="flex min-h-screen items-center justify-center bg-[#08080a] px-4 text-white">
+        <section className="w-full max-w-xl rounded-2xl border border-red-400/30 bg-red-500/10 p-8 text-center">
+          <p className="text-xs font-bold uppercase tracking-[0.22em] text-red-300">
+            Erro
+          </p>
+
+          <h1 className="mt-3 text-2xl font-bold">
+            Não foi possível carregar as modelos
+          </h1>
+
+          <p className="mt-3 text-sm leading-6 text-red-100/75">
+            {modelsError.message}
+          </p>
+        </section>
+      </main>
+    );
   }
 
   const { data: checklistRows, error: checklistError } =
