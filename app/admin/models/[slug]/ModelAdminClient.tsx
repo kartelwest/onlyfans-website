@@ -86,11 +86,11 @@ export default function ModelAdminClient({
                                     {model.profilePhotoUrl ? (
                                         <img
                                             src={model.profilePhotoUrl}
-                                            alt={model.displayName}
+                                            alt={model.fullName}
                                             className="h-full w-full object-cover"
                                         />
                                     ) : (
-                                        model.displayName
+                                        model.fullName
                                             .charAt(0)
                                             .toUpperCase()
                                     )}
@@ -102,7 +102,7 @@ export default function ModelAdminClient({
                                     </p>
 
                                     <h1 className="mt-2 text-3xl font-bold sm:text-4xl">
-                                        {model.displayName}
+                                        {model.fullName}
                                     </h1>
 
                                     <p className="mt-2 text-sm text-white/70">

@@ -86,7 +86,7 @@ export default function OverviewTab({
         </p>
 
         <h2 className="mt-2 text-3xl font-bold">
-          {model.displayName}
+          {model.fullName}
         </h2>
 
         <p className="mt-1 text-white/60">
