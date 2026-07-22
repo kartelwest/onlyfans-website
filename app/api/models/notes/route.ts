@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
-import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
 type ManagementRole =
@@ -74,11 +74,11 @@ export async function GET(
             );
         }
 
-        const supabaseForCheck = await createClient();
+        const supabase = await createClient();
 
         const modelAccess =
             await verifyModelAccess(
-                supabaseForCheck,
+                supabase,
                 modelId,
                 profile,
             );
@@ -91,7 +91,7 @@ export async function GET(
         const {
             data: notes,
             error: notesError,
-        } = await supabaseForCheck
+        } = await supabase
             .from("model_notes")
             .select(
                 `
@@ -139,7 +139,7 @@ export async function GET(
         const {
             data: history,
             error: historyError,
-        } = await supabaseForCheck
+        } = await supabase
             .from("model_note_history")
             .select(
                 `
@@ -222,7 +222,9 @@ export async function POST(
         if (
             profile.role !== "owner" &&
             profile.role !==
-                "administrator"
+                "administrator" &&
+            profile.role !==
+                "representative"
         ) {
             return NextResponse.json(
                 {
@@ -286,12 +288,12 @@ export async function POST(
             );
         }
 
-        const adminSupabase =
-            createAdminClient();
+        const supabase =
+            await createClient();
 
         const modelAccess =
             await verifyModelAccess(
-                adminSupabase,
+                supabase,
                 modelId,
                 profile,
             );
@@ -303,10 +305,13 @@ export async function POST(
         const {
             data: createdNote,
             error: createError,
-        } = await adminSupabase
+        } = await supabase
             .from("model_notes")
             .insert({
                 model_id: modelId,
+                author_id: profile.id,
+                author_name: profile.fullName,
+                author_role: profile.role,
                 body,
                 priority,
                 pinned: false,
@@ -361,7 +366,7 @@ export async function POST(
 
         const historyError =
             await createHistoryEntry(
-                adminSupabase,
+                supabase,
                 {
                     noteId: createdNote.id,
                     modelId,
@@ -373,7 +378,7 @@ export async function POST(
             );
 
         if (historyError) {
-            await adminSupabase
+            await supabase
                 .from("model_notes")
                 .delete()
                 .eq(
@@ -393,7 +398,7 @@ export async function POST(
         }
 
         await updateLatestNoteSummary(
-            adminSupabase,
+            supabase,
             modelId,
         );
 
@@ -469,12 +474,12 @@ export async function PATCH(
             );
         }
 
-        const adminSupabase =
-            createAdminClient();
+        const supabase =
+            await createClient();
 
         const modelAccess =
             await verifyModelAccess(
-                adminSupabase,
+                supabase,
                 modelId,
                 profile,
             );
@@ -486,7 +491,7 @@ export async function PATCH(
         const {
             data: existingNote,
             error: existingNoteError,
-        } = await adminSupabase
+        } = await supabase
             .from("model_notes")
             .select(
                 `
@@ -527,7 +532,7 @@ export async function PATCH(
 
         if (action === "edit") {
             return editNote({
-                adminSupabase,
+                supabase,
                 profile,
                 existingNote,
                 modelId,
@@ -537,7 +542,7 @@ export async function PATCH(
 
         if (action === "pin") {
             return togglePin({
-                adminSupabase,
+                supabase,
                 profile,
                 existingNote,
                 modelId,
@@ -547,7 +552,7 @@ export async function PATCH(
 
         if (action === "archive") {
             return toggleArchive({
-                adminSupabase,
+                supabase,
                 profile,
                 existingNote,
                 modelId,
@@ -583,15 +588,13 @@ export async function PATCH(
 }
 
 async function editNote({
-    adminSupabase,
+    supabase,
     profile,
     existingNote,
     modelId,
     requestBody,
 }: {
-    adminSupabase: ReturnType<
-        typeof createAdminClient
-    >;
+    supabase: SupabaseClient;
     profile: AuthenticatedProfile;
     existingNote: Record<
         string,
@@ -666,7 +669,7 @@ async function editNote({
     const {
         data: updatedNote,
         error: updateError,
-    } = await adminSupabase
+    } = await supabase
         .from("model_notes")
         .update({
             body,
@@ -720,7 +723,7 @@ async function editNote({
 
     const historyError =
         await createHistoryEntry(
-            adminSupabase,
+            supabase,
             {
                 noteId: String(
                     existingNote.id,
@@ -734,7 +737,7 @@ async function editNote({
         );
 
     if (historyError) {
-        await adminSupabase
+        await supabase
             .from("model_notes")
             .update({
                 body: originalBody,
@@ -758,7 +761,7 @@ async function editNote({
     }
 
     await updateLatestNoteSummary(
-        adminSupabase,
+        supabase,
         modelId,
     );
 
@@ -768,15 +771,13 @@ async function editNote({
 }
 
 async function togglePin({
-    adminSupabase,
+    supabase,
     profile,
     existingNote,
     modelId,
     requestBody,
 }: {
-    adminSupabase: ReturnType<
-        typeof createAdminClient
-    >;
+    supabase: SupabaseClient;
     profile: AuthenticatedProfile;
     existingNote: Record<
         string,
@@ -812,7 +813,7 @@ async function togglePin({
     const {
         data: updatedNote,
         error: updateError,
-    } = await adminSupabase
+    } = await supabase
         .from("model_notes")
         .update({
             pinned,
@@ -865,7 +866,7 @@ async function togglePin({
 
     const historyError =
         await createHistoryEntry(
-            adminSupabase,
+            supabase,
             {
                 noteId: String(
                     existingNote.id,
@@ -904,15 +905,13 @@ async function togglePin({
 }
 
 async function toggleArchive({
-    adminSupabase,
+    supabase,
     profile,
     existingNote,
     modelId,
     requestBody,
 }: {
-    adminSupabase: ReturnType<
-        typeof createAdminClient
-    >;
+    supabase: SupabaseClient;
     profile: AuthenticatedProfile;
     existingNote: Record<
         string,
@@ -948,7 +947,7 @@ async function toggleArchive({
     const {
         data: updatedNote,
         error: updateError,
-    } = await adminSupabase
+    } = await supabase
         .from("model_notes")
         .update({
             archived,
@@ -1001,7 +1000,7 @@ async function toggleArchive({
 
     const historyError =
         await createHistoryEntry(
-            adminSupabase,
+            supabase,
             {
                 noteId: String(
                     existingNote.id,
@@ -1035,7 +1034,7 @@ async function toggleArchive({
     }
 
     await updateLatestNoteSummary(
-        adminSupabase,
+        supabase,
         modelId,
     );
 
@@ -1140,9 +1139,7 @@ async function getAuthenticatedProfile(): Promise<
 }
 
 async function verifyModelAccess(
-    adminSupabase: ReturnType<
-        typeof createAdminClient
-    >,
+    supabase: SupabaseClient,
     modelId: string,
     profile: AuthenticatedProfile,
 ): Promise<
@@ -1157,7 +1154,7 @@ async function verifyModelAccess(
     const {
         data: model,
         error: modelError,
-    } = await adminSupabase
+    } = await supabase
         .from("models")
         .select("id")
         .eq("id", modelId)
@@ -1184,24 +1181,21 @@ async function verifyModelAccess(
         "representative"
     ) {
         const {
-            data: assignment,
-            error: assignmentError,
-        } = await adminSupabase
-            .from(
-                "representative_assignments",
-            )
+            data: repModel,
+            error: repModelError,
+        } = await supabase
+            .from("models")
             .select("id")
-            .eq("model_id", modelId)
+            .eq("id", modelId)
             .eq(
                 "representative_id",
                 profile.id,
             )
-            .eq("active", true)
             .maybeSingle();
 
         if (
-            assignmentError ||
-            !assignment
+            repModelError ||
+            !repModel
         ) {
             return {
                 ok: false,
@@ -1225,9 +1219,7 @@ async function verifyModelAccess(
 }
 
 async function createHistoryEntry(
-    adminSupabase: ReturnType<
-        typeof createAdminClient
-    >,
+    supabase: SupabaseClient,
     {
         noteId,
         modelId,
@@ -1244,7 +1236,7 @@ async function createHistoryEntry(
         profile: AuthenticatedProfile;
     },
 ) {
-    const { error } = await adminSupabase
+    const { error } = await supabase
         .from("model_note_history")
         .insert({
             note_id: noteId,
@@ -1274,15 +1266,13 @@ async function createHistoryEntry(
 }
 
 async function updateLatestNoteSummary(
-    adminSupabase: ReturnType<
-        typeof createAdminClient
-    >,
+    supabase: SupabaseClient,
     modelId: string,
 ) {
     const {
         data: latestNote,
         error: noteError,
-    } = await adminSupabase
+    } = await supabase
         .from("model_notes")
         .select("body")
         .eq("model_id", modelId)
@@ -1314,7 +1304,7 @@ async function updateLatestNoteSummary(
             : null;
 
     const { error: modelError } =
-        await adminSupabase
+        await supabase
             .from("models")
             .update({
                 latest_note_summary:
@@ -1337,7 +1327,9 @@ function createPermissions(
         canCreate:
             role === "owner" ||
             role ===
-                "administrator",
+                "administrator" ||
+            role ===
+                "representative",
         canEdit: role === "owner",
         canPin:
             role === "owner" ||

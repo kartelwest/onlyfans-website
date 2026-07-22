@@ -3,25 +3,6 @@ import { notFound, redirect } from "next/navigation";
 
 import { createClient } from "@/lib/supabase/server";
 
-type Model = {
-  id: string;
-  display_name: string;
-  stage_name: string | null;
-  birthday: string | null;
-  nationality: string | null;
-  city: string | null;
-  email: string | null;
-  whatsapp: string | null;
-  instagram: string | null;
-  twitter: string | null;
-  onlyfans: string | null;
-  onboarding_percentage: number;
-  active: boolean;
-  latest_note_summary: string | null;
-  last_login_at: string | null;
-  created_at: string;
-};
-
 type ModelNote = {
   id: string;
   content: string;
@@ -91,7 +72,7 @@ export default async function RepresentativeModelPage({
     notFound();
   }
 
-  const { data: notes, error: notesError } = await supabase
+  const { data: notes } = await supabase
     .from("model_notes")
     .select("id, content, author_name, author_role, created_at")
     .eq("model_id", id)

@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 
-import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
 import type { ManagementRole } from "@/types/model";
@@ -129,14 +128,11 @@ export async function PATCH(
     const normalizedValue =
       body.value?.trim() ?? "";
 
-    const admin =
-      createAdminClient();
-
     if (body.field === "fullName") {
       const {
         data: model,
         error: modelError,
-      } = await admin
+      } = await supabase
         .from("models")
         .select("profile_id")
         .eq("id", body.modelId)
@@ -167,7 +163,7 @@ export async function PATCH(
 
       const {
         error: updateProfileError,
-      } = await admin
+      } = await supabase
         .from("profiles")
         .update({
           full_name: normalizedValue,
@@ -215,7 +211,7 @@ export async function PATCH(
 
     const {
       error: updateModelError,
-    } = await admin
+    } = await supabase
       .from("models")
       .update({
         [dbField]: valueToSave,

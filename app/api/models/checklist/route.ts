@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 
-import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
 import type {
@@ -165,12 +164,10 @@ export async function PATCH(request: Request) {
       );
     }
 
-    const adminSupabase = createAdminClient();
-
     const {
       data: existingChecklist,
       error: existingChecklistError,
-    } = await adminSupabase
+    } = await supabase
       .from("model_checklist")
       .select(
         `
@@ -256,7 +253,7 @@ export async function PATCH(request: Request) {
 
     const {
       error: checklistUpdateError,
-    } = await adminSupabase
+    } = await supabase
       .from("model_checklist")
       .upsert(
         {
@@ -290,7 +287,7 @@ export async function PATCH(request: Request) {
 
     const {
       error: modelUpdateError,
-    } = await adminSupabase
+    } = await supabase
       .from("models")
       .update({
         onboarding_percentage:

@@ -1,4 +1,4 @@
-import LogoutButton from "@/components/admin/LogoutButton";
+import LogoutButton from "@/components/LogoutButton";
 
 export default function AdminLayout({
   children,

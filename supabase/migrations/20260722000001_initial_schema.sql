@@ -270,7 +270,7 @@ create table if not exists public.model_notes (
   priority         text default 'normal' check (priority in ('normal', 'important', 'urgent')),
   pinned           boolean not null default false,
   archived         boolean not null default false,
-  created_by       uuid references.public.profiles(id) on delete set null,
+  created_by       uuid references public.profiles(id) on delete set null,
   created_by_name  text,
   created_by_role  public.management_role,
   updated_by       uuid references public.profiles(id) on delete set null,

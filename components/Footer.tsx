@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 
 export default function Footer() {
   return (
@@ -41,12 +42,12 @@ export default function Footer() {
             </h3>
 
             <nav className="mt-6 flex flex-col gap-4 text-white/70">
-              <a
+              <Link
                 href="/"
                 className="transition hover:translate-x-1 hover:text-[#e9a5b8]"
               >
                 Início
-              </a>
+              </Link>
 
               <a
                 href="/por-que-nos"

@@ -173,7 +173,6 @@ export default async function OwnerUserManagePage({
                   "use server";
 
                   const supabase = await createClient();
-                  const admin = createAdminClient();
 
                   const {
                     data: { user },
@@ -282,7 +281,6 @@ export default async function OwnerUserManagePage({
                     "use server";
 
                     const supabase = await createClient();
-                    const admin = createAdminClient();
 
                     const {
                       data: { user },

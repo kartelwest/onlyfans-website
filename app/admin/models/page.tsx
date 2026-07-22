@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
-import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import type { ManagementRole } from "@/types/model";
 
@@ -69,10 +68,8 @@ export default async function AdminModelsPage() {
     redirect("/login");
   }
 
-  const adminSupabase = createAdminClient();
-
   const { data: modelRows, error: modelsError } =
-    await adminSupabase
+    await supabase
       .from("models")
       .select(
         `
@@ -100,7 +97,7 @@ export default async function AdminModelsPage() {
   }
 
   const { data: checklistRows, error: checklistError } =
-    await adminSupabase
+    await supabase
       .from("model_checklist")
       .select(
         `

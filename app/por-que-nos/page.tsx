@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 const supportItems = [
   "Configuração completa da conta do OnlyFans",
   "Desenvolvimento e posicionamento da sua marca",
@@ -933,12 +935,12 @@ export default function WhyUsPage() {
                 Quero Fazer Parte
               </a>
 
-              <a
+              <Link
                 href="/"
                 className="rounded-full border border-white/40 px-9 py-4 font-bold uppercase tracking-[0.1em] text-white transition hover:border-[#e9a5b8] hover:text-[#e9a5b8]"
               >
                 Voltar ao Início
-              </a>
+              </Link>
             </div>
           </div>
         </section>

@@ -43,7 +43,6 @@ type PaymentsTabProps = {
 
 export default function PaymentsTab({
   modelId,
-  currentUserRole,
 }: PaymentsTabProps) {
   const [payment, setPayment] = useState<ModelPayment | null>(null);
   const [earnings, setEarnings] = useState<EarningsReport[]>([]);

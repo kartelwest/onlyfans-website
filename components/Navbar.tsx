@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { useState } from "react";
 
 function KarrayHeartIcon() {
@@ -43,7 +44,7 @@ export default function Navbar() {
     <>
       <header className="absolute left-0 top-0 z-50 w-full">
         <div className="mx-auto flex max-w-[1440px] items-center justify-between px-5 py-5 sm:px-8 lg:px-16">
-          <a href="/" className="relative z-50 flex items-center">
+          <Link href="/" className="relative z-50 flex items-center">
             <Image
               src="/images/karray-logo.png"
               alt="KARRAY Models"
@@ -52,7 +53,7 @@ export default function Navbar() {
               priority
               className="h-auto w-[210px] object-contain sm:w-[240px] lg:w-[320px]"
             />
-          </a>
+          </Link>
 
           {/* DESKTOP MENU */}
           <nav className="hidden items-center gap-9 text-base font-semibold uppercase tracking-[0.14em] text-white lg:flex">

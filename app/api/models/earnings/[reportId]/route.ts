@@ -24,15 +24,13 @@ export async function DELETE(
 
   if (userError || !user) {
     return NextResponse.json(
-      { error: "Unauthorized" },
+      { error: "Não autenticado." },
       { status: 401 },
     );
   }
 
-  const admin = createAdminClient();
-
   const { data: profile, error: profileError } =
-    await admin
+    await supabase
       .from("profiles")
       .select("role, active")
       .eq("id", user.id)
@@ -47,13 +45,13 @@ export async function DELETE(
     )
   ) {
     return NextResponse.json(
-      { error: "Forbidden" },
+      { error: "Sem permissão." },
       { status: 403 },
     );
   }
 
   const { data: report, error: reportError } =
-    await admin
+    await supabase
       .from("model_earnings_reports")
       .select("id, image_path")
       .eq("id", reportId)
@@ -68,12 +66,13 @@ export async function DELETE(
 
   if (!report) {
     return NextResponse.json(
-      { error: "Report not found." },
+      { error: "Relatório não encontrado." },
       { status: 404 },
     );
   }
 
   if (report.image_path) {
+    const admin = createAdminClient();
     const { error: storageError } =
       await admin.storage
         .from("model-earnings")
@@ -87,7 +86,7 @@ export async function DELETE(
     }
   }
 
-  const { error: deleteError } = await admin
+  const { error: deleteError } = await supabase
     .from("model_earnings_reports")
     .delete()
     .eq("id", reportId);

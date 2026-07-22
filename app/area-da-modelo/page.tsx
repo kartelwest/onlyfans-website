@@ -3,20 +3,6 @@ import { redirect } from "next/navigation";
 
 import { createClient } from "@/lib/supabase/server";
 
-type Model = {
-  id: string;
-  display_name: string;
-  stage_name: string | null;
-  instagram: string | null;
-  twitter: string | null;
-  onlyfans: string | null;
-  onboarding_percentage: number;
-  active: boolean;
-  content_drive_url: string | null;
-  latest_note_summary: string | null;
-  last_login_at: string | null;
-};
-
 type ModelNote = {
   id: string;
   content: string;
@@ -90,7 +76,7 @@ export default async function AreaDaModeloPage() {
     );
   }
 
-  const { data: notes, error: notesError } = await supabase
+  const { data: notes } = await supabase
     .from("model_notes")
     .select("id, content, author_name, author_role, created_at")
     .eq("model_id", model.id)
