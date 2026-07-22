@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
+import ModelRowActions from "@/components/admin/ModelRowActions";
 import { createClient } from "@/lib/supabase/server";
 import type { ManagementRole } from "@/types/model";
 
@@ -314,10 +315,16 @@ export default async function AdminModelsPage() {
                       model.checklist
                         ?.onboarding_percentage ?? 0;
 
+                    const canManage =
+                      role === "owner" ||
+                      role === "administrator";
+
                     return (
                       <tr
                         key={model.id}
-                        className="border-b border-white/10 transition hover:bg-white/[0.03]"
+                        className={`border-b border-white/10 transition hover:bg-white/[0.03] ${
+                          !model.active ? "opacity-50" : ""
+                        }`}
                       >
                         <TableCell>
                           <span className="font-bold text-pink-300">
@@ -410,12 +417,22 @@ export default async function AdminModelsPage() {
                         </TableCell>
 
                         <TableCell>
-                          <Link
-                            href={`/admin/models/${model.slug}`}
-                            className="rounded-lg border border-pink-400/30 bg-pink-500/10 px-4 py-2 text-xs font-bold text-pink-200 transition hover:bg-pink-500/20"
-                          >
-                            Abrir perfil
-                          </Link>
+                          <div className="flex flex-col gap-2">
+                            <Link
+                              href={`/admin/models/${model.slug}`}
+                              className="rounded-lg border border-pink-400/30 bg-pink-500/10 px-4 py-2 text-xs font-bold text-pink-200 transition hover:bg-pink-500/20"
+                            >
+                              Abrir perfil
+                            </Link>
+
+                            {canManage && (
+                              <ModelRowActions
+                                modelId={model.id}
+                                displayName={model.display_name}
+                                active={!!model.active}
+                              />
+                            )}
+                          </div>
                         </TableCell>
                       </tr>
                     );
