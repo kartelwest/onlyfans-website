@@ -44,6 +44,10 @@ export default function OverviewTab({
     field: EditableField,
     value: string,
   ) {
+    if (field === "fullName" && !value.trim()) {
+      return;
+    }
+
     const response = await fetch(
       "/api/models/update",
       {
@@ -75,6 +79,7 @@ export default function OverviewTab({
     onModelUpdate({
       ...model,
       [field]: value,
+      ...(field === "fullName" && { displayName: value }),
     });
   }
 

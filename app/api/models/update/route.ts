@@ -5,7 +5,6 @@ import { createClient } from "@/lib/supabase/server";
 import type { ManagementRole } from "@/types/model";
 
 const allowedModelFields = {
-  displayName: "display_name",
   stageName: "stage_name",
   birthday: "birthday",
 
@@ -129,6 +128,12 @@ export async function PATCH(
       body.value?.trim() ?? "";
 
     if (body.field === "fullName") {
+      if (!normalizedValue) {
+        return NextResponse.json({
+          success: true,
+        });
+      }
+
       const {
         data: model,
         error: modelError,
