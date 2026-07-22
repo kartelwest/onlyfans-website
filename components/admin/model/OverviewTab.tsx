@@ -14,6 +14,7 @@ type OverviewTabProps = {
   model: Model;
   checklist: ModelChecklist;
   currentUserRole: ManagementRole;
+  onModelUpdate: (updatedModel: Model) => void;
 };
 
 type EditableField =
@@ -27,13 +28,11 @@ type EditableField =
   | "whatsapp";
 
 export default function OverviewTab({
-  model: initialModel,
+  model,
   checklist,
   currentUserRole,
+  onModelUpdate,
 }: OverviewTabProps) {
-  const [model, setModel] =
-    useState(initialModel);
-
   const [isEditing, setIsEditing] =
     useState(false);
 
@@ -73,10 +72,10 @@ export default function OverviewTab({
       );
     }
 
-    setModel((prev) => ({
-      ...prev,
+    onModelUpdate({
+      ...model,
       [field]: value,
-    }));
+    });
   }
 
   return (

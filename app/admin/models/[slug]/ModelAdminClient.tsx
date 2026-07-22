@@ -53,12 +53,15 @@ const tabs: {
     ];
 
 export default function ModelAdminClient({
-    model,
+    model: initialModel,
     checklist,
     currentUserRole,
 }: ModelAdminClientProps) {
     const [activeTab, setActiveTab] =
         useState<TabId>("summary");
+
+    const [model, setModel] =
+        useState<Model>(initialModel);
 
     const onboardingPercentage = Math.min(
         Math.max(checklist.onboardingPercentage, 0),
@@ -177,6 +180,7 @@ export default function ModelAdminClient({
                                 model={model}
                                 checklist={checklist}
                                 currentUserRole={currentUserRole}
+                                onModelUpdate={setModel}
                             />
                         )}
 
