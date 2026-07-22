@@ -28,6 +28,7 @@ type ModelRow = {
   active: boolean | null;
   website_login_enabled: boolean | null;
   latest_note_summary: string | null;
+  profile: { full_name: string | null } | null;
 };
 
 type DashboardModel = ModelRow & {
@@ -82,7 +83,8 @@ export default async function AdminModelsPage() {
           status,
           active,
           website_login_enabled,
-          latest_note_summary
+          latest_note_summary,
+          profile:profiles!profile_id ( full_name )
         `,
       )
       .order("model_number", {
@@ -126,7 +128,7 @@ export default async function AdminModelsPage() {
 
   const models: DashboardModel[] = (modelRows ?? []).map(
     (model) => ({
-      ...model,
+      ...(model as unknown as ModelRow),
       checklist: checklistMap.get(model.id) ?? null,
     }),
   );
@@ -319,6 +321,10 @@ export default async function AdminModelsPage() {
                       role === "owner" ||
                       role === "administrator";
 
+                    const displayName =
+                      model.profile?.full_name?.trim() ||
+                      model.display_name;
+
                     return (
                       <tr
                         key={model.id}
@@ -338,12 +344,12 @@ export default async function AdminModelsPage() {
                             href={`/admin/models/${model.slug}`}
                             className="font-bold text-white transition hover:text-pink-300"
                           >
-                            {model.display_name}
+                            {displayName}
                           </Link>
 
                           {model.stage_name &&
                             model.stage_name !==
-                              model.display_name && (
+                              displayName && (
                               <p className="mt-1 text-xs text-white/45">
                                 {model.stage_name}
                               </p>
@@ -428,7 +434,7 @@ export default async function AdminModelsPage() {
                             {canManage && (
                               <ModelRowActions
                                 modelId={model.id}
-                                displayName={model.display_name}
+                                displayName={displayName}
                                 active={!!model.active}
                               />
                             )}
