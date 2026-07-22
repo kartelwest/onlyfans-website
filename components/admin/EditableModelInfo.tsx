@@ -378,10 +378,9 @@ export default function EditableModelInfo({
               ? draftProfile.stageName
               : profile.stageName
           }
-          modelId={slug}
           isEditing={isEditing}
           onPhotoChange={(photo) =>
-            updateDraft("profilePhoto", photo ?? "")
+            updateDraft("profilePhoto", photo)
           }
         />
 

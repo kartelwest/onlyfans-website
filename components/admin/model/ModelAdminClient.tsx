@@ -7,7 +7,6 @@ import ChecklistTab from "@/components/admin/model/ChecklistTab";
 import DocumentsTab from "@/components/admin/model/DocumentsTab";
 import DriveTab from "@/components/admin/model/DriveTab";
 import FanslyTab from "@/components/admin/model/FanslyTab";
-import HistoryTab from "@/components/admin/model/HistoryTab";
 import NotesTab from "@/components/admin/model/NotesTab";
 import OnlyFansTab from "@/components/admin/model/OnlyFansTab";
 import OverviewTab from "@/components/admin/model/OverviewTab";
@@ -261,9 +260,10 @@ export default function ModelAdminClient({
             )}
 
             {activeTab === "history" && (
-              <HistoryTab
+              <NotesTab
                 modelId={model.id}
                 currentUserRole={currentUserRole}
+                historyOnly
               />
             )}
           </div>

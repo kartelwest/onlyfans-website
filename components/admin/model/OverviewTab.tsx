@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 
-import ModelPhotoUpload from "@/components/admin/ModelPhotoUpload";
 import EditableTextField from "@/components/admin/model/EditableTextField";
 
 import type {
@@ -34,9 +33,6 @@ export default function OverviewTab({
 }: OverviewTabProps) {
   const [isEditing, setIsEditing] =
     useState(false);
-
-  const [profilePhoto, setProfilePhoto] =
-    useState<string | null>(model.profilePhotoUrl);
 
   const canEdit =
     currentUserRole === "owner" ||
@@ -150,18 +146,7 @@ export default function OverviewTab({
         </div>
 
         {isEditing && canEdit ? (
-          <div className="mt-6 space-y-6">
-            <ModelPhotoUpload
-              photo={profilePhoto}
-              modelName={model.displayName}
-              modelId={model.id}
-              isEditing={true}
-              onPhotoChange={(photo) =>
-                setProfilePhoto(photo)
-              }
-            />
-
-            <div className="grid gap-5 md:grid-cols-2">
+          <div className="mt-6 grid gap-5 md:grid-cols-2">
             <EditableTextField
               label="Nome completo"
               value={model.fullName}
@@ -259,7 +244,6 @@ export default function OverviewTab({
                 )
               }
             />
-          </div>
           </div>
         ) : (
           <div className="mt-6 grid gap-5 md:grid-cols-2">

@@ -1,15 +1,10 @@
 import { NextResponse } from "next/server";
 
-import {
-  getAuthenticatedProfile,
-  verifyModelAccess,
-  requireStaff,
-} from "@/lib/auth/model-access";
-import { writeAuditLog } from "@/lib/audit";
 import { createClient } from "@/lib/supabase/server";
 
 import type {
   ChecklistStatus,
+  ManagementRole,
 } from "@/types/model";
 
 const allowedStatuses: ChecklistStatus[] = [
@@ -62,20 +57,64 @@ const databaseChecklistFields = Object.values(
 
 export async function PATCH(request: Request) {
   try {
-    const auth =
-      await getAuthenticatedProfile();
+    const supabase = await createClient();
 
-    if (!auth.ok) {
-      return auth.response;
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
+
+    if (userError || !user) {
+      return NextResponse.json(
+        {
+          error: "Usuário não autenticado.",
+        },
+        {
+          status: 401,
+        },
+      );
     }
 
-    const { profile } = auth;
+    const {
+      data: profile,
+      error: profileError,
+    } = await supabase
+      .from("profiles")
+      .select("id, role, active")
+      .eq("id", user.id)
+      .maybeSingle();
 
-    const staffCheck =
-      await requireStaff(profile);
+    if (
+      profileError ||
+      !profile ||
+      !profile.active
+    ) {
+      return NextResponse.json(
+        {
+          error: "Perfil inválido ou inativo.",
+        },
+        {
+          status: 403,
+        },
+      );
+    }
 
-    if (!staffCheck.ok) {
-      return staffCheck.response;
+    const currentUserRole =
+      profile.role as ManagementRole;
+
+    if (
+      currentUserRole !== "owner" &&
+      currentUserRole !== "administrator"
+    ) {
+      return NextResponse.json(
+        {
+          error:
+            "Você não tem permissão para alterar este checklist.",
+        },
+        {
+          status: 403,
+        },
+      );
     }
 
     const body =
@@ -92,15 +131,6 @@ export async function PATCH(request: Request) {
           status: 400,
         },
       );
-    }
-
-    const access = await verifyModelAccess(
-      modelId,
-      profile,
-    );
-
-    if (!access.ok) {
-      return access.response;
     }
 
     if (
@@ -133,8 +163,6 @@ export async function PATCH(request: Request) {
         },
       );
     }
-
-    const supabase = await createClient();
 
     const {
       data: existingChecklist,
@@ -286,17 +314,6 @@ export async function PATCH(request: Request) {
         },
       );
     }
-
-    await writeAuditLog({
-      modelId,
-      actorId: profile.id,
-      actorName: profile.fullName,
-      actorRole: profile.role,
-      field: `checklist.${field}`,
-      oldValue:
-        existingChecklist?.[checklistFieldMap[field]] ?? null,
-      newValue: status,
-    });
 
     return NextResponse.json({
       success: true,

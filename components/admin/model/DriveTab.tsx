@@ -17,9 +17,7 @@ type DriveTabProps = {
 type DriveField =
   | "driveOnlyfans"
   | "driveInstagram"
-  | "driveTwitter"
-  | "driveVideos"
-  | "drivePhotos";
+  | "driveTwitter";
 
 type DriveValues = Record<
   DriveField,
@@ -53,10 +51,6 @@ export default function DriveTab({
         model.driveInstagram ?? "",
       driveTwitter:
         model.driveTwitter ?? "",
-      driveVideos:
-        model.driveVideosUrl ?? "",
-      drivePhotos:
-        model.drivePhotosUrl ?? "",
     });
 
   const canEdit =
@@ -84,20 +78,6 @@ export default function DriveTab({
       description:
         "Pasta destinada ao conteúdo de divulgação e crescimento no X / Twitter.",
       value: driveValues.driveTwitter,
-    },
-    {
-      field: "driveVideos",
-      title: "Pasta de Vídeos",
-      description:
-        "Pasta geral para envio de vídeos da modelo.",
-      value: driveValues.driveVideos,
-    },
-    {
-      field: "drivePhotos",
-      title: "Pasta de Fotos",
-      description:
-        "Pasta geral para envio de fotos da modelo.",
-      value: driveValues.drivePhotos,
     },
   ];
 
@@ -157,8 +137,7 @@ export default function DriveTab({
 
             <p className="mt-2 max-w-3xl text-sm leading-6 text-white/55">
               Pastas de conteúdo da modelo para
-              OnlyFans, Instagram, X / Twitter,
-              vídeos e fotos.
+              OnlyFans, Instagram e X / Twitter.
             </p>
           </div>
 

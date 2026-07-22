@@ -3,11 +3,10 @@
 import { ChangeEvent, useRef, useState } from "react";
 
 type ModelPhotoUploadProps = {
-  photo: string | null;
+  photo: string;
   modelName: string;
-  modelId: string;
   isEditing: boolean;
-  onPhotoChange: (photo: string | null) => void;
+  onPhotoChange: (photo: string) => void;
 };
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
@@ -15,7 +14,6 @@ const MAX_FILE_SIZE = 10 * 1024 * 1024;
 export default function ModelPhotoUpload({
   photo,
   modelName,
-  modelId,
   isEditing,
   onPhotoChange,
 }: ModelPhotoUploadProps) {
@@ -59,34 +57,10 @@ export default function ModelPhotoUpload({
     setIsProcessing(true);
 
     try {
-      const resizedFile =
+      const compressedPhoto =
         await compressProfilePhoto(file);
 
-      const formData = new FormData();
-      formData.append("file", resizedFile);
-      formData.append("modelId", modelId);
-
-      const response = await fetch(
-        "/api/models/photo",
-        {
-          method: "POST",
-          body: formData,
-        }
-      );
-
-      const data = (await response.json()) as {
-        success?: boolean;
-        photoUrl?: string;
-        error?: string;
-      };
-
-      if (!response.ok || !data.success) {
-        throw new Error(
-          data.error ?? "Erro ao fazer upload."
-        );
-      }
-
-      onPhotoChange(data.photoUrl ?? null);
+      onPhotoChange(compressedPhoto);
     } catch (processingError) {
       console.error(
         "Erro ao processar a foto:",
@@ -94,50 +68,16 @@ export default function ModelPhotoUpload({
       );
 
       setError(
-        processingError instanceof Error
-          ? processingError.message
-          : "Não foi possível processar esta imagem."
+        "Não foi possível processar esta imagem."
       );
     } finally {
       setIsProcessing(false);
     }
   }
 
-  async function removePhoto() {
+  function removePhoto() {
     setError("");
-    setIsProcessing(true);
-
-    try {
-      const response = await fetch(
-        `/api/models/photo?modelId=${modelId}`,
-        { method: "DELETE" }
-      );
-
-      const data = (await response.json()) as {
-        success?: boolean;
-        error?: string;
-      };
-
-      if (!response.ok || !data.success) {
-        throw new Error(
-          data.error ?? "Erro ao remover foto."
-        );
-      }
-
-      onPhotoChange(null);
-    } catch (removeError) {
-      console.error(
-        "Erro ao remover foto:",
-        removeError
-      );
-      setError(
-        removeError instanceof Error
-          ? removeError.message
-          : "Não foi possível remover a foto."
-      );
-    } finally {
-      setIsProcessing(false);
-    }
+    onPhotoChange("");
   }
 
   const initial =
@@ -171,8 +111,8 @@ export default function ModelPhotoUpload({
 
           <p className="mt-2 max-w-xl text-sm leading-6 text-zinc-400">
             Selecione uma foto do computador. A imagem
-            será recortada, reduzida e enviada para o
-            armazenamento da plataforma.
+            será automaticamente recortada, reduzida e
+            preparada para uso no perfil.
           </p>
 
           {isEditing && (
@@ -197,7 +137,7 @@ export default function ModelPhotoUpload({
                   disabled={isProcessing}
                   className="rounded-lg border border-red-500/40 bg-red-500/10 px-4 py-2 text-sm font-semibold text-red-300 transition hover:bg-red-500 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  {isProcessing ? "Removendo..." : "Remover foto"}
+                  Remover foto
                 </button>
               )}
             </div>
@@ -222,12 +162,6 @@ export default function ModelPhotoUpload({
               Nenhuma foto cadastrada.
             </p>
           )}
-
-          {isProcessing && (
-            <p className="mt-3 text-sm text-pink-300">
-              Processando...
-            </p>
-          )}
         </div>
       </div>
     </div>
@@ -236,7 +170,7 @@ export default function ModelPhotoUpload({
 
 function compressProfilePhoto(
   file: File
-): Promise<File> {
+): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
 
@@ -309,28 +243,12 @@ function compressProfilePhoto(
           outputSize
         );
 
-        canvas.toBlob(
-          (blob) => {
-            if (!blob) {
-              reject(
-                new Error(
-                  "Não foi possível processar a imagem."
-                )
-              );
-              return;
-            }
-
-            const resizedFile = new File(
-              [blob],
-              file.name,
-              { type: "image/jpeg" }
-            );
-
-            resolve(resizedFile);
-          },
+        const compressedImage = canvas.toDataURL(
           "image/jpeg",
           0.78
         );
+
+        resolve(compressedImage);
       };
 
       image.src = reader.result;

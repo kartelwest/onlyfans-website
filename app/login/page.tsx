@@ -18,15 +18,9 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const [loading, setLoading] = useState(false);
-  const [attempts, setAttempts] = useState(0);
 
   async function handleLogin(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-
-    if (attempts >= 5) {
-      setErrorMessage("Muitas tentativas. Aguarde alguns segundos e tente novamente.");
-      return;
-    }
 
     setLoading(true);
     setErrorMessage("");
@@ -39,7 +33,6 @@ export default function LoginPage() {
         });
 
       if (loginError) {
-        setAttempts((prev) => prev + 1);
         throw new Error("Email ou senha incorretos.");
       }
 
@@ -80,7 +73,7 @@ export default function LoginPage() {
       }
 
       if (role === "administrator") {
-        router.replace("/admin");
+        router.replace("/admin/models");
         router.refresh();
         return;
       }
@@ -108,10 +101,6 @@ export default function LoginPage() {
       setErrorMessage(message);
     } finally {
       setLoading(false);
-
-      if (attempts > 0 && attempts % 5 === 0) {
-        setTimeout(() => setAttempts(0), 15000);
-      }
     }
   }
 

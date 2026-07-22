@@ -49,8 +49,6 @@ export default async function AreaDaModeloPage() {
         onboarding_percentage,
         active,
         content_drive_url,
-        drive_videos_url,
-        drive_photos_url,
         latest_note_summary,
         last_login_at
       `
@@ -197,94 +195,6 @@ export default async function AreaDaModeloPage() {
                 </a>
               </div>
             )}
-
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div
-                className={`rounded-2xl border p-6 ${
-                  model.drive_videos_url
-                    ? "border-[#b06a87] bg-[#4b2438]"
-                    : "border-[#eadfd8] bg-white"
-                }`}
-              >
-                <h2
-                  className={`text-xl font-bold ${
-                    model.drive_videos_url
-                      ? "text-white"
-                      : "text-[#4b2438]"
-                  }`}
-                >
-                  Enviar Vídeos
-                </h2>
-
-                <p
-                  className={`mt-2 text-sm ${
-                    model.drive_videos_url
-                      ? "text-white/80"
-                      : "text-[#765c68]"
-                  }`}
-                >
-                  Acesse a pasta de vídeos no Google Drive.
-                </p>
-
-                {model.drive_videos_url ? (
-                  <a
-                    href={model.drive_videos_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="mt-4 inline-flex items-center rounded-xl bg-white px-6 py-3 text-sm font-bold text-[#4b2438] transition hover:bg-[#f7f1ec]"
-                  >
-                    Abrir pasta de vídeos
-                  </a>
-                ) : (
-                  <p className="mt-4 text-sm text-[#765c68]">
-                    Pasta de vídeos ainda não configurada.
-                  </p>
-                )}
-              </div>
-
-              <div
-                className={`rounded-2xl border p-6 ${
-                  model.drive_photos_url
-                    ? "border-[#b06a87] bg-[#4b2438]"
-                    : "border-[#eadfd8] bg-white"
-                }`}
-              >
-                <h2
-                  className={`text-xl font-bold ${
-                    model.drive_photos_url
-                      ? "text-white"
-                      : "text-[#4b2438]"
-                  }`}
-                >
-                  Enviar Fotos
-                </h2>
-
-                <p
-                  className={`mt-2 text-sm ${
-                    model.drive_photos_url
-                      ? "text-white/80"
-                      : "text-[#765c68]"
-                  }`}
-                >
-                  Acesse a pasta de fotos no Google Drive.
-                </p>
-
-                {model.drive_photos_url ? (
-                  <a
-                    href={model.drive_photos_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="mt-4 inline-flex items-center rounded-xl bg-white px-6 py-3 text-sm font-bold text-[#4b2438] transition hover:bg-[#f7f1ec]"
-                  >
-                    Abrir pasta de fotos
-                  </a>
-                ) : (
-                  <p className="mt-4 text-sm text-[#765c68]">
-                    Pasta de fotos ainda não configurada.
-                  </p>
-                )}
-              </div>
-            </div>
           </div>
 
           <div className="space-y-6">
