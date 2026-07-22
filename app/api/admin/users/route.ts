@@ -225,6 +225,7 @@ export async function POST(request: Request) {
         full_name: fullName,
         role,
         active,
+        must_change_password: true,
       });
 
     if (createProfileError) {
@@ -259,7 +260,6 @@ export async function POST(request: Request) {
           model_number: modelNumber,
           slug,
           display_name: stageName || fullName,
-          full_name: fullName,
           stage_name: stageName,
           birthday: dateOfBirth,
           nationality: country,
@@ -338,9 +338,7 @@ export async function POST(request: Request) {
     return NextResponse.json(
       {
         error:
-          error instanceof Error
-            ? error.message
-            : "Ocorreu um erro inesperado.",
+          "Ocorreu um erro inesperado ao criar o usuário.",
       },
       {
         status: 500,

@@ -67,6 +67,10 @@ export interface Model {
 
   driveTwitter: string | null;
 
+  driveVideosUrl: string | null;
+
+  drivePhotosUrl: string | null;
+
   status: string | null;
 
   onboardingComplete: boolean;
@@ -248,4 +252,24 @@ export interface ModelNote {
   createdAt: string;
 
   updatedAt: string;
+}
+
+export interface ModelAuditLog {
+  id: string;
+
+  modelId: string;
+
+  actorId: string | null;
+
+  actorName: string | null;
+
+  actorRole: ManagementRole | null;
+
+  field: string;
+
+  oldValue: string | null;
+
+  newValue: string | null;
+
+  createdAt: string;
 }

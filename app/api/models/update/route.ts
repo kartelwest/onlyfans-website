@@ -1,8 +1,12 @@
 import { NextResponse } from "next/server";
 
+import {
+  getAuthenticatedProfile,
+  verifyModelAccess,
+  requireStaff,
+} from "@/lib/auth/model-access";
+import { writeAuditLog } from "@/lib/audit";
 import { createClient } from "@/lib/supabase/server";
-
-import type { ManagementRole } from "@/types/model";
 
 const allowedModelFields = {
   displayName: "display_name",
@@ -29,6 +33,9 @@ const allowedModelFields = {
   driveOnlyfans: "drive_onlyfans",
   driveInstagram: "drive_instagram",
   driveTwitter: "drive_twitter",
+
+  driveVideos: "drive_videos_url",
+  drivePhotos: "drive_photos_url",
 } as const;
 
 type ModelEditableField =
@@ -36,7 +43,8 @@ type ModelEditableField =
 
 type EditableField =
   | ModelEditableField
-  | "fullName";
+  | "fullName"
+  | "profilePhotoUrl";
 
 type Body = {
   modelId?: string;
@@ -44,69 +52,32 @@ type Body = {
   value?: string;
 };
 
+function normalizeUrl(value: string): string {
+  const trimmed = value.trim();
+
+  if (
+    trimmed &&
+    !trimmed.startsWith("http://") &&
+    !trimmed.startsWith("https://")
+  ) {
+    return `https://${trimmed}`;
+  }
+
+  return trimmed;
+}
+
 export async function PATCH(
   request: Request,
 ) {
   try {
-    const supabase =
-      await createClient();
+    const auth =
+      await getAuthenticatedProfile();
 
-    const {
-      data: { user },
-      error: userError,
-    } = await supabase.auth.getUser();
-
-    if (userError || !user) {
-      return NextResponse.json(
-        {
-          error: "Não autenticado.",
-        },
-        {
-          status: 401,
-        },
-      );
+    if (!auth.ok) {
+      return auth.response;
     }
 
-    const {
-      data: profile,
-      error: profileError,
-    } = await supabase
-      .from("profiles")
-      .select("role, active")
-      .eq("id", user.id)
-      .maybeSingle();
-
-    if (
-      profileError ||
-      !profile ||
-      !profile.active
-    ) {
-      return NextResponse.json(
-        {
-          error: "Perfil inválido.",
-        },
-        {
-          status: 403,
-        },
-      );
-    }
-
-    const role =
-      profile.role as ManagementRole;
-
-    if (
-      role !== "owner" &&
-      role !== "administrator"
-    ) {
-      return NextResponse.json(
-        {
-          error: "Sem permissão.",
-        },
-        {
-          status: 403,
-        },
-      );
-    }
+    const { profile } = auth;
 
     const body =
       (await request.json()) as Body;
@@ -125,23 +96,49 @@ export async function PATCH(
       );
     }
 
+    const modelId = body.modelId;
+
+    // Verify the caller has access to this model
+    const access =
+      await verifyModelAccess(
+        modelId,
+        profile,
+      );
+
+    if (!access.ok) {
+      return access.response;
+    }
+
     const normalizedValue =
       body.value?.trim() ?? "";
 
+    // --- fullName: update both profiles.full_name AND models.display_name ---
     if (body.field === "fullName") {
+      const staffCheck =
+        await requireStaff(profile);
+
+      if (!staffCheck.ok) {
+        return staffCheck.response;
+      }
+
+      const supabase =
+        await createClient();
+
       const {
         data: model,
         error: modelError,
       } = await supabase
         .from("models")
-        .select("profile_id")
-        .eq("id", body.modelId)
+        .select(
+          "profile_id, display_name",
+        )
+        .eq("id", modelId)
         .maybeSingle();
 
       if (modelError) {
         return NextResponse.json(
           {
-            error: modelError.message,
+            error: "Erro interno.",
           },
           {
             status: 500,
@@ -171,10 +168,13 @@ export async function PATCH(
         .eq("id", model.profile_id);
 
       if (updateProfileError) {
+        console.error(
+          "Erro ao atualizar profiles.full_name:",
+          updateProfileError,
+        );
         return NextResponse.json(
           {
-            error:
-              updateProfileError.message,
+            error: "Erro interno.",
           },
           {
             status: 500,
@@ -182,11 +182,100 @@ export async function PATCH(
         );
       }
 
+      const {
+        error: updateModelError,
+      } = await supabase
+        .from("models")
+        .update({
+          display_name: normalizedValue,
+        })
+        .eq("id", modelId);
+
+      if (updateModelError) {
+        console.error(
+          "Erro ao atualizar models.display_name:",
+          updateModelError,
+        );
+        return NextResponse.json(
+          {
+            error: "Erro interno.",
+          },
+          {
+            status: 500,
+          },
+        );
+      }
+
+      await writeAuditLog({
+        modelId,
+        actorId: profile.id,
+        actorName: profile.fullName,
+        actorRole: profile.role,
+        field: "fullName",
+        oldValue: model.display_name,
+        newValue: normalizedValue,
+      });
+
       return NextResponse.json({
         success: true,
       });
     }
 
+    // --- profilePhotoUrl: owner/admin/rep can clear ---
+    if (body.field === "profilePhotoUrl") {
+      const supabase =
+        await createClient();
+
+      const {
+        data: oldModel,
+      } = await supabase
+        .from("models")
+        .select("profile_photo_url")
+        .eq("id", modelId)
+        .maybeSingle();
+
+      const {
+        error: updateError,
+      } = await supabase
+        .from("models")
+        .update({
+          profile_photo_url:
+            normalizedValue || null,
+        })
+        .eq("id", modelId);
+
+      if (updateError) {
+        console.error(
+          "Erro ao atualizar foto de perfil:",
+          updateError,
+        );
+        return NextResponse.json(
+          {
+            error: "Erro interno.",
+          },
+          {
+            status: 500,
+          },
+        );
+      }
+
+      await writeAuditLog({
+        modelId,
+        actorId: profile.id,
+        actorName: profile.fullName,
+        actorRole: profile.role,
+        field: "profilePhotoUrl",
+        oldValue:
+          oldModel?.profile_photo_url ?? null,
+        newValue: normalizedValue || null,
+      });
+
+      return NextResponse.json({
+        success: true,
+      });
+    }
+
+    // --- Regular model fields ---
     const dbField =
       allowedModelFields[
         body.field as ModelEditableField
@@ -203,11 +292,47 @@ export async function PATCH(
       );
     }
 
-    const valueToSave =
+    // Drive URL fields: owner/admin only; normalize URL
+    const isDriveUrlField =
+      body.field === "driveVideos" ||
+      body.field === "drivePhotos";
+
+    if (isDriveUrlField) {
+      const staffCheck =
+        await requireStaff(profile);
+
+      if (!staffCheck.ok) {
+        return staffCheck.response;
+      }
+    }
+
+    let valueToSave: string | null;
+
+    if (
       body.field === "birthday" &&
       normalizedValue === ""
-        ? null
-        : normalizedValue;
+    ) {
+      valueToSave = null;
+    } else if (isDriveUrlField) {
+      valueToSave =
+        normalizeUrl(normalizedValue) || null;
+    } else {
+      valueToSave = normalizedValue;
+    }
+
+    const supabase =
+      await createClient();
+
+    const {
+      data: oldModel,
+    } = await supabase
+      .from("models")
+      .select(dbField)
+      .eq("id", modelId)
+      .maybeSingle();
+
+    const oldModelRow =
+      oldModel as Record<string, unknown> | null;
 
     const {
       error: updateModelError,
@@ -216,19 +341,35 @@ export async function PATCH(
       .update({
         [dbField]: valueToSave,
       })
-      .eq("id", body.modelId);
+      .eq("id", modelId);
 
     if (updateModelError) {
+      console.error(
+        "Erro ao atualizar modelo:",
+        updateModelError,
+      );
       return NextResponse.json(
         {
-          error:
-            updateModelError.message,
+          error: "Erro interno.",
         },
         {
           status: 500,
         },
       );
     }
+
+    await writeAuditLog({
+      modelId,
+      actorId: profile.id,
+      actorName: profile.fullName,
+      actorRole: profile.role,
+      field: body.field,
+      oldValue:
+        oldModelRow?.[dbField] != null
+          ? String(oldModelRow[dbField])
+          : null,
+      newValue: valueToSave,
+    });
 
     return NextResponse.json({
       success: true,

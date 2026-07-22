@@ -133,6 +133,8 @@ export default async function ModelAdminPage({
         drive_onlyfans,
         drive_instagram,
         drive_twitter,
+        drive_videos_url,
+        drive_photos_url,
         status,
         onboarding_complete,
         active,
@@ -274,6 +276,12 @@ export default async function ModelAdminPage({
 
     driveTwitter:
       modelRow.drive_twitter ?? null,
+
+    driveVideosUrl:
+      modelRow.drive_videos_url ?? null,
+
+    drivePhotosUrl:
+      modelRow.drive_photos_url ?? null,
 
     status:
       modelRow.status ?? null,
