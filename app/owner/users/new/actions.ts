@@ -32,23 +32,15 @@ function createSlug(fullName: string) {
   return `${baseSlug}-${uniqueSuffix}`;
 }
 
-function createModelPassword(fullName: string, whatsapp: string) {
-  const nameParts = fullName.trim().split(/\s+/);
-  const lastName = nameParts[nameParts.length - 1];
-
-  const cleanLastName = removeAccents(lastName).replace(
-    /[^a-zA-Z0-9]/g,
-    "",
-  );
-
-  const phoneDigits = normalizePhone(whatsapp);
-  const lastFourDigits = phoneDigits.slice(-4);
-
-  if (!cleanLastName || lastFourDigits.length !== 4) {
-    return null;
+function generateStrongPassword(): string {
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*";
+  const array = new Uint32Array(16);
+  crypto.getRandomValues(array);
+  let password = "";
+  for (let i = 0; i < 16; i++) {
+    password += chars[array[i] % chars.length];
   }
-
-  return `${cleanLastName}${lastFourDigits}`;
+  return password;
 }
 
 export async function createUserAction(
@@ -110,28 +102,16 @@ export async function createUserAction(
 
   let password = requestedPassword;
 
-  if (role === "model") {
-    const generatedPassword = createModelPassword(
-      fullName,
-      whatsapp,
-    );
-
-    if (!generatedPassword) {
-      return {
-        success: false,
-        message:
-          "Não foi possível gerar a senha temporária da modelo.",
-      };
-    }
-
-    password = generatedPassword;
+  if (!password) {
+    // Generate strong random password for all roles if not provided
+    password = generateStrongPassword();
   }
 
-  if (password.length < 6) {
+  if (password.length < 8) {
     return {
       success: false,
       message:
-        "A senha deve ter pelo menos 6 caracteres.",
+        "A senha deve ter pelo menos 8 caracteres.",
     };
   }
 
@@ -209,6 +189,7 @@ export async function createUserAction(
         full_name: fullName,
         role,
         active: true,
+        must_change_password: true,
       });
 
   if (profileError) {

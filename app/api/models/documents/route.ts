@@ -93,13 +93,47 @@ export async function GET(
       );
     }
 
-    const admin =
-      createAdminClient();
+    // Verify model access based on role
+    let canAccess = false;
 
+    if (
+      profile.role === "owner" ||
+      profile.role === "administrator"
+    ) {
+      // Staff can access all models
+      const { data: model } = await supabase
+        .from("models")
+        .select("id")
+        .eq("id", modelId)
+        .maybeSingle();
+      canAccess = !!model;
+    } else if (profile.role === "representative") {
+      // Rep can only access assigned models
+      const { data: model } = await supabase
+        .from("models")
+        .select("id")
+        .eq("id", modelId)
+        .eq("representative_id", user.id)
+        .maybeSingle();
+      canAccess = !!model;
+    }
+
+    if (!canAccess) {
+      return NextResponse.json(
+        {
+          error: "Sem permissão.",
+        },
+        {
+          status: 403,
+        },
+      );
+    }
+
+    // Use request-scoped client for data access (RLS enforced)
     const {
       data: documents,
       error: documentsError,
-    } = await admin
+    } = await supabase
       .from("model_documents")
       .select(
         `
@@ -120,16 +154,23 @@ export async function GET(
       });
 
     if (documentsError) {
+      console.error(
+        "Erro ao carregar documentos:",
+        documentsError,
+      );
       return NextResponse.json(
         {
           error:
-            documentsError.message,
+            "Erro interno ao carregar documentos.",
         },
         {
           status: 500,
         },
       );
     }
+
+    const admin =
+      createAdminClient();
 
     const documentsWithUrls =
       await Promise.all(
@@ -327,30 +368,21 @@ export async function POST(
       );
     }
 
-    const admin =
-      createAdminClient();
-
+    // Verify model exists using request-scoped client
     const {
       data: model,
       error: modelError,
-    } = await admin
+    } = await supabase
       .from("models")
       .select("id")
       .eq("id", modelId)
       .maybeSingle();
 
-    if (modelError) {
-      return NextResponse.json(
-        {
-          error: modelError.message,
-        },
-        {
-          status: 500,
-        },
+    if (modelError || !model) {
+      console.error(
+        "Erro ao verificar modelo:",
+        modelError,
       );
-    }
-
-    if (!model) {
       return NextResponse.json(
         {
           error:
@@ -365,7 +397,7 @@ export async function POST(
     const {
       count,
       error: countError,
-    } = await admin
+    } = await supabase
       .from("model_documents")
       .select("id", {
         count: "exact",
@@ -374,9 +406,14 @@ export async function POST(
       .eq("model_id", modelId);
 
     if (countError) {
+      console.error(
+        "Erro ao contar documentos:",
+        countError,
+      );
       return NextResponse.json(
         {
-          error: countError.message,
+          error:
+            "Erro interno ao verificar limite de documentos.",
         },
         {
           status: 500,
@@ -412,6 +449,9 @@ export async function POST(
         await uploadedFile.arrayBuffer(),
       );
 
+    const admin =
+      createAdminClient();
+
     const {
       error: uploadError,
     } = await admin.storage
@@ -428,9 +468,14 @@ export async function POST(
       );
 
     if (uploadError) {
+      console.error(
+        "Erro ao fazer upload:",
+        uploadError,
+      );
       return NextResponse.json(
         {
-          error: uploadError.message,
+          error:
+            "Erro ao fazer upload do arquivo.",
         },
         {
           status: 500,
@@ -438,10 +483,11 @@ export async function POST(
       );
     }
 
+    // Use request-scoped client for DB insert (RLS enforced)
     const {
       data: document,
       error: insertError,
-    } = await admin
+    } = await supabase
       .from("model_documents")
       .insert({
         model_id: modelId,
@@ -477,9 +523,14 @@ export async function POST(
         .from(BUCKET_NAME)
         .remove([storagePath]);
 
+      console.error(
+        "Erro ao inserir documento:",
+        insertError,
+      );
       return NextResponse.json(
         {
-          error: insertError.message,
+          error:
+            "Erro interno ao salvar documento.",
         },
         {
           status: 500,

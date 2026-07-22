@@ -6,6 +6,7 @@ import OnlyFansTab from "@/components/admin/model/OnlyFansTab";
 import PlatformsTab from "@/components/admin/model/PlatformsTab";
 import OverviewTab from "@/components/admin/model/OverviewTab";
 import ChecklistTab from "@/components/admin/model/ChecklistTab";
+import PaymentsTab from "@/components/admin/model/PaymentsTab";
 
 import { useState } from "react";
 import Link from "next/link";
@@ -223,9 +224,9 @@ export default function ModelAdminClient({
                         )}
 
                         {activeTab === "payments" && (
-                            <TemporarySection
-                                title="Pagamentos"
-                                description="PIX, banco, porcentagens e situação dos pagamentos."
+                            <PaymentsTab
+                                modelId={model.id}
+                                currentUserRole={currentUserRole}
                             />
                         )}
 

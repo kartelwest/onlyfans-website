@@ -122,13 +122,57 @@ export async function GET(
       );
     }
 
-    const admin =
-      createAdminClient();
+    // Verify model access based on role
+    const supabaseForCheck = await createClient();
+    let canAccess = false;
 
+    if (
+      auth.profile.role === "owner" ||
+      auth.profile.role === "administrator"
+    ) {
+      // Staff can access all models
+      const { data: model } = await supabaseForCheck
+        .from("models")
+        .select("id")
+        .eq("id", modelId)
+        .maybeSingle();
+      canAccess = !!model;
+    } else if (auth.profile.role === "representative") {
+      // Rep can only access assigned models
+      const { data: model } = await supabaseForCheck
+        .from("models")
+        .select("id")
+        .eq("id", modelId)
+        .eq("representative_id", auth.user.id)
+        .maybeSingle();
+      canAccess = !!model;
+    } else if (auth.profile.role === "model") {
+      // Model can only access own onboarding
+      const { data: model } = await supabaseForCheck
+        .from("models")
+        .select("id")
+        .eq("id", modelId)
+        .eq("profile_id", auth.user.id)
+        .maybeSingle();
+      canAccess = !!model;
+    }
+
+    if (!canAccess) {
+      return NextResponse.json(
+        {
+          error: "Sem permissão.",
+        },
+        {
+          status: 403,
+        },
+      );
+    }
+
+    // Use request-scoped client for data access (RLS enforced)
     const {
       data: items,
       error: itemsError,
-    } = await admin
+    } = await supabaseForCheck
       .from("model_onboarding_items")
       .select(
         `
@@ -161,9 +205,14 @@ export async function GET(
       });
 
     if (itemsError) {
+      console.error(
+        "Erro ao carregar onboarding:",
+        itemsError,
+      );
       return NextResponse.json(
         {
-          error: itemsError.message,
+          error:
+            "Erro interno ao carregar o onboarding.",
         },
         {
           status: 500,
@@ -266,13 +315,12 @@ export async function PATCH(
       );
     }
 
-    const admin =
-      createAdminClient();
+    const supabaseForUpdate = await createClient();
 
     const {
       data: existingItem,
       error: existingItemError,
-    } = await admin
+    } = await supabaseForUpdate
       .from("model_onboarding_items")
       .select(
         "id, model_id, completed, notes",
@@ -282,10 +330,14 @@ export async function PATCH(
       .maybeSingle();
 
     if (existingItemError) {
+      console.error(
+        "Erro ao buscar etapa:",
+        existingItemError,
+      );
       return NextResponse.json(
         {
           error:
-            existingItemError.message,
+            "Erro interno ao buscar etapa.",
         },
         {
           status: 500,
@@ -349,7 +401,7 @@ export async function PATCH(
     const {
       data: updatedItem,
       error: updateError,
-    } = await admin
+    } = await supabaseForUpdate
       .from("model_onboarding_items")
       .update(updateValues)
       .eq("id", body.itemId)
@@ -378,9 +430,14 @@ export async function PATCH(
       .single<OnboardingItemRecord>();
 
     if (updateError) {
+      console.error(
+        "Erro ao atualizar etapa:",
+        updateError,
+      );
       return NextResponse.json(
         {
-          error: updateError.message,
+          error:
+            "Erro interno ao atualizar etapa.",
         },
         {
           status: 500,
@@ -391,7 +448,7 @@ export async function PATCH(
     const {
       data: allItems,
       error: summaryError,
-    } = await admin
+    } = await supabaseForUpdate
       .from("model_onboarding_items")
       .select("completed")
       .eq("model_id", body.modelId)
@@ -401,10 +458,14 @@ export async function PATCH(
       );
 
     if (summaryError) {
+      console.error(
+        "Erro ao calcular resumo:",
+        summaryError,
+      );
       return NextResponse.json(
         {
           error:
-            summaryError.message,
+            "Erro interno ao calcular resumo.",
         },
         {
           status: 500,

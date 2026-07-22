@@ -74,12 +74,11 @@ export async function GET(
             );
         }
 
-        const adminSupabase =
-            createAdminClient();
+        const supabaseForCheck = await createClient();
 
         const modelAccess =
             await verifyModelAccess(
-                adminSupabase,
+                supabaseForCheck,
                 modelId,
                 profile,
             );
@@ -88,10 +87,11 @@ export async function GET(
             return modelAccess.response;
         }
 
+        // Use request-scoped client for data access (RLS enforced)
         const {
             data: notes,
             error: notesError,
-        } = await adminSupabase
+        } = await supabaseForCheck
             .from("model_notes")
             .select(
                 `
@@ -139,7 +139,7 @@ export async function GET(
         const {
             data: history,
             error: historyError,
-        } = await adminSupabase
+        } = await supabaseForCheck
             .from("model_note_history")
             .select(
                 `

@@ -4,99 +4,81 @@ import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
-type ProfileRole =
-  | "owner"
-  | "administrator"
-  | "representative"
-  | "model";
-
-export default function LoginPage() {
+export default function ChangePasswordPage() {
   const router = useRouter();
   const supabase = createClient();
 
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const [loading, setLoading] = useState(false);
 
-  async function handleLogin(event: FormEvent<HTMLFormElement>) {
+  async function handleChangePassword(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
     setLoading(true);
     setErrorMessage("");
 
     try {
-      const { data: loginData, error: loginError } =
-        await supabase.auth.signInWithPassword({
-          email: email.trim(),
-          password,
-        });
-
-      if (loginError) {
-        throw new Error("Email ou senha incorretos.");
+      if (newPassword.length < 8) {
+        throw new Error("A senha deve ter pelo menos 8 caracteres.");
       }
 
-      const user = loginData.user;
-
-      if (!user) {
-        throw new Error("Não foi possível acessar esta conta.");
+      if (newPassword !== confirmPassword) {
+        throw new Error("As senhas não coincidem.");
       }
 
-      const { data: profile, error: profileError } = await supabase
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+
+      if (userError || !user) {
+        throw new Error("Sessão expirada. Entre novamente.");
+      }
+
+      const { error: updateError } = await supabase.auth.updateUser({
+        password: newPassword,
+      });
+
+      if (updateError) {
+        throw new Error("Erro ao atualizar senha.");
+      }
+
+      // Clear must_change_password flag
+      const { error: profileError } = await supabase
         .from("profiles")
-        .select("role, active, must_change_password")
+        .update({ must_change_password: false })
+        .eq("id", user.id);
+
+      if (profileError) {
+        console.error("Erro ao atualizar perfil:", profileError);
+      }
+
+      // Get role to redirect appropriately
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("role")
         .eq("id", user.id)
         .single();
 
-      if (profileError || !profile) {
-        await supabase.auth.signOut();
-        throw new Error("Perfil de acesso não encontrado.");
-      }
-
-      if (!profile.active) {
-        await supabase.auth.signOut();
-        throw new Error("Esta conta está desativada.");
-      }
-
-      if (profile.must_change_password) {
-        router.replace("/alterar-senha");
-        router.refresh();
-        return;
-      }
-
-      const role = profile.role as ProfileRole;
+      const role = profile?.role;
 
       if (role === "owner") {
         router.replace("/owner");
-        router.refresh();
-        return;
-      }
-
-      if (role === "administrator") {
+      } else if (role === "administrator") {
         router.replace("/admin/models");
-        router.refresh();
-        return;
-      }
-
-      if (role === "representative") {
+      } else if (role === "representative") {
         router.replace("/representative");
-        router.refresh();
-        return;
-      }
-
-      if (role === "model") {
+      } else if (role === "model") {
         router.replace("/area-da-modelo");
-        router.refresh();
-        return;
+      } else {
+        router.replace("/login");
       }
 
-      await supabase.auth.signOut();
-      throw new Error("Esta conta não possui uma função válida.");
+      router.refresh();
     } catch (error) {
       const message =
         error instanceof Error
           ? error.message
-          : "Ocorreu um erro ao entrar.";
+          : "Ocorreu um erro ao alterar senha.";
 
       setErrorMessage(message);
     } finally {
@@ -113,51 +95,53 @@ export default function LoginPage() {
           </p>
 
           <h1 className="mt-3 text-3xl font-bold text-[#4b2438]">
-            Portal de Acesso
+            Alterar Senha
           </h1>
 
           <p className="mt-3 text-sm leading-6 text-[#765c68]">
-            Entre com seu email e sua senha para acessar sua área.
+            Por segurança, você precisa alterar sua senha antes de continuar.
           </p>
         </div>
 
-        <form onSubmit={handleLogin} className="space-y-5">
+        <form onSubmit={handleChangePassword} className="space-y-5">
           <div>
             <label
-              htmlFor="email"
+              htmlFor="newPassword"
               className="mb-2 block text-sm font-semibold text-[#4b2438]"
             >
-              Email
+              Nova Senha
             </label>
 
             <input
-              id="email"
-              type="email"
-              autoComplete="email"
-              value={email}
-              onChange={(event) => setEmail(event.target.value)}
-              placeholder="seuemail@exemplo.com"
+              id="newPassword"
+              type="password"
+              autoComplete="new-password"
+              value={newPassword}
+              onChange={(event) => setNewPassword(event.target.value)}
+              placeholder="Digite sua nova senha"
               required
+              minLength={8}
               className="w-full rounded-2xl border border-[#d8c7cf] bg-[#fffaf6] px-4 py-3 text-[#321725] outline-none transition focus:border-[#b06a87] focus:ring-4 focus:ring-[#b06a87]/15"
             />
           </div>
 
           <div>
             <label
-              htmlFor="password"
+              htmlFor="confirmPassword"
               className="mb-2 block text-sm font-semibold text-[#4b2438]"
             >
-              Senha
+              Confirmar Senha
             </label>
 
             <input
-              id="password"
+              id="confirmPassword"
               type="password"
-              autoComplete="current-password"
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-              placeholder="Digite sua senha"
+              autoComplete="new-password"
+              value={confirmPassword}
+              onChange={(event) => setConfirmPassword(event.target.value)}
+              placeholder="Confirme sua nova senha"
               required
+              minLength={8}
               className="w-full rounded-2xl border border-[#d8c7cf] bg-[#fffaf6] px-4 py-3 text-[#321725] outline-none transition focus:border-[#b06a87] focus:ring-4 focus:ring-[#b06a87]/15"
             />
           </div>
@@ -173,7 +157,7 @@ export default function LoginPage() {
             disabled={loading}
             className="w-full rounded-2xl bg-[#4b2438] px-5 py-3.5 text-sm font-bold uppercase tracking-[0.16em] text-white transition hover:bg-[#321725] disabled:cursor-not-allowed disabled:opacity-60"
           >
-            {loading ? "Entrando..." : "Entrar"}
+            {loading ? "Alterando..." : "Alterar Senha"}
           </button>
         </form>
       </section>

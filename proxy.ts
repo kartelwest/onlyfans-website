@@ -42,6 +42,31 @@ export async function proxy(request: NextRequest) {
 
   await supabase.auth.getUser();
 
+  // Coarse gating for authenticated routes (defense in depth)
+  const { pathname } = request.nextUrl;
+  const protectedRoutes = [
+    "/owner",
+    "/admin",
+    "/administrator",
+    "/representative",
+    "/area-da-modelo",
+    "/alterar-senha",
+  ];
+
+  const isProtectedRoute = protectedRoutes.some(
+    (route) => pathname.startsWith(route)
+  );
+
+  if (isProtectedRoute) {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      return NextResponse.redirect(new URL("/login", request.url));
+    }
+  }
+
   return response;
 }
 

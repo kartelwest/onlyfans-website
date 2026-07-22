@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { redirect } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 
 import { createClient } from "@/lib/supabase/server";
 
@@ -7,14 +7,19 @@ type Model = {
   id: string;
   display_name: string;
   stage_name: string | null;
+  birthday: string | null;
+  nationality: string | null;
+  city: string | null;
+  email: string | null;
+  whatsapp: string | null;
   instagram: string | null;
   twitter: string | null;
   onlyfans: string | null;
   onboarding_percentage: number;
   active: boolean;
-  content_drive_url: string | null;
   latest_note_summary: string | null;
   last_login_at: string | null;
+  created_at: string;
 };
 
 type ModelNote = {
@@ -25,7 +30,12 @@ type ModelNote = {
   created_at: string;
 };
 
-export default async function AreaDaModeloPage() {
+export default async function RepresentativeModelPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = await params;
   const supabase = await createClient();
 
   const {
@@ -45,11 +55,12 @@ export default async function AreaDaModeloPage() {
   if (
     !profile ||
     !profile.active ||
-    profile.role !== "model"
+    profile.role !== "representative"
   ) {
     redirect("/login");
   }
 
+  // Verify model is assigned to this representative
   const { data: model, error: modelError } = await supabase
     .from("models")
     .select(
@@ -57,101 +68,107 @@ export default async function AreaDaModeloPage() {
         id,
         display_name,
         stage_name,
+        birthday,
+        nationality,
+        city,
+        email,
+        whatsapp,
         instagram,
         twitter,
         onlyfans,
         onboarding_percentage,
         active,
-        content_drive_url,
         latest_note_summary,
-        last_login_at
+        last_login_at,
+        created_at
       `
     )
-    .eq("profile_id", user.id)
+    .eq("id", id)
+    .eq("representative_id", user.id)
     .maybeSingle();
 
   if (modelError || !model) {
-    return (
-      <main className="min-h-screen bg-[#f7f1ec] px-6 py-12">
-        <div className="mx-auto max-w-6xl">
-          <p className="text-sm font-semibold uppercase tracking-[0.24em] text-[#b06a87]">
-            KARRAY Models
-          </p>
-
-          <h1 className="mt-3 text-4xl font-bold text-[#4b2438]">
-            Área da Modelo
-          </h1>
-
-          <p className="mt-3 text-red-600">
-            Perfil não encontrado. Entre em contato com a agência.
-          </p>
-        </div>
-      </main>
-    );
+    notFound();
   }
 
   const { data: notes, error: notesError } = await supabase
     .from("model_notes")
     .select("id, content, author_name, author_role, created_at")
-    .eq("model_id", model.id)
+    .eq("model_id", id)
     .order("created_at", { ascending: false })
-    .limit(5);
+    .limit(10);
 
   const modelNotes = (notes ?? []) as ModelNote[];
 
   return (
     <main className="min-h-screen bg-[#f7f1ec] px-6 py-12">
       <div className="mx-auto max-w-6xl">
-        <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.24em] text-[#b06a87]">
-              KARRAY Models
-            </p>
+        <Link
+          href="/representative"
+          className="text-sm font-semibold text-[#b06a87] hover:text-[#4b2438]"
+        >
+          ← Voltar para modelos
+        </Link>
 
-            <h1 className="mt-3 text-4xl font-bold text-[#4b2438]">
-              Área da Modelo
-            </h1>
-
-            <p className="mt-3 text-[#765c68]">
-              Bem-vinda, {model.display_name}
-            </p>
-          </div>
-
-          <Link
-            href="/login"
-            className="text-sm font-semibold text-[#b06a87] hover:text-[#4b2438]"
-          >
-            Sair
-          </Link>
-        </div>
-
-        <div className="grid gap-8 lg:grid-cols-3">
+        <div className="mt-6 grid gap-8 lg:grid-cols-3">
           <div className="lg:col-span-2 space-y-6">
             <div className="rounded-2xl border border-[#eadfd8] bg-white p-6">
               <h2 className="text-xl font-bold text-[#4b2438]">
-                Suas Plataformas
+                {model.display_name}
               </h2>
 
+              {model.stage_name && (
+                <p className="mt-1 text-[#765c68]">
+                  Nome artístico: {model.stage_name}
+                </p>
+              )}
+
               <div className="mt-4 grid gap-4 sm:grid-cols-2">
-                <PlatformCard
-                  name="Instagram"
-                  username={model.instagram}
+                <InfoItem
+                  label="Data de nascimento"
+                  value={
+                    model.birthday
+                      ? new Date(model.birthday).toLocaleDateString(
+                          "pt-BR"
+                        )
+                      : "Não informado"
+                  }
                 />
-                <PlatformCard
-                  name="Twitter"
-                  username={model.twitter}
+                <InfoItem
+                  label="Nacionalidade"
+                  value={model.nationality || "Não informado"}
                 />
-                <PlatformCard
-                  name="OnlyFans"
-                  username={model.onlyfans}
+                <InfoItem
+                  label="Cidade"
+                  value={model.city || "Não informado"}
+                />
+                <InfoItem
+                  label="E-mail"
+                  value={model.email || "Não informado"}
+                />
+                <InfoItem
+                  label="WhatsApp"
+                  value={model.whatsapp || "Não informado"}
+                />
+                <InfoItem
+                  label="Instagram"
+                  value={model.instagram || "Não informado"}
+                />
+                <InfoItem
+                  label="Twitter"
+                  value={model.twitter || "Não informado"}
+                />
+                <InfoItem
+                  label="OnlyFans"
+                  value={model.onlyfans || "Não informado"}
                 />
               </div>
             </div>
 
             <div className="rounded-2xl border border-[#eadfd8] bg-white p-6">
-              <h2 className="text-xl font-bold text-[#4b2438]">
+              <h3 className="text-lg font-bold text-[#4b2438]">
                 Progresso do Onboarding
-              </h2>
+              </h3>
 
               <div className="mt-4">
                 <div className="flex items-center justify-between">
@@ -180,35 +197,8 @@ export default async function AreaDaModeloPage() {
                     }}
                   />
                 </div>
-
-                <p className="mt-4 text-sm text-[#765c68]">
-                  {model.onboarding_percentage === 100
-                    ? "Onboarding concluído!"
-                    : "Onboarding em andamento"}
-                </p>
               </div>
             </div>
-
-            {model.content_drive_url && (
-              <div className="rounded-2xl border border-[#b06a87] bg-[#4b2438] p-6">
-                <h2 className="text-xl font-bold text-white">
-                  Enviar Conteúdo
-                </h2>
-
-                <p className="mt-2 text-sm text-white/80">
-                  Acesse sua pasta do Google Drive para enviar fotos e vídeos.
-                </p>
-
-                <a
-                  href={model.content_drive_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="mt-4 inline-flex items-center rounded-xl bg-white px-6 py-3 text-sm font-bold text-[#4b2438] transition hover:bg-[#f7f1ec]"
-                >
-                  Acessar Pasta de Conteúdo
-                </a>
-              </div>
-            )}
           </div>
 
           <div className="space-y-6">
@@ -245,6 +235,17 @@ export default async function AreaDaModeloPage() {
                     </span>
                   </div>
                 )}
+
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-[#765c68]">
+                    Cadastrada em
+                  </span>
+                  <span className="text-sm font-semibold text-[#4b2438]">
+                    {new Date(
+                      model.created_at
+                    ).toLocaleDateString("pt-BR")}
+                  </span>
+                </div>
               </div>
             </div>
 
@@ -281,6 +282,56 @@ export default async function AreaDaModeloPage() {
                   ))}
                 </div>
               )}
+
+              <form
+                action={async (formData: FormData) => {
+                  "use server";
+
+                  const supabase = await createClient();
+                  const content = formData.get("content") as string;
+
+                  if (!content || !content.trim()) {
+                    return;
+                  }
+
+                  const {
+                    data: { user },
+                  } = await supabase.auth.getUser();
+
+                  if (!user) {
+                    return;
+                  }
+
+                  const { data: profile } = await supabase
+                    .from("profiles")
+                    .select("full_name, role")
+                    .eq("id", user.id)
+                    .single();
+
+                  await supabase.from("model_notes").insert({
+                    model_id: id,
+                    author_id: user.id,
+                    author_name: profile?.full_name || null,
+                    author_role: profile?.role || null,
+                    content: content.trim(),
+                  });
+                }}
+                className="mt-4"
+              >
+                <textarea
+                  name="content"
+                  placeholder="Adicionar uma nota..."
+                  rows={3}
+                  className="w-full rounded-xl border border-[#eadfd8] bg-[#fffaf6] px-4 py-3 text-sm text-[#4b2438] outline-none focus:border-[#b06a87] focus:ring-4 focus:ring-[#b06a87]/15"
+                  required
+                />
+                <button
+                  type="submit"
+                  className="mt-2 w-full rounded-xl bg-[#4b2438] px-4 py-2 text-sm font-bold text-white transition hover:bg-[#321725]"
+                >
+                  Adicionar Nota
+                </button>
+              </form>
             </div>
           </div>
         </div>
@@ -289,18 +340,14 @@ export default async function AreaDaModeloPage() {
   );
 }
 
-function PlatformCard({
-  name,
-  username,
-}: {
-  name: string;
-  username: string | null;
-}) {
+function InfoItem({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-xl border border-[#eadfd8] bg-[#f7f1ec] p-4">
-      <p className="text-sm font-semibold text-[#765c68]">{name}</p>
+    <div>
+      <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#765c68]">
+        {label}
+      </p>
       <p className="mt-1 text-sm font-medium text-[#4b2438]">
-        {username || "Não configurado"}
+        {value}
       </p>
     </div>
   );
