@@ -27,10 +27,13 @@ type EditableField =
   | "whatsapp";
 
 export default function OverviewTab({
-  model,
+  model: initialModel,
   checklist,
   currentUserRole,
 }: OverviewTabProps) {
+  const [model, setModel] =
+    useState(initialModel);
+
   const [isEditing, setIsEditing] =
     useState(false);
 
@@ -69,6 +72,11 @@ export default function OverviewTab({
           "Não foi possível salvar.",
       );
     }
+
+    setModel((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
   }
 
   return (
