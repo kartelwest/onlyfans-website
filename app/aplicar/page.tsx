@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 
 import { WHATSAPP_URL } from "@/lib/constants/whatsapp";
+import SpanishDatePicker from "@/components/ui/SpanishDatePicker";
 
 type FormState = {
     nomeCompleto: string;
@@ -210,18 +211,18 @@ export default function ApplyPage() {
                                     <span className="text-sm font-semibold uppercase tracking-[0.12em] text-[#8f425a]">
                                         Data de nascimento
                                     </span>
-                                    <input
-                                        type="date"
-                                        required
-                                        value={form.dataNascimento}
-                                        onChange={(event) =>
-                                            updateField(
-                                                "dataNascimento",
-                                                event.target.value,
-                                            )
-                                        }
-                                        className="mt-3 w-full rounded-xl border border-[#dfcbd2] bg-[#fffdfb] px-4 py-4 outline-none transition focus:border-[#c65f7c]"
-                                    />
+                                    <div className="mt-3">
+                                        <SpanishDatePicker
+                                            required
+                                            value={form.dataNascimento}
+                                            onChange={(value) =>
+                                                updateField(
+                                                    "dataNascimento",
+                                                    value,
+                                                )
+                                            }
+                                        />
+                                    </div>
                                 </label>
 
                                 <label className="block">
