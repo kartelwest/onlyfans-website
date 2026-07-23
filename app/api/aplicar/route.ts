@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import type { PostgrestError } from "@supabase/supabase-js";
 
 import { createAdminClient } from "@/lib/supabase/admin";
 import {
@@ -147,7 +148,7 @@ export async function POST(request: Request) {
       );
 
       return NextResponse.json(
-        { error: "Não foi possível registrar a candidatura." },
+        { error: getApplicantInsertErrorMessage(createModelError) },
         { status: 500 },
       );
     }
@@ -230,60 +231,52 @@ async function createApplicationNotes(
 ) {
   const timestamp = formatBrazilDateTime(new Date());
 
-  const frequencyNote =
-    `NOVO CANDIDATO — [${timestamp}]\n` +
-    `COM QUE FREQUÊNCIA PODE PRODUZIR CONTEÚDO? — ${answers.frequenciaConteudo}`;
+  const body = buildApplicationNote(timestamp, answers);
 
-  const motivationNote =
-    `NOVO CANDIDATO — [${timestamp}]\n` +
-    `Por que deseja entrar para nossa agência — ${answers.motivoCandidatura}`;
-
-  const additionalDetailsNote = buildAdditionalDetailsNote(
-    timestamp,
-    answers,
-  );
-
-  const { error } = await adminSupabase.from("model_notes").insert([
-    {
+  const { data: createdNote, error: createNoteError } = await adminSupabase
+    .from("model_notes")
+    .insert({
       model_id: modelId,
-      author_id: null,
-      author_name: NOTE_AUTHOR_NAME,
-      author_role: null,
-      body: frequencyNote,
+      body,
       priority: "normal",
       created_by_name: NOTE_AUTHOR_NAME,
-    },
-    {
-      model_id: modelId,
-      author_id: null,
-      author_name: NOTE_AUTHOR_NAME,
-      author_role: null,
-      body: motivationNote,
-      priority: "normal",
-      created_by_name: NOTE_AUTHOR_NAME,
-    },
-    {
-      model_id: modelId,
-      author_id: null,
-      author_name: NOTE_AUTHOR_NAME,
-      author_role: null,
-      body: additionalDetailsNote,
-      priority: "normal",
-      created_by_name: NOTE_AUTHOR_NAME,
-    },
-  ]);
+    })
+    .select("id")
+    .single();
 
-  if (error) {
+  if (createNoteError || !createdNote) {
     console.error(
-      "Erro ao registrar notas da candidatura:",
-      error,
+      "Erro ao registrar nota da candidatura:",
+      createNoteError,
+    );
+
+    return;
+  }
+
+  const { error: historyError } = await adminSupabase
+    .from("model_note_history")
+    .insert({
+      note_id: createdNote.id,
+      model_id: modelId,
+      action: "created",
+      original_body: null,
+      updated_body: body,
+      editor_name: NOTE_AUTHOR_NAME,
+    });
+
+  if (historyError) {
+    console.error(
+      "Erro ao registrar histórico da nota da candidatura:",
+      historyError,
     );
   }
 }
 
-function buildAdditionalDetailsNote(
+function buildApplicationNote(
   timestamp: string,
   answers: {
+    frequenciaConteudo: string;
+    motivoCandidatura: string;
     cidade: string;
     estado: string;
     pais: string;
@@ -298,7 +291,8 @@ function buildAdditionalDetailsNote(
 ) {
   const lines = [
     `NOVO CANDIDATO — [${timestamp}]`,
-    "Detalhes adicionais da candidatura:",
+    `COM QUE FREQUÊNCIA PODE PRODUZIR CONTEÚDO? — ${answers.frequenciaConteudo}`,
+    `Por que deseja entrar para nossa agência — ${answers.motivoCandidatura}`,
     `Localização — ${answers.cidade}, ${answers.estado}, ${answers.pais}`,
     `Indicação — ${answers.representanteIndicacao}`,
     `Já possui OnlyFans — ${answers.possuiOnlyfans === "sim" ? "Sim" : "Não"}`,
@@ -323,6 +317,21 @@ function buildAdditionalDetailsNote(
   lines.push(`Moeda preferida — ${answers.moedaPreferida}`);
 
   return lines.join("\n");
+}
+
+function getApplicantInsertErrorMessage(
+  error: PostgrestError | null,
+): string {
+  switch (error?.code) {
+    case "22P02":
+      return "Não foi possível registrar a candidatura: o status inicial da candidata não é reconhecido pelo banco de dados. Contate o suporte.";
+    case "23505":
+      return "Já existe uma candidatura registrada com esse identificador. Entre em contato com o suporte.";
+    case "23502":
+      return "Não foi possível registrar a candidatura: faltam informações obrigatórias.";
+    default:
+      return "Não foi possível registrar a candidatura. Tente novamente em instantes ou entre em contato com o suporte.";
+  }
 }
 
 function isAtLeast18(dateOfBirth: string): boolean {
