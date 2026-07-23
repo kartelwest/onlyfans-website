@@ -3,7 +3,7 @@
 import { FormEvent, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
-import SpanishDatePicker from "@/components/ui/SpanishDatePicker";
+import BirthdayDatePicker from "@/components/ui/BirthdayDatePicker";
 
 type NewUserRole =
   | "model"
@@ -251,7 +251,7 @@ export default function NewUserForm({
         {role === "model" && (
           <>
             <FormField label="Data de nascimento">
-              <SpanishDatePicker
+              <BirthdayDatePicker
                 theme="dark"
                 value={form.dateOfBirth}
                 onChange={(value) =>
