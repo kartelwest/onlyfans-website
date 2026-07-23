@@ -5,9 +5,9 @@ import { createClient } from "@/lib/supabase/server";
 
 type ModelNote = {
   id: string;
-  content: string;
-  author_name: string | null;
-  author_role: string | null;
+  body: string;
+  created_by_name: string | null;
+  created_by_role: string | null;
   created_at: string;
 };
 
@@ -74,7 +74,7 @@ export default async function RepresentativeModelPage({
 
   const { data: notes } = await supabase
     .from("model_notes")
-    .select("id, content, author_name, author_role, created_at")
+    .select("id, body, created_by_name, created_by_role, created_at")
     .eq("model_id", id)
     .order("created_at", { ascending: false })
     .limit(10);
@@ -248,7 +248,7 @@ export default async function RepresentativeModelPage({
                     >
                       <div className="flex items-center justify-between gap-2">
                         <span className="text-xs font-semibold text-[#4b2438]">
-                          {note.author_name || "Sistema"}
+                          {note.created_by_name || "Sistema"}
                         </span>
                         <span className="text-xs text-[#765c68]">
                           {new Date(
@@ -257,7 +257,7 @@ export default async function RepresentativeModelPage({
                         </span>
                       </div>
                       <p className="mt-2 text-sm text-[#4b2438]">
-                        {note.content}
+                        {note.body}
                       </p>
                     </div>
                   ))}
@@ -291,10 +291,10 @@ export default async function RepresentativeModelPage({
 
                   await supabase.from("model_notes").insert({
                     model_id: id,
-                    author_id: user.id,
-                    author_name: profile?.full_name || null,
-                    author_role: profile?.role || null,
-                    content: content.trim(),
+                    created_by: user.id,
+                    created_by_name: profile?.full_name || null,
+                    created_by_role: profile?.role || null,
+                    body: content.trim(),
                   });
                 }}
                 className="mt-4"

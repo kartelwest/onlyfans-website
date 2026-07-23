@@ -502,6 +502,19 @@ export default async function AdminModelsPage() {
               </tbody>
             </table>
           </div>
+
+          {models.length > 0 && (
+            <ViewAsPicker
+              options={models.map((model) => ({
+                id: model.id,
+                label:
+                  model.profile?.full_name?.trim() ||
+                  model.display_name,
+              }))}
+              basePath="/admin/view-as/model"
+              fieldLabel="Visualizar como a modelo veria"
+            />
+          )}
         </details>
 
         <ProfileListSection
@@ -509,6 +522,8 @@ export default async function AdminModelsPage() {
           profiles={representatives}
           emptyMessage="Nenhum representante cadastrado."
           isOwner={role === "owner"}
+          viewAsBasePath="/admin/view-as/representative"
+          viewAsFieldLabel="Visualizar como o representante veria"
         />
 
         <ProfileListSection
@@ -576,11 +591,15 @@ function ProfileListSection({
   profiles,
   emptyMessage,
   isOwner,
+  viewAsBasePath,
+  viewAsFieldLabel,
 }: {
   title: string;
   profiles: SimpleProfileRow[];
   emptyMessage: string;
   isOwner: boolean;
+  viewAsBasePath?: string;
+  viewAsFieldLabel?: string;
 }) {
   return (
     <details className="group mt-6 overflow-hidden rounded-2xl border border-white/10 bg-[#111115]">
@@ -664,7 +683,75 @@ function ProfileListSection({
           </tbody>
         </table>
       </div>
+
+      {viewAsBasePath && profiles.length > 0 && (
+        <ViewAsPicker
+          options={profiles.map((profile) => ({
+            id: profile.id,
+            label: profile.full_name || "Sem nome",
+          }))}
+          basePath={viewAsBasePath}
+          fieldLabel={
+            viewAsFieldLabel ?? "Visualizar como"
+          }
+        />
+      )}
     </details>
+  );
+}
+
+function ViewAsPicker({
+  options,
+  basePath,
+  fieldLabel,
+}: {
+  options: { id: string; label: string }[];
+  basePath: string;
+  fieldLabel: string;
+}) {
+  return (
+    <form
+      action={async (formData: FormData) => {
+        "use server";
+
+        const targetId = String(
+          formData.get("targetId") ?? "",
+        );
+
+        if (targetId) {
+          redirect(`${basePath}/${targetId}`);
+        }
+      }}
+      className="flex flex-wrap items-center gap-3 border-t border-white/10 bg-black/20 px-6 py-4"
+    >
+      <label className="text-xs font-bold uppercase tracking-[0.12em] text-white/50">
+        {fieldLabel}
+      </label>
+
+      <select
+        name="targetId"
+        required
+        defaultValue=""
+        className="min-w-[220px] rounded-lg border border-white/15 bg-[#1a1a1f] px-4 py-2 text-sm text-white outline-none focus:border-pink-400/60"
+      >
+        <option value="" disabled>
+          Selecione...
+        </option>
+
+        {options.map((option) => (
+          <option key={option.id} value={option.id}>
+            {option.label}
+          </option>
+        ))}
+      </select>
+
+      <button
+        type="submit"
+        className="rounded-lg bg-pink-500 px-4 py-2 text-xs font-bold uppercase tracking-wider text-white transition hover:bg-pink-400"
+      >
+        Visualizar
+      </button>
+    </form>
   );
 }
 
