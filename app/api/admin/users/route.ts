@@ -2,6 +2,10 @@ import { NextResponse } from "next/server";
 
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
+import {
+  createUniqueModelSlug,
+  getNextModelNumber,
+} from "@/lib/models/createModelSlug";
 import type { ManagementRole } from "@/types/model";
 
 export const dynamic = "force-dynamic";
@@ -250,8 +254,7 @@ export async function POST(request: Request) {
         stageName || fullName,
       );
 
-      const modelNumber =
-        await getNextModelNumber(adminSupabase);
+      const modelNumber = await getNextModelNumber(adminSupabase);
 
       const { error: createModelError } =
         await adminSupabase.from("models").insert({
@@ -346,72 +349,4 @@ export async function POST(request: Request) {
       },
     );
   }
-}
-
-async function getNextModelNumber(
-  adminSupabase: ReturnType<
-    typeof createAdminClient
-  >,
-) {
-  const { data, error } = await adminSupabase
-    .from("models")
-    .select("model_number")
-    .not("model_number", "is", null)
-    .order("model_number", {
-      ascending: false,
-    })
-    .limit(1)
-    .maybeSingle();
-
-  if (error) {
-    throw new Error(
-      `Não foi possível gerar o número da modelo: ${error.message}`,
-    );
-  }
-
-  return (data?.model_number ?? 0) + 1;
-}
-
-async function createUniqueModelSlug(
-  adminSupabase: ReturnType<
-    typeof createAdminClient
-  >,
-  name: string,
-) {
-  const baseSlug =
-    createSlug(name) || `modelo-${Date.now()}`;
-
-  let candidate = baseSlug;
-  let suffix = 2;
-
-  while (true) {
-    const { data, error } = await adminSupabase
-      .from("models")
-      .select("id")
-      .eq("slug", candidate)
-      .maybeSingle();
-
-    if (error) {
-      throw new Error(
-        `Não foi possível verificar o endereço da modelo: ${error.message}`,
-      );
-    }
-
-    if (!data) {
-      return candidate;
-    }
-
-    candidate = `${baseSlug}-${suffix}`;
-    suffix += 1;
-  }
-}
-
-function createSlug(value: string) {
-  return value
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
 }

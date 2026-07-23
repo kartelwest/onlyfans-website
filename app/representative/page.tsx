@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import type { ModelStatus } from "@/types/model";
 
 type Model = {
   id: string;
@@ -9,10 +10,34 @@ type Model = {
   instagram: string | null;
   whatsapp: string | null;
   onboarding_percentage: number;
+  status: string | null;
   active: boolean;
   latest_note_summary: string | null;
   last_login_at: string | null;
 };
+
+const statusDotConfig: Record<ModelStatus, { className: string; label: string }> = {
+  active: { className: "bg-green-500", label: "Ativo" },
+  inactive: { className: "bg-gray-400", label: "Inativo" },
+  candidate: { className: "bg-yellow-400", label: "Candidata" },
+  denied: { className: "bg-red-500", label: "Negada" },
+};
+
+function normalizeModelStatus(
+  status: string | null,
+  active: boolean,
+): ModelStatus {
+  if (
+    status === "active" ||
+    status === "inactive" ||
+    status === "candidate" ||
+    status === "denied"
+  ) {
+    return status;
+  }
+
+  return active ? "active" : "inactive";
+}
 
 export default async function RepresentativePage() {
   const supabase = await createClient();
@@ -49,6 +74,7 @@ export default async function RepresentativePage() {
         instagram,
         whatsapp,
         onboarding_percentage,
+        status,
         active,
         latest_note_summary,
         last_login_at
@@ -110,7 +136,14 @@ export default async function RepresentativePage() {
           </div>
         ) : (
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {assignedModels.map((model) => (
+            {assignedModels.map((model) => {
+              const modelStatus = normalizeModelStatus(
+                model.status,
+                model.active,
+              );
+              const statusDot = statusDotConfig[modelStatus];
+
+              return (
               <Link
                 key={model.id}
                 href={`/representative/models/${model.id}`}
@@ -134,11 +167,8 @@ export default async function RepresentativePage() {
                   </div>
 
                   <div
-                    className={`h-3 w-3 shrink-0 rounded-full ${
-                      model.active
-                        ? "bg-green-500"
-                        : "bg-red-400"
-                    }`}
+                    title={statusDot.label}
+                    className={`h-3 w-3 shrink-0 rounded-full ${statusDot.className}`}
                   />
                 </div>
 
@@ -184,7 +214,8 @@ export default async function RepresentativePage() {
                   )}
                 </div>
               </Link>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>

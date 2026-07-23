@@ -1,7 +1,9 @@
+import { WHATSAPP_URL } from "@/lib/constants/whatsapp";
+
 export default function FloatingWhatsApp() {
     return (
         <a
-            href="https://wa.me/5521970715503"
+            href={WHATSAPP_URL}
             target="_blank"
             rel="noopener noreferrer"
             aria-label="Falar conosco pelo WhatsApp"

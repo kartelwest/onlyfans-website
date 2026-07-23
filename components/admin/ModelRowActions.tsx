@@ -6,16 +6,13 @@ import { useRouter } from "next/navigation";
 type ModelRowActionsProps = {
   modelId: string;
   displayName: string;
-  active: boolean;
 };
 
 export default function ModelRowActions({
   modelId,
   displayName,
-  active,
 }: ModelRowActionsProps) {
   const router = useRouter();
-  const [isToggling, setIsToggling] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [error, setError] = useState("");
@@ -24,41 +21,6 @@ export default function ModelRowActions({
   function clearMessages() {
     setError("");
     setSuccess("");
-  }
-
-  async function handleToggle() {
-    clearMessages();
-    setIsToggling(true);
-
-    try {
-      const response = await fetch("/api/models/toggle-active", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          modelId,
-          active: !active,
-        }),
-      });
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.error || "Não foi possível alterar o status.");
-      }
-
-      setSuccess(
-        `${displayName} foi marcada como ${!active ? "ativa" : "inativa"}.`,
-      );
-      router.refresh();
-    } catch (err) {
-      setError(
-        err instanceof Error
-          ? err.message
-          : "Ocorreu um erro inesperado.",
-      );
-    } finally {
-      setIsToggling(false);
-    }
   }
 
   async function handleDelete() {
@@ -97,28 +59,11 @@ export default function ModelRowActions({
       <div className="flex items-center gap-2">
         <button
           type="button"
-          onClick={handleToggle}
-          disabled={isToggling || isDeleting}
-          className={`rounded-lg border px-3 py-2 text-xs font-bold transition disabled:opacity-50 ${
-            active
-              ? "border-white/15 bg-white/5 text-white/60 hover:bg-white/10"
-              : "border-emerald-400/30 bg-emerald-500/15 text-emerald-300 hover:bg-emerald-500/25"
-          }`}
-        >
-          {isToggling
-            ? "..."
-            : active
-              ? "Inativar"
-              : "Ativar"}
-        </button>
-
-        <button
-          type="button"
           onClick={() => {
             clearMessages();
             setShowDeleteDialog(true);
           }}
-          disabled={isToggling || isDeleting}
+          disabled={isDeleting}
           className="rounded-lg border border-red-400/30 bg-red-500/10 px-3 py-2 text-xs font-bold text-red-300 transition hover:bg-red-500/20 disabled:opacity-50"
         >
           Excluir
