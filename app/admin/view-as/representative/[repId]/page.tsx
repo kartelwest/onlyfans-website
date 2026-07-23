@@ -120,7 +120,7 @@ export default async function ViewAsRepresentativePage({
         <main className="min-h-screen bg-[#f7f1ec] px-6 py-12">
           <div className="mx-auto max-w-6xl">
             <p className="text-sm font-semibold uppercase tracking-[0.24em] text-[#b06a87]">
-              KARRAY Models
+              KARAY Models
             </p>
 
             <h1 className="mt-3 text-4xl font-bold text-[#4b2438]">
@@ -150,7 +150,7 @@ export default async function ViewAsRepresentativePage({
           <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <p className="text-sm font-semibold uppercase tracking-[0.24em] text-[#b06a87]">
-                KARRAY Models
+                KARAY Models
               </p>
 
               <h1 className="mt-3 text-4xl font-bold text-[#4b2438]">

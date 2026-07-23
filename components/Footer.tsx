@@ -71,7 +71,7 @@ export default function Footer() {
               </a>
 
               <a
-                href="/contato"
+                href="/login"
                 className="transition hover:translate-x-1 hover:text-[#e9a5b8]"
               >
                  Área da Modelo

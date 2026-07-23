@@ -11,7 +11,7 @@ export default function AdminLayout({
         <div className="mx-auto flex max-w-[1600px] items-center justify-between px-6 py-4">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.28em] text-pink-300">
-              KARRAY MODELS CRM
+              KARAY MODELS CRM
             </p>
 
             <p className="mt-1 text-sm text-white/50">

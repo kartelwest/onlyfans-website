@@ -91,7 +91,7 @@ export default function ChangePasswordPage() {
       <section className="w-full max-w-md rounded-[32px] border border-[#eadfd8] bg-white p-8 shadow-2xl sm:p-10">
         <div className="mb-8 text-center">
           <p className="text-sm font-semibold uppercase tracking-[0.28em] text-[#b06a87]">
-            KARRAY Models
+            KARAY Models
           </p>
 
           <h1 className="mt-3 text-3xl font-bold text-[#4b2438]">

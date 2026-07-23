@@ -47,7 +47,7 @@ export default function Navbar() {
           <Link href="/" className="relative z-50 flex items-center">
             <Image
               src="/images/karray-logo.png"
-              alt="KARRAY Models"
+              alt="KARAY Models"
               width={360}
               height={140}
               priority
