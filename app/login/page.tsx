@@ -1,6 +1,8 @@
 "use client";
 
 import { FormEvent, useState } from "react";
+import Image from "next/image";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
@@ -105,11 +107,22 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-[#f7f1ec] px-6 py-12">
+    <main className="flex min-h-screen flex-col items-center justify-center bg-[#f7f1ec] px-6 py-12">
+      <Link href="/" className="mb-8 flex items-center">
+        <Image
+          src="/images/karray-logo.png"
+          alt="KARAY Models"
+          width={240}
+          height={95}
+          priority
+          className="h-auto w-[160px] object-contain"
+        />
+      </Link>
+
       <section className="w-full max-w-md rounded-[32px] border border-[#eadfd8] bg-white p-8 shadow-2xl sm:p-10">
         <div className="mb-8 text-center">
           <p className="text-sm font-semibold uppercase tracking-[0.28em] text-[#b06a87]">
-            KARRAY Models
+            KARAY Models
           </p>
 
           <h1 className="mt-3 text-3xl font-bold text-[#4b2438]">
@@ -177,6 +190,13 @@ export default function LoginPage() {
           </button>
         </form>
       </section>
+
+      <Link
+        href="/"
+        className="mt-6 text-sm font-semibold text-[#8a6c78] transition hover:text-[#4b2438]"
+      >
+        ← Voltar para o site
+      </Link>
     </main>
   );
 }

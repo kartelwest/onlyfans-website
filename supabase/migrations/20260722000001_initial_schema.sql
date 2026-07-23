@@ -1,5 +1,5 @@
 -- =============================================================================
--- KARRAY Models — Initial schema (run first)
+-- KARAY Models — Initial schema (run first)
 -- =============================================================================
 create extension if not exists "pgcrypto";  -- gen_random_uuid()
 

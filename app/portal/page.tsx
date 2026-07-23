@@ -3,7 +3,7 @@ export default function PortalPage() {
     <main className="flex min-h-screen items-center justify-center bg-[#f7f1ec]">
       <div className="rounded-3xl bg-white p-10 shadow-xl">
         <h1 className="text-4xl font-bold text-[#4b2438]">
-          Portal KARRAY Models
+          Portal KARAY Models
         </h1>
 
         <p className="mt-4 text-[#765c68]">

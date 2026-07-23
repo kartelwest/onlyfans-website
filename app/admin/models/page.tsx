@@ -10,6 +10,14 @@ export const dynamic = "force-dynamic";
 
 const MAX_ACTIVE_MODELS = 30;
 
+const STATUS_FILTERS: { value: "all" | ModelStatus; label: string }[] = [
+  { value: "all", label: "Todos" },
+  { value: "candidate", label: "Candidatas" },
+  { value: "active", label: "Ativas" },
+  { value: "inactive", label: "Inativas" },
+  { value: "denied", label: "Negadas" },
+];
+
 type ChecklistRow = {
   model_id: string;
   onboarding_percentage: number | null;
@@ -44,7 +52,21 @@ type SimpleProfileRow = {
   created_at: string | null;
 };
 
-export default async function AdminModelsPage() {
+type AdminModelsPageProps = {
+  searchParams: Promise<{ status?: string }>;
+};
+
+export default async function AdminModelsPage({
+  searchParams,
+}: AdminModelsPageProps) {
+  const { status: statusParam } = await searchParams;
+
+  const statusFilter: "all" | ModelStatus = STATUS_FILTERS.some(
+    (filter) => filter.value === statusParam,
+  )
+    ? (statusParam as "all" | ModelStatus)
+    : "all";
+
   const supabase = await createClient();
 
   const {
@@ -193,6 +215,15 @@ export default async function AdminModelsPage() {
       100,
   ).length;
 
+  const filteredModels =
+    statusFilter === "all"
+      ? models
+      : models.filter(
+          (model) =>
+            normalizeModelStatus(model.status, model.active) ===
+            statusFilter,
+        );
+
   const availableSpaces = Math.max(
     MAX_ACTIVE_MODELS - activeModels,
     0,
@@ -209,7 +240,7 @@ export default async function AdminModelsPage() {
         <header className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.28em] text-pink-300">
-              KARRAY Models
+              KARAY Models
             </p>
 
             <h1 className="mt-2 text-3xl font-bold sm:text-4xl">
@@ -227,6 +258,20 @@ export default async function AdminModelsPage() {
               className="rounded-xl border border-white/10 bg-white/5 px-5 py-3 text-sm font-semibold text-white/80 transition hover:bg-white/10"
             >
               Dashboard
+            </Link>
+
+            <Link
+              href="/admin/assistant"
+              className="rounded-xl border border-purple-400/40 bg-purple-500/10 px-5 py-3 text-sm font-semibold text-purple-200 transition hover:bg-purple-500/20"
+            >
+              Assistente Claude
+            </Link>
+
+            <Link
+              href="/admin/import"
+              className="rounded-xl border border-purple-400/40 bg-purple-500/10 px-5 py-3 text-sm font-semibold text-purple-200 transition hover:bg-purple-500/20"
+            >
+              Importar PDF/Imagem
             </Link>
 
             <Link
@@ -327,12 +372,48 @@ export default async function AdminModelsPage() {
             <span className="text-sm font-bold uppercase tracking-[0.14em] text-pink-100">
               Modelos{" "}
               <span className="font-semibold text-pink-300/70">
-                ({models.length})
+                ({filteredModels.length}
+                {statusFilter !== "all" ? ` de ${models.length}` : ""})
               </span>
             </span>
 
             <ChevronIcon />
           </summary>
+
+          <div className="flex flex-wrap gap-2 border-b border-pink-400/20 bg-[#171017] px-6 py-4">
+            {STATUS_FILTERS.map((filter) => {
+              const isActive = filter.value === statusFilter;
+
+              const count =
+                filter.value === "all"
+                  ? models.length
+                  : models.filter(
+                      (model) =>
+                        normalizeModelStatus(
+                          model.status,
+                          model.active,
+                        ) === filter.value,
+                    ).length;
+
+              return (
+                <Link
+                  key={filter.value}
+                  href={
+                    filter.value === "all"
+                      ? "/admin/models"
+                      : `/admin/models?status=${filter.value}`
+                  }
+                  className={`rounded-full border px-4 py-2 text-xs font-bold uppercase tracking-[0.08em] transition ${
+                    isActive
+                      ? "border-pink-400/60 bg-pink-500/20 text-pink-200"
+                      : "border-white/10 bg-white/5 text-white/60 hover:bg-white/10"
+                  }`}
+                >
+                  {filter.label} ({count})
+                </Link>
+              );
+            })}
+          </div>
 
           <div className="overflow-x-auto">
             <table className="w-full min-w-[1350px] border-collapse">
@@ -352,24 +433,27 @@ export default async function AdminModelsPage() {
               </thead>
 
               <tbody>
-                {models.length === 0 ? (
+                {filteredModels.length === 0 ? (
                   <tr>
                     <td
                       colSpan={10}
                       className="px-6 py-16 text-center"
                     >
                       <p className="text-lg font-bold">
-                        Nenhuma modelo cadastrada
+                        {statusFilter === "all"
+                          ? "Nenhuma modelo cadastrada"
+                          : "Nenhuma modelo neste status"}
                       </p>
 
                       <p className="mt-2 text-sm text-white/50">
-                        Adicione a primeira modelo para
-                        começar.
+                        {statusFilter === "all"
+                          ? "Adicione a primeira modelo para começar."
+                          : "Tente selecionar outro filtro de status."}
                       </p>
                     </td>
                   </tr>
                 ) : (
-                  models.map((model, index) => {
+                  filteredModels.map((model, index) => {
                     const onboarding =
                       model.checklist
                         ?.onboarding_percentage ?? 0;
