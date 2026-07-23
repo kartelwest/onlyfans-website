@@ -3,31 +3,31 @@
 import { useEffect, useRef, useState } from "react";
 
 const MONTH_NAMES = [
-  "enero",
-  "febrero",
-  "marzo",
+  "janeiro",
+  "fevereiro",
+  "março",
   "abril",
-  "mayo",
-  "junio",
-  "julio",
+  "maio",
+  "junho",
+  "julho",
   "agosto",
-  "septiembre",
-  "octubre",
-  "noviembre",
-  "diciembre",
+  "setembro",
+  "outubro",
+  "novembro",
+  "dezembro",
 ];
 
 const WEEKDAY_LABELS = [
-  "Lu",
-  "Ma",
-  "Mi",
-  "Ju",
-  "Vi",
-  "Sá",
-  "Do",
+  "Seg",
+  "Ter",
+  "Qua",
+  "Qui",
+  "Sex",
+  "Sáb",
+  "Dom",
 ];
 
-type SpanishDatePickerProps = {
+type BirthdayDatePickerProps = {
   value: string;
   onChange: (value: string) => void;
   required?: boolean;
@@ -57,7 +57,7 @@ function toIsoDate(year: number, month: number, day: number) {
   return `${year}-${pad(month + 1)}-${pad(day)}`;
 }
 
-export default function SpanishDatePicker({
+export default function BirthdayDatePicker({
   value,
   onChange,
   required,
@@ -65,7 +65,7 @@ export default function SpanishDatePicker({
   minYear,
   maxYear,
   theme = "light",
-}: SpanishDatePickerProps) {
+}: BirthdayDatePickerProps) {
   const isDark = theme === "dark";
   const today = new Date();
   const parsed = parseIsoDate(value);
@@ -212,7 +212,7 @@ export default function SpanishDatePicker({
                   ? "border-white/15 text-white hover:bg-white/10"
                   : "border-[#dfcbd2] text-[#4b2438] hover:bg-[#f7f1ec]"
               }`}
-              aria-label="Mes anterior"
+              aria-label="Mês anterior"
             >
               ‹
             </button>
@@ -263,7 +263,7 @@ export default function SpanishDatePicker({
                   ? "border-white/15 text-white hover:bg-white/10"
                   : "border-[#dfcbd2] text-[#4b2438] hover:bg-[#f7f1ec]"
               }`}
-              aria-label="Mes siguiente"
+              aria-label="Mês seguinte"
             >
               ›
             </button>
