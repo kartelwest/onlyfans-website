@@ -309,9 +309,6 @@ export async function POST(
             .from("model_notes")
             .insert({
                 model_id: modelId,
-                author_id: profile.id,
-                author_name: profile.fullName,
-                author_role: profile.role,
                 body,
                 priority,
                 pinned: false,
