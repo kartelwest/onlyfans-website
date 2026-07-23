@@ -15,7 +15,7 @@ export default function AdminLayout({
             </p>
 
             <p className="mt-1 text-sm text-white/50">
-              Owner / Administrator
+              Proprietário / Administrador
             </p>
           </div>
 

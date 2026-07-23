@@ -691,7 +691,7 @@ function TemporarySection({
     return (
         <section className="rounded-2xl border border-dashed border-pink-400/30 bg-pink-500/5 p-8">
             <p className="text-xs font-bold uppercase tracking-[0.2em] text-pink-300">
-                Step 3
+                Etapa 3
             </p>
 
             <h2 className="mt-3 text-2xl font-bold">
