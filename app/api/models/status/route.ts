@@ -1,15 +1,22 @@
 import { NextResponse } from "next/server";
 
 import { createClient } from "@/lib/supabase/server";
-import type { ManagementRole } from "@/types/model";
+import type { ManagementRole, ModelStatus } from "@/types/model";
 
 export const dynamic = "force-dynamic";
 
 const MAX_ACTIVE_MODELS = 30;
 
-type ToggleBody = {
+const VALID_STATUSES: ModelStatus[] = [
+  "active",
+  "inactive",
+  "candidate",
+  "denied",
+];
+
+type StatusBody = {
   modelId?: string;
-  active?: boolean;
+  status?: string;
 };
 
 export async function PATCH(request: Request) {
@@ -28,10 +35,7 @@ export async function PATCH(request: Request) {
       );
     }
 
-    const {
-      data: profile,
-      error: profileError,
-    } = await supabase
+    const { data: profile, error: profileError } = await supabase
       .from("profiles")
       .select("role, active")
       .eq("id", user.id)
@@ -53,20 +57,24 @@ export async function PATCH(request: Request) {
       );
     }
 
-    const body = (await request.json()) as ToggleBody;
+    const body = (await request.json()) as StatusBody;
 
-    if (!body.modelId || typeof body.active !== "boolean") {
+    if (
+      !body.modelId ||
+      !body.status ||
+      !VALID_STATUSES.includes(body.status as ModelStatus)
+    ) {
       return NextResponse.json(
         { error: "Dados inválidos." },
         { status: 400 },
       );
     }
 
-    if (body.active) {
-      const {
-        data: model,
-        error: modelError,
-      } = await supabase
+    const status = body.status as ModelStatus;
+    const willBeActive = status === "active";
+
+    if (willBeActive) {
+      const { data: model, error: modelError } = await supabase
         .from("models")
         .select("active")
         .eq("id", body.modelId)
@@ -114,8 +122,8 @@ export async function PATCH(request: Request) {
     const { error: updateError } = await supabase
       .from("models")
       .update({
-        active: body.active,
-        status: body.active ? "active" : "inactive",
+        active: willBeActive,
+        status,
       })
       .eq("id", body.modelId);
 
@@ -128,7 +136,8 @@ export async function PATCH(request: Request) {
 
     return NextResponse.json({
       success: true,
-      active: body.active,
+      status,
+      active: willBeActive,
     });
   } catch (error) {
     console.error("Erro ao alterar status da modelo:", error);

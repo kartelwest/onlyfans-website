@@ -4,6 +4,12 @@ export type ManagementRole =
   | "representative"
   | "model";
 
+export type ModelStatus =
+  | "active"
+  | "inactive"
+  | "candidate"
+  | "denied";
+
 export type ChecklistStatus =
   | "not_started"
   | "planned"

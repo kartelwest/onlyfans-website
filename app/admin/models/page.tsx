@@ -2,8 +2,9 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import ModelRowActions from "@/components/admin/ModelRowActions";
+import ModelStatusDropdown from "@/components/admin/ModelStatusDropdown";
 import { createClient } from "@/lib/supabase/server";
-import type { ManagementRole } from "@/types/model";
+import type { ManagementRole, ModelStatus } from "@/types/model";
 
 export const dynamic = "force-dynamic";
 
@@ -357,13 +358,12 @@ export default async function AdminModelsPage() {
                         </TableCell>
 
                         <TableCell>
-                          <StatusBadge
-                            status={
-                              model.active
-                                ? model.status ||
-                                  "active"
-                                : "inactive"
-                            }
+                          <ModelStatusDropdown
+                            modelId={model.id}
+                            status={normalizeModelStatus(
+                              model.status,
+                              model.active,
+                            )}
                           />
                         </TableCell>
 
@@ -435,7 +435,6 @@ export default async function AdminModelsPage() {
                               <ModelRowActions
                                 modelId={model.id}
                                 displayName={displayName}
-                                active={!!model.active}
                               />
                             )}
                           </div>
@@ -573,6 +572,22 @@ function OnboardingProgress({
       </div>
     </div>
   );
+}
+
+function normalizeModelStatus(
+  status: string | null,
+  active: boolean | null,
+): ModelStatus {
+  if (
+    status === "active" ||
+    status === "inactive" ||
+    status === "candidate" ||
+    status === "denied"
+  ) {
+    return status;
+  }
+
+  return active ? "active" : "inactive";
 }
 
 function StatusBadge({
