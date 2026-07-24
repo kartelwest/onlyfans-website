@@ -4,6 +4,8 @@ import { redirect } from "next/navigation";
 import LogoutButton from "@/components/LogoutButton";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import DeleteAccountButton from "./DeleteAccountButton";
+import { deleteAccountAction } from "./actions";
 
 type UserRole =
   | "owner"
@@ -320,6 +322,17 @@ export default async function OwnerUserManagePage({
                     Tornar Administrator
                   </button>
                 </form>
+              )}
+
+              {(userProfile.role === "administrator" ||
+                userProfile.role === "representative") && (
+                <DeleteAccountButton
+                  targetId={params.id}
+                  displayName={
+                    userProfile.full_name || "esta conta"
+                  }
+                  action={deleteAccountAction}
+                />
               )}
             </div>
           </div>
