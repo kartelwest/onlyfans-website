@@ -52,7 +52,7 @@ function SectionShell({
             href={viewAllHref}
             className="rounded-lg border border-pink-400/50 bg-pink-400/10 px-4 py-2 text-xs font-bold uppercase tracking-wider text-pink-200 transition hover:bg-pink-400 hover:text-black"
           >
-            {viewAllLabel ?? "View all"}
+            {viewAllLabel ?? "Ver todas"}
           </Link>
         )}
       </div>
@@ -89,7 +89,7 @@ export default async function OwnerUserSection({
       <SectionShell title={title} count="!">
         <div className="px-5 py-10 text-center">
           <p className="font-semibold text-red-400">
-            There was a problem loading this list.
+            Ocorreu um problema ao carregar esta lista.
           </p>
 
           <p className="mt-2 text-sm text-zinc-500">
@@ -114,7 +114,7 @@ export default async function OwnerUserSection({
           <thead className="bg-[#1c1119] text-xs uppercase tracking-[0.14em] text-pink-100/80">
             <tr>
               <th className="border-b border-r border-pink-400/20 px-5 py-4">
-                Name
+                Nome
               </th>
 
               <th className="border-b border-r border-pink-400/20 px-5 py-4">
@@ -122,7 +122,7 @@ export default async function OwnerUserSection({
               </th>
 
               <th className="border-b border-pink-400/20 px-5 py-4">
-                Action
+                Ação
               </th>
             </tr>
           </thead>
@@ -135,7 +135,7 @@ export default async function OwnerUserSection({
               >
                 <td className="border-r border-white/10 px-5 py-5">
                   <p className="font-semibold text-white">
-                    {profile.full_name || "No name"}
+                    {profile.full_name || "Sem nome"}
                   </p>
 
                   <p className="mt-1 text-xs text-zinc-600">
@@ -151,7 +151,7 @@ export default async function OwnerUserSection({
                         : "bg-red-500/10 text-red-300 ring-red-500/30"
                     }`}
                   >
-                    {profile.active ? "Active" : "Inactive"}
+                    {profile.active ? "Ativo" : "Inativo"}
                   </span>
                 </td>
 
@@ -160,7 +160,7 @@ export default async function OwnerUserSection({
                     href={`/owner/users/${profile.id}`}
                     className="inline-flex rounded-lg border border-pink-400/50 bg-pink-400/10 px-4 py-2 text-xs font-bold uppercase tracking-wider text-pink-200 transition hover:bg-pink-400 hover:text-black"
                   >
-                    Manage
+                    Gerenciar
                   </Link>
                 </td>
               </tr>
