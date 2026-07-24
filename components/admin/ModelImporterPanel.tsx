@@ -2,22 +2,28 @@
 
 import { ChangeEvent, useState } from "react";
 
-type EditableModel = {
-  display_name: string;
-  stage_name: string;
-  birthday: string;
-  city: string;
-  state: string;
-  country: string;
+type EditableApplicant = {
+  nomeCompleto: string;
+  nomeArtisticoDesejado: string;
+  dataNascimento: string;
+  cidade: string;
+  estado: string;
+  pais: string;
   whatsapp: string;
   email: string;
   instagram: string;
   twitter: string;
-  notes: string;
+  representanteIndicacao: string;
+  possuiOnlyfans: string;
+  bloquearBrasil: string;
+  mostrarRosto: string;
+  moedaPreferida: string;
+  frequenciaConteudo: string;
+  motivoCandidatura: string;
 };
 
 type ExtractResponse = {
-  models?: Partial<EditableModel>[];
+  applicants?: Partial<EditableApplicant>[];
   clarification_needed?: string | null;
   error?: string;
 };
@@ -36,22 +42,32 @@ type ConfirmResponse = {
   error?: string;
 };
 
-const EMPTY_MODEL: EditableModel = {
-  display_name: "",
-  stage_name: "",
-  birthday: "",
-  city: "",
-  state: "",
-  country: "",
+const EMPTY_APPLICANT: EditableApplicant = {
+  nomeCompleto: "",
+  nomeArtisticoDesejado: "",
+  dataNascimento: "",
+  cidade: "",
+  estado: "",
+  pais: "",
   whatsapp: "",
   email: "",
   instagram: "",
   twitter: "",
-  notes: "",
+  representanteIndicacao: "",
+  possuiOnlyfans: "",
+  bloquearBrasil: "",
+  mostrarRosto: "",
+  moedaPreferida: "",
+  frequenciaConteudo: "",
+  motivoCandidatura: "",
 };
 
-function toEditableModel(input: Partial<EditableModel>): EditableModel {
-  return { ...EMPTY_MODEL, ...input };
+const MAX_FILES = 6;
+
+function toEditableApplicant(
+  input: Partial<EditableApplicant>,
+): EditableApplicant {
+  return { ...EMPTY_APPLICANT, ...input };
 }
 
 export default function ModelImporterPanel({
@@ -64,24 +80,44 @@ export default function ModelImporterPanel({
   const [autoSave, setAutoSave] = useState(initialAutoSave);
   const [isSavingSetting, setIsSavingSetting] = useState(false);
 
-  const [file, setFile] = useState<File | null>(null);
+  const [files, setFiles] = useState<File[]>([]);
   const [isExtracting, setIsExtracting] = useState(false);
   const [extractError, setExtractError] = useState("");
 
   const [clarification, setClarification] = useState<string | null>(null);
-  const [models, setModels] = useState<EditableModel[]>([]);
+  const [applicants, setApplicants] = useState<EditableApplicant[]>([]);
 
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
   const [saveResult, setSaveResult] = useState<ConfirmResponse | null>(null);
 
-  function handleFileChange(event: ChangeEvent<HTMLInputElement>) {
-    setFile(event.target.files?.[0] ?? null);
+  function resetResults() {
     setExtractError("");
     setClarification(null);
-    setModels([]);
+    setApplicants([]);
     setSaveResult(null);
     setSaveError("");
+  }
+
+  function handleFileChange(event: ChangeEvent<HTMLInputElement>) {
+    const selected = Array.from(event.target.files ?? []);
+
+    if (selected.length > MAX_FILES) {
+      setExtractError(`Envie no máximo ${MAX_FILES} arquivos por vez.`);
+      setFiles(selected.slice(0, MAX_FILES));
+    } else {
+      setExtractError("");
+      setFiles(selected);
+    }
+
+    setClarification(null);
+    setApplicants([]);
+    setSaveResult(null);
+    setSaveError("");
+  }
+
+  function removeFile(index: number) {
+    setFiles((current) => current.filter((_, i) => i !== index));
   }
 
   async function handleToggleAutoSave() {
@@ -116,20 +152,16 @@ export default function ModelImporterPanel({
   }
 
   async function handleExtract() {
-    if (!file || isExtracting) {
+    if (files.length === 0 || files.length > MAX_FILES || isExtracting) {
       return;
     }
 
     setIsExtracting(true);
-    setExtractError("");
-    setClarification(null);
-    setModels([]);
-    setSaveResult(null);
-    setSaveError("");
+    resetResults();
 
     try {
       const formData = new FormData();
-      formData.append("file", file);
+      files.forEach((file) => formData.append("files", file));
 
       const response = await fetch("/api/admin/import/extract", {
         method: "POST",
@@ -139,16 +171,18 @@ export default function ModelImporterPanel({
       const result = (await response.json()) as ExtractResponse;
 
       if (!response.ok) {
-        throw new Error(result.error || "Não foi possível ler o arquivo.");
+        throw new Error(result.error || "Não foi possível ler os arquivos.");
       }
 
-      const extractedModels = (result.models ?? []).map(toEditableModel);
+      const extractedApplicants = (result.applicants ?? []).map(
+        toEditableApplicant,
+      );
 
       setClarification(result.clarification_needed ?? null);
-      setModels(extractedModels);
+      setApplicants(extractedApplicants);
 
-      if (autoSave && extractedModels.length > 0) {
-        await handleSave(extractedModels);
+      if (autoSave && extractedApplicants.length > 0) {
+        await handleSave(extractedApplicants);
       }
     } catch (error) {
       setExtractError(
@@ -159,28 +193,30 @@ export default function ModelImporterPanel({
     }
   }
 
-  function updateModelField(
+  function updateApplicantField(
     index: number,
-    field: keyof EditableModel,
+    field: keyof EditableApplicant,
     value: string,
   ) {
-    setModels((current) =>
-      current.map((model, i) =>
-        i === index ? { ...model, [field]: value } : model,
+    setApplicants((current) =>
+      current.map((applicant, i) =>
+        i === index ? { ...applicant, [field]: value } : applicant,
       ),
     );
   }
 
-  function removeModel(index: number) {
-    setModels((current) => current.filter((_, i) => i !== index));
+  function removeApplicant(index: number) {
+    setApplicants((current) => current.filter((_, i) => i !== index));
   }
 
-  function addBlankModel() {
-    setModels((current) => [...current, { ...EMPTY_MODEL }]);
+  function addBlankApplicant() {
+    setApplicants((current) => [...current, { ...EMPTY_APPLICANT }]);
   }
 
-  async function handleSave(modelsToSave: EditableModel[] = models) {
-    if (modelsToSave.length === 0 || isSaving) {
+  async function handleSave(
+    applicantsToSave: EditableApplicant[] = applicants,
+  ) {
+    if (applicantsToSave.length === 0 || isSaving) {
       return;
     }
 
@@ -192,13 +228,13 @@ export default function ModelImporterPanel({
       const response = await fetch("/api/admin/import/confirm", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ models: modelsToSave }),
+        body: JSON.stringify({ applicants: applicantsToSave }),
       });
 
       const result = (await response.json()) as ConfirmResponse;
 
       if (!response.ok) {
-        throw new Error(result.error || "Não foi possível salvar as modelos.");
+        throw new Error(result.error || "Não foi possível salvar as candidatas.");
       }
 
       setSaveResult(result);
@@ -207,7 +243,7 @@ export default function ModelImporterPanel({
         (result.results ?? []).filter((r) => r.ok).map((r) => r.index),
       );
 
-      setModels((current) =>
+      setApplicants((current) =>
         current.filter((_, index) => !savedIndexes.has(index)),
       );
     } catch (error) {
@@ -249,22 +285,48 @@ export default function ModelImporterPanel({
       </div>
 
       <div className="rounded-2xl border border-white/10 bg-[#111115] p-6">
-        <p className="text-sm font-bold text-white">Arquivo</p>
+        <p className="text-sm font-bold text-white">Arquivos</p>
+        <p className="mt-1 text-xs text-white/50">
+          Envie de 1 a {MAX_FILES} arquivos (PDF, JPG, PNG ou WEBP). Se forem
+          vários prints de uma mesma conversa, envie todos juntos — serão
+          tratados como uma única candidata.
+        </p>
 
         <input
           type="file"
+          multiple
           accept="application/pdf,image/jpeg,image/png,image/webp"
           onChange={handleFileChange}
           className="mt-3 block w-full text-sm text-white/70 file:mr-4 file:rounded-lg file:border-0 file:bg-pink-500 file:px-4 file:py-2 file:text-sm file:font-bold file:text-white hover:file:bg-pink-400"
         />
 
+        {files.length > 0 && (
+          <ul className="mt-4 space-y-2">
+            {files.map((file, index) => (
+              <li
+                key={`${file.name}-${index}`}
+                className="flex items-center justify-between rounded-lg border border-white/10 bg-[#08080a] px-4 py-2 text-sm text-white/70"
+              >
+                <span className="truncate">{file.name}</span>
+                <button
+                  type="button"
+                  onClick={() => removeFile(index)}
+                  className="ml-3 shrink-0 text-xs font-bold text-red-300 hover:text-red-200"
+                >
+                  Remover
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+
         <button
           type="button"
           onClick={handleExtract}
-          disabled={!file || isExtracting}
+          disabled={files.length === 0 || files.length > MAX_FILES || isExtracting}
           className="mt-4 rounded-xl bg-pink-500 px-5 py-3 text-sm font-bold text-white transition hover:bg-pink-400 disabled:cursor-not-allowed disabled:opacity-50"
         >
-          {isExtracting ? "Analisando arquivo..." : "Extrair dados"}
+          {isExtracting ? "Analisando arquivos..." : "Extrair dados"}
         </button>
 
         {extractError && (
@@ -285,21 +347,21 @@ export default function ModelImporterPanel({
         </div>
       )}
 
-      {models.length > 0 && (
+      {applicants.length > 0 && (
         <div className="space-y-5">
-          {models.map((model, index) => (
+          {applicants.map((applicant, index) => (
             <div
               key={index}
               className="rounded-2xl border border-white/10 bg-[#111115] p-6"
             >
               <div className="flex items-center justify-between">
                 <p className="text-sm font-bold text-white">
-                  Modelo {index + 1}
+                  Candidata {index + 1}
                 </p>
 
                 <button
                   type="button"
-                  onClick={() => removeModel(index)}
+                  onClick={() => removeApplicant(index)}
                   className="text-xs font-bold text-red-300 hover:text-red-200"
                 >
                   Remover
@@ -309,81 +371,178 @@ export default function ModelImporterPanel({
               <div className="mt-4 grid gap-4 sm:grid-cols-2">
                 <Field
                   label="Nome completo"
-                  value={model.display_name}
+                  value={applicant.nomeCompleto}
                   onChange={(value) =>
-                    updateModelField(index, "display_name", value)
+                    updateApplicantField(index, "nomeCompleto", value)
                   }
                   required
                 />
                 <Field
-                  label="Nome artístico"
-                  value={model.stage_name}
+                  label="Nome artístico desejado"
+                  value={applicant.nomeArtisticoDesejado}
                   onChange={(value) =>
-                    updateModelField(index, "stage_name", value)
+                    updateApplicantField(index, "nomeArtisticoDesejado", value)
                   }
                 />
                 <Field
                   label="Data de nascimento"
-                  value={model.birthday}
+                  value={applicant.dataNascimento}
                   onChange={(value) =>
-                    updateModelField(index, "birthday", value)
+                    updateApplicantField(index, "dataNascimento", value)
                   }
-                  placeholder="YYYY-MM-DD"
+                  placeholder="AAAA-MM-DD"
                 />
                 <Field
                   label="Cidade"
-                  value={model.city}
-                  onChange={(value) => updateModelField(index, "city", value)}
+                  value={applicant.cidade}
+                  onChange={(value) =>
+                    updateApplicantField(index, "cidade", value)
+                  }
                 />
                 <Field
                   label="Estado"
-                  value={model.state}
-                  onChange={(value) => updateModelField(index, "state", value)}
+                  value={applicant.estado}
+                  onChange={(value) =>
+                    updateApplicantField(index, "estado", value)
+                  }
                 />
                 <Field
                   label="País"
-                  value={model.country}
+                  value={applicant.pais}
                   onChange={(value) =>
-                    updateModelField(index, "country", value)
+                    updateApplicantField(index, "pais", value)
                   }
                 />
                 <Field
                   label="WhatsApp"
-                  value={model.whatsapp}
+                  value={applicant.whatsapp}
                   onChange={(value) =>
-                    updateModelField(index, "whatsapp", value)
+                    updateApplicantField(index, "whatsapp", value)
                   }
                 />
                 <Field
                   label="E-mail"
-                  value={model.email}
-                  onChange={(value) => updateModelField(index, "email", value)}
+                  value={applicant.email}
+                  onChange={(value) =>
+                    updateApplicantField(index, "email", value)
+                  }
                 />
                 <Field
                   label="Instagram"
-                  value={model.instagram}
+                  value={applicant.instagram}
                   onChange={(value) =>
-                    updateModelField(index, "instagram", value)
+                    updateApplicantField(index, "instagram", value)
                   }
                 />
                 <Field
                   label="X / Twitter"
-                  value={model.twitter}
+                  value={applicant.twitter}
                   onChange={(value) =>
-                    updateModelField(index, "twitter", value)
+                    updateApplicantField(index, "twitter", value)
                   }
+                />
+
+                <SelectField
+                  label="Quem indicou"
+                  value={applicant.representanteIndicacao}
+                  onChange={(value) =>
+                    updateApplicantField(index, "representanteIndicacao", value)
+                  }
+                  options={[
+                    { value: "", label: "Não identificado" },
+                    { value: "Kartel", label: "Kartel" },
+                    { value: "Rayssa", label: "Rayssa" },
+                    { value: "Antonio (Tony)", label: "Antonio (Tony)" },
+                    { value: "Boca a boca", label: "Boca a boca" },
+                  ]}
+                />
+
+                <SelectField
+                  label="Já possui OnlyFans"
+                  value={applicant.possuiOnlyfans}
+                  onChange={(value) =>
+                    updateApplicantField(index, "possuiOnlyfans", value)
+                  }
+                  options={[
+                    { value: "", label: "Não identificado" },
+                    { value: "sim", label: "Sim" },
+                    { value: "nao", label: "Não" },
+                  ]}
+                />
+
+                <SelectField
+                  label="Deseja bloquear o Brasil"
+                  value={applicant.bloquearBrasil}
+                  onChange={(value) =>
+                    updateApplicantField(index, "bloquearBrasil", value)
+                  }
+                  options={[
+                    { value: "", label: "Não identificado" },
+                    { value: "sim", label: "Sim" },
+                    { value: "nao", label: "Não" },
+                    { value: "nao_sei", label: "Ainda não sei" },
+                  ]}
+                />
+
+                <SelectField
+                  label="Confortável em mostrar o rosto"
+                  value={applicant.mostrarRosto}
+                  onChange={(value) =>
+                    updateApplicantField(index, "mostrarRosto", value)
+                  }
+                  options={[
+                    { value: "", label: "Não identificado" },
+                    { value: "sim", label: "Sim" },
+                    { value: "nao", label: "Não" },
+                    { value: "depende", label: "Depende do conteúdo" },
+                  ]}
+                />
+
+                <SelectField
+                  label="Moeda preferida"
+                  value={applicant.moedaPreferida}
+                  onChange={(value) =>
+                    updateApplicantField(index, "moedaPreferida", value)
+                  }
+                  options={[
+                    { value: "", label: "Não identificado" },
+                    { value: "real", label: "Real" },
+                    { value: "dolar", label: "Dólar" },
+                  ]}
                 />
               </div>
 
               <label className="mt-4 block">
                 <span className="text-xs font-bold uppercase tracking-[0.1em] text-white/50">
-                  Notas
+                  Com que frequência pode produzir conteúdo
+                </span>
+                <textarea
+                  rows={2}
+                  value={applicant.frequenciaConteudo}
+                  onChange={(event) =>
+                    updateApplicantField(
+                      index,
+                      "frequenciaConteudo",
+                      event.target.value,
+                    )
+                  }
+                  className="mt-2 w-full resize-none rounded-xl border border-white/10 bg-[#08080a] px-4 py-3 text-sm text-white outline-none focus:border-pink-400/60"
+                />
+              </label>
+
+              <label className="mt-4 block">
+                <span className="text-xs font-bold uppercase tracking-[0.1em] text-white/50">
+                  Motivo da candidatura
                 </span>
                 <textarea
                   rows={3}
-                  value={model.notes}
+                  value={applicant.motivoCandidatura}
                   onChange={(event) =>
-                    updateModelField(index, "notes", event.target.value)
+                    updateApplicantField(
+                      index,
+                      "motivoCandidatura",
+                      event.target.value,
+                    )
                   }
                   className="mt-2 w-full resize-none rounded-xl border border-white/10 bg-[#08080a] px-4 py-3 text-sm text-white outline-none focus:border-pink-400/60"
                 />
@@ -394,10 +553,10 @@ export default function ModelImporterPanel({
           <div className="flex flex-wrap items-center gap-3">
             <button
               type="button"
-              onClick={addBlankModel}
+              onClick={addBlankApplicant}
               className="rounded-xl border border-white/10 bg-white/5 px-5 py-3 text-sm font-semibold text-white/80 transition hover:bg-white/10"
             >
-              + Adicionar modelo em branco
+              + Adicionar candidata em branco
             </button>
 
             <button
@@ -408,7 +567,7 @@ export default function ModelImporterPanel({
             >
               {isSaving
                 ? "Salvando..."
-                : `Salvar ${models.length > 1 ? `${models.length} modelos` : "modelo"} como candidata(s)`}
+                : `Salvar ${applicants.length > 1 ? `${applicants.length} candidatas` : "candidata"}`}
             </button>
           </div>
 
@@ -472,6 +631,37 @@ function Field({
         onChange={(event) => onChange(event.target.value)}
         className="mt-2 w-full rounded-xl border border-white/10 bg-[#08080a] px-4 py-3 text-sm text-white outline-none focus:border-pink-400/60"
       />
+    </label>
+  );
+}
+
+function SelectField({
+  label,
+  value,
+  onChange,
+  options,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  options: { value: string; label: string }[];
+}) {
+  return (
+    <label className="block">
+      <span className="text-xs font-bold uppercase tracking-[0.1em] text-white/50">
+        {label}
+      </span>
+      <select
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        className="mt-2 w-full rounded-xl border border-white/10 bg-[#08080a] px-4 py-3 text-sm text-white outline-none focus:border-pink-400/60"
+      >
+        {options.map((option) => (
+          <option key={option.value} value={option.value}>
+            {option.label}
+          </option>
+        ))}
+      </select>
     </label>
   );
 }

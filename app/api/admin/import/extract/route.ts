@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { createClient } from "@/lib/supabase/server";
-import { extractModelsFromFile } from "@/lib/anthropic/importTool";
+import { extractApplicantsFromFiles } from "@/lib/anthropic/importTool";
 import type { ManagementRole } from "@/types/model";
 
 export const dynamic = "force-dynamic";
@@ -14,6 +14,7 @@ const ALLOWED_MEDIA_TYPES = new Set([
 ]);
 
 const MAX_FILE_BYTES = 15 * 1024 * 1024;
+const MAX_FILES = 6;
 
 export async function POST(request: Request) {
   try {
@@ -45,44 +46,63 @@ export async function POST(request: Request) {
     }
 
     const formData = await request.formData();
-    const file = formData.get("file");
+    const files = formData.getAll("files").filter((entry): entry is File => entry instanceof File);
 
-    if (!(file instanceof File)) {
+    if (files.length === 0) {
       return NextResponse.json(
-        { error: "Envie um arquivo PDF, JPG ou PNG." },
+        { error: "Envie ao menos 1 arquivo (PDF, JPG ou PNG)." },
         { status: 400 },
       );
     }
 
-    if (!ALLOWED_MEDIA_TYPES.has(file.type)) {
+    if (files.length > MAX_FILES) {
       return NextResponse.json(
-        { error: "Formato não suportado. Envie PDF, JPG, PNG ou WEBP." },
+        { error: `Envie no máximo ${MAX_FILES} arquivos por vez.` },
         { status: 400 },
       );
     }
 
-    if (file.size > MAX_FILE_BYTES) {
-      return NextResponse.json(
-        { error: "Arquivo muito grande. O limite é 15MB." },
-        { status: 400 },
-      );
+    for (const file of files) {
+      if (!ALLOWED_MEDIA_TYPES.has(file.type)) {
+        return NextResponse.json(
+          {
+            error: `Formato não suportado: "${file.name}". Envie PDF, JPG, PNG ou WEBP.`,
+          },
+          { status: 400 },
+        );
+      }
+
+      if (file.size > MAX_FILE_BYTES) {
+        return NextResponse.json(
+          { error: `Arquivo muito grande: "${file.name}". O limite é 15MB por arquivo.` },
+          { status: 400 },
+        );
+      }
     }
 
-    const buffer = Buffer.from(await file.arrayBuffer());
-    const base64Data = buffer.toString("base64");
+    const uploadedFiles = await Promise.all(
+      files.map(async (file) => {
+        const buffer = Buffer.from(await file.arrayBuffer());
 
-    const result = await extractModelsFromFile(base64Data, file.type);
+        return {
+          base64Data: buffer.toString("base64"),
+          mediaType: file.type,
+        };
+      }),
+    );
+
+    const result = await extractApplicantsFromFiles(uploadedFiles);
 
     return NextResponse.json(result);
   } catch (error) {
-    console.error("Erro ao extrair dados do arquivo:", error);
+    console.error("Erro ao extrair dados dos arquivos:", error);
 
     return NextResponse.json(
       {
         error:
           error instanceof Error
             ? error.message
-            : "Erro inesperado ao processar o arquivo.",
+            : "Erro inesperado ao processar os arquivos.",
       },
       { status: 500 },
     );

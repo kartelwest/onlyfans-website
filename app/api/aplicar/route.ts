@@ -6,7 +6,10 @@ import {
   createUniqueModelSlug,
   getNextModelNumber,
 } from "@/lib/models/createModelSlug";
-import { formatBrazilDateTime } from "@/lib/models/formatDateTime";
+import {
+  createApplicationNotes,
+  findReferredRepresentativeId,
+} from "@/lib/models/applicantIntake";
 
 export const dynamic = "force-dynamic";
 
@@ -31,12 +34,6 @@ type ApplyBody = {
   frequenciaConteudo?: string;
   motivoCandidatura?: string;
   confirmacaoIdade?: boolean;
-};
-
-const REFERRAL_TOKENS: Record<string, string[]> = {
-  Kartel: ["Kartel"],
-  Rayssa: ["Rayssa"],
-  "Antonio (Tony)": ["Antonio", "Tony", "Antônio"],
 };
 
 const NOTE_AUTHOR_NAME = "Formulário de candidatura (site)";
@@ -153,21 +150,26 @@ export async function POST(request: Request) {
       );
     }
 
-    await createApplicationNotes(adminSupabase, createdModel.id, {
-      frequenciaConteudo,
-      motivoCandidatura,
-      cidade,
-      estado,
-      pais,
-      representanteIndicacao,
-      possuiOnlyfans,
-      entendeNovaConta: body.entendeNovaConta ?? false,
-      administrarContaExistente:
-        body.administrarContaExistente?.trim() || null,
-      bloquearBrasil,
-      mostrarRosto,
-      moedaPreferida,
-    });
+    await createApplicationNotes(
+      adminSupabase,
+      createdModel.id,
+      {
+        frequenciaConteudo,
+        motivoCandidatura,
+        cidade,
+        estado,
+        pais,
+        representanteIndicacao,
+        possuiOnlyfans,
+        entendeNovaConta: body.entendeNovaConta ?? false,
+        administrarContaExistente:
+          body.administrarContaExistente?.trim() || null,
+        bloquearBrasil,
+        mostrarRosto,
+        moedaPreferida,
+      },
+      NOTE_AUTHOR_NAME,
+    );
 
     return NextResponse.json(
       { success: true, modelId: createdModel.id, slug: createdModel.slug },
@@ -181,142 +183,6 @@ export async function POST(request: Request) {
       { status: 500 },
     );
   }
-}
-
-async function findReferredRepresentativeId(
-  adminSupabase: ReturnType<typeof createAdminClient>,
-  referral: string,
-): Promise<string | null> {
-  const tokens = REFERRAL_TOKENS[referral];
-
-  if (!tokens) {
-    return null;
-  }
-
-  for (const token of tokens) {
-    const { data } = await adminSupabase
-      .from("profiles")
-      .select("id")
-      .eq("role", "representative")
-      .eq("active", true)
-      .ilike("full_name", `%${token}%`)
-      .limit(1)
-      .maybeSingle();
-
-    if (data?.id) {
-      return data.id;
-    }
-  }
-
-  return null;
-}
-
-async function createApplicationNotes(
-  adminSupabase: ReturnType<typeof createAdminClient>,
-  modelId: string,
-  answers: {
-    frequenciaConteudo: string;
-    motivoCandidatura: string;
-    cidade: string;
-    estado: string;
-    pais: string;
-    representanteIndicacao: string;
-    possuiOnlyfans: string;
-    entendeNovaConta: boolean;
-    administrarContaExistente: string | null;
-    bloquearBrasil: string;
-    mostrarRosto: string;
-    moedaPreferida: string;
-  },
-) {
-  const timestamp = formatBrazilDateTime(new Date());
-
-  const body = buildApplicationNote(timestamp, answers);
-
-  const { data: createdNote, error: createNoteError } = await adminSupabase
-    .from("model_notes")
-    .insert({
-      model_id: modelId,
-      body,
-      priority: "normal",
-      created_by_name: NOTE_AUTHOR_NAME,
-    })
-    .select("id")
-    .single();
-
-  if (createNoteError || !createdNote) {
-    console.error(
-      "Erro ao registrar nota da candidatura:",
-      createNoteError,
-    );
-
-    return;
-  }
-
-  const { error: historyError } = await adminSupabase
-    .from("model_note_history")
-    .insert({
-      note_id: createdNote.id,
-      model_id: modelId,
-      action: "created",
-      original_body: null,
-      updated_body: body,
-      editor_name: NOTE_AUTHOR_NAME,
-    });
-
-  if (historyError) {
-    console.error(
-      "Erro ao registrar histórico da nota da candidatura:",
-      historyError,
-    );
-  }
-}
-
-function buildApplicationNote(
-  timestamp: string,
-  answers: {
-    frequenciaConteudo: string;
-    motivoCandidatura: string;
-    cidade: string;
-    estado: string;
-    pais: string;
-    representanteIndicacao: string;
-    possuiOnlyfans: string;
-    entendeNovaConta: boolean;
-    administrarContaExistente: string | null;
-    bloquearBrasil: string;
-    mostrarRosto: string;
-    moedaPreferida: string;
-  },
-) {
-  const lines = [
-    `NOVO CANDIDATO — [${timestamp}]`,
-    `COM QUE FREQUÊNCIA PODE PRODUZIR CONTEÚDO? — ${answers.frequenciaConteudo}`,
-    `Por que deseja entrar para nossa agência — ${answers.motivoCandidatura}`,
-    `Localização — ${answers.cidade}, ${answers.estado}, ${answers.pais}`,
-    `Indicação — ${answers.representanteIndicacao}`,
-    `Já possui OnlyFans — ${answers.possuiOnlyfans === "sim" ? "Sim" : "Não"}`,
-  ];
-
-  if (answers.possuiOnlyfans === "sim") {
-    lines.push(
-      `Entende que a agência criará nova conta principal — ${
-        answers.entendeNovaConta ? "Sim" : "Não"
-      }`,
-    );
-
-    if (answers.administrarContaExistente) {
-      lines.push(
-        `Deseja administração da conta existente — ${answers.administrarContaExistente}`,
-      );
-    }
-  }
-
-  lines.push(`Deseja bloquear o Brasil — ${answers.bloquearBrasil}`);
-  lines.push(`Confortável em mostrar o rosto — ${answers.mostrarRosto}`);
-  lines.push(`Moeda preferida — ${answers.moedaPreferida}`);
-
-  return lines.join("\n");
 }
 
 function getApplicantInsertErrorMessage(
