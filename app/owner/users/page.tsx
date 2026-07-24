@@ -50,7 +50,7 @@ export default async function OwnerUsersPage() {
             </h1>
 
             <p className="mt-2 text-zinc-400">
-              Gerencie todas as contas de usuários da KARRAY Models.
+              Gerencie todas as contas de usuários da KARAY Models.
             </p>
           </div>
 
