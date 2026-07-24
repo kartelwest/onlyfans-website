@@ -51,8 +51,8 @@ export default async function AdminImportPage() {
             </h1>
 
             <p className="mt-2 text-sm text-white/55">
-              Envie um PDF ou imagem com os dados de uma modelo e deixe o
-              Claude extrair as informações para você.
+              Envie de 1 a 6 PDFs ou imagens com os dados de uma modelo e
+              deixe o Claude extrair as informações para você.
             </p>
           </div>
 
