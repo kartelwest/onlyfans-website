@@ -104,7 +104,7 @@ const EXTRACT_TOOL: Anthropic.Tool = {
       clarification_needed: {
         type: ["string", "null"],
         description:
-          "Preencha com uma pergunta clara em português apenas se não estiver certo se os arquivos pertencem a mais de uma candidata, ou se algum dado essencial for ambíguo. Caso contrário, use null.",
+          "Preencha com uma pergunta clara em português apenas se não estiver certo se os arquivos pertencem a mais de uma candidata, se algum dado essencial for ambíguo, OU se dois arquivos mostrarem valores diferentes e conflitantes para o mesmo campo da mesma candidata (nesse caso, cite o campo e os dois valores encontrados). Caso contrário, use null.",
       },
     },
     required: ["applicants"],
@@ -131,9 +131,19 @@ REGRAS OBRIGATÓRIAS:
    data de nascimento explícita estiver escrita no arquivo. Se o arquivo mostrar apenas
    uma IDADE (ex.: "25 anos") mas não uma data de nascimento, NÃO calcule nem estime uma
    data — deixe "dataNascimento" de fora completamente.
-5. Se não tiver certeza sobre a divisão entre candidatas ou sobre algum dado essencial,
-   preencha "clarification_needed" com uma pergunta objetiva em português em vez de
-   adivinhar.`;
+5. Regra crítica sobre conflitos entre arquivos: quando vários arquivos são combinados na
+   MESMA candidata, primeiro reúna os dados — nunca apague ou deixe de fora um campo que
+   já foi encontrado em outro arquivo só porque um arquivo específico não o menciona.
+   Porém, se dois arquivos mostrarem valores DIFERENTES e conflitantes para o mesmo campo
+   (ex.: um WhatsApp em um arquivo e um WhatsApp diferente em outro, ou duas datas de
+   nascimento diferentes), NÃO escolha um valor arbitrariamente e NÃO tente adivinhar qual
+   está certo. Nesse caso: omita esse campo específico do resultado E preencha
+   "clarification_needed" citando exatamente o nome do campo e os valores conflitantes
+   encontrados (ex.: 'O WhatsApp aparece como "11999999999" em um arquivo e
+   "11888888888" em outro — qual está correto?').
+6. Se não tiver certeza sobre a divisão entre candidatas ou sobre algum outro dado
+   essencial, preencha "clarification_needed" com uma pergunta objetiva em português em
+   vez de adivinhar.`;
 
 export async function extractApplicantsFromFiles(
   files: UploadedFile[],
