@@ -231,51 +231,52 @@ async function createApplicationNotes(
 ) {
   const timestamp = formatBrazilDateTime(new Date());
 
-  const frequencyNote =
-    `NOVO CANDIDATO — [${timestamp}]\n` +
-    `COM QUE FREQUÊNCIA PODE PRODUZIR CONTEÚDO? — ${answers.frequenciaConteudo}`;
+  const body = buildApplicationNote(timestamp, answers);
 
-  const motivationNote =
-    `NOVO CANDIDATO — [${timestamp}]\n` +
-    `Por que deseja entrar para nossa agência — ${answers.motivoCandidatura}`;
-
-  const additionalDetailsNote = buildAdditionalDetailsNote(
-    timestamp,
-    answers,
-  );
-
-  const { error } = await adminSupabase.from("model_notes").insert([
-    {
+  const { data: createdNote, error: createNoteError } = await adminSupabase
+    .from("model_notes")
+    .insert({
       model_id: modelId,
-      body: frequencyNote,
+      body,
       priority: "normal",
       created_by_name: NOTE_AUTHOR_NAME,
-    },
-    {
-      model_id: modelId,
-      body: motivationNote,
-      priority: "normal",
-      created_by_name: NOTE_AUTHOR_NAME,
-    },
-    {
-      model_id: modelId,
-      body: additionalDetailsNote,
-      priority: "normal",
-      created_by_name: NOTE_AUTHOR_NAME,
-    },
-  ]);
+    })
+    .select("id")
+    .single();
 
-  if (error) {
+  if (createNoteError || !createdNote) {
     console.error(
-      "Erro ao registrar notas da candidatura:",
-      error,
+      "Erro ao registrar nota da candidatura:",
+      createNoteError,
+    );
+
+    return;
+  }
+
+  const { error: historyError } = await adminSupabase
+    .from("model_note_history")
+    .insert({
+      note_id: createdNote.id,
+      model_id: modelId,
+      action: "created",
+      original_body: null,
+      updated_body: body,
+      editor_name: NOTE_AUTHOR_NAME,
+    });
+
+  if (historyError) {
+    console.error(
+      "Erro ao registrar histórico da nota da candidatura:",
+      historyError,
     );
   }
 }
 
-function buildAdditionalDetailsNote(
+function buildApplicationNote(
   timestamp: string,
   answers: {
+    frequenciaConteudo: string;
+    motivoCandidatura: string;
     cidade: string;
     estado: string;
     pais: string;
@@ -290,7 +291,8 @@ function buildAdditionalDetailsNote(
 ) {
   const lines = [
     `NOVO CANDIDATO — [${timestamp}]`,
-    "Detalhes adicionais da candidatura:",
+    `COM QUE FREQUÊNCIA PODE PRODUZIR CONTEÚDO? — ${answers.frequenciaConteudo}`,
+    `Por que deseja entrar para nossa agência — ${answers.motivoCandidatura}`,
     `Localização — ${answers.cidade}, ${answers.estado}, ${answers.pais}`,
     `Indicação — ${answers.representanteIndicacao}`,
     `Já possui OnlyFans — ${answers.possuiOnlyfans === "sim" ? "Sim" : "Não"}`,
