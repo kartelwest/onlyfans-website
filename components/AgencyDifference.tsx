@@ -7,7 +7,7 @@ const reasons = [
   },
   {
     number: "02",
-    title: "Apenas 25 Modelos",
+    title: "Apenas 30 Modelos",
     description:
       "Limitamos nossa agência para garantir atenção individual, comunicação constante e estratégias realmente personalizadas.",
   },

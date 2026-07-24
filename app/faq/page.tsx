@@ -343,7 +343,7 @@ export default function FAQPage() {
             </a>
 
             <a
-              href="/contato"
+              href="/login"
               className="rounded-full border border-[#b85f79] px-9 py-4 text-sm font-bold uppercase tracking-[0.1em] text-[#9d4861] transition hover:bg-[#b85f79] hover:text-white"
             >
               Fale Conosco

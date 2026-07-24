@@ -1,5 +1,5 @@
 -- =============================================================================
--- KARRAY Models — Row-Level Security + Storage policies (run AFTER schema)
+-- KARAY Models — Row-Level Security + Storage policies (run AFTER schema)
 -- owner: full access. administrator: full EXCEPT account mgmt & deleting notes.
 -- representative: READ-ONLY on assigned models; may ADD notes only.
 -- model: READ-ONLY on own record; earnings only when visible_to_model = true.

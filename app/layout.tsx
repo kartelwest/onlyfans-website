@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "KARRAY Models",
+  title: "KARAY Models",
   description:
     "Agência profissional de gestão, marketing e desenvolvimento para criadoras de conteúdo.",
 };

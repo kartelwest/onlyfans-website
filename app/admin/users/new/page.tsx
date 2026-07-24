@@ -78,7 +78,7 @@ export default async function NewUserPage({
         <div className="mb-8 flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.28em] text-pink-300">
-              KARRAY Models CRM
+              KARAY Models CRM
             </p>
 
             <h1 className="mt-2 text-3xl font-bold sm:text-4xl">
