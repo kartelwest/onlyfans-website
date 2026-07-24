@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import type { PostgrestError } from "@supabase/supabase-js";
 
 import { createAdminClient } from "@/lib/supabase/admin";
 import {
@@ -147,7 +148,7 @@ export async function POST(request: Request) {
       );
 
       return NextResponse.json(
-        { error: "Não foi possível registrar a candidatura." },
+        { error: getApplicantInsertErrorMessage(createModelError) },
         { status: 500 },
       );
     }
@@ -323,6 +324,21 @@ function buildAdditionalDetailsNote(
   lines.push(`Moeda preferida — ${answers.moedaPreferida}`);
 
   return lines.join("\n");
+}
+
+function getApplicantInsertErrorMessage(
+  error: PostgrestError | null,
+): string {
+  switch (error?.code) {
+    case "22P02":
+      return "Não foi possível registrar a candidatura: o status inicial da candidata não é reconhecido pelo banco de dados. Contate o suporte.";
+    case "23505":
+      return "Já existe uma candidatura registrada com esse identificador. Entre em contato com o suporte.";
+    case "23502":
+      return "Não foi possível registrar a candidatura: faltam informações obrigatórias.";
+    default:
+      return "Não foi possível registrar a candidatura. Tente novamente em instantes ou entre em contato com o suporte.";
+  }
 }
 
 function isAtLeast18(dateOfBirth: string): boolean {
