@@ -24,13 +24,13 @@ type Profile = {
 function getRoleLabel(role: UserRole) {
   switch (role) {
     case "owner":
-      return "Owner";
+      return "Proprietário";
     case "administrator":
-      return "Administrator";
+      return "Administrador";
     case "representative":
-      return "Representative";
+      return "Representante";
     case "model":
-      return "Model";
+      return "Modelo";
     default:
       return role;
   }
@@ -103,7 +103,7 @@ export default async function OwnerUserManagePage({
         <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.3em] text-pink-300">
-              Owner Portal
+              Portal do Proprietário
             </p>
 
             <h1 className="mt-2 text-3xl font-bold">
@@ -319,7 +319,7 @@ export default async function OwnerUserManagePage({
                     type="submit"
                     className="rounded-lg border border-purple-400/50 bg-purple-400/10 px-4 py-2 text-sm font-semibold text-purple-200 transition hover:bg-purple-400 hover:text-black"
                   >
-                    Tornar Administrator
+                    Tornar Administrador
                   </button>
                 </form>
               )}

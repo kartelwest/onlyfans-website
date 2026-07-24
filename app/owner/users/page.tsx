@@ -42,15 +42,15 @@ export default async function OwnerUsersPage() {
         <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.3em] text-pink-300">
-              Owner Portal
+              Portal do Proprietário
             </p>
 
             <h1 className="mt-2 text-3xl font-bold">
-              Account Management
+              Gerenciamento de Contas
             </h1>
 
             <p className="mt-2 text-zinc-400">
-              Manage all KARRAY Models user accounts.
+              Gerencie todas as contas de usuários da KARRAY Models.
             </p>
           </div>
 
@@ -59,7 +59,7 @@ export default async function OwnerUsersPage() {
               href="/admin/models"
               className="rounded-lg border border-zinc-700 px-4 py-2 text-sm font-semibold text-zinc-200 transition hover:border-pink-400 hover:text-pink-300"
             >
-              Back to Models
+              Voltar para Modelos
             </Link>
 
             <LogoutButton />
@@ -71,59 +71,59 @@ export default async function OwnerUsersPage() {
             href="/owner/users/new?role=model"
             className="rounded-xl border border-pink-400/30 bg-[#161116] p-5 text-sm font-semibold text-pink-200 transition hover:border-pink-400 hover:bg-pink-400/10"
           >
-            Add Model
+            Adicionar Modelo
           </Link>
 
           <Link
             href="/owner/users/new?role=administrator"
             className="rounded-xl border border-pink-400/30 bg-[#161116] p-5 text-sm font-semibold text-pink-200 transition hover:border-pink-400 hover:bg-pink-400/10"
           >
-            Add Administrator
+            Adicionar Administrador
           </Link>
 
           <Link
             href="/owner/users/new?role=representative"
             className="rounded-xl border border-pink-400/30 bg-[#161116] p-5 text-sm font-semibold text-pink-200 transition hover:border-pink-400 hover:bg-pink-400/10"
           >
-            Add Representative
+            Adicionar Representante
           </Link>
         </div>
 
         <div className="space-y-6">
           <Suspense
-            fallback={<OwnerUserSectionSkeleton title="Models" />}
+            fallback={<OwnerUserSectionSkeleton title="Modelos" />}
           >
             <OwnerUserSection
-              title="Models"
+              title="Modelos"
               role="model"
-              emptyMessage="No models yet"
+              emptyMessage="Nenhuma modelo cadastrada"
               limit={10}
               viewAllHref="/admin/models"
-              viewAllLabel="View all"
+              viewAllLabel="Ver todas"
             />
           </Suspense>
 
           <Suspense
             fallback={
-              <OwnerUserSectionSkeleton title="Representatives" />
+              <OwnerUserSectionSkeleton title="Representantes" />
             }
           >
             <OwnerUserSection
-              title="Representatives"
+              title="Representantes"
               role="representative"
-              emptyMessage="No representatives yet"
+              emptyMessage="Nenhum representante cadastrado"
             />
           </Suspense>
 
           <Suspense
             fallback={
-              <OwnerUserSectionSkeleton title="Administrators" />
+              <OwnerUserSectionSkeleton title="Administradores" />
             }
           >
             <OwnerUserSection
-              title="Administrators"
+              title="Administradores"
               role="administrator"
-              emptyMessage="No administrators yet"
+              emptyMessage="Nenhum administrador cadastrado"
             />
           </Suspense>
         </div>
