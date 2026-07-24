@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 
 import { WHATSAPP_URL } from "@/lib/constants/whatsapp";
-import SpanishDatePicker from "@/components/ui/SpanishDatePicker";
+import BirthdayDatePicker from "@/components/ui/BirthdayDatePicker";
 
 type FormState = {
     nomeCompleto: string;
@@ -212,7 +212,7 @@ export default function ApplyPage() {
                                         Data de nascimento
                                     </span>
                                     <div className="mt-3">
-                                        <SpanishDatePicker
+                                        <BirthdayDatePicker
                                             required
                                             value={form.dataNascimento}
                                             onChange={(value) =>
