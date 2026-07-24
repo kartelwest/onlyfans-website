@@ -36,6 +36,14 @@ type DashboardModel = ModelRow & {
   checklist: ChecklistRow | null;
 };
 
+type SimpleProfileRow = {
+  id: string;
+  full_name: string | null;
+  email: string | null;
+  active: boolean | null;
+  created_at: string | null;
+};
+
 export default async function AdminModelsPage() {
   const supabase = await createClient();
 
@@ -126,6 +134,40 @@ export default async function AdminModelsPage() {
   for (const checklist of checklistRows ?? []) {
     checklistMap.set(checklist.model_id, checklist);
   }
+
+  const { data: representativeRows, error: representativesError } =
+    await supabase
+      .from("profiles")
+      .select("id, full_name, email, active, created_at")
+      .eq("role", "representative")
+      .order("full_name", { ascending: true });
+
+  if (representativesError) {
+    console.error(
+      "Erro ao carregar representantes:",
+      representativesError,
+    );
+  }
+
+  const { data: administratorRows, error: administratorsError } =
+    await supabase
+      .from("profiles")
+      .select("id, full_name, email, active, created_at")
+      .eq("role", "administrator")
+      .order("full_name", { ascending: true });
+
+  if (administratorsError) {
+    console.error(
+      "Erro ao carregar administradores:",
+      administratorsError,
+    );
+  }
+
+  const representatives =
+    (representativeRows ?? []) as SimpleProfileRow[];
+
+  const administrators =
+    (administratorRows ?? []) as SimpleProfileRow[];
 
   const models: DashboardModel[] = (modelRows ?? []).map(
     (model) => ({
@@ -277,7 +319,21 @@ export default async function AdminModelsPage() {
           </div>
         </section>
 
-        <section className="mt-6 overflow-hidden rounded-2xl border border-white/10 bg-[#111115]">
+        <details
+          open
+          className="group mt-6 overflow-hidden rounded-2xl border border-white/10 bg-[#111115]"
+        >
+          <summary className="flex cursor-pointer list-none items-center justify-between gap-4 border-b border-pink-400/20 bg-[#2a1521] px-6 py-4 [&::-webkit-details-marker]:hidden">
+            <span className="text-sm font-bold uppercase tracking-[0.14em] text-pink-100">
+              Modelos{" "}
+              <span className="font-semibold text-pink-300/70">
+                ({models.length})
+              </span>
+            </span>
+
+            <ChevronIcon />
+          </summary>
+
           <div className="overflow-x-auto">
             <table className="w-full min-w-[1350px] border-collapse">
               <thead className="bg-[#2a1521] text-left">
@@ -446,7 +502,21 @@ export default async function AdminModelsPage() {
               </tbody>
             </table>
           </div>
-        </section>
+        </details>
+
+        <ProfileListSection
+          title="Representantes"
+          profiles={representatives}
+          emptyMessage="Nenhum representante cadastrado."
+          isOwner={role === "owner"}
+        />
+
+        <ProfileListSection
+          title="Administradores"
+          profiles={administrators}
+          emptyMessage="Nenhum administrador cadastrado."
+          isOwner={role === "owner"}
+        />
 
         <section className="mt-6 grid gap-4 rounded-2xl border border-pink-400/20 bg-[#21121a] p-6 lg:grid-cols-2">
           <div>
@@ -480,6 +550,121 @@ export default async function AdminModelsPage() {
         </section>
       </div>
     </main>
+  );
+}
+
+function ChevronIcon() {
+  return (
+    <svg
+      viewBox="0 0 20 20"
+      fill="none"
+      className="h-4 w-4 shrink-0 text-pink-200 transition-transform duration-200 group-open:rotate-90"
+    >
+      <path
+        d="M7 4l6 6-6 6"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+function ProfileListSection({
+  title,
+  profiles,
+  emptyMessage,
+  isOwner,
+}: {
+  title: string;
+  profiles: SimpleProfileRow[];
+  emptyMessage: string;
+  isOwner: boolean;
+}) {
+  return (
+    <details className="group mt-6 overflow-hidden rounded-2xl border border-white/10 bg-[#111115]">
+      <summary className="flex cursor-pointer list-none items-center justify-between gap-4 border-b border-pink-400/20 bg-[#2a1521] px-6 py-4 [&::-webkit-details-marker]:hidden">
+        <span className="text-sm font-bold uppercase tracking-[0.14em] text-pink-100">
+          {title}{" "}
+          <span className="font-semibold text-pink-300/70">
+            ({profiles.length})
+          </span>
+        </span>
+
+        <ChevronIcon />
+      </summary>
+
+      <div className="overflow-x-auto">
+        <table className="w-full min-w-[700px] border-collapse">
+          <thead className="bg-[#2a1521] text-left">
+            <tr className="border-b border-pink-400/20">
+              <TableHeading>Nome</TableHeading>
+              <TableHeading>Email</TableHeading>
+              <TableHeading>Status</TableHeading>
+              {isOwner && <TableHeading>Ações</TableHeading>}
+            </tr>
+          </thead>
+
+          <tbody>
+            {profiles.length === 0 ? (
+              <tr>
+                <td
+                  colSpan={isOwner ? 4 : 3}
+                  className="px-6 py-12 text-center text-sm text-white/50"
+                >
+                  {emptyMessage}
+                </td>
+              </tr>
+            ) : (
+              profiles.map((profile) => (
+                <tr
+                  key={profile.id}
+                  className={`border-b border-white/10 transition hover:bg-white/[0.03] ${
+                    !profile.active ? "opacity-50" : ""
+                  }`}
+                >
+                  <TableCell>
+                    <span className="font-bold text-white">
+                      {profile.full_name || "Sem nome"}
+                    </span>
+                  </TableCell>
+
+                  <TableCell>
+                    <span className="text-sm text-white/60">
+                      {profile.email || "—"}
+                    </span>
+                  </TableCell>
+
+                  <TableCell>
+                    <span
+                      className={`inline-flex rounded-full px-3 py-1 text-xs font-bold ring-1 ${
+                        profile.active
+                          ? "bg-emerald-500/10 text-emerald-300 ring-emerald-500/30"
+                          : "bg-red-500/10 text-red-300 ring-red-500/30"
+                      }`}
+                    >
+                      {profile.active ? "Ativo" : "Inativo"}
+                    </span>
+                  </TableCell>
+
+                  {isOwner && (
+                    <TableCell>
+                      <Link
+                        href={`/owner/users/${profile.id}`}
+                        className="rounded-lg border border-pink-400/30 bg-pink-500/10 px-4 py-2 text-xs font-bold text-pink-200 transition hover:bg-pink-500/20"
+                      >
+                        Gerenciar
+                      </Link>
+                    </TableCell>
+                  )}
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
+    </details>
   );
 }
 
