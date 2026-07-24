@@ -5,13 +5,21 @@ import {
   createUniqueModelSlug,
   getNextModelNumber,
 } from "@/lib/models/createModelSlug";
-import type { ExtractedModel } from "@/lib/anthropic/importTool";
+import {
+  createApplicationNotes,
+  findReferredRepresentativeId,
+  hasAnyApplicationAnswer,
+} from "@/lib/models/applicantIntake";
+import type { ExtractedApplicant } from "@/lib/anthropic/importTool";
 import type { ManagementRole } from "@/types/model";
 
 export const dynamic = "force-dynamic";
 
+const NOTE_AUTHOR_NAME = "Importador de PDF/imagem (assistente Claude)";
+const NOTE_HEADER = "CANDIDATA IMPORTADA (PDF/imagem)";
+
 type ConfirmBody = {
-  models?: ExtractedModel[];
+  applicants?: ExtractedApplicant[];
 };
 
 export async function POST(request: Request) {
@@ -45,9 +53,9 @@ export async function POST(request: Request) {
 
     const body = (await request.json()) as ConfirmBody;
 
-    if (!Array.isArray(body.models) || body.models.length === 0) {
+    if (!Array.isArray(body.applicants) || body.applicants.length === 0) {
       return NextResponse.json(
-        { error: "Nenhuma modelo para salvar." },
+        { error: "Nenhuma candidata para salvar." },
         { status: 400 },
       );
     }
@@ -61,71 +69,80 @@ export async function POST(request: Request) {
       error?: string;
     }[] = [];
 
-    for (let index = 0; index < body.models.length; index++) {
-      const model = body.models[index];
-      const displayName = model.display_name?.trim();
+    for (let index = 0; index < body.applicants.length; index++) {
+      const applicant = body.applicants[index];
+      const nomeCompleto = applicant.nomeCompleto?.trim();
 
-      if (!displayName) {
+      if (!nomeCompleto) {
         results.push({
           index,
           ok: false,
           display_name: "(sem nome)",
-          error: "Nome obrigatório.",
+          error: "Nome completo é obrigatório.",
         });
         continue;
       }
 
       try {
-        const stageName = model.stage_name?.trim() || null;
+        const stageName = applicant.nomeArtisticoDesejado?.trim() || null;
+        const cidade = applicant.cidade?.trim() || "";
+        const estado = applicant.estado?.trim() || "";
+        const pais = applicant.pais?.trim() || "";
+        const representanteIndicacao =
+          applicant.representanteIndicacao?.trim() || "";
 
         const slug = await createUniqueModelSlug(
           supabase,
-          stageName || displayName,
+          stageName || nomeCompleto,
         );
 
         const modelNumber = await getNextModelNumber(supabase);
 
-        const cityParts = [model.city?.trim(), model.state?.trim()].filter(
-          Boolean,
-        );
+        const representativeId = representanteIndicacao
+          ? await findReferredRepresentativeId(supabase, representanteIndicacao)
+          : null;
+
+        const cityParts = [cidade, estado].filter(Boolean);
 
         const insertPayload: Record<string, unknown> = {
           model_number: modelNumber,
           slug,
-          display_name: displayName,
+          display_name: nomeCompleto,
           stage_name: stageName,
+          representative_id: representativeId,
           status: "candidate",
           active: false,
+          onboarding_percentage: 0,
           latest_note_summary:
-            "Criada pelo importador de PDF/imagem (assistente Claude).",
+            "Candidata importada de PDF/imagem (assistente Claude).",
         };
 
-        if (model.birthday?.trim()) {
-          insertPayload.birthday = model.birthday.trim();
+        if (applicant.dataNascimento?.trim()) {
+          insertPayload.birthday = applicant.dataNascimento.trim();
         }
 
         if (cityParts.length > 0) {
           insertPayload.city = cityParts.join(", ");
         }
 
-        if (model.country?.trim()) {
-          insertPayload.nationality = model.country.trim();
+        if (pais) {
+          insertPayload.nationality = pais;
         }
 
-        if (model.email?.trim()) {
-          insertPayload.email = model.email.trim().toLowerCase();
+        if (applicant.email?.trim()) {
+          insertPayload.email = applicant.email.trim().toLowerCase();
         }
 
-        if (model.whatsapp?.trim()) {
-          insertPayload.whatsapp = model.whatsapp.trim();
+        if (applicant.whatsapp?.trim()) {
+          insertPayload.whatsapp = applicant.whatsapp.trim();
         }
 
-        if (model.instagram?.trim()) {
-          insertPayload.instagram = model.instagram.trim();
+        if (applicant.instagram?.trim()) {
+          insertPayload.instagram = applicant.instagram.trim();
         }
 
-        if (model.twitter?.trim()) {
-          insertPayload.twitter = model.twitter.trim();
+        if (applicant.twitter?.trim()) {
+          insertPayload.twitter = applicant.twitter.trim();
         }
 
         const { data, error } = await supabase
@@ -138,7 +155,7 @@ export async function POST(request: Request) {
           results.push({
             index,
             ok: false,
-            display_name: displayName,
+            display_name: nomeCompleto,
             error: error?.message || "Erro ao salvar.",
           });
           continue;
@@ -152,19 +169,33 @@ export async function POST(request: Request) {
           display_name: data.display_name,
         });
 
-        if (model.notes?.trim()) {
-          await supabase.from("model_notes").insert({
-            model_id: data.id,
-            body: `IMPORTADO DE ARQUIVO — ${model.notes.trim()}`,
-            priority: "normal",
-            created_by_name: "Importador de PDF/imagem (assistente Claude)",
-          });
+        const answers = {
+          frequenciaConteudo: applicant.frequenciaConteudo?.trim() || undefined,
+          motivoCandidatura: applicant.motivoCandidatura?.trim() || undefined,
+          cidade: cidade || undefined,
+          estado: estado || undefined,
+          pais: pais || undefined,
+          representanteIndicacao: representanteIndicacao || undefined,
+          possuiOnlyfans: applicant.possuiOnlyfans?.trim() || undefined,
+          bloquearBrasil: applicant.bloquearBrasil?.trim() || undefined,
+          mostrarRosto: applicant.mostrarRosto?.trim() || undefined,
+          moedaPreferida: applicant.moedaPreferida?.trim() || undefined,
+        };
+
+        if (hasAnyApplicationAnswer(answers)) {
+          await createApplicationNotes(
+            supabase,
+            data.id,
+            answers,
+            NOTE_AUTHOR_NAME,
+            NOTE_HEADER,
+          );
         }
       } catch (rowError) {
         results.push({
           index,
           ok: false,
-          display_name: displayName,
+          display_name: nomeCompleto,
           error:
             rowError instanceof Error
               ? rowError.message
@@ -175,14 +206,14 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ results });
   } catch (error) {
-    console.error("Erro ao confirmar importação de modelos:", error);
+    console.error("Erro ao confirmar importação de candidatas:", error);
 
     return NextResponse.json(
       {
         error:
           error instanceof Error
             ? error.message
-            : "Erro inesperado ao salvar as modelos.",
+            : "Erro inesperado ao salvar as candidatas.",
       },
       { status: 500 },
     );
