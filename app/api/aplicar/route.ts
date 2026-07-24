@@ -247,27 +247,18 @@ async function createApplicationNotes(
   const { error } = await adminSupabase.from("model_notes").insert([
     {
       model_id: modelId,
-      author_id: null,
-      author_name: NOTE_AUTHOR_NAME,
-      author_role: null,
       body: frequencyNote,
       priority: "normal",
       created_by_name: NOTE_AUTHOR_NAME,
     },
     {
       model_id: modelId,
-      author_id: null,
-      author_name: NOTE_AUTHOR_NAME,
-      author_role: null,
       body: motivationNote,
       priority: "normal",
       created_by_name: NOTE_AUTHOR_NAME,
     },
     {
       model_id: modelId,
-      author_id: null,
-      author_name: NOTE_AUTHOR_NAME,
-      author_role: null,
       body: additionalDetailsNote,
       priority: "normal",
       created_by_name: NOTE_AUTHOR_NAME,
