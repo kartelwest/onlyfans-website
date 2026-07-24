@@ -80,7 +80,9 @@ export default function ModelImporterPanel({
   const [autoSave, setAutoSave] = useState(initialAutoSave);
   const [isSavingSetting, setIsSavingSetting] = useState(false);
 
-  const [files, setFiles] = useState<File[]>([]);
+  const [slotFiles, setSlotFiles] = useState<Array<File | null>>(
+    Array(MAX_FILES).fill(null),
+  );
   const [isExtracting, setIsExtracting] = useState(false);
   const [extractError, setExtractError] = useState("");
 
@@ -91,6 +93,10 @@ export default function ModelImporterPanel({
   const [saveError, setSaveError] = useState("");
   const [saveResult, setSaveResult] = useState<ConfirmResponse | null>(null);
 
+  const files = slotFiles.filter(
+    (file): file is File => file !== null,
+  );
+
   function resetResults() {
     setExtractError("");
     setClarification(null);
@@ -99,25 +105,27 @@ export default function ModelImporterPanel({
     setSaveError("");
   }
 
-  function handleFileChange(event: ChangeEvent<HTMLInputElement>) {
-    const selected = Array.from(event.target.files ?? []);
+  function handleSlotFileChange(
+    slotIndex: number,
+    event: ChangeEvent<HTMLInputElement>,
+  ) {
+    const selected = event.target.files?.[0] ?? null;
 
-    if (selected.length > MAX_FILES) {
-      setExtractError(`Envie no máximo ${MAX_FILES} arquivos por vez.`);
-      setFiles(selected.slice(0, MAX_FILES));
-    } else {
-      setExtractError("");
-      setFiles(selected);
-    }
+    setSlotFiles((current) =>
+      current.map((file, i) => (i === slotIndex ? selected : file)),
+    );
 
+    setExtractError("");
     setClarification(null);
     setApplicants([]);
     setSaveResult(null);
     setSaveError("");
   }
 
-  function removeFile(index: number) {
-    setFiles((current) => current.filter((_, i) => i !== index));
+  function removeSlotFile(slotIndex: number) {
+    setSlotFiles((current) =>
+      current.map((file, i) => (i === slotIndex ? null : file)),
+    );
   }
 
   async function handleToggleAutoSave() {
@@ -152,7 +160,7 @@ export default function ModelImporterPanel({
   }
 
   async function handleExtract() {
-    if (files.length === 0 || files.length > MAX_FILES || isExtracting) {
+    if (files.length === 0 || isExtracting) {
       return;
     }
 
@@ -287,43 +295,59 @@ export default function ModelImporterPanel({
       <div className="rounded-2xl border border-white/10 bg-[#111115] p-6">
         <p className="text-sm font-bold text-white">Arquivos</p>
         <p className="mt-1 text-xs text-white/50">
-          Envie de 1 a {MAX_FILES} arquivos (PDF, JPG, PNG ou WEBP). Se forem
-          vários prints de uma mesma conversa, envie todos juntos — serão
-          tratados como uma única candidata.
+          Envie de 1 a {MAX_FILES} arquivos (PDF, JPG, PNG ou WEBP) usando os
+          campos abaixo. Preencha pelo menos um — os demais são opcionais. Se
+          forem vários prints de uma mesma conversa, envie todos juntos —
+          serão tratados como uma única candidata.
         </p>
 
-        <input
-          type="file"
-          multiple
-          accept="application/pdf,image/jpeg,image/png,image/webp"
-          onChange={handleFileChange}
-          className="mt-3 block w-full text-sm text-white/70 file:mr-4 file:rounded-lg file:border-0 file:bg-pink-500 file:px-4 file:py-2 file:text-sm file:font-bold file:text-white hover:file:bg-pink-400"
-        />
+        <div className="mt-4 space-y-3">
+          {slotFiles.map((slotFile, index) => (
+            <div
+              key={index}
+              className="flex flex-wrap items-center gap-3 rounded-lg border border-white/10 bg-[#08080a] px-4 py-3"
+            >
+              <span className="w-20 shrink-0 text-xs font-bold uppercase tracking-[0.1em] text-white/45">
+                Arquivo {index + 1}
+              </span>
 
-        {files.length > 0 && (
-          <ul className="mt-4 space-y-2">
-            {files.map((file, index) => (
-              <li
-                key={`${file.name}-${index}`}
-                className="flex items-center justify-between rounded-lg border border-white/10 bg-[#08080a] px-4 py-2 text-sm text-white/70"
+              <label
+                htmlFor={`import-file-slot-${index}`}
+                className="shrink-0 cursor-pointer rounded-lg bg-pink-500 px-4 py-2 text-xs font-bold text-white transition hover:bg-pink-400"
               >
-                <span className="truncate">{file.name}</span>
+                Escolher arquivo
+              </label>
+
+              <input
+                id={`import-file-slot-${index}`}
+                key={slotFile?.name ?? `empty-${index}`}
+                type="file"
+                accept="application/pdf,image/jpeg,image/png,image/webp"
+                onChange={(event) => handleSlotFileChange(index, event)}
+                className="hidden"
+              />
+
+              <span className="min-w-0 flex-1 truncate text-sm text-white/60">
+                {slotFile?.name ?? "Nenhum arquivo selecionado"}
+              </span>
+
+              {slotFile && (
                 <button
                   type="button"
-                  onClick={() => removeFile(index)}
-                  className="ml-3 shrink-0 text-xs font-bold text-red-300 hover:text-red-200"
+                  onClick={() => removeSlotFile(index)}
+                  className="shrink-0 text-xs font-bold text-red-300 hover:text-red-200"
                 >
                   Remover
                 </button>
-              </li>
-            ))}
-          </ul>
-        )}
+              )}
+            </div>
+          ))}
+        </div>
 
         <button
           type="button"
           onClick={handleExtract}
-          disabled={files.length === 0 || files.length > MAX_FILES || isExtracting}
+          disabled={files.length === 0 || isExtracting}
           className="mt-4 rounded-xl bg-pink-500 px-5 py-3 text-sm font-bold text-white transition hover:bg-pink-400 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {isExtracting ? "Analisando arquivos..." : "Extrair dados"}
