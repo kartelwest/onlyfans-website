@@ -133,6 +133,15 @@ export default async function ModelAdminPage({
         drive_onlyfans,
         drive_instagram,
         drive_twitter,
+        content_drive_url,
+        preferred_currency,
+        content_frequency,
+        block_brazil,
+        show_face,
+        referral_source,
+        subscribers_count,
+        ppv_sold_count,
+        tips_amount,
         status,
         onboarding_complete,
         active,
@@ -275,6 +284,33 @@ export default async function ModelAdminPage({
     driveTwitter:
       modelRow.drive_twitter ?? null,
 
+    contentDriveUrl:
+      modelRow.content_drive_url ?? null,
+
+    preferredCurrency:
+      modelRow.preferred_currency ?? null,
+
+    contentFrequency:
+      modelRow.content_frequency ?? null,
+
+    blockBrazil:
+      modelRow.block_brazil ?? false,
+
+    showFace:
+      modelRow.show_face ?? true,
+
+    referralSource:
+      modelRow.referral_source ?? null,
+
+    subscribersCount:
+      modelRow.subscribers_count ?? 0,
+
+    ppvSoldCount:
+      modelRow.ppv_sold_count ?? 0,
+
+    tipsAmount:
+      modelRow.tips_amount ?? 0,
+
     status:
       modelRow.status ?? null,
 
@@ -328,6 +364,7 @@ export default async function ModelAdminPage({
         fansly_verification_status,
         welcome_call_status,
         content_received_status,
+        proxy_browser_status,
         onboarding_percentage,
         created_at,
         updated_at
@@ -446,6 +483,11 @@ export default async function ModelAdminPage({
     contentReceivedStatus:
       normalizeChecklistStatus(
         checklistRow?.content_received_status,
+      ),
+
+    proxyBrowserStatus:
+      normalizeChecklistStatus(
+        checklistRow?.proxy_browser_status,
       ),
 
     onboardingPercentage:

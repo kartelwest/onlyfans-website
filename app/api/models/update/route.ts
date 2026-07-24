@@ -28,13 +28,27 @@ const allowedModelFields = {
   driveOnlyfans: "drive_onlyfans",
   driveInstagram: "drive_instagram",
   driveTwitter: "drive_twitter",
+  contentDriveUrl: "content_drive_url",
+
+  preferredCurrency: "preferred_currency",
+  contentFrequency: "content_frequency",
+  referralSource: "referral_source",
+} as const;
+
+const allowedBooleanModelFields = {
+  blockBrazil: "block_brazil",
+  showFace: "show_face",
 } as const;
 
 type ModelEditableField =
   keyof typeof allowedModelFields;
 
+type ModelBooleanEditableField =
+  keyof typeof allowedBooleanModelFields;
+
 type EditableField =
   | ModelEditableField
+  | ModelBooleanEditableField
   | "fullName";
 
 type Body = {
@@ -180,6 +194,41 @@ export async function PATCH(
           {
             error:
               updateProfileError.message,
+          },
+          {
+            status: 500,
+          },
+        );
+      }
+
+      return NextResponse.json({
+        success: true,
+      });
+    }
+
+    if (
+      body.field in allowedBooleanModelFields
+    ) {
+      const booleanDbField =
+        allowedBooleanModelFields[
+          body.field as ModelBooleanEditableField
+        ];
+
+      const {
+        error: updateBooleanError,
+      } = await supabase
+        .from("models")
+        .update({
+          [booleanDbField]:
+            body.value === "true",
+        })
+        .eq("id", body.modelId);
+
+      if (updateBooleanError) {
+        return NextResponse.json(
+          {
+            error:
+              updateBooleanError.message,
           },
           {
             status: 500,

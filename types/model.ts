@@ -73,6 +73,24 @@ export interface Model {
 
   driveTwitter: string | null;
 
+  contentDriveUrl: string | null;
+
+  preferredCurrency: string | null;
+
+  contentFrequency: string | null;
+
+  blockBrazil: boolean;
+
+  showFace: boolean;
+
+  referralSource: string | null;
+
+  subscribersCount: number;
+
+  ppvSoldCount: number;
+
+  tipsAmount: number;
+
   status: string | null;
 
   onboardingComplete: boolean;
@@ -135,11 +153,19 @@ export interface ModelChecklist {
 
   contentReceivedStatus: ChecklistStatus;
 
+  proxyBrowserStatus: ChecklistStatus;
+
   onboardingPercentage: number;
 
   createdAt: string;
 
   updatedAt: string;
+}
+
+export interface ModelMarketingAccounts {
+  instagramMarketing: string | null;
+
+  twitterMarketing: string | null;
 }
 
 export interface ModelPlatform {
