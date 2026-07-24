@@ -3,6 +3,7 @@
 import { useState } from "react";
 
 import EditableTextField from "@/components/admin/model/EditableTextField";
+import SocialAccountsSection from "@/components/admin/model/SocialAccountsSection";
 
 import type {
   ManagementRole,
@@ -25,7 +26,13 @@ type EditableField =
   | "nationality"
   | "language"
   | "email"
-  | "whatsapp";
+  | "whatsapp"
+  | "preferredCurrency"
+  | "contentFrequency"
+  | "referralSource"
+  | "contentDriveUrl";
+
+type BooleanEditableField = "blockBrazil" | "showFace";
 
 export default function OverviewTab({
   model,
@@ -81,6 +88,32 @@ export default function OverviewTab({
       [field]: value,
       ...(field === "fullName" && { displayName: value }),
     });
+  }
+
+  async function updateBooleanField(
+    field: BooleanEditableField,
+    value: boolean,
+  ) {
+    const response = await fetch("/api/models/update", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        modelId: model.id,
+        field,
+        value: value ? "true" : "false",
+      }),
+    });
+
+    const data = (await response.json()) as {
+      success?: boolean;
+      error?: string;
+    };
+
+    if (!response.ok || !data.success) {
+      throw new Error(data.error ?? "Não foi possível salvar.");
+    }
+
+    onModelUpdate({ ...model, [field]: value });
   }
 
   return (
@@ -301,6 +334,128 @@ export default function OverviewTab({
           </div>
         )}
       </section>
+
+      <section className="rounded-2xl border border-white/10 bg-[#111115] p-6">
+        <div>
+          <h3 className="text-xl font-bold">
+            Dados do Model Dashboard
+          </h3>
+          <p className="mt-1 text-sm text-white/45">
+            Campos exibidos na Área da Modelo / visão do representante.
+          </p>
+        </div>
+
+        {isEditing && canEdit ? (
+          <div className="mt-6 grid gap-5 md:grid-cols-2">
+            <EditableTextField
+              label="Moeda preferida"
+              value={model.preferredCurrency}
+              placeholder="BRL, USD..."
+              onSave={(value) => updateField("preferredCurrency", value)}
+            />
+
+            <EditableTextField
+              label="Frequência de conteúdo"
+              value={model.contentFrequency}
+              placeholder="Diária, semanal..."
+              onSave={(value) => updateField("contentFrequency", value)}
+            />
+
+            <EditableTextField
+              label="Indicação"
+              value={model.referralSource}
+              placeholder="Como conheceu a agência"
+              onSave={(value) => updateField("referralSource", value)}
+            />
+
+            <EditableTextField
+              label="Pasta do Google Drive (conteúdo)"
+              value={model.contentDriveUrl}
+              placeholder="https://drive.google.com/drive/folders/..."
+              inputType="url"
+              onSave={(value) => updateField("contentDriveUrl", value)}
+            />
+
+            <BooleanToggle
+              label="Bloquear Brasil"
+              value={model.blockBrazil}
+              onChange={(value) => updateBooleanField("blockBrazil", value)}
+            />
+
+            <BooleanToggle
+              label="Mostrar rosto"
+              value={model.showFace}
+              onChange={(value) => updateBooleanField("showFace", value)}
+            />
+          </div>
+        ) : (
+          <div className="mt-6 grid gap-5 md:grid-cols-2">
+            <Info label="Moeda preferida" value={model.preferredCurrency} />
+            <Info label="Frequência de conteúdo" value={model.contentFrequency} />
+            <Info label="Indicação" value={model.referralSource} />
+            <Info
+              label="Pasta do Google Drive (conteúdo)"
+              value={model.contentDriveUrl}
+            />
+            <Info
+              label="Bloquear Brasil"
+              value={model.blockBrazil ? "Sim" : "Não"}
+            />
+            <Info label="Mostrar rosto" value={model.showFace ? "Sim" : "Não"} />
+          </div>
+        )}
+      </section>
+
+      {canEdit && (
+        <SocialAccountsSection
+          model={model}
+          onModelUpdate={onModelUpdate}
+        />
+      )}
+    </div>
+  );
+}
+
+function BooleanToggle({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: boolean;
+  onChange: (value: boolean) => void;
+}) {
+  return (
+    <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
+      <p className="text-xs font-bold uppercase tracking-[0.14em] text-white/45">
+        {label}
+      </p>
+
+      <div className="mt-3 flex gap-2">
+        <button
+          type="button"
+          onClick={() => onChange(true)}
+          className={`rounded-xl px-4 py-2 text-xs font-black uppercase tracking-[0.1em] transition ${
+            value
+              ? "bg-pink-300 text-[#321725]"
+              : "border border-white/15 text-white/60 hover:bg-white/5"
+          }`}
+        >
+          Sim
+        </button>
+
+        <button
+          type="button"
+          onClick={() => onChange(false)}
+          className={`rounded-xl px-4 py-2 text-xs font-black uppercase tracking-[0.1em] transition ${
+            !value
+              ? "bg-pink-300 text-[#321725]"
+              : "border border-white/15 text-white/60 hover:bg-white/5"
+          }`}
+        >
+          Não
+        </button>
+      </div>
     </div>
   );
 }
