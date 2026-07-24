@@ -36,15 +36,16 @@ alter table public.models
 -- omitted from the app's own queries. Every logged-in user maps to the same
 -- shared `authenticated` Postgres role regardless of their app-level
 -- management_role, so row-level policies alone can't tell an owner's read
--- from a rep's read of the same row. We revoke column-level SELECT/UPDATE
--- from `authenticated` entirely and expose the columns only through
--- SECURITY DEFINER RPCs that self-check public.is_management().
+-- from a rep's read of the same row, and a bare column-level REVOKE is a
+-- no-op here too (Postgres column privileges are additive on top of
+-- table-level grants, not restrictive — see the follow-up
+-- 20260724000002_models_column_select_allowlist.sql migration, which revokes
+-- table-wide SELECT and re-grants it column-by-column for every OTHER
+-- column). These two are exposed only through SECURITY DEFINER RPCs that
+-- self-check public.is_management().
 alter table public.models
   add column if not exists instagram_marketing    text,
   add column if not exists twitter_marketing       text;
-
-revoke select (instagram_marketing, twitter_marketing) on public.models from authenticated;
-revoke update (instagram_marketing, twitter_marketing) on public.models from authenticated;
 
 create or replace function public.get_model_marketing(target_model uuid)
 returns table (instagram_marketing text, twitter_marketing text)
@@ -72,6 +73,8 @@ begin
    where id = target_model;
 end $$;
 
+revoke execute on function public.get_model_marketing(uuid) from public;
+revoke execute on function public.set_model_marketing(uuid, text, text) from public;
 grant execute on function public.get_model_marketing(uuid) to authenticated;
 grant execute on function public.set_model_marketing(uuid, text, text) to authenticated;
 
@@ -85,7 +88,12 @@ alter table public.model_checklist
 -- ----- Storage: model avatars --------------------------------------------------
 -- Public bucket (profile photos are not sensitive) so profile_photo_url can be
 -- used directly as an <img src> without signed-url plumbing, consistent with
--- how profile_photo_url is already consumed across the app.
+-- how profile_photo_url is already consumed across the app. Because the
+-- bucket is `public: true`, Supabase serves objects via the public object URL
+-- without needing a storage.objects SELECT policy — we deliberately do NOT
+-- add one, since a broad `select using (bucket_id = ...)` policy would also
+-- allow LISTING every avatar file in the bucket (flagged by the Supabase
+-- security advisor when first tried).
 insert into storage.buckets (id, name, public)
 values ('model-avatars', 'model-avatars', true) on conflict (id) do nothing;
 
@@ -107,7 +115,3 @@ create policy storage_model_avatars_write on storage.objects for all to authenti
       or private.is_own_model(( (storage.foldername(name))[1] )::uuid)
     )
   );
-
-drop policy if exists storage_model_avatars_public_read on storage.objects;
-create policy storage_model_avatars_public_read on storage.objects for select to public
-  using (bucket_id = 'model-avatars');
