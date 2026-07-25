@@ -60,7 +60,7 @@ export default function BrandGrowthTab({ model }: { model: Model }) {
           </button>
 
           <Link
-            href={`/amplia/clientes`}
+            href="/admin/amplia/models"
             className="rounded-xl border border-white/10 bg-white/5 px-5 py-3 text-sm font-semibold text-white/70 transition hover:bg-white/10"
           >
             Ver clientes Amplia

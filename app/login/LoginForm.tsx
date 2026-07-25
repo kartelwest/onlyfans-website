@@ -103,11 +103,13 @@ export default function LoginForm({ returnTo }: { returnTo?: string }) {
           </p>
 
           <h1 className="mt-3 text-3xl font-bold text-[#4b2438]">
-            Portal de Acesso
+            {returnTo?.startsWith("/admin/amplia") ? "Portal da Amplia" : "Portal de Acesso"}
           </h1>
 
           <p className="mt-3 text-sm leading-6 text-[#765c68]">
-            Entre com seu email e sua senha para acessar sua área.
+            {returnTo?.startsWith("/admin/amplia")
+              ? "Entre com seu email e senha para acessar o painel de crescimento de marca e mídia social."
+              : "Entre com seu email e senha para acessar sua área."}
           </p>
         </div>
 

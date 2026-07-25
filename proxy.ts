@@ -51,7 +51,6 @@ export async function proxy(request: NextRequest) {
     "/representative",
     "/area-da-modelo",
     "/alterar-senha",
-    "/amplia",
     "/api/brand",
   ];
 

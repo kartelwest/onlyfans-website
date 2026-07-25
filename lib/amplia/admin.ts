@@ -30,7 +30,13 @@ export async function requireAdminAmpliaAccess(): Promise<{
   }
 
   if (profile.role !== "owner" && profile.role !== "administrator") {
-    redirect("/admin/models");
+    const fallbackPath =
+      profile.role === "representative"
+        ? "/representative"
+        : profile.role === "model"
+          ? "/area-da-modelo"
+          : "/login";
+    redirect(fallbackPath);
   }
 
   return { user: { id: user.id }, role: profile.role as AmpliaAdminRole };
