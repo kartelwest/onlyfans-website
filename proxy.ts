@@ -50,6 +50,7 @@ export async function proxy(request: NextRequest) {
     "/administrator",
     "/representative",
     "/area-da-modelo",
+    "/amplia",
     "/alterar-senha",
   ];
 

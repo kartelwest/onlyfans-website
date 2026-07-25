@@ -100,6 +100,48 @@ const routeAccessMatrix: RouteAccess[] = [
     roles: ["owner", "administrator"],
     description: "Admin users API is staff-only",
   },
+  {
+    path: "/amplia",
+    roles: ["owner", "administrator"],
+    description: "Amplia overview is staff-only",
+  },
+  {
+    path: "/amplia/clientes",
+    roles: ["owner", "administrator"],
+    description: "Amplia client list is staff-only",
+  },
+  {
+    path: "/amplia/clientes/example-talent-id",
+    roles: ["owner", "administrator"],
+    description: "Amplia client detail is staff-only",
+  },
+  {
+    path: "/amplia/contas-sociais",
+    roles: ["owner", "administrator"],
+    description: "Amplia social accounts is staff-only",
+  },
+  {
+    path: "/amplia/configuracoes",
+    roles: ["owner", "administrator"],
+    description: "Amplia settings page is staff-only (owner-only to write)",
+  },
+  {
+    path: "/amplia/auditoria",
+    roles: ["owner", "administrator"],
+    description: "Amplia audit view is staff-only",
+  },
+];
+
+/**
+ * Amplia actions that only the owner may perform, even though administrators
+ * can reach the page. Enforced in the DB (app_settings write policies check
+ * is_owner()) and re-checked in the server action.
+ */
+const ownerOnlyAmpliaActions = [
+  {
+    name: "update Amplia settings (module name, display name, X feature flag)",
+    roles: ["owner"] as Role[],
+  },
 ];
 
 const allRoles: Role[] = [
@@ -176,6 +218,52 @@ describe("Role isolation", () => {
   it("unauthenticated users cannot access any protected route", () => {
     for (const route of routeAccessMatrix) {
       assert.strictEqual(hasAccess(route, null), false);
+    }
+  });
+});
+
+describe("Amplia (Brand Growth) access", () => {
+  const ampliaRoutes = routeAccessMatrix.filter((r) =>
+    r.path.startsWith("/amplia"),
+  );
+
+  it("has Amplia routes under test", () => {
+    assert.ok(ampliaRoutes.length > 0);
+  });
+
+  it("representatives do NOT auto-receive Brand Growth access", () => {
+    for (const route of ampliaRoutes) {
+      assert.strictEqual(hasAccess(route, "representative"), false);
+    }
+  });
+
+  it("models cannot access any Amplia route", () => {
+    for (const route of ampliaRoutes) {
+      assert.strictEqual(hasAccess(route, "model"), false);
+    }
+  });
+
+  it("unauthenticated users cannot access any Amplia route", () => {
+    for (const route of ampliaRoutes) {
+      assert.strictEqual(hasAccess(route, null), false);
+    }
+  });
+
+  it("owner and administrator can access every Amplia route", () => {
+    for (const route of ampliaRoutes) {
+      assert.strictEqual(hasAccess(route, "owner"), true);
+      assert.strictEqual(hasAccess(route, "administrator"), true);
+    }
+  });
+
+  it("administrators cannot perform owner-only Amplia actions", () => {
+    for (const action of ownerOnlyAmpliaActions) {
+      assert.strictEqual(
+        action.roles.includes("administrator"),
+        false,
+        `${action.name} must not be available to administrators`,
+      );
+      assert.strictEqual(action.roles.includes("owner"), true);
     }
   });
 });
