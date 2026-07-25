@@ -144,6 +144,7 @@ export interface BrandProfile {
   xAutomationMode: AutomationMode;
   brandStatus: string;
   aiGuidance: string | null;
+  dailyDirective: string | null;
   defaultLanguages: string[];
   allowAdultPlatformLinks: boolean;
   createdAt: string;

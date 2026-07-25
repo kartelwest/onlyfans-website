@@ -2,7 +2,6 @@
 
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
-import { AmpliaLayout } from "@/components/amplia/AmpliaLayout";
 
 export default function NovoClienteForm() {
   const router = useRouter();
@@ -44,7 +43,7 @@ export default function NovoClienteForm() {
         throw new Error(result.error ?? "Erro ao criar cliente.");
       }
 
-      router.push(`/amplia/clientes/${result.id}`);
+      router.push(`/admin/amplia/models/${result.id}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erro inesperado.");
     } finally {
@@ -53,8 +52,7 @@ export default function NovoClienteForm() {
   }
 
   return (
-    <AmpliaLayout title="Novo cliente Brand Growth">
-      <form onSubmit={handleSubmit} className="mx-auto max-w-3xl space-y-6 rounded-2xl border border-white/10 bg-[#111115] p-6">
+    <form onSubmit={handleSubmit} className="mx-auto max-w-3xl space-y-6 rounded-2xl border border-white/10 bg-[#111115] p-6">
         {error && (
           <div className="rounded-xl border border-red-400/30 bg-red-500/10 p-4 text-sm text-red-200">
             {error}
@@ -98,7 +96,6 @@ export default function NovoClienteForm() {
           </button>
         </div>
       </form>
-    </AmpliaLayout>
   );
 }
 

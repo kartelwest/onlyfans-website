@@ -305,6 +305,7 @@ function mapBrandProfile(row: Record<string, unknown>): BrandProfile {
     xAutomationMode: (row.x_automation_mode as AutomationMode) ?? "manual",
     brandStatus: String(row.brand_status ?? "planning"),
     aiGuidance: row.ai_guidance ? String(row.ai_guidance) : null,
+    dailyDirective: row.daily_directive ? String(row.daily_directive) : null,
     defaultLanguages: Array.isArray(row.default_languages) ? row.default_languages.map(String) : ["pt-BR"],
     allowAdultPlatformLinks: Boolean(row.allow_adult_platform_links),
     createdAt: String(row.created_at ?? ""),

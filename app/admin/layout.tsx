@@ -23,7 +23,7 @@ export default function AdminLayout({
 
           <div className="flex items-center gap-3">
             <Link
-              href="/amplia"
+              href="/admin/amplia"
               className="rounded-xl border border-pink-400/40 bg-pink-500/10 px-5 py-3 text-sm font-semibold text-pink-200 transition hover:bg-pink-500/20"
             >
               Amplia
