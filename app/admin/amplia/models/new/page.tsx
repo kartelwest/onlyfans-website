@@ -10,7 +10,7 @@ export default async function AdminAmpliaNewClientPage() {
     <main className="min-h-screen bg-[#08080a] px-4 py-8 text-white sm:px-6 lg:px-10">
       <div className="mx-auto max-w-[1600px]">
         <p className="text-xs font-semibold uppercase tracking-[0.28em] text-pink-300">
-          PORTAL PARA AMPLIA
+          PORTAL DA AMPLIA
         </p>
         <h1 className="mt-2 text-3xl font-bold">Novo cliente Amplia</h1>
         <p className="mt-2 text-sm text-white/55">
