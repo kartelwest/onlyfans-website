@@ -37,6 +37,14 @@ exception when duplicate_object then null; end $$;
 
 -- ----- Shared updated_at trigger already exists (set_updated_at) -------------
 
+-- Helper: ensure staff predicate exists for RLS below. Re-creating is safe because
+-- it only depends on public.profiles, which exists in every KarayModels project.
+create or replace function public.is_staff()
+returns boolean language sql stable security definer set search_path = public as $$
+  select coalesce((select active and role in ('owner','administrator')
+    from public.profiles where id = auth.uid()), false)
+$$;
+
 -- ----- video_integrations: connected Google Drive / cloud accounts -----------
 create table if not exists public.video_integrations (
   id                    uuid primary key default gen_random_uuid(),
