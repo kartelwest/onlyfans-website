@@ -32,6 +32,7 @@ type TabId =
     | "onlyfans"
     | "fansly"
     | "drive"
+    | "video"
     | "documents"
     | "payments"
     | "notes"
@@ -48,6 +49,7 @@ const tabs: {
         { id: "onlyfans", label: "OnlyFans" },
         { id: "fansly", label: "Fansly" },
         { id: "drive", label: "Google Drive" },
+        { id: "video", label: "Vídeo" },
         { id: "documents", label: "Documentos" },
         { id: "payments", label: "Pagamentos" },
         { id: "notes", label: "Notas" },
@@ -226,6 +228,15 @@ export default function ModelAdminClient({
                             <TemporarySection
                                 title="Google Drive"
                                 description="Pastas, links, acesso e envio de conteúdo."
+                            />
+                        )}
+
+                        {activeTab === "video" && (
+                            <ChecklistTab
+                                modelId={model.id}
+                                checklist={checklist}
+                                currentUserRole={currentUserRole}
+                                platform="video_editor"
                             />
                         )}
 

@@ -36,6 +36,69 @@ type PatchBody = {
   notes?: string;
 };
 
+function getDefaultOnboardingItems(
+  platform: string,
+  modelId: string,
+): Omit<OnboardingItemRecord, "id" | "created_at" | "updated_at">[] {
+  if (platform !== "video_editor") {
+    return [];
+  }
+
+  return [
+    {
+      model_id: modelId,
+      platform: "video_editor",
+      section_key: "video_account",
+      section_title: "Editor de Vídeo",
+      section_order: 0,
+      item_key: "create_google_account",
+      item_title: "Criar conta Google individual da modelo",
+      item_description:
+        "Criar uma conta Google separada para a modelo. Esta conta será usada para conectar o Google Drive de edição de vídeos.",
+      item_order: 0,
+      responsibility: "agency",
+      completed: false,
+      completed_at: null,
+      completed_by: null,
+      notes: null,
+    },
+    {
+      model_id: modelId,
+      platform: "video_editor",
+      section_key: "video_account",
+      section_title: "Editor de Vídeo",
+      section_order: 0,
+      item_key: "share_drive_folders",
+      item_title: "Compartilhar pastas do Google Drive com a agência",
+      item_description:
+        "Criar e compartilhar as pastas ONLY FANS e INSTAGRAM com o e-mail da service account da agência (somente Editor).",
+      item_order: 1,
+      responsibility: "agency",
+      completed: false,
+      completed_at: null,
+      completed_by: null,
+      notes: null,
+    },
+    {
+      model_id: modelId,
+      platform: "video_editor",
+      section_key: "video_account",
+      section_title: "Editor de Vídeo",
+      section_order: 0,
+      item_key: "set_default_template",
+      item_title: "Definir template padrão e plataforma",
+      item_description:
+        "Escolher o template padrão de edição (ex: Instagram Reels — Básico) e a plataforma de destino para vídeos da modelo.",
+      item_order: 2,
+      responsibility: "agency",
+      completed: false,
+      completed_at: null,
+      completed_by: null,
+      notes: null,
+    },
+  ];
+}
+
 async function getAuthenticatedProfile() {
   const supabase = await createClient();
 
@@ -219,8 +282,59 @@ export async function GET(
       );
     }
 
-    const onboardingItems =
+    let onboardingItems =
       (items ?? []) as OnboardingItemRecord[];
+
+    if (
+      onboardingItems.length === 0 &&
+      (auth.profile.role === "owner" ||
+        auth.profile.role === "administrator")
+    ) {
+      const defaultItems = getDefaultOnboardingItems(
+        platform,
+        modelId,
+      );
+
+      if (defaultItems.length > 0) {
+        await supabaseForCheck
+          .from("model_onboarding_items")
+          .insert(defaultItems as OnboardingItemRecord[]);
+
+        const { data: seededItems } = await supabaseForCheck
+          .from("model_onboarding_items")
+          .select(
+            `
+              id,
+              model_id,
+              item_key,
+              platform,
+              section_key,
+              section_title,
+              section_order,
+              item_title,
+              item_description,
+              item_order,
+              responsibility,
+              completed,
+              completed_at,
+              completed_by,
+              notes,
+              created_at,
+              updated_at
+            `,
+          )
+          .eq("model_id", modelId)
+          .eq("platform", platform)
+          .order("section_order", {
+            ascending: true,
+          })
+          .order("item_order", {
+            ascending: true,
+          });
+
+        onboardingItems = (seededItems ?? []) as OnboardingItemRecord[];
+      }
+    }
 
     const total =
       onboardingItems.length;
