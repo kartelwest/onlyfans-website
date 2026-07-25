@@ -35,7 +35,7 @@ const menuLinks = [
   { name: "Por Que Nós", href: "/por-que-nos" },
   { name: "FAQ", href: "/faq" },
   { name: "Login", href: "/login" },
-  { name: "PORTAL DA AMPLIA", href: "/admin/amplia" },
+  { name: "AMPLIA", href: "/admin/amplia" },
 ];
 
 export default function Navbar() {
