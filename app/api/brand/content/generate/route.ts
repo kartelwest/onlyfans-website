@@ -20,7 +20,7 @@ export async function POST(request: Request) {
     .eq("id", userData.user.id)
     .single();
 
-  if (!profile || !["owner", "administrator", "brand_manager", "content_manager"].includes(profile.role)) {
+  if (!profile || !["owner", "administrator"].includes(profile.role)) {
     return Response.json({ error: "Permissão negada." }, { status: 403 });
   }
 

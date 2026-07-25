@@ -27,8 +27,8 @@ export async function requireAmpliaAccess(): Promise<{
     redirect("/login");
   }
 
-  if (!["owner", "administrator", "brand_manager", "content_manager", "analyst", "reviewer"].includes(profile.role)) {
-    redirect("/admin/models");
+  if (!["owner", "administrator"].includes(profile.role)) {
+    redirect("/login");
   }
 
   return { user: { id: user.id }, role: profile.role };

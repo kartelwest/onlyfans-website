@@ -154,7 +154,13 @@ export default function ModelAdminClient({
 
                     <nav className="border-b border-white/10 bg-black/20 px-4 pt-4 sm:px-6">
                         <div className="flex gap-2 overflow-x-auto pb-4">
-                            {tabs.map((tab) => {
+                            {tabs
+                            .filter((tab) =>
+                                tab.id !== "brand_growth" ||
+                                currentUserRole === "owner" ||
+                                currentUserRole === "administrator",
+                            )
+                            .map((tab) => {
                                 const selected =
                                     activeTab === tab.id;
 

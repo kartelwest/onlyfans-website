@@ -58,7 +58,7 @@ export async function createBrandOnlyClient(
     .eq("id", userData.user.id)
     .single();
 
-  if (!profile || !profile.active || !["owner", "administrator", "brand_manager"].includes(profile.role)) {
+  if (!profile || !profile.active || !["owner", "administrator"].includes(profile.role)) {
     return { error: "Permissão negada." };
   }
 
@@ -202,7 +202,7 @@ export async function enrollModelInBrandGrowth(modelId: string): Promise<{ error
     .eq("id", userData.user.id)
     .single();
 
-  if (!profile || !["owner", "administrator", "brand_manager"].includes(profile.role)) {
+  if (!profile || !["owner", "administrator"].includes(profile.role)) {
     return { error: "Permissão negada." };
   }
 
