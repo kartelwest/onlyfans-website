@@ -1,6 +1,10 @@
 export type ManagementRole =
   | "owner"
   | "administrator"
+  | "brand_manager"
+  | "content_manager"
+  | "analyst"
+  | "reviewer"
   | "representative"
   | "model";
 

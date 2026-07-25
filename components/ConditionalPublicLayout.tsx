@@ -13,6 +13,7 @@ const privateRoutes = [
   "/representative",
   "/area-da-modelo",
   "/login",
+  "/amplia",
 ];
 
 export default function ConditionalPublicLayout({

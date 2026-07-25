@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import LogoutButton from "@/components/LogoutButton";
 
 export default function AdminLayout({
@@ -19,7 +21,15 @@ export default function AdminLayout({
             </p>
           </div>
 
-          <LogoutButton />
+          <div className="flex items-center gap-3">
+            <Link
+              href="/amplia"
+              className="rounded-xl border border-pink-400/40 bg-pink-500/10 px-5 py-3 text-sm font-semibold text-pink-200 transition hover:bg-pink-500/20"
+            >
+              Amplia
+            </Link>
+            <LogoutButton />
+          </div>
         </div>
       </header>
 

@@ -7,6 +7,7 @@ import PlatformsTab from "@/components/admin/model/PlatformsTab";
 import OverviewTab from "@/components/admin/model/OverviewTab";
 import ChecklistTab from "@/components/admin/model/ChecklistTab";
 import PaymentsTab from "@/components/admin/model/PaymentsTab";
+import BrandGrowthTab from "@/components/brand/BrandGrowthTab";
 
 import { useState } from "react";
 import Link from "next/link";
@@ -34,7 +35,8 @@ type TabId =
     | "documents"
     | "payments"
     | "notes"
-    | "history";
+    | "history"
+    | "brand_growth";
 
 const tabs: {
     id: TabId;
@@ -50,6 +52,7 @@ const tabs: {
         { id: "payments", label: "Pagamentos" },
         { id: "notes", label: "Notas" },
         { id: "history", label: "Histórico" },
+        { id: "brand_growth", label: "Amplia" },
     ];
 
 export default function ModelAdminClient({
@@ -247,6 +250,10 @@ export default function ModelAdminClient({
                                 currentUserRole={currentUserRole}
                                 historyOnly
                             />
+                        )}
+
+                        {activeTab === "brand_growth" && (
+                            <BrandGrowthTab model={model} />
                         )}
                     </div>
                 </section>
@@ -975,6 +982,10 @@ function roleLabel(
     > = {
         owner: "Proprietário",
         administrator: "Administrador",
+        brand_manager: "Brand Manager",
+        content_manager: "Content Manager",
+        analyst: "Analista",
+        reviewer: "Revisor",
         representative: "Representante",
         model: "Modelo",
     };
