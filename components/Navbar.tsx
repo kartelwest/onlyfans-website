@@ -59,7 +59,7 @@ export default function Navbar() {
           {/* DESKTOP MENU */}
           <nav className="hidden items-center gap-9 text-base font-semibold uppercase tracking-[0.14em] text-white lg:flex">
             {menuLinks.map((link) => (
-              <a
+              <Link
                 key={link.name}
                 href={link.href}
                 className="group relative py-3 transition duration-300 hover:-translate-y-1 hover:text-[#e9a5b8]"
@@ -69,17 +69,17 @@ export default function Navbar() {
                 <span className="absolute left-1/2 top-full -translate-x-1/2 scale-0 text-[#e9a5b8] opacity-0 transition duration-300 group-hover:scale-100 group-hover:opacity-100">
                   <KarrayHeartIcon />
                 </span>
-              </a>
+              </Link>
             ))}
           </nav>
 
           {/* DESKTOP BUTTON */}
-          <a
+          <Link
             href="/aplicar"
             className="hidden rounded-full bg-[#c95f7d] px-8 py-4 text-sm font-bold uppercase tracking-[0.12em] text-white transition duration-300 hover:-translate-y-1 hover:bg-[#ae4e69] lg:inline-flex"
           >
             Candidate-se
-          </a>
+          </Link>
 
           {/* MOBILE HAMBURGER BUTTON */}
           <button
@@ -125,7 +125,7 @@ export default function Navbar() {
         >
           <nav className="flex flex-col items-center gap-3">
             {menuLinks.map((link) => (
-              <a
+              <Link
                 key={link.name}
                 href={link.href}
                 onClick={() => setMenuOpen(false)}
@@ -136,16 +136,16 @@ export default function Navbar() {
                 <span className="text-[#e9a5b8]">
                   <KarrayHeartIcon />
                 </span>
-              </a>
+              </Link>
             ))}
 
-            <a
+            <Link
               href="/aplicar"
               onClick={() => setMenuOpen(false)}
               className="mt-8 w-full max-w-sm rounded-full bg-[#c95f7d] px-8 py-5 text-center text-sm font-bold uppercase tracking-[0.14em] text-white transition hover:bg-[#ae4e69]"
             >
               Candidate-se
-            </a>
+            </Link>
           </nav>
         </div>
       </header>

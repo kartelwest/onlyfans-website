@@ -187,18 +187,20 @@ export default async function ModelAdminPage({
   const {
     data: modelProfile,
     error: modelProfileError,
-  } = await supabase
-    .from("profiles")
-    .select(
-      `
-        id,
-        full_name,
-        role,
-        active
-      `,
-    )
-    .eq("id", modelRow.profile_id)
-    .maybeSingle();
+  } = modelRow.profile_id
+    ? await supabase
+        .from("profiles")
+        .select(
+          `
+            id,
+            full_name,
+            role,
+            active
+          `,
+        )
+        .eq("id", modelRow.profile_id)
+        .maybeSingle()
+    : { data: null, error: null };
 
   if (modelProfileError) {
     console.error(

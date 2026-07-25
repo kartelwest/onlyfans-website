@@ -1,20 +1,40 @@
-export default function PortalPage() {
-  return (
-    <main className="flex min-h-screen items-center justify-center bg-[#f7f1ec]">
-      <div className="rounded-3xl bg-white p-10 shadow-xl">
-        <h1 className="text-4xl font-bold text-[#4b2438]">
-          Portal KARAY Models
-        </h1>
+import { redirect } from "next/navigation";
 
-        <p className="mt-4 text-[#765c68]">
-          Portal criado com sucesso.
-        </p>
+import { createClient } from "@/lib/supabase/server";
 
-        <p className="mt-2 text-sm text-[#765c68]">
-          Em seguida iremos carregar automaticamente o painel correto
-          conforme o usuário logado.
-        </p>
-      </div>
-    </main>
-  );
+export const dynamic = "force-dynamic";
+
+export default async function PortalPage() {
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    redirect("/login");
+  }
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role, active")
+    .eq("id", user.id)
+    .maybeSingle();
+
+  if (!profile || !profile.active) {
+    redirect("/login");
+  }
+
+  switch (profile.role) {
+    case "owner":
+      redirect("/admin/models");
+    case "administrator":
+      redirect("/admin/models");
+    case "representative":
+      redirect("/representative");
+    case "model":
+      redirect("/area-da-modelo");
+    default:
+      redirect("/login");
+  }
 }

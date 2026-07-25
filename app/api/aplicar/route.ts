@@ -201,20 +201,36 @@ function getApplicantInsertErrorMessage(
 }
 
 function isAtLeast18(dateOfBirth: string): boolean {
-  const birthDate = new Date(dateOfBirth);
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dateOfBirth);
 
-  if (Number.isNaN(birthDate.getTime())) {
+  if (!match) {
+    return false;
+  }
+
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+
+  if (
+    Number.isNaN(year) ||
+    Number.isNaN(month) ||
+    Number.isNaN(day) ||
+    month < 1 ||
+    month > 12 ||
+    day < 1 ||
+    day > 31
+  ) {
     return false;
   }
 
   const today = new Date();
 
-  let age = today.getFullYear() - birthDate.getFullYear();
+  let age = today.getFullYear() - year;
 
   const hasHadBirthdayThisYear =
-    today.getMonth() > birthDate.getMonth() ||
-    (today.getMonth() === birthDate.getMonth() &&
-      today.getDate() >= birthDate.getDate());
+    today.getMonth() + 1 > month ||
+    (today.getMonth() + 1 === month &&
+      today.getDate() >= day);
 
   if (!hasHadBirthdayThisYear) {
     age -= 1;

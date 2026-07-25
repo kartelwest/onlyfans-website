@@ -12,6 +12,7 @@ const privateRoutes = [
   "/administrator",
   "/representative",
   "/area-da-modelo",
+  "/alterar-senha",
   "/login",
 ];
 

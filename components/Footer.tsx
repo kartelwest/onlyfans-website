@@ -8,13 +8,15 @@ export default function Footer() {
         <div className="grid gap-12 border-b border-white/15 pb-14 md:grid-cols-2 lg:grid-cols-[1.3fr_0.8fr_0.9fr]">
           {/* ABOUT US */}
           <div>
-            <Image
+            <Link href="/" className="inline-block">
+              <Image
               src="/images/karray-logo.png"
               alt="KARAY Models"
               width={330}
               height={130}
               className="h-auto w-[230px] object-contain"
             />
+            </Link>
 
             <h2 className="mt-7 font-serif text-3xl text-white">
               Sobre Nós
@@ -49,33 +51,33 @@ export default function Footer() {
                 Início
               </Link>
 
-              <a
+              <Link
                 href="/por-que-nos"
                 className="transition hover:translate-x-1 hover:text-[#e9a5b8]"
               >
                 Por Que Nós
-              </a>
+              </Link>
 
-              <a
+              <Link
                 href="/faq"
                 className="transition hover:translate-x-1 hover:text-[#e9a5b8]"
               >
                 Perguntas Frequentes
-              </a>
+              </Link>
 
-              <a
+              <Link
                 href="/aplicar"
                 className="transition hover:translate-x-1 hover:text-[#e9a5b8]"
               >
                 Candidate-se
-              </a>
+              </Link>
 
-              <a
+              <Link
                 href="/login"
                 className="transition hover:translate-x-1 hover:text-[#e9a5b8]"
               >
                  Área da Modelo
-              </a>
+              </Link>
             </nav>
           </div>
 
@@ -131,19 +133,19 @@ export default function Footer() {
           <p>© KARAY Models. Todos os direitos reservados.</p>
 
           <div className="flex flex-wrap gap-x-6 gap-y-2">
-            <a
+            <Link
               href="/privacidade"
               className="transition hover:text-[#e9a5b8]"
             >
               Política de Privacidade
-            </a>
+            </Link>
 
-            <a
+            <Link
               href="/termos"
               className="transition hover:text-[#e9a5b8]"
             >
               Termos de Uso
-            </a>
+            </Link>
           </div>
         </div>
       </div>
