@@ -28,59 +28,75 @@ No projeto Vercel, vá em **Settings > Environment Variables** e adicione:
 ```bash
 SUPABASE_VIDEO_ORIGINAIS_BUCKET=video-originals
 SUPABASE_VIDEO_EDITADOS_BUCKET=video-edited
-VIDEO_WORKER_API_KEY=                # pode deixar vazio no MVP
+VIDEO_WORKER_API_KEY=                # string aleatória segura
 VIDEO_MAX_FILE_SIZE_MB=2048
 VIDEO_MAX_DURATION_SECONDS=600
 VIDEO_WORKER_CONCURRENCY=2
 VIDEO_WORKER_POLL_INTERVAL_MS=15000
-
-GOOGLE_CLOUD_PROJECT=                # preencher na hora do deploy
-GOOGLE_CLOUD_REGION=southamerica-east1
-GOOGLE_CLOUD_ARTIFACT_REPO=karay-video-worker
-CLOUD_RUN_SERVICE_NAME=karay-video-worker
 ```
 
-As demais (`NEXT_PUBLIC_SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, etc.) já devem existir.
+As demais (`NEXT_PUBLIC_SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `GOOGLE_SERVICE_ACCOUNT_EMAIL`, `GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY`) já devem existir.
 
-## 4. Criar um projeto Google Cloud para o worker
+## 4. Criar uma VM Always Free no Oracle Cloud Infrastructure (OCI)
 
-1. Acesse https://console.cloud.google.com/projectcreate
-2. Nomeie como preferir (ex: `karay-models-worker`).
-3. Anote o **Project ID** (não o nome).
-4. Vincule uma conta de faturamento.
+A worker é executada em uma instância **ARM/Ampere A1** do OCI, que é gratuita para sempre e tem 2 OCPUs + 12 GB de RAM (o suficiente para renderizar vídeos).
 
-## 5. Criar service account e chave JSON
+1. Crie uma conta em https://www.oracle.com/cloud/free/.
+2. No console OCI, vá em **Compute > Instances > Create Instance**.
+3. Escolha a imagem **Canonical Ubuntu 24.04**.
+4. Em **Shape**, selecione **VM.Standard.A1.Flex** com **2 OCPUs** e **12 GB** de memória.
+5. Em **Networking**, marque **Assign a public IPv4 address**.
+6. Adicione sua chave SSH pública.
+7. Crie a instância e anote o **IP público**.
 
-1. No projeto criado, vá em **IAM & Admin > Service Accounts**.
-2. Clique em **Create service account**.
-3. Nome: `karay-video-worker`.
-4. Em **Grant roles**, adicione:
-   - `Cloud Run Admin`
-   - `Cloud Build Service Account`
-   - `Artifact Registry Administrator`
-   - `Viewer` (ou `Service Account User`)
-5. Crie a conta e vá em **Keys > Add key > JSON**.
-6. Baixe o arquivo `.json`.
+## 5. Copiar e instalar o worker na VM
 
-## 6. Fazer deploy do worker no Cloud Run
-
-1. Copie o conteúdo do arquivo `.json` baixado.
-2. No terminal local (ou na Devin), defina as variáveis:
+No seu terminal local, copie a pasta `worker/` para a VM:
 
 ```bash
-export GOOGLE_CLOUD_PROJECT=SEU_PROJECT_ID
-export GOOGLE_CLOUD_REGION=southamerica-east1
-export GOOGLE_CLOUD_SERVICE_ACCOUNT_KEY=$(cat caminho/para/key.json)
+scp -r worker ubuntu@<IP_DA_VM>:/home/ubuntu/
+ssh ubuntu@<IP_DA_VM>
 ```
 
-3. Rode o script:
+Na VM:
 
 ```bash
-cd worker
-./deploy-cloud-run.sh
+sudo mv /home/ubuntu/worker /opt/karay-video-worker
+cd /opt/karay-video-worker
+sudo ./oci-setup.sh
 ```
 
-O script habilita as APIs necessárias, faz o build, envia a imagem para o Artifact Registry e deploya o serviço `karay-video-worker`.
+O script instala Node.js, FFmpeg, as dependências e cria o serviço systemd `karay-video-worker`.
+
+## 6. Configurar e iniciar o worker
+
+Edite o arquivo de configuração na VM:
+
+```bash
+sudo nano /etc/karay/video-worker.env
+```
+
+Preencha:
+
+```bash
+NEXT_PUBLIC_SUPABASE_URL=https://zdifvgeyyugevhchtbie.supabase.co
+SUPABASE_SERVICE_ROLE_KEY=<sua_chave>
+SUPABASE_VIDEO_ORIGINAIS_BUCKET=video-originals
+SUPABASE_VIDEO_EDITADOS_BUCKET=video-edited
+VIDEO_WORKER_API_KEY=<mesmo_valor_do_vercel>
+VIDEO_MAX_FILE_SIZE_MB=2048
+VIDEO_MAX_DURATION_SECONDS=600
+VIDEO_WORKER_CONCURRENCY=2
+VIDEO_WORKER_POLL_INTERVAL_MS=15000
+```
+
+Inicie e verifique o serviço:
+
+```bash
+sudo systemctl start karay-video-worker
+sudo systemctl status karay-video-worker
+sudo journalctl -u karay-video-worker -f
+```
 
 ## 7. Testar o upload e renderização
 
@@ -89,7 +105,7 @@ O script habilita as APIs necessárias, faz o build, envia a imagem para o Artif
 3. Selecione uma modelo, um template (ex: `Instagram Reels — Básico`) e faça upload de um vídeo.
 4. O job aparecerá na tabela como `pending`.
 5. Clique em **Aprovar**.
-6. O worker Cloud Run deverá processar o vídeo e atualizar o status para `completed`.
+6. O worker OCI deverá processar o vídeo e atualizar o status para `completed`.
 7. Use o botão **Visualizar** para ver o vídeo editado via URL assinada.
 
 ## Próxima etapa (por modelo)

@@ -13,7 +13,7 @@ The system is **feasible**, but video rendering cannot run inside a Vercel serve
 - **Admin UI and API** → Next.js + Supabase + Vercel.
 - **Queue and database** → Supabase Postgres.
 - **Private storage** → Supabase Storage + Google Drive.
-- **Rendering worker** → Fly.io / Railway / Google Cloud Run / Vercel Sandbox with FFmpeg.
+- **Rendering worker** → Fly.io / Railway / Oracle Cloud Infrastructure (OCI) Always Free / Vercel Sandbox with FFmpeg.
 
 The full feature list in the request requires post-MVP integrations (AI captions, stabilization, scene detection, etc.), but the core trim, crop, resize, watermark, lower third, color correction, and multi-platform export is achievable with FFmpeg today.
 
@@ -24,7 +24,7 @@ The full feature list in the request requires post-MVP integrations (AI captions
 | Option | Type | Pros | Cons | Recommended? |
 |--------|------|------|------|--------------|
 | **FFmpeg (self-hosted worker)** | CLI / C library | Very low cost, full control, no per-render royalties, supports cut, crop, resize, filters, text burn-in, concat, audio, subtitles, etc. | Requires operating your own worker, learning curve, AI captions need Whisper add-on, advanced stabilization is limited. | **Best choice for MVP and long term.** |
-| **Remotion (React → video)** | Library + Lambda/Cloud Run/Vercel | Programmable in React/TS, great for animated titles/brand, good Node integration. | Not a classic clip editor (source video is an input asset), commercial license per render ($0.01/render, $100/mo min). | Good for programmatic titles, but more expensive than FFmpeg for raw processing. |
+| **Remotion (React → video)** | Library + Lambda/Cloud Functions/Vercel | Programmable in React/TS, great for animated titles/brand, good Node integration. | Not a classic clip editor (source video is an input asset), commercial license per render ($0.01/render, $100/mo min). | Good for programmatic titles, but more expensive than FFmpeg for raw processing. |
 | **Shotstack** | SaaS API | Mature JSON API, templates, white-label, no infra management. | $0.20–$0.30/min, less control over advanced filters, third-party adult-content ToS risk. | Quick to start, but cost scales and platform risk exists. |
 | **Cloudinary** | SaaS API | Basic transformations via URL, resize, crop, overlays, transcode, storage. | Not a timeline editor (cannot cut/combine multiple clips), per-minute costs, adult-content policies. | Useful for delivery/derivatives, not the main engine. |
 | **Mux** | Video API | Excellent for streaming, thumbnails, transcoding. | Not a composition/brand/lower-third editor. | For final delivery, not editing. |
@@ -81,7 +81,7 @@ The full feature list in the request requires post-MVP integrations (AI captions
                         │ service role + queue
                         ▼
 ┌─────────────────────────────────────────────────────────────────────────┐
-│  Video Worker (Fly.io / Railway / Cloud Run)                            │
+│  Video Worker (Fly.io / Railway / OCI Always Free)                      │
 │  - Node.js + FFmpeg + Whisper (optional) + googleapis                   │
 │  - Polls video_jobs table for status = queued                          │
 │  - Downloads source (Supabase Storage or Google Drive)                  │
@@ -228,7 +228,7 @@ All new tables will have RLS enabled and reuse existing helpers (`is_staff()`, `
 
 | Item | Option | Estimated monthly cost |
 |------|--------|------------------------|
-| Worker hosting | Fly.io / Railway (1 CPU, 2 GB) | $15–$30 |
+| Worker hosting | Fly.io / Railway (1 CPU, 2 GB) or OCI Always Free (2 OCPU, 12 GB ARM) | $0–$30 |
 | Supabase Storage | 50 GB source + 50 GB edited | Free tier or ~$5 |
 | Data transfer | Video egress | $5–$20 (usage dependent) |
 | Captions (Whisper) | Local worker | $0 (CPU) or OpenAI API $0.006/min |
@@ -264,7 +264,7 @@ For comparison, Shotstack at $0.20/min: 100 min/mo = $20; at higher volume, FFmp
    - `POST /api/video/jobs` (create job from upload).
    - `POST /api/video/jobs/[id]/approve`.
    - `POST /api/video/jobs/[id]/reprocess`.
-6. Node.js + FFmpeg worker in Docker (local + Fly.io/Railway):
+6. Node.js + FFmpeg worker in Docker (local + Fly.io/Railway/OCI):
    - Poll `video_jobs`.
    - Render with template: trim, crop/resize, lower third, watermark, basic color, burned-in captions.
    - Upload result to Supabase Storage.
@@ -357,8 +357,8 @@ VIDEO_WORKER_POLL_INTERVAL_MS=15000
 
 ## 14. Decisions Blocking Implementation
 
-1. **Architecture approval**: Can we proceed with FFmpeg + worker on Fly.io/Railway/Cloud Run?
-2. **Worker hosting**: Which do you prefer — Fly.io, Railway, Google Cloud Run, or Vercel Sandbox?
+1. **Architecture approval**: Can we proceed with FFmpeg + worker on Fly.io/Railway/OCI Always Free?
+2. **Worker hosting**: Which do you prefer — Fly.io, Railway, Oracle Cloud Infrastructure Always Free, or Vercel Sandbox?
 3. **Google Drive folder structure**: Keep `ONLY FANS` and `INSTAGRAM` flat, or create subfolders (`Originals`, `Processing`, `Edited`, `Errors`, `Archived`)?
 4. **Captions**: Use local Whisper on the worker (no per-minute cost, CPU-bound) or OpenAI Whisper API?
 5. **Brand assets**: Please provide the KarayModels logo PNG/SVG and the default font for lower thirds.
