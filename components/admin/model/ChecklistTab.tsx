@@ -13,6 +13,7 @@ type ChecklistTabProps = {
   modelId: string;
   checklist?: unknown;
   currentUserRole: ManagementRole;
+  platform?: string;
 };
 
 type Responsibility =
@@ -77,6 +78,7 @@ const EMPTY_SUMMARY: OnboardingSummary = {
 export default function ChecklistTab({
   modelId,
   currentUserRole,
+  platform = "onlyfans",
 }: ChecklistTabProps) {
   const [items, setItems] = useState<
     OnboardingItem[]
@@ -113,7 +115,7 @@ export default function ChecklistTab({
         const response = await fetch(
           `/api/models/onboarding?modelId=${encodeURIComponent(
             modelId,
-          )}&platform=onlyfans`,
+          )}&platform=${encodeURIComponent(platform)}`,
           {
             method: "GET",
             cache: "no-store",
@@ -168,7 +170,7 @@ export default function ChecklistTab({
         setIsLoading(false);
       }
     },
-    [modelId],
+    [modelId, platform],
   );
 
   useEffect(() => {

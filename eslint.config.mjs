@@ -12,6 +12,7 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    "worker/**",
   ]),
   // Temporary: admin UI components rely on historical data-loading patterns that
   // synchronously set state inside effects. Refactoring them is out of scope for
