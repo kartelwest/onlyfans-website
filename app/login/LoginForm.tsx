@@ -3,7 +3,6 @@
 import { FormEvent, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
 type ProfileRole =
@@ -13,7 +12,6 @@ type ProfileRole =
   | "model";
 
 export default function LoginForm({ returnTo }: { returnTo?: string }) {
-  const router = useRouter();
   const supabase = createClient();
 
   const [email, setEmail] = useState("");
@@ -61,16 +59,15 @@ export default function LoginForm({ returnTo }: { returnTo?: string }) {
       }
 
       if (profile.must_change_password) {
-        router.replace("/alterar-senha");
-        router.refresh();
+        window.location.replace("/alterar-senha");
         return;
       }
 
       const role = profile.role as ProfileRole;
 
       const redirectPath = resolveRedirectPath(role, returnTo ?? null);
-      router.replace(redirectPath);
-      router.refresh();
+      window.location.replace(redirectPath);
+      return;
     } catch (error) {
       const message =
         error instanceof Error

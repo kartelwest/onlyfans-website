@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { createClient } from "@/lib/supabase/server";
+import { ensureOnlyFansEnrollmentForModel } from "@/lib/brand/talent";
 import type { ManagementRole, ModelStatus } from "@/types/model";
 
 export const dynamic = "force-dynamic";
@@ -117,6 +118,18 @@ export async function PATCH(request: Request) {
           );
         }
       }
+    }
+
+    // Ensure the canonical talent record and OnlyFans service enrollment
+    // exist before changing the model status. A DB trigger keeps the
+    // enrollment status in sync with models.active; this call guarantees the
+    // talent row is present for new or legacy models.
+    const { error: ensureError } = await ensureOnlyFansEnrollmentForModel(body.modelId);
+    if (ensureError) {
+      return NextResponse.json(
+        { error: ensureError },
+        { status: 500 },
+      );
     }
 
     const { error: updateError } = await supabase

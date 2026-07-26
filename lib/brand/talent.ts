@@ -2,6 +2,7 @@ import "server-only";
 
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import type { AutomationMode, BrandProfile, ServiceEnrollment, Talent } from "@/types/brand";
 
 export interface CreateTalentInput {
@@ -206,17 +207,43 @@ export async function enrollModelInBrandGrowth(modelId: string): Promise<{ error
     return { error: "Permissão negada." };
   }
 
-  const { data: talent } = await supabase
-    .from("talents")
+  const admin = createAdminClient();
+
+  const talentResult = await getOrCreateTalentForModel(modelId, admin);
+  if ("error" in talentResult) {
+    return { error: talentResult.error };
+  }
+  const talentId = talentResult.id;
+
+  // Make sure a brand profile exists before enrolling in Brand Growth.
+  const { data: existingBrandProfile } = await admin
+    .from("brand_profiles")
     .select("id")
-    .eq("model_id", modelId)
+    .eq("talent_id", talentId)
     .maybeSingle();
 
-  if (!talent) {
-    return { error: "Talento não encontrado para este modelo." };
+  if (!existingBrandProfile) {
+    const { data: model } = await admin
+      .from("models")
+      .select("display_name")
+      .eq("id", modelId)
+      .maybeSingle();
+
+    const { error: brandProfileError } = await admin
+      .from("brand_profiles")
+      .insert({
+        talent_id: talentId,
+        display_name: String(model?.display_name ?? ""),
+        niche_1: "lifestyle",
+        default_languages: ["pt-BR"],
+      });
+
+    if (brandProfileError) {
+      return { error: brandProfileError.message };
+    }
   }
 
-  const { data: serviceType } = await supabase
+  const { data: serviceType } = await admin
     .from("service_types")
     .select("id")
     .eq("code", "brand_growth")
@@ -226,9 +253,9 @@ export async function enrollModelInBrandGrowth(modelId: string): Promise<{ error
     return { error: "Tipo de serviço Brand Growth não encontrado." };
   }
 
-  const { error } = await supabase.from("service_enrollments").upsert(
+  const { error } = await admin.from("service_enrollments").upsert(
     {
-      talent_id: talent.id,
+      talent_id: talentId,
       service_type_id: serviceType.id,
       status: "active",
       started_at: new Date().toISOString(),
@@ -241,6 +268,169 @@ export async function enrollModelInBrandGrowth(modelId: string): Promise<{ error
   }
 
   return {};
+}
+
+/**
+ * Ensures that a `models` row has a canonical `talents` identity and an
+ * `onlyfans` service enrollment whose status mirrors `models.active`.
+ * Also creates a minimal `brand_profiles` row so the Amplia detail view can
+ * render a brand status even for models that have not yet gone through a
+ * full brand-growth onboarding.
+ */
+export async function ensureOnlyFansEnrollmentForModel(
+  modelId: string,
+): Promise<{ talentId?: string; error?: string }> {
+  const admin = createAdminClient();
+
+  const { data: model, error: modelError } = await admin
+    .from("models")
+    .select("id, display_name, active")
+    .eq("id", modelId)
+    .maybeSingle();
+
+  if (modelError || !model) {
+    return { error: modelError?.message ?? "Modelo não encontrado." };
+  }
+
+  const talentResult = await getOrCreateTalentForModel(modelId, admin);
+  if ("error" in talentResult) {
+    return { error: talentResult.error };
+  }
+  const talentId = talentResult.id;
+
+  const { data: serviceType } = await admin
+    .from("service_types")
+    .select("id")
+    .eq("code", "onlyfans")
+    .single();
+
+  if (!serviceType) {
+    return { error: "Tipo de serviço OnlyFans não encontrado." };
+  }
+
+  const status = model.active ? "active" : "inactive";
+  const { error: enrollmentError } = await admin
+    .from("service_enrollments")
+    .upsert(
+      {
+        talent_id: talentId,
+        service_type_id: serviceType.id,
+        status,
+        started_at: model.active ? new Date().toISOString() : null,
+      },
+      { onConflict: "talent_id, service_type_id" },
+    );
+
+  if (enrollmentError) {
+    return { error: enrollmentError.message };
+  }
+
+  // Best-effort: keep the legacy models.talent_id FK in sync. New code does
+  // not rely on this column, but existing migrations created it.
+  try {
+    await admin.from("models").update({ talent_id: talentId }).eq("id", modelId);
+  } catch {
+    // ignored
+  }
+
+  return { talentId };
+}
+
+async function getOrCreateTalentForModel(
+  modelId: string,
+  adminClient?: SupabaseClient,
+): Promise<{ id: string } | { error: string }> {
+  const admin = adminClient ?? createAdminClient();
+
+  const { data: model, error: modelError } = await admin
+    .from("models")
+    .select(
+      "id, profile_id, display_name, stage_name, email, whatsapp, birthday, nationality, city, language, active",
+    )
+    .eq("id", modelId)
+    .maybeSingle();
+
+  if (modelError || !model) {
+    return { error: modelError?.message ?? "Modelo não encontrado." };
+  }
+
+  const { data: existingByModel } = await admin
+    .from("talents")
+    .select("id")
+    .eq("model_id", modelId)
+    .maybeSingle();
+
+  if (existingByModel) {
+    return { id: existingByModel.id };
+  }
+
+  if (model.profile_id) {
+    const { data: existingByProfile } = await admin
+      .from("talents")
+      .select("id, model_id")
+      .eq("profile_id", model.profile_id)
+      .maybeSingle();
+
+    if (existingByProfile) {
+      const { error: updateError } = await admin
+        .from("talents")
+        .update({
+          model_id: modelId,
+          display_name: String(model.display_name ?? ""),
+          stage_name: model.stage_name ? String(model.stage_name) : null,
+          email: model.email ? String(model.email) : null,
+          whatsapp: model.whatsapp ? String(model.whatsapp) : null,
+          birthday: model.birthday ? String(model.birthday) : null,
+          nationality: model.nationality ? String(model.nationality) : null,
+          location: model.city ? String(model.city) : null,
+          languages: model.language ? [String(model.language)] : null,
+          active: true,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", existingByProfile.id);
+
+      if (updateError) {
+        return { error: updateError.message };
+      }
+
+      return { id: existingByProfile.id };
+    }
+  }
+
+  const { data: profile } = model.profile_id
+    ? await admin
+        .from("profiles")
+        .select("full_name")
+        .eq("id", model.profile_id)
+        .maybeSingle()
+    : { data: null };
+
+  const legalName = profile?.full_name ?? String(model.display_name ?? "");
+
+  const { data: talent, error: talentError } = await admin
+    .from("talents")
+    .insert({
+      profile_id: model.profile_id ? String(model.profile_id) : null,
+      model_id: modelId,
+      legal_name: legalName,
+      stage_name: model.stage_name ? String(model.stage_name) : null,
+      display_name: String(model.display_name ?? ""),
+      email: model.email ? String(model.email) : null,
+      whatsapp: model.whatsapp ? String(model.whatsapp) : null,
+      birthday: model.birthday ? String(model.birthday) : null,
+      nationality: model.nationality ? String(model.nationality) : null,
+      location: model.city ? String(model.city) : null,
+      languages: model.language ? [String(model.language)] : null,
+      active: true,
+    })
+    .select("id")
+    .single();
+
+  if (talentError || !talent) {
+    return { error: talentError?.message ?? "Erro ao criar talento para a modelo." };
+  }
+
+  return { id: talent.id };
 }
 
 function mapTalent(row: Record<string, unknown>): Talent {

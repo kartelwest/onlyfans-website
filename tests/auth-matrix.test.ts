@@ -41,6 +41,26 @@ const routeAccessMatrix: RouteAccess[] = [
     description: "Admin user creation is staff-only",
   },
   {
+    path: "/admin/amplia",
+    roles: ["owner", "administrator"],
+    description: "Amplia dashboard is staff-only",
+  },
+  {
+    path: "/admin/amplia/models",
+    roles: ["owner", "administrator"],
+    description: "Amplia client list is staff-only",
+  },
+  {
+    path: "/admin/amplia/models/new",
+    roles: ["owner", "administrator"],
+    description: "Amplia client creation is staff-only",
+  },
+  {
+    path: "/admin/amplia/models/123",
+    roles: ["owner", "administrator"],
+    description: "Amplia client detail is staff-only",
+  },
+  {
     path: "/representative",
     roles: ["representative"],
     description: "Representative dashboard is rep-only",

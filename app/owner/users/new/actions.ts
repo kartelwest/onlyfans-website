@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
+import { ensureOnlyFansEnrollmentForModel } from "@/lib/brand/talent";
 
 export type CreateUserState = {
   success: boolean;
@@ -207,7 +208,7 @@ export async function createUserAction(
   if (role === "model") {
     const modelSlug = createSlug(fullName);
 
-    const { error: modelError } =
+    const { data: createdModel, error: modelError } =
       await adminSupabase
         .from("models")
         .insert({
@@ -217,7 +218,9 @@ export async function createUserAction(
           onboarding_complete: false,
           active: true,
           created_by: user.id,
-        });
+        })
+        .select("id")
+        .single();
 
     if (modelError) {
       await adminSupabase
@@ -234,6 +237,10 @@ export async function createUserAction(
         message:
           `A conta da modelo não pôde ser concluída: ${modelError.message}`,
       };
+    }
+
+    if (createdModel) {
+      await ensureOnlyFansEnrollmentForModel(createdModel.id);
     }
   }
 

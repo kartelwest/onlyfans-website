@@ -1,7 +1,7 @@
 import "server-only";
 
 import { createClient } from "@/lib/supabase/server";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { ensureOnlyFansEnrollmentForModel } from "@/lib/brand/talent";
 import type { BrandProfile, Platform, SocialAccount, Talent } from "@/types/brand";
 
 export interface AmpliaClient {
@@ -38,167 +38,240 @@ export interface AmpliaClientDetail extends AmpliaClient {
   } | null;
 }
 
+const zeroStats = {
+  activeSocialModels: 0,
+  brandGrowthOnlyClients: 0,
+  connectedInstagram: 0,
+  awaitingLaunch: 0,
+  awaitingAuthorization: 0,
+  contentAwaitingApproval: 0,
+  postsScheduledToday: 0,
+  playbookCompletedToday: 0,
+  playbookPendingToday: 0,
+  publishingFailures24h: 0,
+  accountsNeedingAttention: 0,
+  contentShortages: 0,
+  recentFollowerGrowth: 0,
+  criticalAlerts: 0,
+  estimatedAICostMonth: 0,
+};
+
 export async function getAmpliaClients(): Promise<{
   clients: AmpliaClient[];
-  stats: {
-    activeSocialModels: number;
-    brandGrowthOnlyClients: number;
-    connectedInstagram: number;
-    awaitingLaunch: number;
-    awaitingAuthorization: number;
-    contentAwaitingApproval: number;
-    postsScheduledToday: number;
-    playbookCompletedToday: number;
-    playbookPendingToday: number;
-    publishingFailures24h: number;
-    accountsNeedingAttention: number;
-    contentShortages: number;
-    recentFollowerGrowth: number;
-    criticalAlerts: number;
-    estimatedAICostMonth: number;
-  };
+  stats: typeof zeroStats;
 }> {
   const supabase = await createClient();
 
-  // Active models (source of truth: models.active)
-  const { data: modelRows } = await supabase
-    .from("models")
+  const { data: serviceTypes, error: serviceTypesError } = await supabase
+    .from("service_types")
+    .select("id, code");
+
+  if (serviceTypesError) {
+    console.error("Erro ao carregar tipos de serviço:", serviceTypesError);
+    return { clients: [], stats: zeroStats };
+  }
+
+  const onlyfansTypeId = serviceTypes?.find((s) => (s as { code?: string }).code === "onlyfans")?.id as string | undefined;
+  const brandGrowthTypeId = serviceTypes?.find((s) => (s as { code?: string }).code === "brand_growth")?.id as string | undefined;
+
+  const relevantTypeIds = [onlyfansTypeId, brandGrowthTypeId].filter(Boolean) as string[];
+  if (relevantTypeIds.length === 0) {
+    return { clients: [], stats: zeroStats };
+  }
+
+  // Canonical source of truth for Amplia visibility:
+  // a talent appears in the regular models area when it has an ACTIVE
+  // service enrollment for either OnlyFans or Brand Growth.
+  const { data: enrollmentRows, error: enrollmentsError } = await supabase
+    .from("service_enrollments")
     .select(
       `
       id,
-      profile_id,
+      status,
+      service_type_id,
+      service_types ( code ),
       talent_id,
-      display_name,
-      stage_name,
-      city,
-      email,
-      whatsapp,
-      profile_photo_url,
-      active,
-      created_at,
-      updated_at,
-      profiles ( full_name )
+      talents!inner (
+        id,
+        model_id,
+        profile_id,
+        legal_name,
+        stage_name,
+        display_name,
+        preferred_username,
+        email,
+        whatsapp,
+        location,
+        nationality,
+        active,
+        created_at,
+        updated_at,
+        models!model_id ( id, profile_photo_url, city, active ),
+        profiles!profile_id ( full_name )
+      )
     `,
     )
-    .eq("active", true)
-    .order("display_name", { ascending: true });
+    .in("service_type_id", relevantTypeIds)
+    .eq("status", "active")
+    .order("talent_id", { ascending: true });
 
-  // Brand-Growth-only clients (talents with no linked model)
-  const { data: bgOnlyRows } = await supabase
-    .from("talents")
-    .select(
-      `
-      id,
-      model_id,
-      profile_id,
-      display_name,
-      stage_name,
-      location,
-      email,
-      whatsapp,
-      active,
-      created_at,
-      updated_at,
-      profiles ( full_name )
-    `,
-    )
-    .is("model_id", null)
-    .eq("active", true)
-    .order("display_name", { ascending: true });
-
-  // Fetch brand profiles and social accounts for all relevant talent_ids.
-  const talentIds = new Set<string>();
-  for (const row of modelRows ?? []) {
-    if (row.talent_id) talentIds.add(row.talent_id as string);
-  }
-  for (const row of bgOnlyRows ?? []) {
-    talentIds.add(row.id as string);
+  if (enrollmentsError) {
+    console.error("Erro ao carregar matrículas Amplia:", enrollmentsError);
+    return { clients: [], stats: zeroStats };
   }
 
-  const { data: brandProfiles } = await supabase
-    .from("brand_profiles")
-    .select("*")
-    .in("talent_id", Array.from(talentIds));
+  type ServiceTypeCode = "onlyfans" | "brand_growth";
+  type EnrollmentItem = {
+    talents: (Record<string, unknown> & {
+      models: Record<string, unknown>[] | null;
+      profiles: { full_name: string | null }[] | null;
+    })[];
+    service_types: { code?: ServiceTypeCode }[];
+  };
 
-  const { data: socialAccounts } = await supabase
-    .from("social_accounts")
-    .select("*")
-    .in("talent_id", Array.from(talentIds));
+  const talentsById = new Map<
+    string,
+    {
+      talent: (EnrollmentItem["talents"][number]);
+      hasOnlyFans: boolean;
+      hasBrandGrowth: boolean;
+    }
+  >();
 
-  const { data: approvalCounts } = await supabase
-    .from("content_items")
-    .select("talent_id, id")
-    .in(
-      "status",
-      ["awaiting_client_approval", "awaiting_agency_approval"],
-    )
-    .in("talent_id", Array.from(talentIds));
+  for (const raw of (enrollmentRows ?? []) as unknown as EnrollmentItem[]) {
+    const talent = raw.talents[0];
+    if (!talent) continue;
+    const code = raw.service_types?.[0]?.code;
+    const id = String(talent.id);
+    const entry = talentsById.get(id) ?? { talent, hasOnlyFans: false, hasBrandGrowth: false };
+    if (code === "onlyfans") entry.hasOnlyFans = true;
+    if (code === "brand_growth") entry.hasBrandGrowth = true;
+    talentsById.set(id, entry);
+  }
 
-  const today = new Date().toISOString().split("T")[0];
-  const { data: scheduledToday } = await supabase
-    .from("content_items")
-    .select("talent_id, id")
-    .eq("status", "scheduled")
-    .gte("scheduled_for", `${today}T00:00:00`)
-    .lt("scheduled_for", `${today}T23:59:59`);
+  const talentIds = Array.from(talentsById.keys());
+
+  const [brandProfilesResult, socialAccountsResult, approvalCountsResult, scheduledTodayResult] =
+    await Promise.all([
+      supabase.from("brand_profiles").select("*").in("talent_id", talentIds),
+      supabase.from("social_accounts").select("*").in("talent_id", talentIds),
+      supabase
+        .from("content_items")
+        .select("talent_id, id")
+        .in("status", ["awaiting_client_approval", "awaiting_agency_approval"])
+        .in("talent_id", talentIds),
+      (() => {
+        const today = new Date().toISOString().split("T")[0];
+        return supabase
+          .from("content_items")
+          .select("talent_id, id")
+          .eq("status", "scheduled")
+          .gte("scheduled_for", `${today}T00:00:00`)
+          .lt("scheduled_for", `${today}T23:59:59`);
+      })(),
+    ]);
+
+  if (brandProfilesResult.error) {
+    console.error("Erro ao carregar perfis de marca:", brandProfilesResult.error);
+  }
+  if (socialAccountsResult.error) {
+    console.error("Erro ao carregar contas sociais:", socialAccountsResult.error);
+  }
+  if (approvalCountsResult.error) {
+    console.error("Erro ao carregar aprovações pendentes:", approvalCountsResult.error);
+  }
+  if (scheduledTodayResult.error) {
+    console.error("Erro ao carregar agendamentos de hoje:", scheduledTodayResult.error);
+  }
 
   const brandProfileMap = new Map(
-    (brandProfiles ?? []).map((bp) => [bp.talent_id as string, bp]),
+    (brandProfilesResult.data ?? []).map((bp) => [String(bp.talent_id), bp as Record<string, unknown>]),
   );
 
-  const socialAccountsByTalent = new Map<string, typeof socialAccounts>();
-  for (const acc of socialAccounts ?? []) {
-    const list = socialAccountsByTalent.get(acc.talent_id as string) ?? [];
+  const socialAccountsByTalent = new Map<string, Record<string, unknown>[]>();
+  for (const acc of (socialAccountsResult.data ?? []) as Record<string, unknown>[]) {
+    const list = socialAccountsByTalent.get(String(acc.talent_id)) ?? [];
     list.push(acc);
-    socialAccountsByTalent.set(acc.talent_id as string, list);
+    socialAccountsByTalent.set(String(acc.talent_id), list);
   }
 
   const approvalsByTalent = new Map<string, number>();
-  for (const item of approvalCounts ?? []) {
-    approvalsByTalent.set(
-      item.talent_id as string,
-      (approvalsByTalent.get(item.talent_id as string) ?? 0) + 1,
-    );
+  for (const item of (approvalCountsResult.data ?? []) as { talent_id: string; id: string }[]) {
+    approvalsByTalent.set(item.talent_id, (approvalsByTalent.get(item.talent_id) ?? 0) + 1);
   }
 
   const scheduledByTalent = new Map<string, number>();
-  for (const item of scheduledToday ?? []) {
-    scheduledByTalent.set(
-      item.talent_id as string,
-      (scheduledByTalent.get(item.talent_id as string) ?? 0) + 1,
-    );
+  for (const item of (scheduledTodayResult.data ?? []) as { talent_id: string; id: string }[]) {
+    scheduledByTalent.set(item.talent_id, (scheduledByTalent.get(item.talent_id) ?? 0) + 1);
   }
 
   const clients: AmpliaClient[] = [];
 
-  for (const row of modelRows ?? []) {
-    const profile = (row.profiles as unknown) as { full_name: string | null } | null;
-    const talentId = (row.talent_id as string) ?? (row.id as string);
-    const bp = brandProfileMap.get(talentId);
+  for (const { talent, hasOnlyFans } of talentsById.values()) {
+    const model = (talent.models?.[0] as Record<string, unknown> | undefined) ?? null;
+    const talentId = String(talent.id);
+    const type = hasOnlyFans ? "model" : "brand_only";
+
+    // Source fields are taken from the canonical talent row. For models we
+    // overlay model-only fields (profile photo, city) while keeping the talent
+    // identity as the primary key.
+    const sourceRow: Record<string, unknown> = {
+      id: model?.id ?? talentId,
+      display_name: talent.display_name,
+      stage_name: talent.stage_name,
+      email: talent.email,
+      whatsapp: talent.whatsapp,
+      profile_photo_url: model?.profile_photo_url ?? null,
+      city: model?.city ?? null,
+      location: talent.location,
+      active: talent.active,
+      created_at: talent.created_at,
+      updated_at: talent.updated_at,
+    };
+
+    const profile = (talent.profiles?.[0] as { full_name: string | null } | undefined) ?? null;
+    const brandProfile = brandProfileMap.get(talentId);
     const accounts = socialAccountsByTalent.get(talentId) ?? [];
-    clients.push(buildClient(row, "model", talentId, profile, bp, accounts, approvalsByTalent, scheduledByTalent));
+
+    clients.push(
+      buildClient(
+        sourceRow,
+        type,
+        talentId,
+        profile,
+        brandProfile,
+        accounts,
+        approvalsByTalent,
+        scheduledByTalent,
+      ),
+    );
   }
 
-  for (const row of bgOnlyRows ?? []) {
-    const profile = (row.profiles as unknown) as { full_name: string | null } | null;
-    const talentId = row.id as string;
-    const bp = brandProfileMap.get(talentId);
-    const accounts = socialAccountsByTalent.get(talentId) ?? [];
-    clients.push(buildClient(row, "brand_only", talentId, profile, bp, accounts, approvalsByTalent, scheduledByTalent));
-  }
+  clients.sort((a, b) => a.displayName.localeCompare(b.displayName, "pt-BR", { sensitivity: "base" }));
 
   const stats = {
-    activeSocialModels: clients.filter((c) => c.type === "model").length,
-    brandGrowthOnlyClients: clients.filter((c) => c.type === "brand_only").length,
+    activeSocialModels: Array.from(talentsById.values()).filter((t) => t.hasOnlyFans).length,
+    brandGrowthOnlyClients: Array.from(talentsById.values()).filter(
+      (entry) => !entry.hasOnlyFans && entry.hasBrandGrowth,
+    ).length,
     connectedInstagram: clients.filter((c) => c.connectedInstagram).length,
-    awaitingLaunch: clients.filter((c) => c.brandStatus === "planning" || c.brandStatus === "not_requested").length,
-    awaitingAuthorization: clients.filter((c) => c.brandStatus === "awaiting_connection" || c.brandStatus === "awaiting_verification").length,
+    awaitingLaunch: clients.filter(
+      (c) => c.brandStatus === "planning" || c.brandStatus === "not_requested",
+    ).length,
+    awaitingAuthorization: clients.filter(
+      (c) => c.brandStatus === "awaiting_connection" || c.brandStatus === "awaiting_verification",
+    ).length,
     contentAwaitingApproval: clients.reduce((sum, c) => sum + c.pendingApprovals, 0),
     postsScheduledToday: clients.reduce((sum, c) => sum + c.scheduledToday, 0),
     playbookCompletedToday: 0,
     playbookPendingToday: 0,
     publishingFailures24h: 0,
-    accountsNeedingAttention: clients.filter((c) => c.brandStatus === "restricted" || c.brandStatus === "suspended" || c.brandStatus === "authorization_expired").length,
+    accountsNeedingAttention: clients.filter(
+      (c) =>
+        c.brandStatus === "restricted" ||
+        c.brandStatus === "suspended" ||
+        c.brandStatus === "authorization_expired",
+    ).length,
     contentShortages: 0,
     recentFollowerGrowth: 0,
     criticalAlerts: 0,
@@ -219,7 +292,6 @@ export async function getAmpliaClientById(
     .select(
       `
       id,
-      talent_id,
       display_name,
       stage_name,
       city,
@@ -235,69 +307,108 @@ export async function getAmpliaClientById(
     .eq("id", id)
     .maybeSingle();
 
-  const { data: talentRow } = await supabase
-    .from("talents")
-    .select(
-      `
-      id,
-      model_id,
-      profile_id,
-      display_name,
-      stage_name,
-      location,
-      email,
-      whatsapp,
-      active,
-      created_at,
-      updated_at,
-      profiles ( full_name )
-    `,
-    )
-    .eq("id", id)
-    .maybeSingle();
+  let talentId: string | null = null;
+  let type: "model" | "brand_only" = "brand_only";
+  let sourceRow: Record<string, unknown>;
+  let profile: { full_name: string | null } | undefined;
 
-  const row = modelRow ?? talentRow;
-  if (!row) {
-    return { error: "Cliente não encontrado." };
+  if (modelRow) {
+    type = "model";
+
+    const { talentId: maybeTalentId, error: ensureError } = await ensureOnlyFansEnrollmentForModel(id);
+    if (ensureError || !maybeTalentId) {
+      return { error: ensureError ?? "Não foi possível preparar o talento da modelo." };
+    }
+    talentId = maybeTalentId;
+
+    const row = modelRow as unknown as Record<string, unknown>;
+    sourceRow = {
+      id: row.id,
+      display_name: row.display_name,
+      stage_name: row.stage_name,
+      email: row.email,
+      whatsapp: row.whatsapp,
+      profile_photo_url: row.profile_photo_url,
+      city: row.city,
+      location: row.city,
+      active: row.active,
+      created_at: row.created_at,
+      updated_at: row.updated_at,
+    };
+
+    const rawProfile = row.profiles as unknown as
+      | { full_name: string | null }
+      | { full_name: string | null }[]
+      | null;
+    profile = Array.isArray(rawProfile) ? rawProfile[0] : (rawProfile ?? undefined);
+  } else {
+    const { data: talentRow } = await supabase
+      .from("talents")
+      .select(
+        `
+        id,
+        model_id,
+        profile_id,
+        display_name,
+        stage_name,
+        location,
+        email,
+        whatsapp,
+        active,
+        created_at,
+        updated_at,
+        profiles ( full_name ),
+        models!model_id ( id, profile_photo_url, city, active )
+      `,
+      )
+      .eq("id", id)
+      .maybeSingle();
+
+    if (!talentRow) {
+      return { error: "Cliente não encontrado." };
+    }
+
+    const row = talentRow as unknown as Record<string, unknown>;
+    const linkedModels = row.models as unknown as
+      | Record<string, unknown>[]
+      | undefined;
+    const linkedModel = linkedModels?.[0];
+
+    sourceRow = {
+      id: linkedModel?.id ?? row.id,
+      display_name: row.display_name,
+      stage_name: row.stage_name,
+      email: row.email,
+      whatsapp: row.whatsapp,
+      profile_photo_url: linkedModel?.profile_photo_url ?? null,
+      city: linkedModel?.city ?? null,
+      location: row.location ?? linkedModel?.city ?? null,
+      active: row.active,
+      created_at: row.created_at,
+      updated_at: row.updated_at,
+    };
+    talentId = row.id as string;
+
+    const rawProfile = row.profiles as unknown as
+      | { full_name: string | null }
+      | { full_name: string | null }[]
+      | null;
+    profile = Array.isArray(rawProfile) ? rawProfile[0] : (rawProfile ?? undefined);
   }
 
-  const talentId = modelRow ? ((modelRow.talent_id as string) ?? modelRow.id) : talentRow!.id;
-
-  // If an active model has no talent yet, create the talent and brand profile.
-  if (modelRow && !modelRow.talent_id) {
-    await ensureTalentForModel(
-      modelRow,
-      ((modelRow.profiles as unknown) as { full_name: string | null } | null)?.full_name ?? null,
-    );
-  }
-
-  const { data: brandProfile } = await supabase
-    .from("brand_profiles")
-    .select("*")
-    .eq("talent_id", talentId)
-    .maybeSingle();
-
-  const { data: socialAccounts } = await supabase
-    .from("social_accounts")
-    .select("*")
-    .eq("talent_id", talentId);
-
-  const { data: consents } = await supabase
-    .from("client_consents")
-    .select("consent_key, granted")
-    .eq("talent_id", talentId);
-
-  const { data: boundaries } = await supabase
-    .from("client_boundaries")
-    .select("*")
-    .eq("talent_id", talentId)
-    .maybeSingle();
+  const [{ data: brandProfile }, { data: socialAccounts }, { data: consents }, { data: boundaries }] =
+    await Promise.all([
+      supabase.from("brand_profiles").select("*").eq("talent_id", talentId).maybeSingle(),
+      supabase.from("social_accounts").select("*").eq("talent_id", talentId),
+      supabase.from("client_consents").select("consent_key, granted").eq("talent_id", talentId),
+      supabase.from("client_boundaries").select("*").eq("talent_id", talentId).maybeSingle(),
+    ]);
 
   const client = buildClient(
-    row,
-    modelRow ? "model" : "brand_only",
+    sourceRow,
+    type,
     talentId,
-    ((row.profiles as unknown) as { full_name: string | null } | null) ?? null,
+    profile ?? null,
     brandProfile,
     socialAccounts ?? [],
     new Map(),
@@ -321,61 +432,6 @@ export async function getAmpliaClientById(
         : null,
     },
   };
-}
-
-async function ensureTalentForModel(
-  model: Record<string, unknown>,
-  fullName: string | null,
-): Promise<string> {
-  const supabase = await createClient();
-  const admin = createAdminClient();
-
-  const { data: existing } = await supabase
-    .from("talents")
-    .select("id")
-    .eq("model_id", model.id as string)
-    .maybeSingle();
-
-  if (existing) {
-    await supabase
-      .from("models")
-      .update({ talent_id: existing.id })
-      .eq("id", model.id as string);
-    return existing.id;
-  }
-
-  const { data: talent, error } = await admin
-    .from("talents")
-    .insert({
-      profile_id: (model.profile_id as string) ?? null,
-      model_id: model.id as string,
-      legal_name: fullName,
-      stage_name: (model.stage_name as string) ?? null,
-      display_name: (model.display_name as string) ?? "",
-      email: (model.email as string) ?? null,
-      whatsapp: (model.whatsapp as string) ?? null,
-      location: (model.city as string) ?? null,
-      active: true,
-    })
-    .select()
-    .single();
-
-  if (error || !talent) {
-    throw new Error(error?.message ?? "Erro ao criar talento.");
-  }
-
-  await admin.from("brand_profiles").insert({
-    talent_id: talent.id,
-    display_name: (model.display_name as string) ?? "",
-    niche_1: "lifestyle",
-  });
-
-  await admin
-    .from("models")
-    .update({ talent_id: talent.id })
-    .eq("id", model.id as string);
-
-  return talent.id;
 }
 
 function buildClient(
@@ -405,7 +461,8 @@ function buildClient(
     profilePhotoUrl: (row.profile_photo_url as string) ?? null,
     active: row.active as boolean,
     brandStatus,
-    connectedInstagram: instagram?.status === "connected" || instagram?.status === "active" || false,
+    connectedInstagram:
+      instagram?.status === "connected" || instagram?.status === "active" || false,
     connectedX: xAccount?.status === "connected" || xAccount?.status === "active" || false,
     pendingApprovals: approvalsByTalent.get(talentId) ?? 0,
     scheduledToday: scheduledByTalent.get(talentId) ?? 0,
@@ -447,12 +504,17 @@ function mapBrandProfile(row: Record<string, unknown>): BrandProfile {
     desiredFollowerProfile: row.desired_follower_profile ? String(row.desired_follower_profile) : null,
     marketsToAvoid: Array.isArray(row.markets_to_avoid) ? row.markets_to_avoid.map(String) : null,
     objectives: Array.isArray(row.objectives) ? (row.objectives as Record<string, unknown>[]) : [],
-    instagramAutomationMode: (row.instagram_automation_mode as "manual" | "approval_based" | "controlled_autopilot") ?? "manual",
-    xAutomationMode: (row.x_automation_mode as "manual" | "approval_based" | "controlled_autopilot") ?? "manual",
+    instagramAutomationMode:
+      (row.instagram_automation_mode as "manual" | "approval_based" | "controlled_autopilot") ??
+      "manual",
+    xAutomationMode:
+      (row.x_automation_mode as "manual" | "approval_based" | "controlled_autopilot") ?? "manual",
     brandStatus: String(row.brand_status ?? "planning"),
     aiGuidance: row.ai_guidance ? String(row.ai_guidance) : null,
     dailyDirective: row.daily_directive ? String(row.daily_directive) : null,
-    defaultLanguages: Array.isArray(row.default_languages) ? row.default_languages.map(String) : ["pt-BR"],
+    defaultLanguages: Array.isArray(row.default_languages)
+      ? row.default_languages.map(String)
+      : ["pt-BR"],
     allowAdultPlatformLinks: Boolean(row.allow_adult_platform_links),
     createdAt: String(row.created_at ?? ""),
     updatedAt: String(row.updated_at ?? ""),
