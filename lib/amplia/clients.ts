@@ -225,7 +225,7 @@ export async function getAmpliaClients(): Promise<{
       | null;
     const profile = Array.isArray(rawProfiles) ? rawProfiles[0] : rawProfiles;
 
-    const brandProfile = modelId ? brandProfileMap.get(modelId) : brandProfileMap.get(String(talent.id));
+    const brandProfile = brandProfileMap.get(String(talent.id));
     const brandStatus = (brandProfile?.status as string) ?? "not_requested";
 
     const platforms = modelId ? (platformsByModel.get(modelId) ?? []) : [];
