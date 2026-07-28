@@ -29,7 +29,7 @@ export default function AdminHeader() {
               href="/admin/socialmediamodels"
               className="rounded-xl border border-pink-400/40 bg-pink-500/10 px-5 py-3 text-sm font-semibold text-pink-200 transition hover:bg-pink-500/20"
             >
-              MÍDIA SOCIAL
+              AMPLIA
             </Link>
           )}
           <LogoutButton />
@@ -42,7 +42,7 @@ export default function AdminHeader() {
 function getPortalLabel(pathname: string | null): { title: string; subtitle: string } {
   if (pathname?.startsWith("/admin/socialmediamodels")) {
     return {
-      title: "PORTAL DE MÍDIA SOCIAL",
+      title: "PORTAL DA AMPLIA",
       subtitle: "Painel de crescimento de marca e mídia social",
     };
   }

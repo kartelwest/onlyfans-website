@@ -15,7 +15,7 @@ export default async function AdminSocialMediaOverviewPage() {
         <header className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.28em] text-pink-300">
-              PORTAL DE MÍDIA SOCIAL
+              PORTAL DA AMPLIA
             </p>
 
             <h1 className="mt-2 text-3xl font-bold sm:text-4xl">
