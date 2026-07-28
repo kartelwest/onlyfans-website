@@ -209,7 +209,7 @@ export async function getAmpliaClients(): Promise<{
     hasBrandGrowthInstagram,
     hasBrandGrowthX,
   } of talentsById.values()) {
-    if (!hasBrandGrowth) {
+    if (!hasOnlyFans && !hasBrandGrowth) {
       continue;
     }
 
@@ -272,7 +272,7 @@ export async function getAmpliaClients(): Promise<{
   clients.sort((a, b) => a.displayName.localeCompare(b.displayName, "pt-BR", { sensitivity: "base" }));
 
   const stats = {
-    activeSocialModels: clients.filter((c) => c.type === "model").length,
+    activeSocialModels: clients.length,
     brandGrowthOnlyClients: clients.filter((c) => c.type === "brand_only").length,
     connectedInstagram: clients.filter((c) => c.connectedInstagram).length,
     awaitingLaunch: clients.filter((c) => ["draft", "planning", "not_requested"].includes(c.brandStatus)).length,
