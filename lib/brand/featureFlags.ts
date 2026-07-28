@@ -12,7 +12,7 @@ export interface BrandGrowthFlags {
 const DEFAULT_FLAGS: BrandGrowthFlags = {
   brandGrowthEnabled: true,
   featureXEnabled: false,
-  ampliaTitle: "Amplia",
+  ampliaTitle: "Mídia Social",
   ampliaInternalName: "Brand Growth",
 };
 
