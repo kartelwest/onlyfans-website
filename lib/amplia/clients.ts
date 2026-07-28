@@ -95,16 +95,23 @@ export async function getAmpliaClients(): Promise<{
   }
 
   type EnrollmentItem = {
-    talents: (Record<string, unknown> & {
-      linked_model_id?: string | null;
-    })[];
-    service_types: { key?: string; category?: string; display_name?: string }[];
+    talents:
+      | (Record<string, unknown> & { linked_model_id?: string | null })
+      | (Record<string, unknown> & { linked_model_id?: string | null })[];
+    service_types:
+      | { key?: string; category?: string; display_name?: string }
+      | { key?: string; category?: string; display_name?: string }[];
   };
+
+  function first<T>(value: T | T[] | null | undefined): T | undefined {
+    if (!value) return undefined;
+    return Array.isArray(value) ? value[0] : value;
+  }
 
   const talentsById = new Map<
     string,
     {
-      talent: EnrollmentItem["talents"][number];
+      talent: Record<string, unknown> & { linked_model_id?: string | null };
       hasOnlyFans: boolean;
       hasBrandGrowth: boolean;
       hasBrandGrowthInstagram: boolean;
@@ -115,9 +122,9 @@ export async function getAmpliaClients(): Promise<{
   const modelIds = new Set<string>();
 
   for (const raw of (enrollmentRows ?? []) as unknown as EnrollmentItem[]) {
-    const talent = raw.talents[0];
+    const talent = first(raw.talents);
     if (!talent) continue;
-    const serviceType = raw.service_types[0];
+    const serviceType = first(raw.service_types);
     if (!serviceType) continue;
 
     const id = String(talent.id);
@@ -155,7 +162,7 @@ export async function getAmpliaClients(): Promise<{
       ? supabase
           .from("models")
           .select(
-            "id, display_name, stage_name, city, email, whatsapp, profile_photo_url, active, created_at, updated_at, profiles ( full_name )",
+            "id, display_name, stage_name, city, email, whatsapp, profile_photo_url, active, created_at, updated_at, profile:profiles!profile_id ( full_name )",
           )
           .in("id", Array.from(modelIds))
       : { data: [], error: null },
@@ -224,7 +231,7 @@ export async function getAmpliaClients(): Promise<{
       updated_at: talent.updated_at,
     };
 
-    const rawProfiles = model?.profiles as unknown as
+    const rawProfiles = model?.profile as unknown as
       | { full_name: string | null }[]
       | { full_name: string | null }
       | null;
@@ -306,7 +313,7 @@ export async function getAmpliaClientById(
       active,
       created_at,
       updated_at,
-      profiles ( full_name )
+      profile:profiles!profile_id ( full_name )
     `,
     )
     .eq("id", id)
@@ -341,7 +348,7 @@ export async function getAmpliaClientById(
       updated_at: row.updated_at,
     };
 
-    const rawProfile = row.profiles as unknown as
+    const rawProfile = row.profile as unknown as
       | { full_name: string | null }[]
       | { full_name: string | null }
       | null;
@@ -377,12 +384,12 @@ export async function getAmpliaClientById(
     if (linkedModelId) {
       const { data: linkedModel } = await supabase
         .from("models")
-        .select("id, city, profile_photo_url, email, whatsapp, active, created_at, updated_at, profiles ( full_name )")
+        .select("id, city, profile_photo_url, email, whatsapp, active, created_at, updated_at, profile:profiles!profile_id ( full_name )")
         .eq("id", linkedModelId)
         .maybeSingle();
       model = (linkedModel as Record<string, unknown>) ?? null;
 
-      const rawModelProfiles = model?.profiles as unknown as
+      const rawModelProfiles = model?.profile as unknown as
         | { full_name: string | null }[]
         | { full_name: string | null }
         | null;

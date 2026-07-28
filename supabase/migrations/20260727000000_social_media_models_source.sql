@@ -17,7 +17,7 @@ insert into public.talents (
 select
   m.id,
   coalesce(p.full_name, m.display_name),
-  m.stage_name,
+  coalesce(m.stage_name, m.display_name),
   m.display_name,
   m.city,
   m.nationality,

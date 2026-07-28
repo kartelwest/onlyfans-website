@@ -103,7 +103,7 @@ export default async function AdminModelsPage({
 
   const { data: enrollmentRows, error: enrollmentsError } = await supabase
     .from("service_enrollments")
-    .select("talent_id, talents!inner ( linked_model_id )")
+    .select("talent_id, talents!inner ( linked_model_id ), service_types!inner ( key )")
     .eq("service_types.key", "onlyfans")
     .order("talent_id", { ascending: true });
 
@@ -112,8 +112,9 @@ export default async function AdminModelsPage({
   }
 
   const onlyFansModelIds = new Set<string>();
-  for (const raw of (enrollmentRows ?? []) as unknown as { talents: { linked_model_id?: string | null }[] }[]) {
-    const talent = raw.talents?.[0];
+  for (const raw of (enrollmentRows ?? []) as unknown as { talents: { linked_model_id?: string | null } | { linked_model_id?: string | null }[] }[]) {
+    const rawTalent = raw.talents;
+    const talent = Array.isArray(rawTalent) ? rawTalent[0] : rawTalent;
     if (talent?.linked_model_id) {
       onlyFansModelIds.add(String(talent.linked_model_id));
     }
