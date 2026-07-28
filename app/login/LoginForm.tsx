@@ -100,12 +100,12 @@ export default function LoginForm({ returnTo }: { returnTo?: string }) {
           </p>
 
           <h1 className="mt-3 text-3xl font-bold text-[#4b2438]">
-            {isSocialMediaPortal(returnTo) ? "Portal de Mídia Social" : "Portal de Acesso"}
+            {isSocialMediaPortal(returnTo) ? "Portal da Amplia" : "Portal de Acesso"}
           </h1>
 
           <p className="mt-3 text-sm leading-6 text-[#765c68]">
             {isSocialMediaPortal(returnTo)
-              ? "Entre com seu email e senha para acessar o painel de crescimento de marca e mídia social."
+              ? "Entre com seu email e senha para acessar o painel da Amplia."
               : "Entre com seu email e senha para acessar sua área."}
           </p>
         </div>

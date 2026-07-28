@@ -43,7 +43,7 @@ function getPortalLabel(pathname: string | null): { title: string; subtitle: str
   if (pathname?.startsWith("/admin/socialmediamodels")) {
     return {
       title: "PORTAL DA AMPLIA",
-      subtitle: "Painel de crescimento de marca e mídia social",
+      subtitle: "Painel de crescimento de marca (Amplia)",
     };
   }
 
