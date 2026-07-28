@@ -1,6 +1,17 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
+function redirectWithCookies(url: URL, sourceResponse: NextResponse): NextResponse {
+  const redirectResponse = NextResponse.redirect(url);
+
+  for (const cookie of sourceResponse.cookies.getAll()) {
+    const { name, value, ...options } = cookie;
+    redirectResponse.cookies.set(name, value, options as Parameters<typeof redirectResponse.cookies.set>[2]);
+  }
+
+  return redirectResponse;
+}
+
 export async function proxy(request: NextRequest) {
   let response = NextResponse.next({
     request,
@@ -40,8 +51,6 @@ export async function proxy(request: NextRequest) {
     },
   );
 
-  await supabase.auth.getUser();
-
   // Coarse gating for authenticated routes (defense in depth)
   const { pathname } = request.nextUrl;
   const protectedRoutes = [
@@ -66,7 +75,7 @@ export async function proxy(request: NextRequest) {
     if (!user) {
       const loginUrl = new URL("/login", request.url);
       loginUrl.searchParams.set("returnTo", pathname);
-      return NextResponse.redirect(loginUrl);
+      return redirectWithCookies(loginUrl, response);
     }
   }
 

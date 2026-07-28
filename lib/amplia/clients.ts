@@ -198,9 +198,14 @@ export async function getAmpliaClients(): Promise<{
   for (const {
     talent,
     hasOnlyFans,
+    hasBrandGrowth,
     hasBrandGrowthInstagram,
     hasBrandGrowthX,
   } of talentsById.values()) {
+    if (!hasBrandGrowth) {
+      continue;
+    }
+
     const modelId = talent.linked_model_id ? String(talent.linked_model_id) : null;
     const model = modelId ? (modelMap.get(modelId) as Record<string, unknown> | undefined) : null;
     const type = hasOnlyFans ? "model" : "brand_only";
@@ -260,10 +265,8 @@ export async function getAmpliaClients(): Promise<{
   clients.sort((a, b) => a.displayName.localeCompare(b.displayName, "pt-BR", { sensitivity: "base" }));
 
   const stats = {
-    activeSocialModels: Array.from(talentsById.values()).filter((t) => t.hasOnlyFans).length,
-    brandGrowthOnlyClients: Array.from(talentsById.values()).filter(
-      (t) => !t.hasOnlyFans && t.hasBrandGrowth,
-    ).length,
+    activeSocialModels: clients.filter((c) => c.type === "model").length,
+    brandGrowthOnlyClients: clients.filter((c) => c.type === "brand_only").length,
     connectedInstagram: clients.filter((c) => c.connectedInstagram).length,
     awaitingLaunch: clients.filter((c) => ["draft", "planning", "not_requested"].includes(c.brandStatus)).length,
     awaitingAuthorization: clients.filter((c) => ["awaiting_connection", "awaiting_verification"].includes(c.brandStatus)).length,
@@ -355,12 +358,9 @@ export async function getAmpliaClientById(
         display_name,
         preferred_username,
         location,
-        email,
-        whatsapp,
         active,
         created_at,
-        updated_at,
-        profiles ( full_name )
+        updated_at
       `,
       )
       .eq("id", id)
@@ -373,47 +373,68 @@ export async function getAmpliaClientById(
     const row = talentRow as unknown as Record<string, unknown>;
     const linkedModelId = row.linked_model_id ? String(row.linked_model_id) : null;
     let model: Record<string, unknown> | null = null;
+    let modelProfile: { full_name: string | null } | undefined;
     if (linkedModelId) {
       const { data: linkedModel } = await supabase
         .from("models")
-        .select("id, city, profile_photo_url, email, whatsapp, active, created_at, updated_at")
+        .select("id, city, profile_photo_url, email, whatsapp, active, created_at, updated_at, profiles ( full_name )")
         .eq("id", linkedModelId)
         .maybeSingle();
       model = (linkedModel as Record<string, unknown>) ?? null;
+
+      const rawModelProfiles = model?.profiles as unknown as
+        | { full_name: string | null }[]
+        | { full_name: string | null }
+        | null;
+      modelProfile = Array.isArray(rawModelProfiles)
+        ? rawModelProfiles[0]
+        : (rawModelProfiles ?? undefined);
     }
 
     sourceRow = {
       id: model?.id ?? row.id,
       display_name: row.display_name,
       stage_name: row.stage_name,
-      email: model?.email ?? row.email ?? null,
-      whatsapp: model?.whatsapp ?? row.whatsapp ?? null,
+      email: model?.email ?? null,
+      whatsapp: model?.whatsapp ?? null,
       profile_photo_url: model?.profile_photo_url ?? null,
       city: model?.city ?? row.location ?? null,
       location: row.location ?? model?.city ?? null,
-      active: row.active,
+      active: model?.active ?? row.active,
       created_at: row.created_at,
       updated_at: row.updated_at,
     };
     talentId = String(row.id);
 
-    const rawProfile = row.profiles as unknown as
-      | { full_name: string | null }[]
-      | { full_name: string | null }
-      | null;
-    profile = Array.isArray(rawProfile) ? rawProfile[0] : (rawProfile ?? undefined);
+    profile = modelProfile ?? (row.legal_name ? { full_name: String(row.legal_name) } : undefined);
   }
 
   if (!talentId) {
     return { error: "Não foi possível identificar o talento." };
   }
 
-  const [brandProfileResult, platformsResult, consentsResult, boundariesResult] = await Promise.all([
-    supabase.from("brand_profiles").select("*").eq("talent_id", talentId).maybeSingle(),
-    supabase.from("model_platforms").select("*").eq("model_id", sourceRow.id as string),
-    supabase.from("client_consents").select("consent_type, granted").eq("talent_id", talentId),
-    supabase.from("client_boundaries").select("*").eq("talent_id", talentId).maybeSingle(),
-  ]);
+  const [brandProfileResult, platformsResult, consentsResult, boundariesResult, enrollmentsResult] =
+    await Promise.all([
+      supabase.from("brand_profiles").select("*").eq("talent_id", talentId).maybeSingle(),
+      supabase.from("model_platforms").select("*").eq("model_id", sourceRow.id as string),
+      supabase.from("client_consents").select("consent_type, granted").eq("talent_id", talentId),
+      supabase.from("client_boundaries").select("*").eq("talent_id", talentId).maybeSingle(),
+      supabase
+        .from("service_enrollments")
+        .select("service_types(key)")
+        .eq("talent_id", talentId)
+        .eq("status", "active"),
+    ]);
+
+  const hasOnlyFans = (enrollmentsResult.data ?? []).some((e: Record<string, unknown>) => {
+    const serviceTypes = e.service_types as { key?: string }[] | { key?: string } | null;
+    const first = Array.isArray(serviceTypes) ? serviceTypes[0] : serviceTypes;
+    return first?.key === "onlyfans";
+  });
+
+  if (type === "brand_only" && hasOnlyFans) {
+    type = "model";
+  }
 
   const brandProfile = brandProfileResult.data as Record<string, unknown> | null;
   const platforms = (platformsResult.data ?? []) as Record<string, unknown>[];

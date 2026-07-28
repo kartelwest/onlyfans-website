@@ -30,7 +30,7 @@ export default function AmpliaDetailClient({
         <header className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
           <div>
             <Link
-              href="/admin/amplia/models"
+              href="/admin/socialmediamodels/models"
               className="text-xs font-semibold text-white/55 transition hover:text-white"
             >
               ← Voltar para SOCIAL MEDIA MODELS

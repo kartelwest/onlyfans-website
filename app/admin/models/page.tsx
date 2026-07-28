@@ -101,30 +101,51 @@ export default async function AdminModelsPage({
     redirect("/login");
   }
 
+  const { data: enrollmentRows, error: enrollmentsError } = await supabase
+    .from("service_enrollments")
+    .select("talent_id, talents!inner ( linked_model_id )")
+    .eq("service_types.key", "onlyfans")
+    .order("talent_id", { ascending: true });
+
+  if (enrollmentsError) {
+    console.error("Erro ao carregar matrículas OnlyFans:", enrollmentsError);
+  }
+
+  const onlyFansModelIds = new Set<string>();
+  for (const raw of (enrollmentRows ?? []) as unknown as { talents: { linked_model_id?: string | null }[] }[]) {
+    const talent = raw.talents?.[0];
+    if (talent?.linked_model_id) {
+      onlyFansModelIds.add(String(talent.linked_model_id));
+    }
+  }
+
   const { data: modelRows, error: modelsError } =
-    await supabase
-      .from("models")
-      .select(
-        `
-          id,
-          model_number,
-          slug,
-          display_name,
-          stage_name,
-          status,
-          active,
-          website_login_enabled,
-          latest_note_summary,
-          profile:profiles!profile_id ( full_name )
-        `,
-      )
-      .order("model_number", {
-        ascending: true,
-        nullsFirst: false,
-      })
-      .order("created_at", {
-        ascending: true,
-      });
+    onlyFansModelIds.size > 0
+      ? await supabase
+          .from("models")
+          .select(
+            `
+              id,
+              model_number,
+              slug,
+              display_name,
+              stage_name,
+              status,
+              active,
+              website_login_enabled,
+              latest_note_summary,
+              profile:profiles!profile_id ( full_name )
+            `,
+          )
+          .in("id", Array.from(onlyFansModelIds))
+          .order("model_number", {
+            ascending: true,
+            nullsFirst: false,
+          })
+          .order("created_at", {
+            ascending: true,
+          })
+      : { data: [], error: null };
 
   if (modelsError) {
     console.error("Erro ao carregar modelos:", modelsError);

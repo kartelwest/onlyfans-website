@@ -43,7 +43,7 @@ export default function NovoClienteForm() {
         throw new Error(result.error ?? "Erro ao criar cliente.");
       }
 
-      router.push(`/admin/amplia/models/${result.id}`);
+      router.push(`/admin/socialmediamodels/models/${result.id}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erro inesperado.");
     } finally {

@@ -213,7 +213,7 @@ const faqGroups = [
   },
 ];
 
-function KarrayHeartIcon() {
+function KarayHeartIcon() {
   return (
     <svg
       viewBox="0 0 32 30"
@@ -282,7 +282,7 @@ export default function FAQPage() {
             >
               <div className="flex items-center gap-4">
                 <span className="text-[#c65f7c]">
-                  <KarrayHeartIcon />
+                  <KarayHeartIcon />
                 </span>
 
                 <h2 className="font-serif text-3xl md:text-4xl">

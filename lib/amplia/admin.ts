@@ -16,7 +16,7 @@ export async function requireAdminAmpliaAccess(): Promise<{
   } = await supabase.auth.getUser();
 
   if (!user) {
-    redirect("/login?returnTo=/admin/amplia");
+    redirect("/login?returnTo=/admin/socialmediamodels");
   }
 
   const { data: profile } = await supabase

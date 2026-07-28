@@ -36,7 +36,7 @@ export default function BrandGrowthTab({ model }: { model: Model }) {
     <section className="grid gap-6 lg:grid-cols-3">
       <div className="rounded-2xl border border-white/10 bg-black/20 p-6 lg:col-span-2">
         <h2 className="text-sm font-semibold uppercase tracking-[0.14em] text-pink-100">
-          Brand Growth — Amplia
+          Brand Growth — Mídia Social
         </h2>
 
         <p className="mt-4 text-sm text-white/60">
@@ -60,10 +60,10 @@ export default function BrandGrowthTab({ model }: { model: Model }) {
           </button>
 
           <Link
-            href="/admin/amplia/models"
+            href="/admin/socialmediamodels/models"
             className="rounded-xl border border-white/10 bg-white/5 px-5 py-3 text-sm font-semibold text-white/70 transition hover:bg-white/10"
           >
-            Ver clientes Amplia
+            Ver clientes de Mídia Social
           </Link>
         </div>
       </div>

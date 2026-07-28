@@ -347,7 +347,7 @@ async function getOrCreateTalentForModel(
       location: model.city,
       nationality: model.nationality,
       languages: model.language ? [String(model.language)] : [],
-      active: true,
+      active: model.active,
     })
     .select("id")
     .single();
