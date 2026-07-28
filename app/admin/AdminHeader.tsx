@@ -24,12 +24,14 @@ export default function AdminHeader() {
         </div>
 
         <div className="flex items-center gap-3">
-          <Link
-            href={pathname?.startsWith("/admin/amplia") ? "/admin/models" : "/admin/amplia"}
-            className="rounded-xl border border-pink-400/40 bg-pink-500/10 px-5 py-3 text-sm font-semibold text-pink-200 transition hover:bg-pink-500/20"
-          >
-            {pathname?.startsWith("/admin/amplia") ? "MODELOS" : "AMPLIA"}
-          </Link>
+          {pathname?.startsWith("/admin/models") && (
+            <Link
+              href="/admin/socialmediamodels"
+              className="rounded-xl border border-pink-400/40 bg-pink-500/10 px-5 py-3 text-sm font-semibold text-pink-200 transition hover:bg-pink-500/20"
+            >
+              MÍDIA SOCIAL
+            </Link>
+          )}
           <LogoutButton />
         </div>
       </div>
@@ -38,9 +40,9 @@ export default function AdminHeader() {
 }
 
 function getPortalLabel(pathname: string | null): { title: string; subtitle: string } {
-  if (pathname?.startsWith("/admin/amplia")) {
+  if (pathname?.startsWith("/admin/socialmediamodels")) {
     return {
-      title: "PORTAL DA AMPLIA",
+      title: "PORTAL DE MÍDIA SOCIAL",
       subtitle: "Painel de crescimento de marca e mídia social",
     };
   }

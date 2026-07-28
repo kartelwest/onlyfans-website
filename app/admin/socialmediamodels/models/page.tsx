@@ -4,7 +4,7 @@ import { getAmpliaClients, type AmpliaClient } from "@/lib/amplia/clients";
 
 export const dynamic = "force-dynamic";
 
-export default async function AdminAmpliaModelsPage() {
+export default async function AdminSocialMediaModelsPage() {
   await requireAdminAmpliaAccess();
 
   const { clients } = await getAmpliaClients();
@@ -15,7 +15,7 @@ export default async function AdminAmpliaModelsPage() {
         <header className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.28em] text-pink-300">
-              PORTAL DA AMPLIA
+              PORTAL DE MÍDIA SOCIAL
             </p>
 
             <h1 className="mt-2 text-3xl font-bold sm:text-4xl">
@@ -24,7 +24,7 @@ export default async function AdminAmpliaModelsPage() {
           </div>
 
           <Link
-            href="/admin/amplia/models/new"
+            href="/admin/socialmediamodels/models/new"
             className="rounded-xl bg-pink-500 px-5 py-3 text-center text-sm font-bold text-white transition hover:bg-pink-400"
           >
             + Cliente Brand Growth
@@ -119,7 +119,7 @@ function ClientRow({ client, dummy }: { client: AmpliaClient; dummy?: boolean })
       </td>
       <td className="px-6 py-4 text-right">
         <Link
-          href={`/admin/amplia/models/${client.talentId}`}
+          href={`/admin/socialmediamodels/models/${client.talentId}`}
           className="rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-xs font-semibold text-white/80 transition hover:bg-white/10"
         >
           Abrir

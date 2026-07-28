@@ -98,7 +98,7 @@ const freedomItems = [
   "Todo o processo será conduzido com profissionalismo e respeito",
 ];
 
-function KarrayHeartIcon({ className = "h-5 w-5" }: { className?: string }) {
+function KarayHeartIcon({ className = "h-5 w-5" }: { className?: string }) {
   return (
     <svg
       viewBox="0 0 32 30"
@@ -155,7 +155,7 @@ function SectionHeading({
         }`}
       >
         <span className="h-px w-14 bg-[#d8a6b4]" />
-        <KarrayHeartIcon />
+        <KarayHeartIcon />
         <span className="h-px w-14 bg-[#d8a6b4]" />
       </div>
     </div>
@@ -171,7 +171,7 @@ function CheckList({ items }: { items: string[] }) {
           className="flex items-start gap-4 rounded-2xl border border-[#ead8df] bg-white p-5"
         >
           <span className="mt-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#f6e3e9] text-[#b85f79]">
-            <KarrayHeartIcon className="h-4 w-4" />
+            <KarayHeartIcon className="h-4 w-4" />
           </span>
 
           <span className="leading-7 text-[#66565d]">{item}</span>
@@ -259,7 +259,7 @@ export default function WhyUsPage() {
               <div className="mx-auto mt-7 flex items-center justify-center gap-3 text-[#c65f7c]">
                 <span className="h-px w-16 bg-[#d8a6b4]" />
 
-                <KarrayHeartIcon className="h-5 w-5" />
+                <KarayHeartIcon className="h-5 w-5" />
 
                 <span className="h-px w-16 bg-[#d8a6b4]" />
               </div>
@@ -431,7 +431,7 @@ export default function WhyUsPage() {
                       className="flex items-start gap-4 rounded-2xl border border-white/10 bg-white/5 p-5"
                     >
                       <span className="mt-1 shrink-0 text-[#e9a5b8]">
-                        <KarrayHeartIcon className="h-5 w-5" />
+                        <KarayHeartIcon className="h-5 w-5" />
                       </span>
 
                       <span className="leading-7 text-white/75">{item}</span>
@@ -815,7 +815,7 @@ export default function WhyUsPage() {
                 {freedomItems.map((item) => (
                   <li key={item} className="flex items-start gap-4">
                     <span className="mt-1 text-[#e9a5b8]">
-                      <KarrayHeartIcon className="h-5 w-5" />
+                      <KarayHeartIcon className="h-5 w-5" />
                     </span>
 
                     <span className="leading-7 text-white/75">{item}</span>

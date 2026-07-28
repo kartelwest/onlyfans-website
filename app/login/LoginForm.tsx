@@ -3,7 +3,6 @@
 import { FormEvent, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
 type ProfileRole =
@@ -13,7 +12,6 @@ type ProfileRole =
   | "model";
 
 export default function LoginForm({ returnTo }: { returnTo?: string }) {
-  const router = useRouter();
   const supabase = createClient();
 
   const [email, setEmail] = useState("");
@@ -61,16 +59,15 @@ export default function LoginForm({ returnTo }: { returnTo?: string }) {
       }
 
       if (profile.must_change_password) {
-        router.replace("/alterar-senha");
-        router.refresh();
+        window.location.replace("/alterar-senha");
         return;
       }
 
       const role = profile.role as ProfileRole;
 
       const redirectPath = resolveRedirectPath(role, returnTo ?? null);
-      router.replace(redirectPath);
-      router.refresh();
+      window.location.replace(redirectPath);
+      return;
     } catch (error) {
       const message =
         error instanceof Error
@@ -103,11 +100,11 @@ export default function LoginForm({ returnTo }: { returnTo?: string }) {
           </p>
 
           <h1 className="mt-3 text-3xl font-bold text-[#4b2438]">
-            {returnTo?.startsWith("/admin/amplia") ? "Portal da Amplia" : "Portal de Acesso"}
+            {isSocialMediaPortal(returnTo) ? "Portal de Mídia Social" : "Portal de Acesso"}
           </h1>
 
           <p className="mt-3 text-sm leading-6 text-[#765c68]">
-            {returnTo?.startsWith("/admin/amplia")
+            {isSocialMediaPortal(returnTo)
               ? "Entre com seu email e senha para acessar o painel de crescimento de marca e mídia social."
               : "Entre com seu email e senha para acessar sua área."}
           </p>
@@ -177,6 +174,14 @@ export default function LoginForm({ returnTo }: { returnTo?: string }) {
         ← Voltar para o site
       </Link>
     </main>
+  );
+}
+
+function isSocialMediaPortal(returnTo: string | undefined): boolean {
+  if (!returnTo) return false;
+  return (
+    returnTo.startsWith("/admin/socialmediamodels") ||
+    returnTo.startsWith("/admin/amplia")
   );
 }
 

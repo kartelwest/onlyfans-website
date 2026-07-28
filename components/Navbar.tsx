@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 
-function KarrayHeartIcon() {
+function KarayHeartIcon() {
   return (
     <svg
       viewBox="0 0 32 30"
@@ -35,7 +35,7 @@ const menuLinks = [
   { name: "Por Que Nós", href: "/por-que-nos" },
   { name: "FAQ", href: "/faq" },
   { name: "Login", href: "/login" },
-  { name: "AMPLIA", href: "/admin/amplia" },
+  { name: "MÍDIA SOCIAL", href: "/admin/socialmediamodels" },
 ];
 
 export default function Navbar() {
@@ -67,7 +67,7 @@ export default function Navbar() {
                 {link.name}
 
                 <span className="absolute left-1/2 top-full -translate-x-1/2 scale-0 text-[#e9a5b8] opacity-0 transition duration-300 group-hover:scale-100 group-hover:opacity-100">
-                  <KarrayHeartIcon />
+                  <KarayHeartIcon />
                 </span>
               </Link>
             ))}
@@ -134,7 +134,7 @@ export default function Navbar() {
                 <span>{link.name}</span>
 
                 <span className="text-[#e9a5b8]">
-                  <KarrayHeartIcon />
+                  <KarayHeartIcon />
                 </span>
               </Link>
             ))}

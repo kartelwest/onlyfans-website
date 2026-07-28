@@ -4,7 +4,7 @@ import { getAmpliaClients } from "@/lib/amplia/clients";
 
 export const dynamic = "force-dynamic";
 
-export default async function AdminAmpliaOverviewPage() {
+export default async function AdminSocialMediaOverviewPage() {
   await requireAdminAmpliaAccess();
 
   const { stats } = await getAmpliaClients();
@@ -15,7 +15,7 @@ export default async function AdminAmpliaOverviewPage() {
         <header className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.28em] text-pink-300">
-              PORTAL DA AMPLIA
+              PORTAL DE MÍDIA SOCIAL
             </p>
 
             <h1 className="mt-2 text-3xl font-bold sm:text-4xl">
@@ -28,7 +28,7 @@ export default async function AdminAmpliaOverviewPage() {
           </div>
 
           <Link
-            href="/admin/amplia/models"
+            href="/admin/socialmediamodels/models"
             className="rounded-xl bg-pink-500 px-6 py-3 text-sm font-bold text-white transition hover:bg-pink-400"
           >
             Open Now — SOCIAL MEDIA MODELS

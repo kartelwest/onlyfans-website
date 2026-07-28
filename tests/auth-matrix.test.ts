@@ -41,6 +41,26 @@ const routeAccessMatrix: RouteAccess[] = [
     description: "Admin user creation is staff-only",
   },
   {
+    path: "/admin/socialmediamodels",
+    roles: ["owner", "administrator"],
+    description: "Social media dashboard is staff-only",
+  },
+  {
+    path: "/admin/socialmediamodels/models",
+    roles: ["owner", "administrator"],
+    description: "Social media client list is staff-only",
+  },
+  {
+    path: "/admin/socialmediamodels/models/new",
+    roles: ["owner", "administrator"],
+    description: "Social media client creation is staff-only",
+  },
+  {
+    path: "/admin/socialmediamodels/models/123",
+    roles: ["owner", "administrator"],
+    description: "Social media client detail is staff-only",
+  },
+  {
     path: "/representative",
     roles: ["representative"],
     description: "Representative dashboard is rep-only",

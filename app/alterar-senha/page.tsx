@@ -3,11 +3,9 @@
 export const dynamic = "force-dynamic";
 
 import { FormEvent, useState } from "react";
-import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
 export default function ChangePasswordPage() {
-  const router = useRouter();
   const supabase = createClient();
 
   const [newPassword, setNewPassword] = useState("");
@@ -64,18 +62,16 @@ export default function ChangePasswordPage() {
       const role = profile?.role;
 
       if (role === "owner") {
-        router.replace("/owner");
+        window.location.replace("/owner");
       } else if (role === "administrator") {
-        router.replace("/admin/models");
+        window.location.replace("/admin/models");
       } else if (role === "representative") {
-        router.replace("/representative");
+        window.location.replace("/representative");
       } else if (role === "model") {
-        router.replace("/area-da-modelo");
+        window.location.replace("/area-da-modelo");
       } else {
-        router.replace("/login");
+        window.location.replace("/login");
       }
-
-      router.refresh();
     } catch (error) {
       const message =
         error instanceof Error

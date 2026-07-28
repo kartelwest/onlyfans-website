@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
+import { ensureOnlyFansEnrollmentForModel } from "@/lib/brand/talent";
 import {
   createUniqueModelSlug,
   getNextModelNumber,
@@ -256,22 +257,26 @@ export async function POST(request: Request) {
 
       const modelNumber = await getNextModelNumber(adminSupabase);
 
-      const { error: createModelError } =
-        await adminSupabase.from("models").insert({
-          profile_id: createdAuthUserId,
-          model_number: modelNumber,
-          slug,
-          display_name: fullName,
-          stage_name: stageName,
-          birthday: dateOfBirth,
-          nationality: country,
-          email,
-          whatsapp: phone,
-          status: active ? "active" : "inactive",
-          active,
-          website_login_enabled:
-            websiteLoginEnabled,
-        });
+      const { data: createdModel, error: createModelError } =
+        await adminSupabase
+          .from("models")
+          .insert({
+            profile_id: createdAuthUserId,
+            model_number: modelNumber,
+            slug,
+            display_name: fullName,
+            stage_name: stageName,
+            birthday: dateOfBirth,
+            nationality: country,
+            email,
+            whatsapp: phone,
+            status: active ? "active" : "inactive",
+            active,
+            website_login_enabled:
+              websiteLoginEnabled,
+          })
+          .select("id")
+          .single();
 
       if (createModelError) {
         await adminSupabase
@@ -293,6 +298,10 @@ export async function POST(request: Request) {
             status: 500,
           },
         );
+      }
+
+      if (createdModel) {
+        await ensureOnlyFansEnrollmentForModel(createdModel.id);
       }
     }
 
