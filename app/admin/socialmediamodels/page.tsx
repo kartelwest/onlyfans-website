@@ -1,13 +1,13 @@
 import Link from "next/link";
 import { requireAdminAmpliaAccess } from "@/lib/amplia/admin";
-import { getAmpliaClients } from "@/lib/amplia/clients";
+import { getAmpliaClients, type AmpliaClient } from "@/lib/amplia/clients";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminSocialMediaOverviewPage() {
   await requireAdminAmpliaAccess();
 
-  const { stats } = await getAmpliaClients();
+  const { clients, stats } = await getAmpliaClients();
 
   return (
     <main className="min-h-screen bg-[#08080a] px-4 py-8 text-white sm:px-6 lg:px-10">
@@ -23,7 +23,7 @@ export default async function AdminSocialMediaOverviewPage() {
             </h1>
 
             <p className="mt-2 text-sm text-white/55">
-              Painel de crescimento de marca e mídia social.
+              Painel de crescimento de marca (Amplia).
             </p>
           </div>
 
@@ -31,12 +31,12 @@ export default async function AdminSocialMediaOverviewPage() {
             href="/admin/socialmediamodels/models"
             className="rounded-xl bg-pink-500 px-6 py-3 text-sm font-bold text-white transition hover:bg-pink-400"
           >
-            Open Now — SOCIAL MEDIA MODELS
+            Open Now — AMPLIA MODELS
           </Link>
         </header>
 
         <section className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          <MetricCard label="Modelos em mídia social" value={stats.activeSocialModels} description="Ativos" />
+          <MetricCard label="Modelos em Amplia" value={stats.activeSocialModels} description="Ativos" />
           <MetricCard label="Clientes Brand-Growth-only" value={stats.brandGrowthOnlyClients} description="Não-OnlyFans" />
           <MetricCard label="Instagram conectado" value={stats.connectedInstagram} description="Contas ativas" />
           <MetricCard label="Aguardando lançamento" value={stats.awaitingLaunch} description="Setup pendente" />
@@ -61,6 +61,24 @@ export default async function AdminSocialMediaOverviewPage() {
             <MetricCard label="Custo estimado de IA" value={stats.estimatedAICostMonth} description="Este mês (USD)" />
           </div>
         </section>
+
+        <section className="mt-8 rounded-2xl border border-white/10 bg-[#111115] p-6">
+          <h2 className="text-sm font-bold uppercase tracking-[0.14em] text-pink-100">
+            Modelos / Clientes Amplia
+          </h2>
+
+          <div className="mt-4 divide-y divide-white/5">
+            {clients.length > 0 ? (
+              clients.map((client) => (
+                <ClientAccordion key={client.talentId} client={client} />
+              ))
+            ) : (
+              <p className="py-6 text-sm text-white/45">
+                Nenhum modelo ou cliente Amplia ativo no momento.
+              </p>
+            )}
+          </div>
+        </section>
       </div>
     </main>
   );
@@ -81,5 +99,76 @@ function MetricCard({
       <p className="mt-3 text-3xl font-bold text-pink-300">{value}</p>
       <p className="mt-2 text-xs text-white/45">{description}</p>
     </div>
+  );
+}
+
+function ClientAccordion({ client }: { client: AmpliaClient }) {
+  return (
+    <details className="group py-4">
+      <summary className="flex cursor-pointer list-none items-center justify-between">
+        <div className="flex items-center gap-4">
+          {client.profilePhotoUrl ? (
+            <img
+              src={client.profilePhotoUrl}
+              alt=""
+              className="h-10 w-10 rounded-full object-cover"
+            />
+          ) : (
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-xs font-bold text-white/60">
+              {client.displayName.charAt(0).toUpperCase() || "?"}
+            </div>
+          )}
+          <div>
+            <p className="font-semibold text-white">{client.displayName}</p>
+            <p className="text-xs text-white/45">
+              {client.stageName || client.fullName || "—"}
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <span
+            className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
+              client.type === "model"
+                ? "bg-pink-500/20 text-pink-200"
+                : "bg-white/10 text-white/60"
+            }`}
+          >
+            {client.type === "model" ? "Modelo Karay" : "Cliente Amplia"}
+          </span>
+          <span className="text-white/40 transition group-open:rotate-180">
+            ▼
+          </span>
+        </div>
+      </summary>
+
+      <div className="mt-4 grid gap-4 pl-14 text-sm sm:grid-cols-2 lg:grid-cols-4">
+        <div>
+          <p className="text-xs text-white/45">Email</p>
+          <p className="mt-1 text-white/80">{client.email || "—"}</p>
+        </div>
+        <div>
+          <p className="text-xs text-white/45">WhatsApp</p>
+          <p className="mt-1 text-white/80">{client.whatsapp || "—"}</p>
+        </div>
+        <div>
+          <p className="text-xs text-white/45">Cidade</p>
+          <p className="mt-1 text-white/80">{client.location || "—"}</p>
+        </div>
+        <div>
+          <p className="text-xs text-white/45">Status</p>
+          <p className="mt-1 capitalize text-white/80">{client.brandStatus.replace(/_/g, " ")}</p>
+        </div>
+      </div>
+
+      <div className="mt-4 flex flex-wrap gap-3 pl-14">
+        <Link
+          href={`/admin/socialmediamodels/models/${client.talentId}`}
+          className="rounded-lg bg-pink-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-pink-400"
+        >
+          Abrir perfil
+        </Link>
+      </div>
+    </details>
   );
 }

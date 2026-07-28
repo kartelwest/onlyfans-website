@@ -10,9 +10,9 @@ export default async function AdminSocialMediaNewClientPage() {
     <main className="min-h-screen bg-[#08080a] px-4 py-8 text-white sm:px-6 lg:px-10">
       <div className="mx-auto max-w-[1600px]">
         <p className="text-xs font-semibold uppercase tracking-[0.28em] text-pink-300">
-          PORTAL DE MÍDIA SOCIAL
+          PORTAL DA AMPLIA
         </p>
-        <h1 className="mt-2 text-3xl font-bold">Novo cliente de Mídia Social</h1>
+        <h1 className="mt-2 text-3xl font-bold">Novo cliente Amplia</h1>
         <p className="mt-2 text-sm text-white/55">
           Criar um cliente sem vinculação ao /admin/models.
         </p>

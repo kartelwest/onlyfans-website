@@ -52,7 +52,7 @@ const tabs: {
         { id: "payments", label: "Pagamentos" },
         { id: "notes", label: "Notas" },
         { id: "history", label: "Histórico" },
-        { id: "brand_growth", label: "Mídia Social" },
+        { id: "brand_growth", label: "Amplia" },
     ];
 
 export default function ModelAdminClient({
