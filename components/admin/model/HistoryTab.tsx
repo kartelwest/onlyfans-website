@@ -46,6 +46,12 @@ const ACTION_LABELS: Record<string, string> = {
   model_created: "Modelo criada",
   model_imported: "Modelo importada",
   model_applied: "Candidatura recebida",
+  note_created: "Nota adicionada",
+  note_edited: "Nota editada",
+  note_pinned: "Nota fixada",
+  note_unpinned: "Nota desafixada",
+  note_archived: "Nota arquivada",
+  note_restored: "Nota restaurada",
 };
 
 const ACTION_COLORS: Record<string, string> = {
@@ -62,6 +68,12 @@ const ACTION_COLORS: Record<string, string> = {
   model_created: "text-green-300",
   model_imported: "text-orange-300",
   model_applied: "text-pink-300",
+  note_created: "text-rose-300",
+  note_edited: "text-rose-300",
+  note_pinned: "text-rose-300",
+  note_unpinned: "text-rose-300",
+  note_archived: "text-rose-300",
+  note_restored: "text-rose-300",
 };
 
 const ACTION_FILTERS = [
@@ -78,6 +90,12 @@ const ACTION_FILTERS = [
   "model_created",
   "model_imported",
   "model_applied",
+  "note_created",
+  "note_edited",
+  "note_pinned",
+  "note_unpinned",
+  "note_archived",
+  "note_restored",
 ];
 
 function formatDate(iso: string): string {
@@ -180,10 +198,11 @@ export default function HistoryTab({
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h3 className="text-lg font-bold text-pink-200">
-            Histórico de Alterações
+            Histórico
           </h3>
           <p className="mt-1 text-sm text-zinc-400">
-            Registro completo de todas as modificações na modelo.
+            Registro completo de todas as alterações na conta da modelo,
+            incluindo notas.
           </p>
         </div>
 

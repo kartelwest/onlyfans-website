@@ -13,6 +13,38 @@ type ManagementRole =
 const MAX_PAGE_SIZE = 100;
 const DEFAULT_PAGE_SIZE = 25;
 
+// Note events live in `model_note_history` with short action names. They are
+// exposed through this endpoint under a `note_` prefix so that the unified
+// history can tell them apart from profile changes in `model_audit_history`.
+const NOTE_ACTION_PREFIX = "note_";
+
+const NOTE_ACTION_SUMMARIES: Record<string, string> = {
+  created: "Nota adicionada",
+  edited: "Nota editada",
+  pinned: "Nota fixada",
+  unpinned: "Nota desafixada",
+  archived: "Nota arquivada",
+  restored: "Nota restaurada",
+};
+
+const MAX_SUMMARY_EXCERPT = 140;
+
+function excerpt(value: unknown): string | null {
+  if (value === null || value === undefined) {
+    return null;
+  }
+
+  const str = String(value).replace(/\s+/g, " ").trim();
+
+  if (!str) {
+    return null;
+  }
+
+  return str.length > MAX_SUMMARY_EXCERPT
+    ? `${str.slice(0, MAX_SUMMARY_EXCERPT)}…`
+    : str;
+}
+
 export async function GET(request: NextRequest) {
   try {
     const supabase = await createClient();
@@ -100,56 +132,142 @@ export async function GET(request: NextRequest) {
 
     const offset = (page - 1) * pageSize;
 
-    let query = supabase
-      .from("model_audit_history")
-      .select(
-        `
-          id,
-          model_id,
-          action,
-          field_name,
-          previous_value,
-          new_value,
-          actor_id,
-          actor_name,
-          actor_role,
-          source,
-          summary,
-          created_at
-        `,
-        { count: "exact" },
-      )
-      .eq("model_id", modelId)
-      .order("created_at", { ascending: false })
-      .range(offset, offset + pageSize - 1);
+    // Both sources are ordered by created_at desc, so the first `offset +
+    // pageSize` rows of each are guaranteed to contain every row that could
+    // appear on the requested page of the merged list.
+    const upperBound = offset + pageSize - 1;
 
-    if (action) {
-      query = query.eq("action", action);
-    }
+    const isNoteAction =
+      Boolean(action) && action!.startsWith(NOTE_ACTION_PREFIX);
 
-    if (fieldName) {
-      query = query.eq("field_name", fieldName);
-    }
+    // A field filter only ever matches profile changes; a note-scoped action
+    // filter only ever matches note events. Skip the source that cannot match.
+    const skipAudit = isNoteAction;
+    const skipNotes = Boolean(fieldName) || (Boolean(action) && !isNoteAction);
 
-    if (actorId) {
-      query = query.eq("actor_id", actorId);
-    }
+    const auditPromise = skipAudit
+      ? null
+      : (() => {
+          let query = supabase
+            .from("model_audit_history")
+            .select(
+              `
+                id,
+                model_id,
+                action,
+                field_name,
+                previous_value,
+                new_value,
+                actor_id,
+                actor_name,
+                actor_role,
+                source,
+                summary,
+                created_at
+              `,
+              { count: "exact" },
+            )
+            .eq("model_id", modelId)
+            .order("created_at", { ascending: false })
+            .range(0, upperBound);
 
-    const { data: entries, error: entriesError, count } = await query;
+          if (action) {
+            query = query.eq("action", action);
+          }
 
-    if (entriesError) {
-      console.error("Erro ao carregar histórico de auditoria:", entriesError);
+          if (fieldName) {
+            query = query.eq("field_name", fieldName);
+          }
+
+          if (actorId) {
+            query = query.eq("actor_id", actorId);
+          }
+
+          return query;
+        })();
+
+    const notesPromise = skipNotes
+      ? null
+      : (() => {
+          let query = supabase
+            .from("model_note_history")
+            .select(
+              `
+                id,
+                note_id,
+                model_id,
+                action,
+                original_body,
+                updated_body,
+                editor_id,
+                editor_name,
+                editor_role,
+                created_at
+              `,
+              { count: "exact" },
+            )
+            .eq("model_id", modelId)
+            .order("created_at", { ascending: false })
+            .range(0, upperBound);
+
+          if (isNoteAction) {
+            query = query.eq(
+              "action",
+              action!.slice(NOTE_ACTION_PREFIX.length),
+            );
+          }
+
+          if (actorId) {
+            query = query.eq("editor_id", actorId);
+          }
+
+          return query;
+        })();
+
+    const [auditResult, notesResult] = await Promise.all([
+      auditPromise,
+      notesPromise,
+    ]);
+
+    if (auditResult?.error) {
+      console.error(
+        "Erro ao carregar histórico de auditoria:",
+        auditResult.error,
+      );
       return NextResponse.json(
         { error: "Erro interno ao carregar histórico." },
         { status: 500 },
       );
     }
 
-    const totalCount = count ?? 0;
+    if (notesResult?.error) {
+      console.error(
+        "Erro ao carregar histórico de notas:",
+        notesResult.error,
+      );
+      return NextResponse.json(
+        { error: "Erro interno ao carregar histórico." },
+        { status: 500 },
+      );
+    }
+
+    const merged = [
+      ...(auditResult?.data ?? []).map(mapAuditEntry),
+      ...(notesResult?.data ?? []).map(mapNoteEntry),
+    ].sort(
+      (first, second) =>
+        new Date(second.createdAt).getTime() -
+        new Date(first.createdAt).getTime(),
+    );
+
+    const entries = merged.slice(offset, offset + pageSize);
+
+    const totalCount =
+      (auditResult?.count ?? 0) + (notesResult?.count ?? 0);
     const totalPages = Math.ceil(totalCount / pageSize) || 1;
 
     return NextResponse.json({
-      entries: (entries ?? []).map(mapEntry),
+      entries,
       pagination: {
         page,
         pageSize,
@@ -168,7 +286,7 @@ export async function GET(request: NextRequest) {
   }
 }
 
-function mapEntry(entry: Record<string, unknown>) {
+function mapAuditEntry(entry: Record<string, unknown>) {
   return {
     id: String(entry.id ?? ""),
     modelId: String(entry.model_id ?? ""),
@@ -181,6 +299,32 @@ function mapEntry(entry: Record<string, unknown>) {
     actorRole: String(entry.actor_role ?? "administrator"),
     source: entry.source ?? null,
     summary: String(entry.summary ?? ""),
+    createdAt: String(entry.created_at ?? new Date().toISOString()),
+  };
+}
+
+function mapNoteEntry(entry: Record<string, unknown>) {
+  const rawAction = String(entry.action ?? "");
+  const label = NOTE_ACTION_SUMMARIES[rawAction] ?? "Nota atualizada";
+
+  // For a brand-new note the body arrives in `updated_body`; for edits the
+  // previous text is in `original_body`. Show whichever represents the note
+  // as it stands after the event.
+  const body =
+    excerpt(entry.updated_body) ?? excerpt(entry.original_body);
+
+  return {
+    id: `note:${String(entry.id ?? "")}`,
+    modelId: String(entry.model_id ?? ""),
+    action: `${NOTE_ACTION_PREFIX}${rawAction}`,
+    fieldName: null as string | null,
+    previousValue: entry.original_body ?? null,
+    newValue: entry.updated_body ?? null,
+    actorId: entry.editor_id ?? null,
+    actorName: String(entry.editor_name ?? "Usuário"),
+    actorRole: String(entry.editor_role ?? "administrator"),
+    source: "notes" as string | null,
+    summary: body ? `${label}: ${body}` : label,
     createdAt: String(entry.created_at ?? new Date().toISOString()),
   };
 }
