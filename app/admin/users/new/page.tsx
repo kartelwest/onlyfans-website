@@ -16,7 +16,19 @@ type NewUserRole =
 type NewUserPageProps = {
   searchParams: Promise<{
     role?: string;
+    draft?: string;
   }>;
+};
+
+type DraftModel = {
+  id: string;
+  slug: string;
+  display_name: string | null;
+  stage_name: string | null;
+  email: string | null;
+  whatsapp: string | null;
+  birthday: string | null;
+  nationality: string | null;
 };
 
 export default async function NewUserPage({
@@ -70,6 +82,31 @@ export default async function NewUserPage({
     profile.role !== "owner"
   ) {
     redirect("/admin/models");
+  }
+
+  let drafts: DraftModel[] = [];
+  let selectedDraft: DraftModel | null = null;
+
+  if (role === "model") {
+    const { data: draftModels } = await supabase
+      .from("models")
+      .select(
+        "id, slug, display_name, stage_name, email, whatsapp, birthday, nationality",
+      )
+      .is("profile_id", null)
+      .eq("created_by", profile.id)
+      .eq("status", "candidate")
+      .order("created_at", { ascending: false });
+
+    drafts = (draftModels ?? []) as DraftModel[];
+
+    if (params.draft) {
+      const matchingDraft = drafts.find(
+        (draft) => draft.slug === params.draft,
+      );
+
+      selectedDraft = matchingDraft ?? null;
+    }
   }
 
   return (
@@ -126,6 +163,8 @@ export default async function NewUserPage({
         <NewUserForm
           role={role}
           currentUserRole={profile.role}
+          drafts={drafts}
+          selectedDraft={selectedDraft}
         />
       </div>
     </main>
