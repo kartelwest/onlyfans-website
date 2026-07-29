@@ -1,5 +1,13 @@
 import { NextResponse } from "next/server";
 
+import {
+  generateTemporaryPassword,
+  normalizeDateOfBirth,
+  normalizeEmail,
+  normalizeName,
+  normalizePhone,
+  normalizeCountry,
+} from "@/lib/admin/modelOnboardingHelpers";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { ensureOnlyFansEnrollmentForModel } from "@/lib/brand/talent";
@@ -22,6 +30,8 @@ type CreateUserRequest = {
   temporaryPassword?: string;
   active?: boolean;
   websiteLoginEnabled?: boolean;
+  draftModelId?: string;
+  originalText?: string;
 };
 
 const ALLOWED_CREATION_ROLES: ManagementRole[] = [
@@ -32,6 +42,8 @@ const ALLOWED_CREATION_ROLES: ManagementRole[] = [
 
 export async function POST(request: Request) {
   let createdAuthUserId: string | null = null;
+  let createdModelId: string | null = null;
+  let isNewModel = false;
 
   try {
     const supabase = await createClient();
@@ -55,7 +67,7 @@ export async function POST(request: Request) {
     const { data: currentProfile, error: profileError } =
       await supabase
         .from("profiles")
-        .select("id, role, active")
+        .select("id, role, active, full_name")
         .eq("id", currentUser.id)
         .single();
 
@@ -96,17 +108,21 @@ export async function POST(request: Request) {
       (await request.json()) as CreateUserRequest;
 
     const role = body.role;
-    const fullName = body.fullName?.trim();
-    const stageName = body.stageName?.trim() || null;
-    const email = body.email?.trim().toLowerCase();
-    const phone = body.phone?.trim() || null;
-    const dateOfBirth = body.dateOfBirth || null;
-    const country = body.country?.trim() || null;
-    const temporaryPassword =
-      body.temporaryPassword || "";
+    const fullName = normalizeName(body.fullName);
+    const stageName = normalizeName(body.stageName);
+    const emailResult = normalizeEmail(body.email);
+    const email = emailResult.value;
+    const phoneResult = normalizePhone(body.phone);
+    const phone = phoneResult.normalized;
+    const dateOfBirth = normalizeDateOfBirth(body.dateOfBirth ?? "").value;
+    const country = normalizeCountry(body.country);
     const active = body.active ?? true;
     const websiteLoginEnabled =
       body.websiteLoginEnabled ?? true;
+    const draftModelId =
+      typeof body.draftModelId === "string" && body.draftModelId
+        ? body.draftModelId
+        : null;
 
     if (
       !role ||
@@ -159,6 +175,85 @@ export async function POST(request: Request) {
       );
     }
 
+    if (role === "model") {
+      if (!phoneResult.valid) {
+        return NextResponse.json(
+          {
+            error:
+              "Informe um número de WhatsApp válido com pelo menos 8 dígitos.",
+          },
+          { status: 400 },
+        );
+      }
+
+      if (!emailResult.valid) {
+        return NextResponse.json(
+          { error: "Informe um endereço de e-mail válido." },
+          { status: 400 },
+        );
+      }
+    }
+
+    const adminSupabase = createAdminClient();
+
+    let existingDraft:
+      | { id: string; slug: string; model_number: number | null }
+      | null = null;
+
+    if (draftModelId && role === "model") {
+      const { data, error } = await adminSupabase
+        .from("models")
+        .select("id, slug, model_number, profile_id, email, whatsapp")
+        .eq("id", draftModelId)
+        .is("profile_id", null)
+        .maybeSingle();
+
+      if (error || !data) {
+        return NextResponse.json(
+          { error: "Rascunho não encontrado ou já foi convertido." },
+          { status: 404 },
+        );
+      }
+
+      existingDraft = data;
+    }
+
+    if (role === "model") {
+      const duplicateEmail = await adminSupabase
+        .from("models")
+        .select("id", { count: "exact", head: true })
+        .eq("email", email)
+        .neq("id", existingDraft?.id || "00000000-0000-0000-0000-000000000000");
+
+      if (!duplicateEmail.error && (duplicateEmail.count ?? 0) > 0) {
+        return NextResponse.json(
+          { error: "Já existe uma modelo cadastrada com este e-mail." },
+          { status: 409 },
+        );
+      }
+
+      if (phoneResult.normalized) {
+        const duplicateWhatsApp = await adminSupabase
+          .from("models")
+          .select("id", { count: "exact", head: true })
+          .eq("whatsapp", phoneResult.normalized)
+          .neq("id", existingDraft?.id || "00000000-0000-0000-0000-000000000000");
+
+        if (!duplicateWhatsApp.error && (duplicateWhatsApp.count ?? 0) > 0) {
+          return NextResponse.json(
+            { error: "Já existe uma modelo cadastrada com este WhatsApp." },
+            { status: 409 },
+          );
+        }
+      }
+    }
+
+    let temporaryPassword = body.temporaryPassword || "";
+
+    if (role === "model" && phoneResult.digits) {
+      temporaryPassword = generateTemporaryPassword(phoneResult.digits);
+    }
+
     if (temporaryPassword.length < 8) {
       return NextResponse.json(
         {
@@ -170,8 +265,6 @@ export async function POST(request: Request) {
         },
       );
     }
-
-    const adminSupabase = createAdminClient();
 
     const {
       data: createdAuthData,
@@ -230,6 +323,7 @@ export async function POST(request: Request) {
         full_name: fullName,
         role,
         active,
+        must_change_password: role === "model" ? true : false,
       });
 
     if (createProfileError) {
@@ -250,58 +344,113 @@ export async function POST(request: Request) {
     }
 
     if (role === "model") {
-      const slug = await createUniqueModelSlug(
-        adminSupabase,
-        stageName || fullName,
-      );
+      const slug = existingDraft
+        ? existingDraft.slug
+        : await createUniqueModelSlug(
+            adminSupabase,
+            stageName || fullName,
+          );
 
-      const modelNumber = await getNextModelNumber(adminSupabase);
+      const modelNumber = existingDraft
+        ? existingDraft.model_number
+        : await getNextModelNumber(adminSupabase);
 
-      const { data: createdModel, error: createModelError } =
-        await adminSupabase
+      const modelPayload = {
+        profile_id: createdAuthUserId,
+        model_number: modelNumber,
+        slug,
+        display_name: fullName,
+        stage_name: stageName,
+        birthday: dateOfBirth,
+        nationality: country,
+        email,
+        whatsapp: phone,
+        status: active ? "active" as const : "inactive" as const,
+        active,
+        website_login_enabled: websiteLoginEnabled,
+        created_by: currentProfile.id,
+      };
+
+      let createdModel;
+
+      if (existingDraft) {
+        const { data, error: updateModelError } = await adminSupabase
           .from("models")
-          .insert({
-            profile_id: createdAuthUserId,
-            model_number: modelNumber,
-            slug,
-            display_name: fullName,
-            stage_name: stageName,
-            birthday: dateOfBirth,
-            nationality: country,
-            email,
-            whatsapp: phone,
-            status: active ? "active" : "inactive",
-            active,
-            website_login_enabled:
-              websiteLoginEnabled,
-          })
+          .update(modelPayload)
+          .eq("id", existingDraft.id)
           .select("id")
           .single();
 
-      if (createModelError) {
-        await adminSupabase
-          .from("profiles")
-          .delete()
-          .eq("id", createdAuthUserId);
+        if (updateModelError) {
+          throw new Error(updateModelError.message);
+        }
 
-        await adminSupabase.auth.admin.deleteUser(
-          createdAuthUserId,
-        );
+        createdModel = data;
+      } else {
+        const { data, error: createModelError } = await adminSupabase
+          .from("models")
+          .insert(modelPayload)
+          .select("id")
+          .single();
 
-        createdAuthUserId = null;
+        if (createModelError) {
+          throw new Error(createModelError.message);
+        }
 
-        return NextResponse.json(
-          {
-            error: `O acesso foi criado, mas o cadastro da modelo não pôde ser salvo: ${createModelError.message}`,
-          },
-          {
-            status: 500,
-          },
-        );
+        createdModel = data;
+        isNewModel = true;
       }
 
       if (createdModel) {
-        await ensureOnlyFansEnrollmentForModel(createdModel.id);
+        createdModelId = createdModel.id;
+
+        const enrollmentResult = await ensureOnlyFansEnrollmentForModel(
+          createdModel.id,
+        );
+
+        if (enrollmentResult.error) {
+          console.error(
+            "Erro ao sincronizar matrícula OnlyFans:",
+            enrollmentResult.error,
+          );
+        }
+      }
+
+      const originalText =
+        typeof body.originalText === "string" ? body.originalText.trim() : "";
+
+      if (createdModel && originalText) {
+        const { count: existingNoteCount } = await adminSupabase
+          .from("model_notes")
+          .select("*", { count: "exact", head: true })
+          .eq("model_id", createdModel.id)
+          .eq("body", originalText)
+          .eq("created_by", currentProfile.id);
+
+        if (!existingNoteCount) {
+          const { error: noteError } = await adminSupabase
+            .from("model_notes")
+            .insert({
+              model_id: createdModel.id,
+              body: originalText,
+              priority: "normal",
+              pinned: false,
+              archived: false,
+              author_id: currentProfile.id,
+              author_name: currentProfile.full_name,
+              author_role: currentProfile.role,
+              created_by: currentProfile.id,
+              created_by_name: currentProfile.full_name,
+              created_by_role: currentProfile.role,
+              updated_by: currentProfile.id,
+              updated_by_name: currentProfile.full_name,
+              updated_by_role: currentProfile.role,
+            });
+
+          if (noteError) {
+            console.error("Erro ao salvar nota do texto original:", noteError);
+          }
+        }
       }
     }
 
@@ -326,9 +475,21 @@ export async function POST(request: Request) {
       error,
     );
 
-    if (createdAuthUserId) {
+    if (createdAuthUserId && (!createdModelId || isNewModel)) {
       try {
         const adminSupabase = createAdminClient();
+
+        if (createdModelId && isNewModel) {
+          await adminSupabase
+            .from("model_notes")
+            .delete()
+            .eq("model_id", createdModelId);
+
+          await adminSupabase
+            .from("models")
+            .delete()
+            .eq("id", createdModelId);
+        }
 
         await adminSupabase
           .from("profiles")

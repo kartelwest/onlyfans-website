@@ -120,6 +120,16 @@ const routeAccessMatrix: RouteAccess[] = [
     roles: ["owner", "administrator"],
     description: "Admin users API is staff-only",
   },
+  {
+    path: "/api/admin/users/parse-claude",
+    roles: ["owner", "administrator"],
+    description: "Claude parse API is staff-only",
+  },
+  {
+    path: "/api/admin/users/drafts",
+    roles: ["owner", "administrator"],
+    description: "Draft model creation API is staff-only",
+  },
 ];
 
 const allRoles: Role[] = [
