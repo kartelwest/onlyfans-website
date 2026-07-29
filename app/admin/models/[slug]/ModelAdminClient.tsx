@@ -5,6 +5,7 @@ import DocumentsTab from "@/components/admin/model/DocumentsTab";
 import OnlyFansTab from "@/components/admin/model/OnlyFansTab";
 import PlatformsTab from "@/components/admin/model/PlatformsTab";
 import OverviewTab from "@/components/admin/model/OverviewTab";
+import ModelProxyPanel from "@/components/admin/model/ModelProxyPanel";
 import ChecklistTab from "@/components/admin/model/ChecklistTab";
 import PaymentsTab from "@/components/admin/model/PaymentsTab";
 import BrandGrowthTab from "@/components/brand/BrandGrowthTab";
@@ -17,12 +18,14 @@ import type {
     ManagementRole,
     Model,
     ModelChecklist,
+    ModelProxyDetails,
 } from "@/types/model";
 
 type ModelAdminClientProps = {
     model: Model;
     checklist: ModelChecklist;
     currentUserRole: ManagementRole;
+    proxyDetails: ModelProxyDetails;
 };
 
 type TabId =
@@ -59,6 +62,7 @@ export default function ModelAdminClient({
     model: initialModel,
     checklist,
     currentUserRole,
+    proxyDetails,
 }: ModelAdminClientProps) {
     const [activeTab, setActiveTab] =
         useState<TabId>("summary");
@@ -84,7 +88,7 @@ export default function ModelAdminClient({
                 <section className="mt-6 overflow-hidden rounded-3xl border border-white/10 bg-[#111115] shadow-2xl">
                     <header className="border-b border-pink-400/20 bg-gradient-to-r from-[#4b2438] via-[#321725] to-[#211018] p-6 sm:p-8">
                         <div className="flex flex-col gap-6 xl:flex-row xl:items-center xl:justify-between">
-                            <div className="flex items-center gap-5">
+                            <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
                                 <div className="flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-full border-4 border-white/20 bg-black/30 text-3xl font-bold">
                                     {model.profilePhotoUrl ? (
                                         <img
@@ -117,6 +121,16 @@ export default function ModelAdminClient({
                                     <p className="mt-1 text-sm text-white/50">
                                         Modelo #{model.modelNumber ?? "—"}
                                     </p>
+                                </div>
+
+                                <div className="w-full sm:w-72">
+                                    <ModelProxyPanel
+                                        modelId={model.id}
+                                        proxyDetails={proxyDetails}
+                                        canEdit={
+                                            currentUserRole === "owner"
+                                        }
+                                    />
                                 </div>
                             </div>
 
