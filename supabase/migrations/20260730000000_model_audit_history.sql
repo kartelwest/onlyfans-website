@@ -21,7 +21,7 @@ create table if not exists public.model_audit_history (
   new_value       text,
   actor_id        uuid references public.profiles(id) on delete set null,
   actor_name      text,
-  actor_role      public.management_role,
+  actor_role      public.app_role,
   source          text,
   summary         text not null,
   created_at      timestamptz not null default now()
@@ -45,7 +45,7 @@ alter table public.model_audit_history enable row level security;
 drop policy if exists audit_history_select on public.model_audit_history;
 create policy audit_history_select on public.model_audit_history
   for select to authenticated
-  using ( public.is_staff() or public.is_assigned_rep(model_id) );
+  using ( public.is_staff() or public.is_assigned_representative(model_id) );
 
 -- INSERT: staff only — audit entries are created by API routes, never by users
 drop policy if exists audit_history_insert on public.model_audit_history;
