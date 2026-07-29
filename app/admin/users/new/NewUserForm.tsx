@@ -141,7 +141,7 @@ export default function NewUserForm({
   }, [role]);
 
   const generatedPassword = useMemo(() => {
-    if (!isModel || !useAI) {
+    if (!isModel) {
       return "";
     }
 
@@ -152,16 +152,16 @@ export default function NewUserForm({
     }
 
     return generateTemporaryPassword(digits);
-  }, [isModel, useAI, form.phone]);
+  }, [isModel, form.phone]);
 
   useEffect(() => {
-    if (useAI && isModel && generatedPassword) {
+    if (isModel) {
       setForm((current) => ({
         ...current,
         temporaryPassword: generatedPassword,
       }));
     }
-  }, [generatedPassword, useAI, isModel]);
+  }, [generatedPassword, isModel]);
 
   useEffect(() => {
     if (selectedDraft) {
@@ -325,12 +325,10 @@ export default function NewUserForm({
 
           const currentValue = current[field];
 
-          const isEmpty =
+          if (
             typeof currentValue !== "string" ||
-            currentValue.trim() === "" ||
-            (field === "country" && currentValue === "Brasil");
-
-          if (isEmpty) {
+            currentValue.trim() === ""
+          ) {
             (updates as Record<string, unknown>)[field] =
               extractedValue;
           }
@@ -368,6 +366,13 @@ export default function NewUserForm({
       return;
     }
 
+    if (isModel && form.phone.replace(/\D/g, "").length < 8) {
+      setErrorMessage(
+        "Informe um número de WhatsApp válido com pelo menos 8 dígitos.",
+      );
+      return;
+    }
+
     if (
       role === "administrator" &&
       currentUserRole !== "owner"
@@ -378,7 +383,7 @@ export default function NewUserForm({
       return;
     }
 
-    let temporaryPassword = form.temporaryPassword;
+    const temporaryPassword = form.temporaryPassword;
 
     if (isModel) {
       if (useAI && aiText.trim() && !review) {
@@ -387,17 +392,6 @@ export default function NewUserForm({
         );
         return;
       }
-
-      const phoneDigits = form.phone.replace(/\D/g, "");
-
-      if (phoneDigits.length < 8) {
-        setErrorMessage(
-          "Informe um número de WhatsApp válido com pelo menos 8 dígitos.",
-        );
-        return;
-      }
-
-      temporaryPassword = generateTemporaryPassword(phoneDigits);
     } else if (temporaryPassword.length < 8) {
       setErrorMessage(
         "A senha temporária deve ter pelo menos 8 caracteres.",
@@ -641,7 +635,7 @@ export default function NewUserForm({
           />
         </FormField>
 
-        <FormField label="Telefone / WhatsApp">
+        <FormField label="Telefone / WhatsApp" required={isModel}>
           <input
             type="tel"
             value={form.phone}
@@ -685,9 +679,9 @@ export default function NewUserForm({
 
         <FormField
           label="Senha temporária"
-          required={!isModel || !useAI}
+          required={!isModel}
           description={
-            isModel && useAI
+            isModel
               ? "Gerada automaticamente pelos 4 últimos dígitos do WhatsApp + 1234567."
               : "Use pelo menos 8 caracteres."
           }
@@ -701,10 +695,14 @@ export default function NewUserForm({
                 event.target.value,
               )
             }
-            placeholder="Senha temporária"
+            placeholder={
+              isModel
+                ? "Preencha o WhatsApp para gerar a senha"
+                : "Senha temporária"
+            }
             autoComplete="new-password"
-            disabled={isModel && useAI && phoneValid}
-            className={`${inputClassName} ${isModel && useAI && phoneValid ? "cursor-not-allowed opacity-60" : ""}`}
+            disabled={isModel}
+            className={`${inputClassName} ${isModel ? "cursor-not-allowed opacity-60" : ""}`}
           />
         </FormField>
 

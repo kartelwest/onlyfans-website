@@ -71,9 +71,9 @@ export async function POST(request: Request) {
     const publicFields: NormalizedModelFields = {
       fullName: extracted.fullName,
       stageName: extracted.stageName,
-      email: extracted.email,
+      email: extracted.emailValid ? extracted.email : null,
       emailValid: extracted.emailValid,
-      phone: extracted.phone,
+      phone: extracted.phoneValid ? extracted.phone : null,
       phoneDigits: extracted.phoneDigits,
       phoneValid: extracted.phoneValid,
       dateOfBirth: extracted.dateOfBirth,
@@ -81,7 +81,7 @@ export async function POST(request: Request) {
       country: extracted.country,
     };
 
-    const conflicts = computeConflicts(extracted, body.currentForm ?? {});
+    const conflicts = computeConflicts(publicFields, body.currentForm ?? {});
 
     return NextResponse.json({
       extracted: publicFields,

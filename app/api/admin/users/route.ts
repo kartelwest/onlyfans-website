@@ -43,6 +43,7 @@ const ALLOWED_CREATION_ROLES: ManagementRole[] = [
 export async function POST(request: Request) {
   let createdAuthUserId: string | null = null;
   let createdModelId: string | null = null;
+  let isNewModel = false;
 
   try {
     const supabase = await createClient();
@@ -397,39 +398,58 @@ export async function POST(request: Request) {
         }
 
         createdModel = data;
+        isNewModel = true;
       }
 
       if (createdModel) {
         createdModelId = createdModel.id;
 
-        await ensureOnlyFansEnrollmentForModel(createdModel.id);
+        const enrollmentResult = await ensureOnlyFansEnrollmentForModel(
+          createdModel.id,
+        );
+
+        if (enrollmentResult.error) {
+          console.error(
+            "Erro ao sincronizar matrícula OnlyFans:",
+            enrollmentResult.error,
+          );
+        }
       }
 
       const originalText =
         typeof body.originalText === "string" ? body.originalText.trim() : "";
 
       if (createdModel && originalText) {
-        const { error: noteError } = await adminSupabase
+        const { count: existingNoteCount } = await adminSupabase
           .from("model_notes")
-          .insert({
-            model_id: createdModel.id,
-            body: originalText,
-            priority: "normal",
-            pinned: false,
-            archived: false,
-            author_id: currentProfile.id,
-            author_name: currentProfile.full_name,
-            author_role: currentProfile.role,
-            created_by: currentProfile.id,
-            created_by_name: currentProfile.full_name,
-            created_by_role: currentProfile.role,
-            updated_by: currentProfile.id,
-            updated_by_name: currentProfile.full_name,
-            updated_by_role: currentProfile.role,
-          });
+          .select("*", { count: "exact", head: true })
+          .eq("model_id", createdModel.id)
+          .eq("body", originalText)
+          .eq("created_by", currentProfile.id);
 
-        if (noteError) {
-          console.error("Erro ao salvar nota do texto original:", noteError);
+        if (!existingNoteCount) {
+          const { error: noteError } = await adminSupabase
+            .from("model_notes")
+            .insert({
+              model_id: createdModel.id,
+              body: originalText,
+              priority: "normal",
+              pinned: false,
+              archived: false,
+              author_id: currentProfile.id,
+              author_name: currentProfile.full_name,
+              author_role: currentProfile.role,
+              created_by: currentProfile.id,
+              created_by_name: currentProfile.full_name,
+              created_by_role: currentProfile.role,
+              updated_by: currentProfile.id,
+              updated_by_name: currentProfile.full_name,
+              updated_by_role: currentProfile.role,
+            });
+
+          if (noteError) {
+            console.error("Erro ao salvar nota do texto original:", noteError);
+          }
         }
       }
     }
@@ -455,11 +475,11 @@ export async function POST(request: Request) {
       error,
     );
 
-    if (createdAuthUserId) {
+    if (createdAuthUserId && (!createdModelId || isNewModel)) {
       try {
         const adminSupabase = createAdminClient();
 
-        if (createdModelId) {
+        if (createdModelId && isNewModel) {
           await adminSupabase
             .from("model_notes")
             .delete()

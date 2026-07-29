@@ -31,6 +31,7 @@ type DraftRequest = {
 
 export async function POST(request: Request) {
   let createdModelId: string | null = null;
+  let isNewDraft = false;
 
   try {
     const supabase = await createClient();
@@ -165,6 +166,7 @@ export async function POST(request: Request) {
       }
 
       modelId = data.id;
+      isNewDraft = true;
     }
 
     createdModelId = modelId;
@@ -173,27 +175,36 @@ export async function POST(request: Request) {
       typeof body.originalText === "string" ? body.originalText.trim() : "";
 
     if (originalText) {
-      const { error: noteError } = await adminSupabase
+      const { count: existingNoteCount } = await adminSupabase
         .from("model_notes")
-        .insert({
-          model_id: modelId,
-          body: originalText,
-          priority: "normal",
-          pinned: false,
-          archived: false,
-          author_id: profile.id,
-          author_name: profile.full_name,
-          author_role: profile.role,
-          created_by: profile.id,
-          created_by_name: profile.full_name,
-          created_by_role: profile.role,
-          updated_by: profile.id,
-          updated_by_name: profile.full_name,
-          updated_by_role: profile.role,
-        });
+        .select("*", { count: "exact", head: true })
+        .eq("model_id", modelId)
+        .eq("body", originalText)
+        .eq("created_by", profile.id);
 
-      if (noteError) {
-        console.error("Erro ao salvar nota do texto original:", noteError);
+      if (!existingNoteCount) {
+        const { error: noteError } = await adminSupabase
+          .from("model_notes")
+          .insert({
+            model_id: modelId,
+            body: originalText,
+            priority: "normal",
+            pinned: false,
+            archived: false,
+            author_id: profile.id,
+            author_name: profile.full_name,
+            author_role: profile.role,
+            created_by: profile.id,
+            created_by_name: profile.full_name,
+            created_by_role: profile.role,
+            updated_by: profile.id,
+            updated_by_name: profile.full_name,
+            updated_by_role: profile.role,
+          });
+
+        if (noteError) {
+          console.error("Erro ao salvar nota do texto original:", noteError);
+        }
       }
     }
 
@@ -206,7 +217,7 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error("Erro inesperado ao criar rascunho:", error);
 
-    if (createdModelId) {
+    if (createdModelId && isNewDraft) {
       try {
         const adminSupabase = createAdminClient();
 
