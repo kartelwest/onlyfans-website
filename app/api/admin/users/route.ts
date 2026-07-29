@@ -344,12 +344,11 @@ export async function POST(request: Request) {
     }
 
     if (role === "model") {
+      const effectiveStageName = stageName || fullName || "";
+
       const slug = existingDraft
         ? existingDraft.slug
-        : await createUniqueModelSlug(
-            adminSupabase,
-            stageName || fullName,
-          );
+        : await createUniqueModelSlug(adminSupabase, effectiveStageName);
 
       const modelNumber = existingDraft
         ? existingDraft.model_number
@@ -360,7 +359,7 @@ export async function POST(request: Request) {
         model_number: modelNumber,
         slug,
         display_name: fullName,
-        stage_name: stageName,
+        stage_name: effectiveStageName,
         birthday: dateOfBirth,
         nationality: country,
         email,

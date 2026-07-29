@@ -78,6 +78,7 @@ export async function POST(request: Request) {
     }
 
     const stageName = normalizeName(body.stageName);
+    const effectiveStageName = stageName || fullName || "";
     const emailResult = normalizeEmail(body.email);
     const phoneResult = normalizePhone(body.phone);
     const dateResult = normalizeDateOfBirth(body.dateOfBirth);
@@ -113,7 +114,7 @@ export async function POST(request: Request) {
       slug = data.slug;
       modelNumber = data.model_number;
     } else {
-      slug = await createUniqueModelSlug(adminSupabase, stageName || fullName);
+      slug = await createUniqueModelSlug(adminSupabase, effectiveStageName);
       modelNumber = await getNextModelNumber(adminSupabase);
     }
 
@@ -121,7 +122,7 @@ export async function POST(request: Request) {
       model_number: modelNumber,
       slug,
       display_name: fullName,
-      stage_name: stageName,
+      stage_name: effectiveStageName,
       birthday: dateResult.value,
       nationality: country,
       email: emailResult.value,
