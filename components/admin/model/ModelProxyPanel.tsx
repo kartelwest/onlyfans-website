@@ -2,7 +2,11 @@
 
 import { useMemo, useState } from "react";
 
-import { getCountryName, listCountries } from "@/lib/countries";
+import {
+  countryCodeToFlag,
+  getCountryName,
+  listCountries,
+} from "@/lib/countries";
 import {
   PROXY_COMPANY_LABELS,
   isValidProxyIp,
@@ -201,7 +205,7 @@ export default function ModelProxyPanel({
 
               {countries.map((option) => (
                 <option key={option.code} value={option.code}>
-                  {option.name}
+                  {countryCodeToFlag(option.code)} {option.name}
                 </option>
               ))}
             </select>
@@ -242,7 +246,11 @@ export default function ModelProxyPanel({
 
           <ProxyValue
             label="Country"
-            value={getCountryName(details.proxyCountry)}
+            value={
+              details.proxyCountry
+                ? `${countryCodeToFlag(details.proxyCountry)} ${getCountryName(details.proxyCountry)}`
+                : null
+            }
           />
         </dl>
       )}

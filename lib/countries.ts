@@ -41,6 +41,15 @@ export function isCountryCode(value: string): value is CountryCode {
   return (COUNTRY_CODES as readonly string[]).includes(value);
 }
 
+export function countryCodeToFlag(code: string): string {
+  return String.fromCodePoint(
+    ...code
+      .toUpperCase()
+      .split("")
+      .map((char) => 0x1f1e6 + char.charCodeAt(0) - 65),
+  );
+}
+
 export function getCountryName(code: string | null): string | null {
   if (!code) {
     return null;
