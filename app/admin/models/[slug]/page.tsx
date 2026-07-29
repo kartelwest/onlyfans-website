@@ -9,6 +9,8 @@ import type {
   ManagementRole,
   Model,
   ModelChecklist,
+  ModelProxyDetails,
+  ProxyCompany,
 } from "@/types/model";
 
 export const dynamic = "force-dynamic";
@@ -507,11 +509,47 @@ export default async function ModelAdminPage({
   };
 
 
+  // proxy_ip / proxy_company / proxy_company_other / proxy_country are not
+  // selectable by the `authenticated` Postgres role (see the
+  // model_proxy_details migration) — the RPC self-checks public.is_staff().
+  const { data: proxyRow, error: proxyError } = await supabase
+    .rpc("get_model_proxy_details", { target_model: model.id })
+    .maybeSingle<{
+      proxy_ip: string | null;
+      proxy_company: string | null;
+      proxy_company_other: string | null;
+      proxy_country: string | null;
+    }>();
+
+  if (proxyError) {
+    console.error(
+      "Erro ao carregar os dados de proxy:",
+      proxyError,
+    );
+  }
+
+  const proxyDetails: ModelProxyDetails = {
+    proxyIp: proxyRow?.proxy_ip ?? null,
+
+    proxyCompany:
+      proxyRow?.proxy_company === "proxy_empire" ||
+      proxyRow?.proxy_company === "other"
+        ? (proxyRow.proxy_company as ProxyCompany)
+        : null,
+
+    proxyCompanyOther:
+      proxyRow?.proxy_company_other ?? null,
+
+    proxyCountry:
+      proxyRow?.proxy_country ?? null,
+  };
+
   return (
     <ModelAdminClient
       model={model}
       checklist={checklist}
       currentUserRole={currentUserRole}
+      proxyDetails={proxyDetails}
     />
   );
 }

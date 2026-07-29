@@ -166,6 +166,18 @@ export interface ModelChecklist {
   updatedAt: string;
 }
 
+export type ProxyCompany = "proxy_empire" | "other";
+
+export interface ModelProxyDetails {
+  proxyIp: string | null;
+
+  proxyCompany: ProxyCompany | null;
+
+  proxyCompanyOther: string | null;
+
+  proxyCountry: string | null;
+}
+
 export interface ModelMarketingAccounts {
   instagramMarketing: string | null;
 
