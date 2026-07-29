@@ -1,6 +1,10 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
+import {
+  normalizeModelStatus,
+  sortByModelStatus,
+} from "@/lib/models/modelStatusOrder";
 import { createClient } from "@/lib/supabase/server";
 import ViewAsBanner from "@/components/admin/ViewAsBanner";
 import type { ManagementRole, ModelStatus } from "@/types/model";
@@ -27,22 +31,6 @@ const statusDotConfig: Record<
   candidate: { className: "bg-yellow-400", label: "Candidata" },
   denied: { className: "bg-red-500", label: "Negada" },
 };
-
-function normalizeModelStatus(
-  status: string | null,
-  active: boolean,
-): ModelStatus {
-  if (
-    status === "active" ||
-    status === "inactive" ||
-    status === "candidate" ||
-    status === "denied"
-  ) {
-    return status;
-  }
-
-  return active ? "active" : "inactive";
-}
 
 export default async function ViewAsRepresentativePage({
   params,
@@ -136,7 +124,14 @@ export default async function ViewAsRepresentativePage({
     );
   }
 
-  const assignedModels = (models ?? []) as Model[];
+  const assignedModels = sortByModelStatus(
+    (models ?? []) as Model[],
+    (model) => ({
+      status: model.status,
+      active: model.active,
+      name: model.display_name,
+    }),
+  );
 
   return (
     <>

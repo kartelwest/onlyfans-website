@@ -2,7 +2,12 @@ import "server-only";
 
 import { createClient } from "@/lib/supabase/server";
 import { ensureOnlyFansEnrollmentForModel, mapBrandProfile } from "@/lib/brand/talent";
+import {
+  normalizeModelStatus,
+  sortByModelStatus,
+} from "@/lib/models/modelStatusOrder";
 import type { BrandProfile, Platform, SocialAccount, Talent } from "@/types/brand";
+import type { ModelStatus } from "@/types/model";
 
 export interface AmpliaClient {
   id: string;
@@ -16,6 +21,7 @@ export interface AmpliaClient {
   whatsapp: string | null;
   profilePhotoUrl: string | null;
   active: boolean;
+  status: ModelStatus;
   brandStatus: string;
   connectedInstagram: boolean;
   connectedX: boolean;
@@ -162,7 +168,7 @@ export async function getAmpliaClients(): Promise<{
       ? supabase
           .from("models")
           .select(
-            "id, display_name, stage_name, city, email, whatsapp, profile_photo_url, active, created_at, updated_at, profile:profiles!profile_id ( full_name )",
+            "id, display_name, stage_name, city, email, whatsapp, profile_photo_url, active, status, created_at, updated_at, profile:profiles!profile_id ( full_name )",
           )
           .in("id", Array.from(modelIds))
       : { data: [], error: null },
@@ -227,6 +233,7 @@ export async function getAmpliaClients(): Promise<{
       city: model?.city ?? talent.location ?? null,
       location: model?.city ?? talent.location ?? null,
       active: talent.active,
+      status: model?.status ?? null,
       created_at: talent.created_at,
       updated_at: talent.updated_at,
     };
@@ -269,7 +276,11 @@ export async function getAmpliaClients(): Promise<{
     );
   }
 
-  clients.sort((a, b) => a.displayName.localeCompare(b.displayName, "pt-BR", { sensitivity: "base" }));
+  const sortedClients = sortByModelStatus(clients, (client) => ({
+    status: client.status,
+    active: client.active,
+    name: client.displayName,
+  }));
 
   const stats = {
     activeSocialModels: clients.length,
@@ -291,7 +302,7 @@ export async function getAmpliaClients(): Promise<{
     estimatedAICostMonth: 0,
   };
 
-  return { clients, stats };
+  return { clients: sortedClients, stats };
 }
 
 export async function getAmpliaClientById(
@@ -344,6 +355,7 @@ export async function getAmpliaClientById(
       city: row.city,
       location: row.city,
       active: row.active,
+      status: row.status ?? null,
       created_at: row.created_at,
       updated_at: row.updated_at,
     };
@@ -408,6 +420,7 @@ export async function getAmpliaClientById(
       city: model?.city ?? row.location ?? null,
       location: row.location ?? model?.city ?? null,
       active: model?.active ?? row.active,
+      status: model?.status ?? null,
       created_at: row.created_at,
       updated_at: row.updated_at,
     };
@@ -511,6 +524,10 @@ function buildClient(
     whatsapp: (row.whatsapp as string) ?? null,
     profilePhotoUrl: (row.profile_photo_url as string) ?? null,
     active: row.active as boolean,
+    status: normalizeModelStatus(
+      row.status as string | null,
+      row.active as boolean | null,
+    ),
     brandStatus,
     connectedInstagram,
     connectedX,

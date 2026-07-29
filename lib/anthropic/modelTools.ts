@@ -7,6 +7,7 @@ import {
   createUniqueModelSlug,
   getNextModelNumber,
 } from "@/lib/models/createModelSlug";
+import { sortByModelStatus } from "@/lib/models/modelStatusOrder";
 
 const MAX_ACTIVE_MODELS = 30;
 
@@ -245,7 +246,18 @@ async function listModels(
     return { ok: false, error: error.message };
   }
 
-  return { ok: true, data };
+  const models = (data ?? []) as {
+    status: string | null;
+    active: boolean | null;
+  }[];
+
+  return {
+    ok: true,
+    data: sortByModelStatus(models, (model) => ({
+      status: model.status,
+      active: model.active,
+    })),
+  };
 }
 
 async function addModel(

@@ -1,5 +1,9 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import {
+  normalizeModelStatus,
+  sortByModelStatus,
+} from "@/lib/models/modelStatusOrder";
 import { createClient } from "@/lib/supabase/server";
 import type { ModelStatus } from "@/types/model";
 
@@ -22,22 +26,6 @@ const statusDotConfig: Record<ModelStatus, { className: string; label: string }>
   candidate: { className: "bg-yellow-400", label: "Candidata" },
   denied: { className: "bg-red-500", label: "Negada" },
 };
-
-function normalizeModelStatus(
-  status: string | null,
-  active: boolean,
-): ModelStatus {
-  if (
-    status === "active" ||
-    status === "inactive" ||
-    status === "candidate" ||
-    status === "denied"
-  ) {
-    return status;
-  }
-
-  return active ? "active" : "inactive";
-}
 
 export default async function RepresentativePage() {
   const supabase = await createClient();
@@ -103,7 +91,14 @@ export default async function RepresentativePage() {
     );
   }
 
-  const assignedModels = (models ?? []) as Model[];
+  const assignedModels = sortByModelStatus(
+    (models ?? []) as Model[],
+    (model) => ({
+      status: model.status,
+      active: model.active,
+      name: model.display_name,
+    }),
+  );
 
   return (
     <main className="min-h-screen bg-[#f7f1ec] px-6 py-12">
