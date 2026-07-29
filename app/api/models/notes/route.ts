@@ -178,13 +178,67 @@ export async function GET(
             );
         }
 
+        // The recent-history panel shows the same unified timeline as the
+        // Histórico tab: note events plus every other change to the account.
+        // Models are excluded from `model_audit_history` by RLS, so for them
+        // this simply comes back empty rather than erroring.
+        const {
+            data: auditHistory,
+            error: auditHistoryError,
+        } = await supabase
+            .from("model_audit_history")
+            .select(
+                `
+                    id,
+                    model_id,
+                    action,
+                    field_name,
+                    previous_value,
+                    new_value,
+                    actor_id,
+                    actor_name,
+                    actor_role,
+                    summary,
+                    created_at
+                `,
+            )
+            .eq("model_id", modelId)
+            .order("created_at", {
+                ascending: false,
+            })
+            .limit(100);
+
+        if (auditHistoryError) {
+            console.error(
+                "Erro ao carregar histórico de auditoria das notas:",
+                auditHistoryError,
+            );
+        }
+
+        const recentHistory = [
+            ...(history ?? []).map(
+                mapHistory,
+            ),
+            ...(
+                auditHistory ?? []
+            ).map(mapAuditHistory),
+        ]
+            .sort(
+                (first, second) =>
+                    new Date(
+                        second.createdAt,
+                    ).getTime() -
+                    new Date(
+                        first.createdAt,
+                    ).getTime(),
+            )
+            .slice(0, 100);
+
         return NextResponse.json({
             notes: (notes ?? []).map(
                 mapNote,
             ),
-            recentHistory: (
-                history ?? []
-            ).map(mapHistory),
+            recentHistory,
             permissions:
                 createPermissions(profile.role),
         });
@@ -1439,6 +1493,60 @@ function mapHistory(
         createdAt:
             readRequiredString(
                 history.created_at,
+            ) ??
+            new Date().toISOString(),
+    };
+}
+
+// Reshapes a `model_audit_history` row into the same envelope the notes panel
+// already renders, so account changes and note events can share one timeline.
+// `summary` carries the human-readable description the audit table stores.
+function mapAuditHistory(
+    entry: Record<string, unknown>,
+) {
+    return {
+        id: `audit:${
+            readRequiredString(
+                entry.id,
+            ) ?? ""
+        }`,
+        noteId: null,
+        modelId:
+            readRequiredString(
+                entry.model_id,
+            ),
+        action:
+            readRequiredString(
+                entry.action,
+            ) ?? "field_update",
+        fieldName:
+            readRequiredString(
+                entry.field_name,
+            ),
+        summary:
+            readRequiredString(
+                entry.summary,
+            ),
+        originalBody:
+            readRequiredString(
+                entry.previous_value,
+            ),
+        updatedBody:
+            readRequiredString(
+                entry.new_value,
+            ),
+        editorName:
+            readRequiredString(
+                entry.actor_name,
+            ) ?? "Usuário",
+        editorRole:
+            readRequiredString(
+                entry.actor_role,
+            ) ??
+            "administrator",
+        createdAt:
+            readRequiredString(
+                entry.created_at,
             ) ??
             new Date().toISOString(),
     };

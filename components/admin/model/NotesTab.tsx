@@ -34,6 +34,8 @@ type NoteHistory = {
     id: string;
     noteId: string | null;
     action: string;
+    fieldName: string | null;
+    summary: string | null;
     originalBody: string | null;
     updatedBody: string | null;
     editorName: string;
@@ -918,9 +920,9 @@ function HistoryPanel({
             </h2>
 
             <p className="mt-2 text-sm leading-6 text-white/50">
-                Alterações realizadas nas notas,
-                com responsável, data e conteúdo
-                anterior.
+                Notas e demais alterações na conta
+                da modelo, com responsável, data e
+                conteúdo anterior.
             </p>
 
             {errorMessage && (
@@ -975,6 +977,18 @@ function HistoryCard({
                     )}
                 </span>
             </div>
+
+            {item.fieldName && (
+                <p className="mt-3 inline-block rounded bg-white/10 px-2 py-0.5 text-[11px] text-white/60">
+                    {item.fieldName}
+                </p>
+            )}
+
+            {item.summary && (
+                <p className="mt-3 text-sm leading-6 text-white/80">
+                    {item.summary}
+                </p>
+            )}
 
             <p className="mt-3 text-xs text-white/45">
                 Por{" "}
@@ -1369,6 +1383,13 @@ function normalizeHistory(
                 value.changeType,
                 value.change_type,
             ) ?? "updated",
+        fieldName: readString(
+            value.fieldName,
+            value.field_name,
+        ),
+        summary: readString(
+            value.summary,
+        ),
         originalBody: readString(
             value.originalBody,
             value.original_body,
@@ -1518,6 +1539,20 @@ function historyActionLabel(
         archive: "Arquivamento alterado",
         restored: "Nota restaurada",
         restore: "Nota restaurada",
+        // Account changes from `model_audit_history`, shown alongside notes.
+        field_update: "Campo atualizado",
+        status_change: "Status alterado",
+        proxy_update: "Proxy atualizado",
+        avatar_update: "Avatar atualizado",
+        checklist_update: "Checklist atualizado",
+        marketing_update: "Marketing atualizado",
+        onboarding_update: "Onboarding atualizado",
+        earnings_created: "Relatório de ganhos criado",
+        document_uploaded: "Documento enviado",
+        model_deleted: "Modelo excluída",
+        model_created: "Modelo criada",
+        model_imported: "Modelo importada",
+        model_applied: "Candidatura recebida",
     };
 
     return (
