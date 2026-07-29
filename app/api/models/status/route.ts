@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 import { createClient } from "@/lib/supabase/server";
 import { ensureOnlyFansEnrollmentForModel } from "@/lib/brand/talent";
+import { logAuditEntry } from "@/lib/audit/auditLogger";
 import type { ManagementRole, ModelStatus } from "@/types/model";
 
 export const dynamic = "force-dynamic";
@@ -38,7 +39,7 @@ export async function PATCH(request: Request) {
 
     const { data: profile, error: profileError } = await supabase
       .from("profiles")
-      .select("role, active")
+      .select("id, full_name, role, active")
       .eq("id", user.id)
       .maybeSingle();
 
@@ -120,6 +121,12 @@ export async function PATCH(request: Request) {
       }
     }
 
+    const { data: existingModel } = await supabase
+      .from("models")
+      .select("status, active")
+      .eq("id", body.modelId)
+      .maybeSingle();
+
     // Ensure the canonical talent record and OnlyFans service enrollment
     // exist before changing the model status. A DB trigger keeps the
     // enrollment status in sync with models.active; this call guarantees the
@@ -146,6 +153,21 @@ export async function PATCH(request: Request) {
         { status: 500 },
       );
     }
+
+    await logAuditEntry(supabase, {
+      modelId: body.modelId,
+      action: "status_change",
+      fieldName: "status",
+      previousValue: existingModel?.status ?? null,
+      newValue: status,
+      actor: {
+        id: profile.id,
+        fullName: profile.full_name || "Usuário",
+        role,
+      },
+      source: "api:/api/models/status",
+      summary: `Status alterado de "${existingModel?.status ?? "—"}" para "${status}"`,
+    });
 
     return NextResponse.json({
       success: true,

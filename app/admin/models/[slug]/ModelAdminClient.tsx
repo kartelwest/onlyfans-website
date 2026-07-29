@@ -9,6 +9,7 @@ import ModelProxyPanel from "@/components/admin/model/ModelProxyPanel";
 import ChecklistTab from "@/components/admin/model/ChecklistTab";
 import PaymentsTab from "@/components/admin/model/PaymentsTab";
 import BrandGrowthTab from "@/components/brand/BrandGrowthTab";
+import HistoryTab from "@/components/admin/model/HistoryTab";
 
 import { useState } from "react";
 import Link from "next/link";
@@ -265,10 +266,9 @@ export default function ModelAdminClient({
                         )}
 
                         {activeTab === "history" && (
-                            <NotesTab
+                            <HistoryTab
                                 modelId={model.id}
                                 currentUserRole={currentUserRole}
-                                historyOnly
                             />
                         )}
 

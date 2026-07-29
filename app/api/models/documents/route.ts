@@ -4,6 +4,7 @@ import { NextResponse } from "next/server";
 
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
+import { logAuditEntry } from "@/lib/audit/auditLogger";
 
 import type { ManagementRole } from "@/types/model";
 
@@ -24,6 +25,8 @@ type DocumentRecord = {
 };
 
 type ProfileRecord = {
+  id: string;
+  full_name: string;
   role: ManagementRole;
   active: boolean;
 };
@@ -252,7 +255,7 @@ export async function POST(
       error: profileError,
     } = await supabase
       .from("profiles")
-      .select("role, active")
+      .select("id, full_name, role, active")
       .eq("id", user.id)
       .maybeSingle<ProfileRecord>();
 
@@ -550,6 +553,21 @@ export async function POST(
             document.file_name,
         },
       );
+
+    await logAuditEntry(supabase, {
+      modelId,
+      action: "document_uploaded",
+      fieldName: "document",
+      previousValue: null,
+      newValue: document.file_name,
+      actor: {
+        id: profile.id,
+        fullName: profile.full_name || "Usuário",
+        role: profile.role,
+      },
+      source: "api:/api/models/documents",
+      summary: `Documento "${document.file_name}" enviado (${document.description})`,
+    });
 
     return NextResponse.json(
       {

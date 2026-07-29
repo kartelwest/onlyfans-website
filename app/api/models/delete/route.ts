@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
+import { logAuditEntry } from "@/lib/audit/auditLogger";
 import type { ManagementRole } from "@/types/model";
 
 export const dynamic = "force-dynamic";
@@ -31,7 +32,7 @@ export async function POST(request: Request) {
       error: profileError,
     } = await supabase
       .from("profiles")
-      .select("role, active")
+      .select("id, full_name, role, active")
       .eq("id", user.id)
       .maybeSingle();
 
@@ -107,6 +108,21 @@ export async function POST(request: Request) {
 
       await adminSupabase.auth.admin.deleteUser(profileId);
     }
+
+    await logAuditEntry(supabase, {
+      modelId: body.modelId,
+      action: "model_deleted",
+      fieldName: null,
+      previousValue: model.display_name,
+      newValue: null,
+      actor: {
+        id: profile.id,
+        fullName: profile.full_name || "Usuário",
+        role,
+      },
+      source: "api:/api/models/delete",
+      summary: `Modelo "${model.display_name}" excluída permanentemente`,
+    });
 
     return NextResponse.json({
       success: true,

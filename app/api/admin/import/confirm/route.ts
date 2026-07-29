@@ -10,6 +10,7 @@ import {
   findReferredRepresentativeId,
   hasAnyApplicationAnswer,
 } from "@/lib/models/applicantIntake";
+import { logAuditEntry } from "@/lib/audit/auditLogger";
 import type { ExtractedApplicant } from "@/lib/anthropic/importTool";
 import type { ManagementRole } from "@/types/model";
 
@@ -37,7 +38,7 @@ export async function POST(request: Request) {
 
     const { data: profile, error: profileError } = await supabase
       .from("profiles")
-      .select("role, active")
+      .select("id, full_name, role, active")
       .eq("id", user.id)
       .maybeSingle();
 
@@ -191,6 +192,21 @@ export async function POST(request: Request) {
             NOTE_HEADER,
           );
         }
+
+        await logAuditEntry(supabase, {
+          modelId: data.id,
+          action: "model_imported",
+          fieldName: null,
+          previousValue: null,
+          newValue: data.display_name,
+          actor: {
+            id: profile.id,
+            fullName: profile.full_name || "Usuário",
+            role,
+          },
+          source: "api:/api/admin/import/confirm",
+          summary: `Candidata "${data.display_name}" importada de PDF/imagem`,
+        });
       } catch (rowError) {
         results.push({
           index,

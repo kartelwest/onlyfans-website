@@ -10,6 +10,7 @@ import {
   createApplicationNotes,
   findReferredRepresentativeId,
 } from "@/lib/models/applicantIntake";
+import { logAuditEntry } from "@/lib/audit/auditLogger";
 
 export const dynamic = "force-dynamic";
 
@@ -170,6 +171,21 @@ export async function POST(request: Request) {
       },
       NOTE_AUTHOR_NAME,
     );
+
+    await logAuditEntry(adminSupabase, {
+      modelId: createdModel.id,
+      action: "model_applied",
+      fieldName: null,
+      previousValue: null,
+      newValue: nomeCompleto,
+      actor: {
+        id: "00000000-0000-0000-0000-000000000000",
+        fullName: NOTE_AUTHOR_NAME,
+        role: "model",
+      },
+      source: "api:/api/aplicar",
+      summary: `Nova candidatura recebida pelo site: "${nomeCompleto}"`,
+    });
 
     return NextResponse.json(
       { success: true, modelId: createdModel.id, slug: createdModel.slug },

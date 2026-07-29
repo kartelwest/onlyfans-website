@@ -1,10 +1,13 @@
 import { NextResponse } from "next/server";
 
 import { createClient } from "@/lib/supabase/server";
+import { logAuditEntry } from "@/lib/audit/auditLogger";
 
 import type { ManagementRole } from "@/types/model";
 
 type ProfileRecord = {
+  id: string;
+  full_name: string;
   role: ManagementRole;
   active: boolean;
 };
@@ -62,7 +65,7 @@ async function getAuthenticatedProfile() {
     error: profileError,
   } = await supabase
     .from("profiles")
-    .select("role, active")
+    .select("id, full_name, role, active")
     .eq("id", user.id)
     .maybeSingle<ProfileRecord>();
 
@@ -489,6 +492,21 @@ export async function PATCH(
         : Math.round(
             (completed / total) * 100,
           );
+
+    await logAuditEntry(supabaseForUpdate, {
+      modelId: body.modelId,
+      action: "onboarding_update",
+      fieldName: updatedItem.item_key,
+      previousValue: existingItem.completed ? "completed" : "pending",
+      newValue: updatedItem.completed ? "completed" : "pending",
+      actor: {
+        id: auth.profile.id,
+        fullName: auth.profile.full_name || "Usuário",
+        role: auth.profile.role,
+      },
+      source: "api:/api/models/onboarding",
+      summary: `Onboarding "${updatedItem.item_title}" marcado como ${updatedItem.completed ? "concluído" : "pendente"} (${percentage}%)`,
+    });
 
     return NextResponse.json({
       item: updatedItem,

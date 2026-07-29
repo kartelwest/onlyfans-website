@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { createClient } from "@/lib/supabase/server";
+import { logAuditEntry } from "@/lib/audit/auditLogger";
 
 import type {
   ChecklistStatus,
@@ -80,7 +81,7 @@ export async function PATCH(request: Request) {
       error: profileError,
     } = await supabase
       .from("profiles")
-      .select("id, role, active")
+      .select("id, full_name, role, active")
       .eq("id", user.id)
       .maybeSingle();
 
@@ -314,6 +315,21 @@ export async function PATCH(request: Request) {
         },
       );
     }
+
+    await logAuditEntry(supabase, {
+      modelId,
+      action: "checklist_update",
+      fieldName: databaseField,
+      previousValue: (existingChecklist as Record<string, unknown> | null)?.[databaseField] as string ?? null,
+      newValue: status,
+      actor: {
+        id: profile.id,
+        fullName: profile.full_name || "Usuário",
+        role: currentUserRole,
+      },
+      source: "api:/api/models/checklist",
+      summary: `Checklist "${field}" alterado para "${status}" (${onboardingPercentage}% concluído)`,
+    });
 
     return NextResponse.json({
       success: true,

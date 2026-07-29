@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
+import { logAuditEntry } from "@/lib/audit/auditLogger";
 
 export async function GET(request: NextRequest) {
   const supabase = await createClient();
@@ -172,7 +173,7 @@ export async function POST(request: NextRequest) {
     error: profileError,
   } = await supabase
     .from("profiles")
-    .select("role, active")
+    .select("id, full_name, role, active")
     .eq("id", user.id)
     .maybeSingle();
 
@@ -332,6 +333,21 @@ export async function POST(request: NextRequest) {
   const signed = await admin.storage
     .from("model-earnings")
     .createSignedUrl(path, 3600);
+
+  await logAuditEntry(supabase, {
+    modelId,
+    action: "earnings_created",
+    fieldName: "earnings_report",
+    previousValue: null,
+    newValue: `Receita: ${grossRevenue} (${platform ?? "—"}, ${period ?? "—"})`,
+    actor: {
+      id: profile.id,
+      fullName: profile.full_name || "Usuário",
+      role: profile.role as import("@/types/model").ManagementRole,
+    },
+    source: "api:/api/models/earnings",
+    summary: `Relatório de ganhos criado (${platform ?? "—"}, ${period ?? "—"}, receita: ${grossRevenue})`,
+  });
 
   return NextResponse.json({
     report: {

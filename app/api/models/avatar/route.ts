@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
+import { logAuditEntry } from "@/lib/audit/auditLogger";
 
 import type { ManagementRole } from "@/types/model";
 
@@ -33,7 +34,7 @@ export async function POST(request: Request) {
 
     const { data: profile, error: profileError } = await supabase
       .from("profiles")
-      .select("role, active")
+      .select("id, full_name, role, active")
       .eq("id", user.id)
       .maybeSingle();
 
@@ -84,6 +85,12 @@ export async function POST(request: Request) {
         { status: 400 },
       );
     }
+
+    const { data: existingModel } = await supabase
+      .from("models")
+      .select("profile_photo_url")
+      .eq("id", modelId)
+      .maybeSingle();
 
     const { data: model, error: modelError } = await supabase
       .from("models")
@@ -147,6 +154,21 @@ export async function POST(request: Request) {
         { status: 500 },
       );
     }
+
+    await logAuditEntry(supabase, {
+      modelId,
+      action: "avatar_update",
+      fieldName: "profile_photo_url",
+      previousValue: existingModel?.profile_photo_url ?? null,
+      newValue: publicUrlData.publicUrl,
+      actor: {
+        id: profile.id,
+        fullName: profile.full_name || "Usuário",
+        role,
+      },
+      source: "api:/api/models/avatar",
+      summary: "Foto de perfil atualizada",
+    });
 
     return NextResponse.json({
       success: true,

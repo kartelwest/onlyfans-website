@@ -1,0 +1,323 @@
+"use client";
+
+import { useCallback, useEffect, useState } from "react";
+
+import type { ManagementRole } from "@/types/model";
+
+type AuditEntry = {
+  id: string;
+  modelId: string;
+  action: string;
+  fieldName: string | null;
+  previousValue: string | null;
+  newValue: string | null;
+  actorId: string | null;
+  actorName: string;
+  actorRole: string;
+  source: string | null;
+  summary: string;
+  createdAt: string;
+};
+
+type Pagination = {
+  page: number;
+  pageSize: number;
+  totalCount: number;
+  totalPages: number;
+  hasMore: boolean;
+};
+
+type HistoryTabProps = {
+  modelId: string;
+  currentUserRole: ManagementRole;
+};
+
+const ACTION_LABELS: Record<string, string> = {
+  field_update: "Campo atualizado",
+  status_change: "Status alterado",
+  proxy_update: "Proxy atualizado",
+  avatar_update: "Avatar atualizado",
+  checklist_update: "Checklist atualizado",
+  marketing_update: "Marketing atualizado",
+  onboarding_update: "Onboarding atualizado",
+  earnings_created: "Relatório de ganhos criado",
+  document_uploaded: "Documento enviado",
+  model_deleted: "Modelo excluída",
+  model_created: "Modelo criada",
+  model_imported: "Modelo importada",
+  model_applied: "Candidatura recebida",
+};
+
+const ACTION_COLORS: Record<string, string> = {
+  field_update: "text-blue-300",
+  status_change: "text-yellow-300",
+  proxy_update: "text-purple-300",
+  avatar_update: "text-green-300",
+  checklist_update: "text-cyan-300",
+  marketing_update: "text-indigo-300",
+  onboarding_update: "text-teal-300",
+  earnings_created: "text-emerald-300",
+  document_uploaded: "text-sky-300",
+  model_deleted: "text-red-300",
+  model_created: "text-green-300",
+  model_imported: "text-orange-300",
+  model_applied: "text-pink-300",
+};
+
+const ACTION_FILTERS = [
+  "field_update",
+  "status_change",
+  "proxy_update",
+  "avatar_update",
+  "checklist_update",
+  "marketing_update",
+  "onboarding_update",
+  "earnings_created",
+  "document_uploaded",
+  "model_deleted",
+  "model_created",
+  "model_imported",
+  "model_applied",
+];
+
+function formatDate(iso: string): string {
+  try {
+    const d = new Date(iso);
+    return d.toLocaleString("pt-BR", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  } catch {
+    return iso;
+  }
+}
+
+function getActionLabel(action: string): string {
+  return ACTION_LABELS[action] ?? action;
+}
+
+function getActionColor(action: string): string {
+  return ACTION_COLORS[action] ?? "text-zinc-300";
+}
+
+function getRoleLabel(role: string): string {
+  switch (role) {
+    case "owner":
+      return "Proprietário";
+    case "administrator":
+      return "Administrador";
+    case "representative":
+      return "Representante";
+    case "model":
+      return "Modelo";
+    default:
+      return role;
+  }
+}
+
+export default function HistoryTab({
+  modelId,
+  currentUserRole,
+}: HistoryTabProps) {
+  const [entries, setEntries] = useState<AuditEntry[]>([]);
+  const [pagination, setPagination] = useState<Pagination | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+  const [actionFilter, setActionFilter] = useState<string>("");
+
+  const fetchHistory = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const params = new URLSearchParams({
+        modelId,
+        page: String(page),
+        pageSize: "25",
+      });
+
+      if (actionFilter) {
+        params.set("action", actionFilter);
+      }
+
+      const res = await fetch(`/api/models/history?${params.toString()}`);
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || "Erro ao carregar histórico.");
+      }
+
+      const data = await res.json();
+
+      setEntries(data.entries ?? []);
+      setPagination(data.pagination ?? null);
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Erro inesperado ao carregar histórico.",
+      );
+    } finally {
+      setLoading(false);
+    }
+  }, [modelId, page, actionFilter]);
+
+  useEffect(() => {
+    fetchHistory();
+  }, [fetchHistory]);
+
+  const handleFilterChange = (value: string) => {
+    setActionFilter(value);
+    setPage(1);
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h3 className="text-lg font-bold text-pink-200">
+            Histórico de Alterações
+          </h3>
+          <p className="mt-1 text-sm text-zinc-400">
+            Registro completo de todas as modificações na modelo.
+          </p>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <label className="text-sm text-zinc-400">Filtrar:</label>
+          <select
+            value={actionFilter}
+            onChange={(e) => handleFilterChange(e.target.value)}
+            className="rounded-lg border border-zinc-700 bg-[#1a1a1e] px-3 py-2 text-sm text-white outline-none transition focus:border-pink-400"
+          >
+            <option value="">Todas as ações</option>
+            {ACTION_FILTERS.map((action) => (
+              <option key={action} value={action}>
+                {getActionLabel(action)}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      {error && (
+        <div className="rounded-lg border border-red-400/30 bg-red-400/10 p-4 text-sm text-red-200">
+          {error}
+        </div>
+      )}
+
+      {loading ? (
+        <div className="py-12 text-center text-zinc-400">
+          Carregando histórico…
+        </div>
+      ) : entries.length === 0 ? (
+        <div className="py-12 text-center text-zinc-400">
+          Nenhuma alteração registrada.
+        </div>
+      ) : (
+        <>
+          <div className="space-y-3">
+            {entries.map((entry) => (
+              <div
+                key={entry.id}
+                className="rounded-xl border border-white/10 bg-[#1a1a1e] p-4 transition hover:border-pink-400/30"
+              >
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <span
+                        className={`text-sm font-semibold ${getActionColor(entry.action)}`}
+                      >
+                        {getActionLabel(entry.action)}
+                      </span>
+                      {entry.fieldName && (
+                        <span className="rounded bg-white/10 px-2 py-0.5 text-xs text-zinc-300">
+                          {entry.fieldName}
+                        </span>
+                      )}
+                    </div>
+
+                    <p className="mt-1 text-sm text-zinc-200">
+                      {entry.summary}
+                    </p>
+
+                    {entry.previousValue !== null &&
+                      entry.newValue !== null && (
+                        <div className="mt-2 flex flex-col gap-1 text-xs sm:flex-row sm:gap-3">
+                          <span className="text-zinc-500">
+                            Antes:{" "}
+                            <span className="text-zinc-300">
+                              {entry.previousValue}
+                            </span>
+                          </span>
+                          <span className="text-zinc-500">
+                            Depois:{" "}
+                            <span className="text-zinc-300">
+                              {entry.newValue}
+                            </span>
+                          </span>
+                        </div>
+                      )}
+
+                    <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-zinc-500">
+                      <span>
+                        Por{" "}
+                        <span className="text-zinc-300">
+                          {entry.actorName}
+                        </span>{" "}
+                        ({getRoleLabel(entry.actorRole)})
+                      </span>
+                      <span>·</span>
+                      <span>{formatDate(entry.createdAt)}</span>
+                      {entry.source && (
+                        <>
+                          <span>·</span>
+                          <span className="font-mono text-zinc-600">
+                            {entry.source}
+                          </span>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {pagination && pagination.totalPages > 1 && (
+            <div className="flex items-center justify-between pt-4">
+              <button
+                type="button"
+                disabled={page <= 1 || loading}
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                className="rounded-lg border border-zinc-700 px-4 py-2 text-sm font-semibold text-zinc-200 transition enabled:hover:border-pink-400 enabled:hover:text-pink-300 disabled:opacity-40"
+              >
+                ← Anterior
+              </button>
+
+              <span className="text-sm text-zinc-400">
+                Página {pagination.page} de {pagination.totalPages} ·{" "}
+                {pagination.totalCount} registro(s)
+              </span>
+
+              <button
+                type="button"
+                disabled={!pagination.hasMore || loading}
+                onClick={() =>
+                  setPage((p) => Math.min(pagination.totalPages, p + 1))
+                }
+                className="rounded-lg border border-zinc-700 px-4 py-2 text-sm font-semibold text-zinc-200 transition enabled:hover:border-pink-400 enabled:hover:text-pink-300 disabled:opacity-40"
+              >
+                Próxima →
+              </button>
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  );
+}

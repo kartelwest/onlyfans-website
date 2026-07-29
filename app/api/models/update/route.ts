@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { createClient } from "@/lib/supabase/server";
+import { logAuditEntry, getFieldLabel } from "@/lib/audit/auditLogger";
 
 import type { ManagementRole } from "@/types/model";
 
@@ -85,7 +86,7 @@ export async function PATCH(
       error: profileError,
     } = await supabase
       .from("profiles")
-      .select("role, active")
+      .select("id, full_name, role, active")
       .eq("id", user.id)
       .maybeSingle();
 
@@ -181,6 +182,14 @@ export async function PATCH(
       }
 
       const {
+        data: existingProfile,
+      } = await supabase
+        .from("profiles")
+        .select("full_name")
+        .eq("id", model.profile_id)
+        .maybeSingle();
+
+      const {
         error: updateProfileError,
       } = await supabase
         .from("profiles")
@@ -201,6 +210,21 @@ export async function PATCH(
         );
       }
 
+      await logAuditEntry(supabase, {
+        modelId: body.modelId,
+        action: "field_update",
+        fieldName: "full_name",
+        previousValue: existingProfile?.full_name ?? null,
+        newValue: normalizedValue,
+        actor: {
+          id: profile.id,
+          fullName: profile.full_name || "Usuário",
+          role,
+        },
+        source: "api:/api/models/update",
+        summary: `${getFieldLabel("full_name")} alterado(a) de "${existingProfile?.full_name ?? "—"}" para "${normalizedValue}"`,
+      });
+
       return NextResponse.json({
         success: true,
       });
@@ -215,12 +239,23 @@ export async function PATCH(
         ];
 
       const {
+        data: existingModel,
+      } = await supabase
+        .from("models")
+        .select(booleanDbField)
+        .eq("id", body.modelId)
+        .maybeSingle();
+
+      const previousBooleanValue =
+        (existingModel as Record<string, unknown> | null)?.[booleanDbField];
+      const newBooleanValue = body.value === "true";
+
+      const {
         error: updateBooleanError,
       } = await supabase
         .from("models")
         .update({
-          [booleanDbField]:
-            body.value === "true",
+          [booleanDbField]: newBooleanValue,
         })
         .eq("id", body.modelId);
 
@@ -235,6 +270,21 @@ export async function PATCH(
           },
         );
       }
+
+      await logAuditEntry(supabase, {
+        modelId: body.modelId,
+        action: "field_update",
+        fieldName: booleanDbField,
+        previousValue: previousBooleanValue != null ? String(previousBooleanValue) : null,
+        newValue: String(newBooleanValue),
+        actor: {
+          id: profile.id,
+          fullName: profile.full_name || "Usuário",
+          role,
+        },
+        source: "api:/api/models/update",
+        summary: `${getFieldLabel(booleanDbField)} alterado(a) de "${previousBooleanValue ?? "—"}" para "${newBooleanValue}"`,
+      });
 
       return NextResponse.json({
         success: true,
@@ -264,6 +314,17 @@ export async function PATCH(
         : normalizedValue;
 
     const {
+      data: existingModel,
+    } = await supabase
+      .from("models")
+      .select(dbField)
+      .eq("id", body.modelId)
+      .maybeSingle();
+
+    const previousFieldValue =
+      (existingModel as Record<string, unknown> | null)?.[dbField];
+
+    const {
       error: updateModelError,
     } = await supabase
       .from("models")
@@ -283,6 +344,21 @@ export async function PATCH(
         },
       );
     }
+
+    await logAuditEntry(supabase, {
+      modelId: body.modelId,
+      action: "field_update",
+      fieldName: dbField,
+      previousValue: previousFieldValue != null ? String(previousFieldValue) : null,
+      newValue: valueToSave ?? null,
+      actor: {
+        id: profile.id,
+        fullName: profile.full_name || "Usuário",
+        role,
+      },
+      source: "api:/api/models/update",
+      summary: `${getFieldLabel(dbField)} alterado(a) de "${previousFieldValue ?? "—"}" para "${valueToSave ?? "—"}"`,
+    });
 
     return NextResponse.json({
       success: true,

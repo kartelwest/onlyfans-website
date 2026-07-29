@@ -11,6 +11,7 @@ import {
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { ensureOnlyFansEnrollmentForModel } from "@/lib/brand/talent";
+import { logAuditEntry } from "@/lib/audit/auditLogger";
 import {
   createUniqueModelSlug,
   getNextModelNumber,
@@ -451,6 +452,23 @@ export async function POST(request: Request) {
           }
         }
       }
+    }
+
+    if (createdModelId && role === "model") {
+      await logAuditEntry(supabase, {
+        modelId: createdModelId,
+        action: "model_created",
+        fieldName: null,
+        previousValue: null,
+        newValue: fullName,
+        actor: {
+          id: currentProfile.id,
+          fullName: currentProfile.full_name || "Usuário",
+          role: currentUserRole,
+        },
+        source: "api:/api/admin/users",
+        summary: `Modelo "${fullName}" criada (${existingDraft ? "a partir de rascunho" : "nova"})`,
+      });
     }
 
     return NextResponse.json(

@@ -11,7 +11,7 @@ type ProfileRole =
   | "representative"
   | "model";
 
-export default function LoginForm({ returnTo }: { returnTo?: string }) {
+export default function LoginForm({ returnTo, expired }: { returnTo?: string; expired?: boolean }) {
   const supabase = createClient();
 
   const [email, setEmail] = useState("");
@@ -109,6 +109,12 @@ export default function LoginForm({ returnTo }: { returnTo?: string }) {
               : "Entre com seu email e senha para acessar sua área."}
           </p>
         </div>
+
+        {expired && (
+          <div className="mb-6 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-800">
+            Your session expired after 8 minutes of inactivity. Please sign in again.
+          </div>
+        )}
 
         <form onSubmit={handleLogin} className="space-y-5">
           <div>

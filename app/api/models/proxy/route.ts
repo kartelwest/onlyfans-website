@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { isCountryCode } from "@/lib/countries";
 import { isProxyCompany, isValidProxyIp } from "@/lib/models/proxyDetails";
+import { logAuditEntry } from "@/lib/audit/auditLogger";
 
 import type { ManagementRole, ProxyCompany } from "@/types/model";
 
@@ -34,7 +35,7 @@ export async function PATCH(request: Request) {
 
     const { data: profile, error: profileError } = await supabase
       .from("profiles")
-      .select("role, active")
+      .select("id, full_name, role, active")
       .eq("id", user.id)
       .maybeSingle();
 
@@ -109,6 +110,21 @@ export async function PATCH(request: Request) {
         { status: 500 },
       );
     }
+
+    await logAuditEntry(supabase, {
+      modelId: body.modelId,
+      action: "proxy_update",
+      fieldName: "proxy_details",
+      previousValue: null,
+      newValue: [proxyIp, proxyCompany, proxyCompanyOther, proxyCountry].filter(Boolean).join(" / ") || null,
+      actor: {
+        id: profile.id,
+        fullName: profile.full_name || "Usuário",
+        role: profile.role as ManagementRole,
+      },
+      source: "api:/api/models/proxy",
+      summary: `Dados de proxy atualizados (IP: ${proxyIp ?? "—"}, empresa: ${proxyCompany ?? "—"}, país: ${proxyCountry ?? "—"})`,
+    });
 
     return NextResponse.json({ success: true });
   } catch (error) {

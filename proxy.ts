@@ -1,6 +1,12 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
+import {
+  INACTIVITY_TIMEOUT_MS,
+  LAST_ACTIVITY_COOKIE,
+  isExpired,
+} from "@/lib/auth/inactivityConfig";
+
 function redirectWithCookies(url: URL, sourceResponse: NextResponse): NextResponse {
   const redirectResponse = NextResponse.redirect(url);
 
@@ -77,6 +83,29 @@ export async function proxy(request: NextRequest) {
       loginUrl.searchParams.set("returnTo", pathname);
       return redirectWithCookies(loginUrl, response);
     }
+
+    const lastActivityCookie = request.cookies.get(LAST_ACTIVITY_COOKIE);
+    const lastActivity = lastActivityCookie ? Number(lastActivityCookie.value) : null;
+
+    if (isExpired(lastActivity)) {
+      const loginUrl = new URL("/login", request.url);
+      loginUrl.searchParams.set("expired", "1");
+      loginUrl.searchParams.set("returnTo", pathname);
+
+      const expiredResponse = redirectWithCookies(loginUrl, response);
+
+      expiredResponse.cookies.delete(LAST_ACTIVITY_COOKIE);
+
+      return expiredResponse;
+    }
+
+    const now = Date.now();
+    response.cookies.set(LAST_ACTIVITY_COOKIE, String(now), {
+      httpOnly: true,
+      sameSite: "lax",
+      path: "/",
+      maxAge: Math.ceil(INACTIVITY_TIMEOUT_MS / 1000),
+    });
   }
 
   return response;
