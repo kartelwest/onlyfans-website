@@ -150,6 +150,7 @@ const dummyClient: AmpliaClient = {
   whatsapp: null,
   profilePhotoUrl: null,
   active: true,
+  status: "active",
   brandStatus: "planning",
   connectedInstagram: false,
   connectedX: false,

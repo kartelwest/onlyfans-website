@@ -3,6 +3,10 @@ import { redirect } from "next/navigation";
 
 import ModelRowActions from "@/components/admin/ModelRowActions";
 import ModelStatusDropdown from "@/components/admin/ModelStatusDropdown";
+import {
+  normalizeModelStatus,
+  sortByModelStatus,
+} from "@/lib/models/modelStatusOrder";
 import { createClient } from "@/lib/supabase/server";
 import type { ManagementRole, ModelStatus } from "@/types/model";
 
@@ -213,11 +217,12 @@ export default async function AdminModelsPage({
   const administrators =
     (administratorRows ?? []) as SimpleProfileRow[];
 
-  const models: DashboardModel[] = (modelRows ?? []).map(
-    (model) => ({
+  const models: DashboardModel[] = sortByModelStatus(
+    (modelRows ?? []).map((model) => ({
       ...(model as unknown as ModelRow),
       checklist: checklistMap.get(model.id) ?? null,
-    }),
+    })),
+    (model) => ({ status: model.status, active: model.active }),
   );
 
   const activeModels = models.filter(
@@ -950,22 +955,6 @@ function OnboardingProgress({
       </div>
     </div>
   );
-}
-
-function normalizeModelStatus(
-  status: string | null,
-  active: boolean | null,
-): ModelStatus {
-  if (
-    status === "active" ||
-    status === "inactive" ||
-    status === "candidate" ||
-    status === "denied"
-  ) {
-    return status;
-  }
-
-  return active ? "active" : "inactive";
 }
 
 function StatusBadge({
