@@ -105,52 +105,35 @@ export default async function AdminModelsPage({
     redirect("/login");
   }
 
-  const { data: enrollmentRows, error: enrollmentsError } = await supabase
-    .from("service_enrollments")
-    .select("talent_id, talents!inner ( linked_model_id ), service_types!inner ( key )")
-    .eq("service_types.key", "onlyfans")
-    .order("talent_id", { ascending: true });
-
-  if (enrollmentsError) {
-    console.error("Erro ao carregar matrículas OnlyFans:", enrollmentsError);
-  }
-
-  const onlyFansModelIds = new Set<string>();
-  for (const raw of (enrollmentRows ?? []) as unknown as { talents: { linked_model_id?: string | null } | { linked_model_id?: string | null }[] }[]) {
-    const rawTalent = raw.talents;
-    const talent = Array.isArray(rawTalent) ? rawTalent[0] : rawTalent;
-    if (talent?.linked_model_id) {
-      onlyFansModelIds.add(String(talent.linked_model_id));
-    }
-  }
-
-  const { data: modelRows, error: modelsError } =
-    onlyFansModelIds.size > 0
-      ? await supabase
-          .from("models")
-          .select(
-            `
-              id,
-              model_number,
-              slug,
-              display_name,
-              stage_name,
-              status,
-              active,
-              website_login_enabled,
-              latest_note_summary,
-              profile:profiles!profile_id ( full_name )
-            `,
-          )
-          .in("id", Array.from(onlyFansModelIds))
-          .order("model_number", {
-            ascending: true,
-            nullsFirst: false,
-          })
-          .order("created_at", {
-            ascending: true,
-          })
-      : { data: [], error: null };
+  // Read straight from public.models. This list must show every model record,
+  // including candidates created by the public /aplicar form: those have no
+  // talent and no OnlyFans service_enrollment yet, so gating the list on
+  // enrollments hid every new applicant. Social-media-only clients never get a
+  // models row (they live in talents + brand_profiles), so they cannot leak in
+  // here — /admin/socialmediamodels remains the enrollment-driven list.
+  const { data: modelRows, error: modelsError } = await supabase
+    .from("models")
+    .select(
+      `
+        id,
+        model_number,
+        slug,
+        display_name,
+        stage_name,
+        status,
+        active,
+        website_login_enabled,
+        latest_note_summary,
+        profile:profiles!profile_id ( full_name )
+      `,
+    )
+    .order("model_number", {
+      ascending: true,
+      nullsFirst: false,
+    })
+    .order("created_at", {
+      ascending: true,
+    });
 
   if (modelsError) {
     console.error("Erro ao carregar modelos:", modelsError);
