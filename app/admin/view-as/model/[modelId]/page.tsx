@@ -60,7 +60,6 @@ export default async function ViewAsModelPage({
         onboarding_percentage,
         active,
         content_drive_url,
-        latest_note_summary,
         last_login_at
       `,
     )

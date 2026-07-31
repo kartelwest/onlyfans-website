@@ -40,12 +40,17 @@ type ModelRow = {
   status: string | null;
   active: boolean | null;
   website_login_enabled: boolean | null;
-  latest_note_summary: string | null;
   profile: { full_name: string | null } | null;
+};
+
+type NoteSummaryRow = {
+  model_id: string;
+  latest_note_summary: string | null;
 };
 
 type DashboardModel = ModelRow & {
   checklist: ChecklistRow | null;
+  latest_note_summary: string | null;
 };
 
 type SimpleProfileRow = {
@@ -123,7 +128,6 @@ export default async function AdminModelsPage({
         status,
         active,
         website_login_enabled,
-        latest_note_summary,
         profile:profiles!profile_id ( full_name )
       `,
     )
@@ -137,6 +141,32 @@ export default async function AdminModelsPage({
 
   if (modelsError) {
     console.error("Erro ao carregar modelos:", modelsError);
+  }
+
+  // latest_note_summary is an excerpt of the model's most recent internal
+  // note, so `authenticated` no longer holds a column SELECT grant on it (see
+  // the notes_staff_only_access migration). It comes back through a SECURITY
+  // DEFINER RPC that self-checks public.is_staff().
+  const modelIds = (modelRows ?? []).map((model) => model.id);
+
+  const { data: noteSummaryRows, error: noteSummaryError } =
+    modelIds.length > 0
+      ? await supabase.rpc("get_models_latest_note_summary", {
+          target_models: modelIds,
+        })
+      : { data: [], error: null };
+
+  if (noteSummaryError) {
+    console.error(
+      "Erro ao carregar os resumos das notas:",
+      noteSummaryError,
+    );
+  }
+
+  const noteSummaryMap = new Map<string, string | null>();
+
+  for (const row of (noteSummaryRows ?? []) as NoteSummaryRow[]) {
+    noteSummaryMap.set(row.model_id, row.latest_note_summary);
   }
 
   const { data: checklistRows, error: checklistError } =
@@ -204,6 +234,7 @@ export default async function AdminModelsPage({
     (modelRows ?? []).map((model) => ({
       ...(model as unknown as ModelRow),
       checklist: checklistMap.get(model.id) ?? null,
+      latest_note_summary: noteSummaryMap.get(model.id) ?? null,
     })),
     (model) => ({ status: model.status, active: model.active }),
   );

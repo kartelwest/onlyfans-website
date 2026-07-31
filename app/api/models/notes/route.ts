@@ -30,10 +30,12 @@ type AuthenticatedProfile = {
     role: ManagementRole;
 };
 
+// Notes are internal agency records: owner and administrator only. This
+// mirrors the staff-only RLS policies on model_notes / model_note_history —
+// a representative is denied at both layers, never just one.
 const allowedRoles: ManagementRole[] = [
     "owner",
     "administrator",
-    "representative",
 ];
 
 const notePriorities: NotePriority[] = [
@@ -276,9 +278,7 @@ export async function POST(
         if (
             profile.role !== "owner" &&
             profile.role !==
-                "administrator" &&
-            profile.role !==
-                "representative"
+                "administrator"
         ) {
             return NextResponse.json(
                 {
@@ -1378,9 +1378,7 @@ function createPermissions(
         canCreate:
             role === "owner" ||
             role ===
-                "administrator" ||
-            role ===
-                "representative",
+                "administrator",
         canEdit: role === "owner",
         canPin:
             role === "owner" ||

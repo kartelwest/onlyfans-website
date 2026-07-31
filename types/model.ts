@@ -105,8 +105,6 @@ export interface Model {
 
   profilePhotoUrl: string | null;
 
-  latestNoteSummary: string | null;
-
   lastLoginAt: string | null;
 
   createdAt: string;

@@ -148,7 +148,6 @@ export default async function ModelAdminPage({
         onboarding_complete,
         active,
         profile_photo_url,
-        latest_note_summary,
         last_login_at,
         created_at,
         updated_at
@@ -326,9 +325,6 @@ export default async function ModelAdminPage({
 
     profilePhotoUrl:
       modelRow.profile_photo_url ?? null,
-
-    latestNoteSummary:
-      modelRow.latest_note_summary ?? null,
 
     lastLoginAt:
       modelRow.last_login_at ?? null,
