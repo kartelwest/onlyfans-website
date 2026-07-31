@@ -6,6 +6,7 @@ import OnlyFansTab from "@/components/admin/model/OnlyFansTab";
 import PlatformsTab from "@/components/admin/model/PlatformsTab";
 import OverviewTab from "@/components/admin/model/OverviewTab";
 import ModelProxyPanel from "@/components/admin/model/ModelProxyPanel";
+import ModelCredentialsReset from "@/components/admin/model/ModelCredentialsReset";
 import ChecklistTab from "@/components/admin/model/ChecklistTab";
 import PaymentsTab from "@/components/admin/model/PaymentsTab";
 import BrandGrowthTab from "@/components/brand/BrandGrowthTab";
@@ -104,24 +105,33 @@ export default function ModelAdminClient({
                                     )}
                                 </div>
 
-                                <div>
-                                    <p className="text-xs font-semibold uppercase tracking-[0.25em] text-pink-200">
-                                        Perfil da modelo
-                                    </p>
+                                <div className="flex flex-1 items-start justify-between gap-4">
+                                    <div>
+                                        <p className="text-xs font-semibold uppercase tracking-[0.25em] text-pink-200">
+                                            Perfil da modelo
+                                        </p>
 
-                                    <h1 className="mt-2 text-3xl font-bold sm:text-4xl">
-                                        {model.fullName}
-                                    </h1>
+                                        <h1 className="mt-2 text-3xl font-bold sm:text-4xl">
+                                            {model.fullName}
+                                        </h1>
 
-                                    <p className="mt-2 text-sm text-white/70">
-                                        {model.stageName
-                                            ? `Nome artístico: ${model.stageName}`
-                                            : "Nome artístico não informado"}
-                                    </p>
+                                        <p className="mt-2 text-sm text-white/70">
+                                            {model.stageName
+                                                ? `Nome artístico: ${model.stageName}`
+                                                : "Nome artístico não informado"}
+                                        </p>
 
-                                    <p className="mt-1 text-sm text-white/50">
-                                        Modelo #{model.modelNumber ?? "—"}
-                                    </p>
+                                        <p className="mt-1 text-sm text-white/50">
+                                            Modelo #{model.modelNumber ?? "—"}
+                                        </p>
+                                    </div>
+
+                                    <ModelCredentialsReset
+                                        modelId={model.id}
+                                        modelName={model.fullName}
+                                        currentEmail={model.email}
+                                        whatsapp={model.whatsapp}
+                                    />
                                 </div>
 
                                 <div className="w-full sm:w-72">
