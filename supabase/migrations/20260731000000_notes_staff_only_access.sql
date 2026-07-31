@@ -120,5 +120,12 @@ language sql stable security definer set search_path = public as $$
     and public.is_staff()
 $$;
 
+-- `revoke ... from public` alone is not enough: Supabase's default privileges
+-- hand `anon` its own EXECUTE grant on every new function in this schema, so
+-- anon has to be revoked by name. The function self-checks is_staff() and
+-- would return nothing to anon anyway, but leaving the grant in place trips
+-- the security advisor (anon_security_definer_function_executable) — the same
+-- finding 20260724000003 cleaned up for the marketing RPCs.
 revoke execute on function public.get_models_latest_note_summary(uuid[]) from public;
+revoke execute on function public.get_models_latest_note_summary(uuid[]) from anon;
 grant execute on function public.get_models_latest_note_summary(uuid[]) to authenticated;
