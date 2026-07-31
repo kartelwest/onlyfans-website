@@ -283,6 +283,32 @@ export async function POST(request: Request) {
       }
     }
 
+    // A password reset that leaves her existing session alive does not take
+    // access away from anyone, so revoke it. This cannot go through
+    // auth.admin.signOut(): that takes the user's own JWT, not a user id, and
+    // there is no per-user revocation in the admin API at all — see the
+    // force_sign_out_user migration. Deleting her sessions cascades to her
+    // refresh tokens, so the session she holds cannot be extended past the
+    // access token already issued to it.
+    let sessionsRevoked = false;
+
+    if (requestedPassword) {
+      const { error: signOutError } = await adminSupabase.rpc(
+        "force_sign_out_user",
+        { target_user: model.profile_id },
+      );
+
+      if (signOutError) {
+        console.error("Erro ao encerrar as sessões da modelo:", signOutError);
+
+        warnings.push(
+          "O acesso foi alterado, mas as sessões abertas da modelo não puderam ser encerradas.",
+        );
+      } else {
+        sessionsRevoked = true;
+      }
+    }
+
     const actorName = currentProfile.full_name || "Usuário";
 
     const noteWritten = await writeAccessChangeNote(adminSupabase, {
@@ -330,6 +356,7 @@ export async function POST(request: Request) {
       password: requestedPassword || null,
       emailChanged,
       passwordChanged: Boolean(requestedPassword),
+      sessionsRevoked,
       warnings,
     });
   } catch (error) {

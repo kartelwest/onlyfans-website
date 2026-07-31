@@ -21,6 +21,7 @@ type SuccessPayload = {
   password: string | null;
   emailChanged: boolean;
   passwordChanged: boolean;
+  sessionsRevoked: boolean;
   warnings: string[];
 };
 
@@ -148,6 +149,7 @@ export default function ModelCredentialsReset({
         password: payload.password ?? null,
         emailChanged: Boolean(payload.emailChanged),
         passwordChanged: Boolean(payload.passwordChanged),
+        sessionsRevoked: Boolean(payload.sessionsRevoked),
         warnings: Array.isArray(payload.warnings) ? payload.warnings : [],
       });
 
@@ -371,6 +373,13 @@ export default function ModelCredentialsReset({
                     <CredentialRow label="Nova senha" value={result.password} />
                   )}
                 </div>
+
+                {result.sessionsRevoked && (
+                  <p className="mt-5 rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white/60">
+                    As sessões ativas da modelo foram encerradas. Ela precisará
+                    entrar novamente.
+                  </p>
+                )}
 
                 {result.warnings.length > 0 && (
                   <div className="mt-5 space-y-2">
