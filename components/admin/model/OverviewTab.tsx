@@ -3,6 +3,7 @@
 import { useState } from "react";
 
 import EditableTextField from "@/components/admin/model/EditableTextField";
+import FinancialSettingsSection from "@/components/admin/model/FinancialSettingsSection";
 import SocialAccountsSection from "@/components/admin/model/SocialAccountsSection";
 
 import type {
@@ -348,13 +349,6 @@ export default function OverviewTab({
         {isEditing && canEdit ? (
           <div className="mt-6 grid gap-5 md:grid-cols-2">
             <EditableTextField
-              label="Moeda preferida"
-              value={model.preferredCurrency}
-              placeholder="BRL, USD..."
-              onSave={(value) => updateField("preferredCurrency", value)}
-            />
-
-            <EditableTextField
               label="Frequência de conteúdo"
               value={model.contentFrequency}
               placeholder="Diária, semanal..."
@@ -390,7 +384,6 @@ export default function OverviewTab({
           </div>
         ) : (
           <div className="mt-6 grid gap-5 md:grid-cols-2">
-            <Info label="Moeda preferida" value={model.preferredCurrency} />
             <Info label="Frequência de conteúdo" value={model.contentFrequency} />
             <Info label="Indicação" value={model.referralSource} />
             <Info
@@ -405,6 +398,13 @@ export default function OverviewTab({
           </div>
         )}
       </section>
+
+      {canEdit && (
+        <FinancialSettingsSection
+          model={model}
+          onModelUpdate={onModelUpdate}
+        />
+      )}
 
       {canEdit && (
         <SocialAccountsSection

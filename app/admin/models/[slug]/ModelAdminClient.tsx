@@ -8,6 +8,7 @@ import OverviewTab from "@/components/admin/model/OverviewTab";
 import ModelProxyPanel from "@/components/admin/model/ModelProxyPanel";
 import ModelCredentialsReset from "@/components/admin/model/ModelCredentialsReset";
 import ChecklistTab from "@/components/admin/model/ChecklistTab";
+import EarningsTab from "@/components/admin/model/EarningsTab";
 import PaymentsTab from "@/components/admin/model/PaymentsTab";
 import BrandGrowthTab from "@/components/brand/BrandGrowthTab";
 import HistoryTab from "@/components/admin/model/HistoryTab";
@@ -43,6 +44,7 @@ type TabId =
     | "fansly"
     | "drive"
     | "documents"
+    | "earnings"
     | "payments"
     | "notes"
     | "history"
@@ -59,6 +61,7 @@ const tabs: {
         { id: "fansly", label: "Fansly" },
         { id: "drive", label: "Google Drive" },
         { id: "documents", label: "Documentos" },
+        { id: "earnings", label: "Ganhos e lançamentos" },
         { id: "payments", label: "Pagamentos" },
         { id: "notes", label: "Notas" },
         { id: "history", label: "Histórico" },
@@ -269,6 +272,10 @@ export default function ModelAdminClient({
                                 model={model}
                                 currentUserRole={currentUserRole}
                             />
+                        )}
+
+                        {activeTab === "earnings" && (
+                            <EarningsTab model={model} />
                         )}
 
                         {activeTab === "payments" && (
