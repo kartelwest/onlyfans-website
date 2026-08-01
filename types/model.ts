@@ -79,7 +79,17 @@ export interface Model {
 
   contentDriveUrl: string | null;
 
+  /** ISO 4217 code. The spec's `currency_code`; column is preferred_currency. */
   preferredCurrency: string | null;
+
+  /** ISO 3166-1 alpha-2 country of residence. Seeds the currency and the flag. */
+  countryCode: string | null;
+
+  /**
+   * Whether expense/loan entries are available for this model. The single
+   * source of truth for the feature — never branch on countryCode at runtime.
+   */
+  expensesEnabled: boolean;
 
   contentFrequency: string | null;
 
@@ -88,12 +98,6 @@ export interface Model {
   showFace: boolean;
 
   referralSource: string | null;
-
-  subscribersCount: number;
-
-  ppvSoldCount: number;
-
-  tipsAmount: number;
 
   status: string | null;
 

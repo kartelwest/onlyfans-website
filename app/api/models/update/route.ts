@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 
 import { createClient } from "@/lib/supabase/server";
 import { logAuditEntry, getFieldLabel } from "@/lib/audit/auditLogger";
+import { isCountryCode } from "@/lib/countries";
+import { normalizeCurrencyCode } from "@/lib/money/currency";
 
 import type { ManagementRole } from "@/types/model";
 
@@ -32,6 +34,7 @@ const allowedModelFields = {
   contentDriveUrl: "content_drive_url",
 
   preferredCurrency: "preferred_currency",
+  countryCode: "country_code",
   contentFrequency: "content_frequency",
   referralSource: "referral_source",
 } as const;
@@ -307,11 +310,41 @@ export async function PATCH(
       );
     }
 
+    // country_code and preferred_currency are codes, not prose: they feed
+    // Intl (flag emoji, currency symbol) and a CHECK constraint, so they are
+    // normalized and validated here rather than stored as typed.
+    if (dbField === "country_code" && normalizedValue !== "") {
+      if (!isCountryCode(normalizedValue.toUpperCase())) {
+        return NextResponse.json(
+          { error: "País inválido." },
+          { status: 400 },
+        );
+      }
+    }
+
+    if (dbField === "preferred_currency" && normalizedValue !== "") {
+      if (!normalizeCurrencyCode(normalizedValue)) {
+        return NextResponse.json(
+          { error: "Moeda inválida. Use um código ISO 4217, como BRL ou USD." },
+          { status: 400 },
+        );
+      }
+    }
+
+    const codeValue =
+      dbField === "country_code"
+        ? normalizedValue.toUpperCase()
+        : dbField === "preferred_currency"
+          ? normalizeCurrencyCode(normalizedValue)
+          : normalizedValue;
+
     const valueToSave =
-      body.field === "birthday" &&
-      normalizedValue === ""
+      normalizedValue === "" &&
+      (body.field === "birthday" ||
+        dbField === "country_code" ||
+        dbField === "preferred_currency")
         ? null
-        : normalizedValue;
+        : codeValue;
 
     const {
       data: existingModel,

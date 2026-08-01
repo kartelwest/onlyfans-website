@@ -1,11 +1,12 @@
 import { redirect } from "next/navigation";
 
+import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import ModelDashboardView from "@/components/model-dashboard/ModelDashboardView";
 import {
   buildDashboardChecklist,
-  buildDashboardEarnings,
   buildDashboardModel,
+  loadDashboardFinance,
   DASHBOARD_MODEL_COLUMNS,
 } from "@/lib/models/modelDashboardData";
 
@@ -55,42 +56,39 @@ export default async function AreaDaModeloPage() {
     );
   }
 
-  const [{ data: checklistRow }, { data: paymentsRow }, { data: earningsRows }] =
-    await Promise.all([
-      supabase
-        .from("model_checklist")
-        .select(
-          "onlyfans_status, instagram_status, twitter_status, proxy_browser_status, contract_status, content_received_status",
-        )
-        .eq("model_id", modelRow.id)
-        .maybeSingle(),
-      supabase
-        .from("model_payments")
-        .select("model_percentage, agency_percentage, marketing_percentage")
-        .eq("model_id", modelRow.id)
-        .maybeSingle(),
-      supabase
-        .from("model_earnings_reports")
-        .select(
-          "gross_revenue, model_share, agency_share, marketing_share, report_date, created_at, updated_at",
-        )
-        .eq("model_id", modelRow.id)
-        .eq("visible_to_model", true),
-    ]);
+  const [{ data: checklistRow }, { data: paymentsRow }] = await Promise.all([
+    supabase
+      .from("model_checklist")
+      .select(
+        "onlyfans_status, instagram_status, twitter_status, proxy_browser_status, contract_status, content_received_status",
+      )
+      .eq("model_id", modelRow.id)
+      .maybeSingle(),
+    supabase
+      .from("model_payments")
+      .select("model_percentage, agency_percentage, marketing_percentage")
+      .eq("model_id", modelRow.id)
+      .maybeSingle(),
+  ]);
 
   const dashboardModel = buildDashboardModel(modelRow);
   const dashboardChecklist = buildDashboardChecklist(modelRow, checklistRow);
-  const dashboardEarnings = buildDashboardEarnings(
+
+  const { earnings, ledger } = await loadDashboardFinance({
+    supabase,
+    admin: createAdminClient(),
+    model: dashboardModel,
     paymentsRow,
-    earningsRows ?? [],
-  );
+    expensesEnabled: modelRow.expenses_enabled === true,
+  });
 
   return (
     <ModelDashboardView
       viewerRole="model"
       model={dashboardModel}
       checklist={dashboardChecklist}
-      earnings={dashboardEarnings}
+      earnings={earnings}
+      ledger={ledger}
       canEditAvatar
     />
   );

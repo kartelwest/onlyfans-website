@@ -139,13 +139,12 @@ export default async function ModelAdminPage({
         drive_twitter,
         content_drive_url,
         preferred_currency,
+        country_code,
+        expenses_enabled,
         content_frequency,
         block_brazil,
         show_face,
         referral_source,
-        subscribers_count,
-        ppv_sold_count,
-        tips_amount,
         status,
         onboarding_complete,
         active,
@@ -295,6 +294,12 @@ export default async function ModelAdminPage({
     preferredCurrency:
       modelRow.preferred_currency ?? null,
 
+    countryCode:
+      modelRow.country_code ?? null,
+
+    expensesEnabled:
+      modelRow.expenses_enabled ?? false,
+
     contentFrequency:
       modelRow.content_frequency ?? null,
 
@@ -306,15 +311,6 @@ export default async function ModelAdminPage({
 
     referralSource:
       modelRow.referral_source ?? null,
-
-    subscribersCount:
-      modelRow.subscribers_count ?? 0,
-
-    ppvSoldCount:
-      modelRow.ppv_sold_count ?? 0,
-
-    tipsAmount:
-      modelRow.tips_amount ?? 0,
 
     status:
       modelRow.status ?? null,
