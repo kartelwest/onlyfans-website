@@ -92,8 +92,11 @@ export async function PATCH(request: NextRequest) {
   if (error) {
     console.error("Erro ao alterar a elegibilidade de lançamentos:", error);
 
+    // Surface the database's own reason: this endpoint is owner/administrator
+    // only, and a swallowed "permission denied for column expenses_enabled"
+    // is exactly what made this look like a silent no-op the first time.
     return NextResponse.json(
-      { error: "Não foi possível alterar a configuração." },
+      { error: error.message || "Não foi possível alterar a configuração." },
       { status: 500 },
     );
   }
