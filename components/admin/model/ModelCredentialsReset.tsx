@@ -4,11 +4,20 @@ import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { generateTemporaryPassword } from "@/lib/admin/modelOnboardingHelpers";
+import {
+  looksLikeEmail,
+  normalizeUsername,
+  USERNAME_MAX_LENGTH,
+  USERNAME_MIN_LENGTH,
+} from "@/lib/auth/loginIdentifier";
 
 type ModelCredentialsResetProps = {
   modelId: string;
   modelName: string;
+  /** Her contact e-mail on file — not necessarily her login. */
   currentEmail: string | null;
+  /** What she signs in with today: a username, an e-mail, or nothing yet. */
+  currentLogin: string | null;
   whatsapp: string | null;
   /**
    * False when the model has no auth account yet — most model records are
@@ -23,9 +32,9 @@ type Step = "form" | "confirm" | "success";
 type PasswordMode = "none" | "preset" | "custom";
 
 type SuccessPayload = {
-  email: string | null;
+  login: string | null;
   password: string | null;
-  emailChanged: boolean;
+  loginChanged: boolean;
   passwordChanged: boolean;
   accessCreated: boolean;
   sessionsRevoked: boolean;
@@ -38,6 +47,7 @@ export default function ModelCredentialsReset({
   modelId,
   modelName,
   currentEmail,
+  currentLogin,
   whatsapp,
   hasLogin,
 }: ModelCredentialsResetProps) {
@@ -52,7 +62,7 @@ export default function ModelCredentialsReset({
     hasLogin ? "none" : "preset",
   );
   const [customPassword, setCustomPassword] = useState("");
-  const [newEmail, setNewEmail] = useState("");
+  const [newLogin, setNewLogin] = useState("");
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
@@ -77,24 +87,28 @@ export default function ModelCredentialsReset({
         ? customPassword
         : "";
 
-  const trimmedEmail = newEmail.trim();
+  const trimmedLogin = newLogin.trim();
 
-  const emailWillChange =
-    trimmedEmail.length > 0 &&
-    trimmedEmail.toLowerCase() !== (currentEmail ?? "").toLowerCase();
+  // Whatever is typed is an e-mail if it contains "@", otherwise a username.
+  const loginIsUsername =
+    trimmedLogin.length > 0 && !looksLikeEmail(trimmedLogin);
+
+  const loginWillChange =
+    trimmedLogin.length > 0 &&
+    trimmedLogin.toLowerCase() !== (currentLogin ?? "").toLowerCase();
 
   // Creating an access needs a password and an address to register it under —
   // either newly typed or the one already on her record.
   const hasSomethingToApply = hasLogin
-    ? effectivePassword.length > 0 || emailWillChange
+    ? effectivePassword.length > 0 || loginWillChange
     : effectivePassword.length > 0 &&
-      (trimmedEmail.length > 0 || Boolean(currentEmail));
+      (trimmedLogin.length > 0 || Boolean(currentEmail));
 
   function resetState() {
     setStep("form");
     setPasswordMode(hasLogin ? "none" : "preset");
     setCustomPassword("");
-    setNewEmail("");
+    setNewLogin("");
     setErrorMessage("");
     setResult(null);
     setIsSubmitting(false);
@@ -126,11 +140,13 @@ export default function ModelCredentialsReset({
       }
 
       if (!hasLogin) {
-        setErrorMessage("Informe um e-mail para criar o acesso desta modelo.");
+        setErrorMessage(
+          "Informe um e-mail ou um nome de usuário para criar o acesso desta modelo.",
+        );
         return;
       }
 
-      setErrorMessage("Informe uma nova senha ou um novo e-mail.");
+      setErrorMessage("Informe uma nova senha ou um novo login.");
       return;
     }
 
@@ -140,6 +156,13 @@ export default function ModelCredentialsReset({
     ) {
       setErrorMessage(
         `A senha deve ter pelo menos ${MIN_PASSWORD_LENGTH} caracteres.`,
+      );
+      return;
+    }
+
+    if (loginIsUsername && !normalizeUsername(trimmedLogin)) {
+      setErrorMessage(
+        `O nome de usuário deve ter de ${USERNAME_MIN_LENGTH} a ${USERNAME_MAX_LENGTH} caracteres e usar apenas letras, números, ponto, hífen ou sublinhado.`,
       );
       return;
     }
@@ -158,9 +181,9 @@ export default function ModelCredentialsReset({
         body: JSON.stringify({
           modelId,
           password: effectivePassword || undefined,
-          email:
-            emailWillChange || (!hasLogin && trimmedEmail)
-              ? trimmedEmail
+          login:
+            loginWillChange || (!hasLogin && trimmedLogin)
+              ? trimmedLogin
               : undefined,
         }),
       });
@@ -174,9 +197,9 @@ export default function ModelCredentialsReset({
       }
 
       setResult({
-        email: payload.email ?? null,
+        login: payload.login ?? null,
         password: payload.password ?? null,
-        emailChanged: Boolean(payload.emailChanged),
+        loginChanged: Boolean(payload.loginChanged),
         passwordChanged: Boolean(payload.passwordChanged),
         accessCreated: Boolean(payload.accessCreated),
         sessionsRevoked: Boolean(payload.sessionsRevoked),
@@ -296,29 +319,32 @@ export default function ModelCredentialsReset({
 
                 <section className="mt-6 border-t border-white/10 pt-6">
                   <h4 className="text-xs font-bold uppercase tracking-[0.2em] text-pink-200">
-                    Login (e-mail)
+                    Login (e-mail ou nome de usuário)
                   </h4>
 
                   <p className="mt-2 text-xs text-white/45">
                     {hasLogin
-                      ? `E-mail atual: ${currentEmail || "não informado"}`
+                      ? `Login atual: ${currentLogin || "não informado"}`
                       : currentEmail
                         ? `Deixe em branco para usar o e-mail da ficha: ${currentEmail}`
-                        : "Obrigatório: esta modelo ainda não tem e-mail cadastrado."}
+                        : "Obrigatório: informe um e-mail ou crie um nome de usuário."}
                   </p>
 
                   <input
-                    type="email"
-                    value={newEmail}
-                    onChange={(event) => setNewEmail(event.target.value)}
-                    placeholder="novoemail@exemplo.com"
+                    type="text"
+                    value={newLogin}
+                    onChange={(event) => setNewLogin(event.target.value)}
+                    placeholder="maria@exemplo.com ou maria.silva"
                     autoComplete="off"
+                    autoCapitalize="none"
+                    spellCheck={false}
                     className="mt-3 w-full rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none transition placeholder:text-white/30 focus:border-pink-400"
                   />
 
                   <p className="mt-2 text-xs text-white/45">
-                    A modelo poderá entrar com este e-mail imediatamente, sem
-                    precisar confirmar nada.
+                    {loginIsUsername
+                      ? "Nome de usuário: a modelo entra digitando apenas isso, sem e-mail. Use letras, números, ponto, hífen ou sublinhado."
+                      : "Com \"@\" será tratado como e-mail; sem \"@\", como nome de usuário. A modelo poderá entrar imediatamente, sem precisar confirmar nada."}
                   </p>
                 </section>
 
@@ -386,11 +412,15 @@ export default function ModelCredentialsReset({
                     </li>
                   )}
 
-                  {(emailWillChange || (!hasLogin && currentEmail)) && (
+                  {(loginWillChange || (!hasLogin && currentEmail)) && (
                     <li>
-                      • O e-mail de login {hasLogin ? "passará a ser" : "será"}{" "}
+                      •{" "}
+                      {loginIsUsername
+                        ? "O nome de usuário"
+                        : "O e-mail de login"}{" "}
+                      {hasLogin ? "passará a ser" : "será"}{" "}
                       <span className="font-semibold text-white">
-                        {trimmedEmail || currentEmail}
+                        {trimmedLogin || currentEmail}
                       </span>
                       .
                     </li>
@@ -438,10 +468,14 @@ export default function ModelCredentialsReset({
                 </p>
 
                 <div className="mt-5 space-y-3">
-                  {result.email && (
+                  {result.login && (
                     <CredentialRow
-                      label="E-mail de login"
-                      value={result.email}
+                      label={
+                        looksLikeEmail(result.login)
+                          ? "E-mail de login"
+                          : "Nome de usuário"
+                      }
+                      value={result.login}
                     />
                   )}
 

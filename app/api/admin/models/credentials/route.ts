@@ -1,6 +1,12 @@
 import { NextResponse } from "next/server";
 
-import { normalizeEmail } from "@/lib/admin/modelOnboardingHelpers";
+import {
+  describeLogin,
+  looksLikeEmail,
+  resolveLoginIdentifier,
+  USERNAME_MAX_LENGTH,
+  USERNAME_MIN_LENGTH,
+} from "@/lib/auth/loginIdentifier";
 import { logAuditEntry } from "@/lib/audit/auditLogger";
 import { formatBrazilDateTime } from "@/lib/models/formatDateTime";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -32,7 +38,12 @@ const ROLE_LABELS: Record<AuthorizedRole, string> = {
 type CredentialsRequest = {
   modelId?: unknown;
   password?: unknown;
-  email?: unknown;
+  /**
+   * Either an e-mail address or a bare username. Usernames are registered
+   * under MODEL_LOGIN_DOMAIN so Supabase, which authenticates by e-mail only,
+   * has an address to work with.
+   */
+  login?: unknown;
 };
 
 export async function POST(request: Request) {
@@ -100,15 +111,11 @@ export async function POST(request: Request) {
     const requestedPassword =
       typeof body.password === "string" ? body.password.trim() : "";
 
-    const emailResult = normalizeEmail(
-      typeof body.email === "string" ? body.email : "",
-    );
+    const rawLogin = typeof body.login === "string" ? body.login.trim() : "";
 
-    const requestedEmail = emailResult.value;
-
-    if (!requestedPassword && !requestedEmail) {
+    if (!requestedPassword && !rawLogin) {
       return NextResponse.json(
-        { error: "Informe uma nova senha ou um novo e-mail." },
+        { error: "Informe uma nova senha ou um novo login." },
         { status: 400 },
       );
     }
@@ -122,12 +129,33 @@ export async function POST(request: Request) {
       );
     }
 
-    if (requestedEmail && !emailResult.valid) {
-      return NextResponse.json(
-        { error: "Informe um endereço de e-mail válido." },
-        { status: 400 },
-      );
+    let requestedLoginEmail: string | null = null;
+    let requestedUsername: string | null = null;
+
+    if (rawLogin) {
+      const resolved = resolveLoginIdentifier(rawLogin);
+
+      if (!resolved.ok) {
+        return NextResponse.json(
+          {
+            error:
+              resolved.reason === "invalid_email"
+                ? "Informe um endereço de e-mail válido."
+                : `O nome de usuário deve ter de ${USERNAME_MIN_LENGTH} a ${USERNAME_MAX_LENGTH} caracteres e usar apenas letras, números, ponto, hífen ou sublinhado.`,
+          },
+          { status: 400 },
+        );
+      }
+
+      requestedLoginEmail = resolved.email;
+      requestedUsername = resolved.username;
     }
+
+    // A real e-mail doubles as her contact address and is mirrored onto the
+    // model record; a username is a login-only identifier, so her contact
+    // e-mail on file is left exactly as it is.
+    const requestedContactEmail =
+      requestedLoginEmail && !requestedUsername ? requestedLoginEmail : null;
 
     const adminSupabase = createAdminClient();
 
@@ -160,7 +188,20 @@ export async function POST(request: Request) {
     // the admin's point of view it is the same action: give her access.
     const isProvisioning = !model.profile_id;
 
-    const previousEmail = model.email ?? null;
+    // Her contact e-mail on file, which is NOT necessarily her login: once she
+    // has a username, the two diverge on purpose.
+    const contactEmail = model.email ?? null;
+
+    // The address she actually authenticates against today.
+    let currentLoginEmail: string | null = null;
+
+    if (!isProvisioning) {
+      const { data: authUser } = await adminSupabase.auth.admin.getUserById(
+        model.profile_id as string,
+      );
+
+      currentLoginEmail = authUser?.user?.email ?? null;
+    }
 
     if (isProvisioning) {
       if (!requestedPassword) {
@@ -170,31 +211,35 @@ export async function POST(request: Request) {
         );
       }
 
-      if (!requestedEmail && !previousEmail) {
+      if (!requestedLoginEmail && !contactEmail) {
         return NextResponse.json(
-          { error: "Informe um e-mail para criar o acesso desta modelo." },
+          {
+            error:
+              "Informe um e-mail ou um nome de usuário para criar o acesso desta modelo.",
+          },
           { status: 400 },
         );
       }
     }
 
-    // When provisioning, the address we register is whatever was typed, or the
-    // one already on her record. It is "changed" only if it differs from what
-    // the record holds, so the audit note stays truthful either way.
-    const targetEmail = requestedEmail ?? previousEmail;
+    // When provisioning, register whatever was typed, falling back to the
+    // contact address already on her record.
+    const targetLoginEmail = isProvisioning
+      ? (requestedLoginEmail ?? contactEmail)
+      : (requestedLoginEmail ?? currentLoginEmail);
 
-    const emailChanged = Boolean(
-      requestedEmail &&
-        requestedEmail.toLowerCase() !== (previousEmail ?? "").toLowerCase(),
+    const loginChanged = Boolean(
+      requestedLoginEmail &&
+        requestedLoginEmail !== (currentLoginEmail ?? "").toLowerCase(),
     );
 
-    // Only guard against duplicates when the address is actually changing —
-    // re-submitting the model's current e-mail must not collide with herself.
-    if (emailChanged) {
+    // Contact-address collisions are checked here; login collisions are caught
+    // by Supabase itself, which enforces uniqueness on auth.users.email.
+    if (requestedContactEmail && requestedContactEmail !== contactEmail) {
       const { count, error: duplicateError } = await adminSupabase
         .from("models")
         .select("id", { count: "exact", head: true })
-        .eq("email", requestedEmail)
+        .eq("email", requestedContactEmail)
         .neq("id", model.id);
 
       if (!duplicateError && (count ?? 0) > 0) {
@@ -211,7 +256,7 @@ export async function POST(request: Request) {
     if (isProvisioning) {
       const { data: createdAuth, error: createAuthError } =
         await adminSupabase.auth.admin.createUser({
-          email: targetEmail as string,
+          email: targetLoginEmail as string,
           password: requestedPassword,
           // Without email_confirm she would have to click a confirmation link
           // before the account works at all.
@@ -238,8 +283,8 @@ export async function POST(request: Request) {
         attributes.password = requestedPassword;
       }
 
-      if (emailChanged && requestedEmail) {
-        attributes.email = requestedEmail;
+      if (loginChanged && requestedLoginEmail) {
+        attributes.email = requestedLoginEmail;
 
         // Without email_confirm the model receives a confirmation e-mail and
         // is locked out of her account until she clicks it.
@@ -248,7 +293,7 @@ export async function POST(request: Request) {
 
       if (Object.keys(attributes).length === 0) {
         return NextResponse.json(
-          { error: "Informe uma nova senha ou um novo e-mail." },
+          { error: "Informe uma nova senha ou um novo login." },
           { status: 400 },
         );
       }
@@ -333,7 +378,9 @@ export async function POST(request: Request) {
         .from("models")
         .update({
           profile_id: authUserId,
-          email: targetEmail,
+          // Only write back a real address. A username is a login-only
+          // identifier and must never overwrite her contact e-mail.
+          ...(requestedContactEmail ? { email: requestedContactEmail } : {}),
           website_login_enabled: true,
         })
         .eq("id", model.id);
@@ -350,13 +397,14 @@ export async function POST(request: Request) {
       }
     }
 
-    // The login identifier lives in auth.users.email, but it is mirrored on
-    // public.models.email (shown across the admin UI and used for duplicate
-    // checks) and on public.profiles.email. Keep all three in step.
-    if (!isProvisioning && emailChanged && requestedEmail) {
+    // auth.users.email is the login. When the admin supplied a real e-mail it
+    // is also her contact address, so it is mirrored onto public.models.email
+    // and public.profiles.email. A username updates neither: her contact
+    // e-mail stays whatever it was.
+    if (!isProvisioning && requestedContactEmail && loginChanged) {
       const { error: modelEmailError } = await adminSupabase
         .from("models")
-        .update({ email: requestedEmail })
+        .update({ email: requestedContactEmail })
         .eq("id", model.id);
 
       if (modelEmailError) {
@@ -372,7 +420,7 @@ export async function POST(request: Request) {
 
       const { error: profileEmailError } = await adminSupabase
         .from("profiles")
-        .update({ email: requestedEmail })
+        .update({ email: requestedContactEmail })
         .eq("id", model.profile_id);
 
       if (profileEmailError) {
@@ -383,13 +431,6 @@ export async function POST(request: Request) {
       }
     }
 
-    // A password reset that leaves her existing session alive does not take
-    // access away from anyone, so revoke it. This cannot go through
-    // auth.admin.signOut(): that takes the user's own JWT, not a user id, and
-    // there is no per-user revocation in the admin API at all — see the
-    // force_sign_out_user migration. Deleting her sessions cascades to her
-    // refresh tokens, so the session she holds cannot be extended past the
-    // access token already issued to it.
     // A brand-new account has no sessions to end, so this only applies when an
     // existing password was replaced.
     let sessionsRevoked = false;
@@ -413,6 +454,11 @@ export async function POST(request: Request) {
 
     const actorName = currentProfile.full_name || "Usuário";
 
+    // What the admin and the model will call the login from now on: the bare
+    // username for a synthetic address, the address itself for a real one.
+    const loginLabel = describeLogin(targetLoginEmail);
+    const previousLoginLabel = describeLogin(currentLoginEmail);
+
     const noteWritten = await writeAccessChangeNote(adminSupabase, {
       modelId: model.id,
       actorId: currentProfile.id,
@@ -420,8 +466,11 @@ export async function POST(request: Request) {
       actorRole: currentUserRole,
       provisioned: isProvisioning,
       passwordChanged: Boolean(requestedPassword),
-      previousEmail: emailChanged ? previousEmail : null,
-      newEmail: isProvisioning ? targetEmail : emailChanged ? requestedEmail : null,
+      isUsername: Boolean(
+        targetLoginEmail && !looksLikeEmail(loginLabel ?? ""),
+      ),
+      previousLogin: loginChanged ? previousLoginLabel : null,
+      newLogin: isProvisioning || loginChanged ? loginLabel : null,
     });
 
     if (!noteWritten) {
@@ -432,7 +481,7 @@ export async function POST(request: Request) {
 
     const changeSummary = isProvisioning
       ? "acesso criado"
-      : buildChangeSummary(Boolean(requestedPassword), emailChanged);
+      : buildChangeSummary(Boolean(requestedPassword), loginChanged);
 
     // field_name "password" is in the auditLogger SENSITIVE_FIELDS set, which
     // nulls both value columns — the password can never reach this table.
@@ -442,8 +491,8 @@ export async function POST(request: Request) {
         ? "model_credentials_created"
         : "model_credentials_updated",
       fieldName: requestedPassword ? "password" : "email",
-      previousValue: emailChanged ? previousEmail : null,
-      newValue: isProvisioning ? targetEmail : emailChanged ? requestedEmail : null,
+      previousValue: loginChanged ? previousLoginLabel : null,
+      newValue: isProvisioning || loginChanged ? loginLabel : null,
       actor: {
         id: currentProfile.id,
         fullName: actorName,
@@ -457,10 +506,11 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
       success: true,
-      email: targetEmail,
+      // The bare username when she has one, otherwise her e-mail address.
+      login: loginLabel,
       // Returned once so the admin can hand it over; never persisted anywhere.
       password: requestedPassword || null,
-      emailChanged,
+      loginChanged,
       passwordChanged: Boolean(requestedPassword),
       accessCreated: isProvisioning,
       sessionsRevoked,
@@ -478,13 +528,13 @@ export async function POST(request: Request) {
 
 function buildChangeSummary(
   passwordChanged: boolean,
-  emailChanged: boolean,
+  loginChanged: boolean,
 ): string {
-  if (passwordChanged && emailChanged) {
-    return "senha e e-mail de login";
+  if (passwordChanged && loginChanged) {
+    return "senha e login";
   }
 
-  return passwordChanged ? "senha" : "e-mail de login";
+  return passwordChanged ? "senha" : "login";
 }
 
 type AccessChangeNoteInput = {
@@ -494,8 +544,9 @@ type AccessChangeNoteInput = {
   actorRole: AuthorizedRole;
   provisioned: boolean;
   passwordChanged: boolean;
-  previousEmail: string | null;
-  newEmail: string | null;
+  isUsername: boolean;
+  previousLogin: string | null;
+  newLogin: string | null;
 };
 
 /**
@@ -518,8 +569,9 @@ async function writeAccessChangeNote(
     actorRole,
     provisioned,
     passwordChanged,
-    previousEmail,
-    newEmail,
+    isUsername,
+    previousLogin,
+    newLogin,
   }: AccessChangeNoteInput,
 ): Promise<boolean> {
   const timestamp = formatBrazilDateTime(new Date());
@@ -538,11 +590,13 @@ async function writeAccessChangeNote(
     lines.push(provisioned ? "Senha — definida" : "Senha — alterada");
   }
 
-  if (newEmail) {
+  if (newLogin) {
+    const label = isUsername ? "Nome de usuário" : "E-mail de login";
+
     lines.push(
       provisioned
-        ? `E-mail de login — ${newEmail}`
-        : `E-mail de login — anterior: ${previousEmail || "não informado"} | novo: ${newEmail}`,
+        ? `${label} — ${newLogin}`
+        : `${label} — anterior: ${previousLogin || "não informado"} | novo: ${newLogin}`,
     );
   }
 

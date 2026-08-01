@@ -2,6 +2,8 @@ import { notFound, redirect } from "next/navigation";
 
 import ModelAdminClient from "./ModelAdminClient";
 
+import { describeLogin } from "@/lib/auth/loginIdentifier";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
 import type {
@@ -540,12 +542,34 @@ export default async function ModelAdminPage({
       proxyRow?.proxy_country ?? null,
   };
 
+  // Her login lives in auth.users.email, which no anon/authenticated client
+  // can read, and it is not necessarily her contact e-mail: once she has a
+  // username the two diverge. This page is owner/administrator-only, so the
+  // lookup happens here with the admin client and only the display form
+  // (username or address) is handed to the client component.
+  let currentLogin: string | null = null;
+
+  if (model.profileId) {
+    const { data: authUser, error: authUserError } = await createAdminClient()
+      .auth.admin.getUserById(model.profileId);
+
+    if (authUserError) {
+      console.error(
+        "Erro ao carregar o login da modelo:",
+        authUserError,
+      );
+    }
+
+    currentLogin = describeLogin(authUser?.user?.email ?? null);
+  }
+
   return (
     <ModelAdminClient
       model={model}
       checklist={checklist}
       currentUserRole={currentUserRole}
       proxyDetails={proxyDetails}
+      currentLogin={currentLogin}
     />
   );
 }

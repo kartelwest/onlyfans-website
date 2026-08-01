@@ -28,6 +28,11 @@ type ModelAdminClientProps = {
     checklist: ModelChecklist;
     currentUserRole: ManagementRole;
     proxyDetails: ModelProxyDetails;
+    /**
+     * What she signs in with — a username or an e-mail address — resolved
+     * server-side from auth.users. Null when she has no login yet.
+     */
+    currentLogin: string | null;
 };
 
 type TabId =
@@ -65,6 +70,7 @@ export default function ModelAdminClient({
     checklist,
     currentUserRole,
     proxyDetails,
+    currentLogin,
 }: ModelAdminClientProps) {
     const [activeTab, setActiveTab] =
         useState<TabId>("summary");
@@ -130,6 +136,7 @@ export default function ModelAdminClient({
                                         modelId={model.id}
                                         modelName={model.fullName}
                                         currentEmail={model.email}
+                                        currentLogin={currentLogin}
                                         whatsapp={model.whatsapp}
                                         hasLogin={Boolean(
                                             model.profileId,
