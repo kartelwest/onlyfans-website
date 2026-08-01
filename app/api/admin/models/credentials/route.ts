@@ -18,6 +18,7 @@ const MIN_PASSWORD_LENGTH = 8;
 // (lib/models/applicantIntake.ts): `HEADER — [dd/MM/yyyy HH:mm]`, then
 // `Rótulo — valor` lines.
 const AUDIT_NOTE_HEADER = "ALTERAÇÃO DE ACESSO";
+const PROVISION_NOTE_HEADER = "CRIAÇÃO DE ACESSO";
 
 // Only these two roles can reach this route, so the label map is narrowed to
 // them rather than covering every value of ManagementRole.
@@ -152,14 +153,35 @@ export async function POST(request: Request) {
       );
     }
 
-    if (!model.profile_id) {
-      return NextResponse.json(
-        { error: "Esta modelo ainda não possui acesso ao site." },
-        { status: 400 },
-      );
-    }
+    // Most model records are created by the public /aplicar form or by the
+    // importer, which never create a login — profile_id stays null until
+    // somebody provisions one. Those models have no password to change, so
+    // instead of refusing, this route creates the account and links it. From
+    // the admin's point of view it is the same action: give her access.
+    const isProvisioning = !model.profile_id;
 
     const previousEmail = model.email ?? null;
+
+    if (isProvisioning) {
+      if (!requestedPassword) {
+        return NextResponse.json(
+          { error: "Informe uma senha para criar o acesso desta modelo." },
+          { status: 400 },
+        );
+      }
+
+      if (!requestedEmail && !previousEmail) {
+        return NextResponse.json(
+          { error: "Informe um e-mail para criar o acesso desta modelo." },
+          { status: 400 },
+        );
+      }
+    }
+
+    // When provisioning, the address we register is whatever was typed, or the
+    // one already on her record. It is "changed" only if it differs from what
+    // the record holds, so the audit note stays truthful either way.
+    const targetEmail = requestedEmail ?? previousEmail;
 
     const emailChanged = Boolean(
       requestedEmail &&
@@ -183,39 +205,69 @@ export async function POST(request: Request) {
       }
     }
 
-    const attributes: {
-      password?: string;
-      email?: string;
-      email_confirm?: boolean;
-    } = {};
+    let authUserId = model.profile_id as string | null;
+    let authError: { message: string } | null = null;
 
-    if (requestedPassword) {
-      attributes.password = requestedPassword;
+    if (isProvisioning) {
+      const { data: createdAuth, error: createAuthError } =
+        await adminSupabase.auth.admin.createUser({
+          email: targetEmail as string,
+          password: requestedPassword,
+          // Without email_confirm she would have to click a confirmation link
+          // before the account works at all.
+          email_confirm: true,
+          user_metadata: {
+            full_name: model.display_name,
+            role: "model",
+          },
+          app_metadata: {
+            role: "model",
+          },
+        });
+
+      authUserId = createdAuth?.user?.id ?? null;
+      authError = createAuthError;
+    } else {
+      const attributes: {
+        password?: string;
+        email?: string;
+        email_confirm?: boolean;
+      } = {};
+
+      if (requestedPassword) {
+        attributes.password = requestedPassword;
+      }
+
+      if (emailChanged && requestedEmail) {
+        attributes.email = requestedEmail;
+
+        // Without email_confirm the model receives a confirmation e-mail and
+        // is locked out of her account until she clicks it.
+        attributes.email_confirm = true;
+      }
+
+      if (Object.keys(attributes).length === 0) {
+        return NextResponse.json(
+          { error: "Informe uma nova senha ou um novo e-mail." },
+          { status: 400 },
+        );
+      }
+
+      const { error: updateAuthError } =
+        await adminSupabase.auth.admin.updateUserById(
+          model.profile_id as string,
+          attributes,
+        );
+
+      authError = updateAuthError;
     }
 
-    if (emailChanged && requestedEmail) {
-      attributes.email = requestedEmail;
-
-      // Without email_confirm the model receives a confirmation e-mail and is
-      // locked out of her account until she clicks it.
-      attributes.email_confirm = true;
+    if (!authError && !authUserId) {
+      authError = { message: "Não foi possível criar o acesso da modelo." };
     }
 
-    if (Object.keys(attributes).length === 0) {
-      return NextResponse.json(
-        { error: "Informe uma nova senha ou um novo e-mail." },
-        { status: 400 },
-      );
-    }
-
-    const { error: updateAuthError } =
-      await adminSupabase.auth.admin.updateUserById(
-        model.profile_id,
-        attributes,
-      );
-
-    if (updateAuthError) {
-      const message = updateAuthError.message.toLowerCase();
+    if (authError) {
+      const message = authError.message.toLowerCase();
 
       if (
         message.includes("already") ||
@@ -237,7 +289,7 @@ export async function POST(request: Request) {
         );
       }
 
-      console.error("Erro ao atualizar o acesso:", updateAuthError);
+      console.error("Erro ao atualizar o acesso:", authError);
 
       return NextResponse.json(
         { error: "Ocorreu um erro inesperado. Tente novamente." },
@@ -250,10 +302,58 @@ export async function POST(request: Request) {
     // bookkeeping write goes wrong.
     const warnings: string[] = [];
 
+    if (isProvisioning && authUserId) {
+      // The on_auth_user_created trigger already inserted a profile row from
+      // the user metadata; upsert so this works whether or not it fired, and
+      // so the name and role are what the model record says they are.
+      const { error: profileUpsertError } = await adminSupabase
+        .from("profiles")
+        .upsert(
+          {
+            id: authUserId,
+            full_name: model.display_name,
+            role: "model",
+            active: true,
+          },
+          { onConflict: "id" },
+        );
+
+      if (profileUpsertError) {
+        console.error(
+          "Erro ao criar o perfil da modelo:",
+          profileUpsertError,
+        );
+
+        warnings.push(
+          "O acesso foi criado, mas o perfil da modelo não pôde ser concluído.",
+        );
+      }
+
+      const { error: linkError } = await adminSupabase
+        .from("models")
+        .update({
+          profile_id: authUserId,
+          email: targetEmail,
+          website_login_enabled: true,
+        })
+        .eq("id", model.id);
+
+      if (linkError) {
+        console.error(
+          "Erro ao vincular o acesso à ficha da modelo:",
+          linkError,
+        );
+
+        warnings.push(
+          "O acesso foi criado, mas não pôde ser vinculado à ficha da modelo. Avise o suporte antes de entregar a senha.",
+        );
+      }
+    }
+
     // The login identifier lives in auth.users.email, but it is mirrored on
     // public.models.email (shown across the admin UI and used for duplicate
     // checks) and on public.profiles.email. Keep all three in step.
-    if (emailChanged && requestedEmail) {
+    if (!isProvisioning && emailChanged && requestedEmail) {
       const { error: modelEmailError } = await adminSupabase
         .from("models")
         .update({ email: requestedEmail })
@@ -290,12 +390,14 @@ export async function POST(request: Request) {
     // force_sign_out_user migration. Deleting her sessions cascades to her
     // refresh tokens, so the session she holds cannot be extended past the
     // access token already issued to it.
+    // A brand-new account has no sessions to end, so this only applies when an
+    // existing password was replaced.
     let sessionsRevoked = false;
 
-    if (requestedPassword) {
+    if (requestedPassword && !isProvisioning && authUserId) {
       const { error: signOutError } = await adminSupabase.rpc(
         "force_sign_out_user",
-        { target_user: model.profile_id },
+        { target_user: authUserId },
       );
 
       if (signOutError) {
@@ -316,9 +418,10 @@ export async function POST(request: Request) {
       actorId: currentProfile.id,
       actorName,
       actorRole: currentUserRole,
+      provisioned: isProvisioning,
       passwordChanged: Boolean(requestedPassword),
       previousEmail: emailChanged ? previousEmail : null,
-      newEmail: emailChanged ? requestedEmail : null,
+      newEmail: isProvisioning ? targetEmail : emailChanged ? requestedEmail : null,
     });
 
     if (!noteWritten) {
@@ -327,35 +430,39 @@ export async function POST(request: Request) {
       );
     }
 
-    const changeSummary = buildChangeSummary(
-      Boolean(requestedPassword),
-      emailChanged,
-    );
+    const changeSummary = isProvisioning
+      ? "acesso criado"
+      : buildChangeSummary(Boolean(requestedPassword), emailChanged);
 
     // field_name "password" is in the auditLogger SENSITIVE_FIELDS set, which
     // nulls both value columns — the password can never reach this table.
     await logAuditEntry(adminSupabase, {
       modelId: model.id,
-      action: "model_credentials_updated",
+      action: isProvisioning
+        ? "model_credentials_created"
+        : "model_credentials_updated",
       fieldName: requestedPassword ? "password" : "email",
       previousValue: emailChanged ? previousEmail : null,
-      newValue: emailChanged ? requestedEmail : null,
+      newValue: isProvisioning ? targetEmail : emailChanged ? requestedEmail : null,
       actor: {
         id: currentProfile.id,
         fullName: actorName,
         role: currentUserRole,
       },
       source: "api:/api/admin/models/credentials",
-      summary: `Acesso da modelo "${model.display_name}" atualizado (${changeSummary})`,
+      summary: isProvisioning
+        ? `Acesso ao site criado para a modelo "${model.display_name}"`
+        : `Acesso da modelo "${model.display_name}" atualizado (${changeSummary})`,
     });
 
     return NextResponse.json({
       success: true,
-      email: emailChanged ? requestedEmail : previousEmail,
+      email: targetEmail,
       // Returned once so the admin can hand it over; never persisted anywhere.
       password: requestedPassword || null,
       emailChanged,
       passwordChanged: Boolean(requestedPassword),
+      accessCreated: isProvisioning,
       sessionsRevoked,
       warnings,
     });
@@ -385,6 +492,7 @@ type AccessChangeNoteInput = {
   actorId: string;
   actorName: string;
   actorRole: AuthorizedRole;
+  provisioned: boolean;
   passwordChanged: boolean;
   previousEmail: string | null;
   newEmail: string | null;
@@ -408,6 +516,7 @@ async function writeAccessChangeNote(
     actorId,
     actorName,
     actorRole,
+    provisioned,
     passwordChanged,
     previousEmail,
     newEmail,
@@ -415,17 +524,25 @@ async function writeAccessChangeNote(
 ): Promise<boolean> {
   const timestamp = formatBrazilDateTime(new Date());
 
-  const lines = [`${AUDIT_NOTE_HEADER} — [${timestamp}]`];
+  const header = provisioned ? PROVISION_NOTE_HEADER : AUDIT_NOTE_HEADER;
+
+  const lines = [`${header} — [${timestamp}]`];
 
   lines.push(`Alterado por — ${actorName} (${ROLE_LABELS[actorRole]})`);
 
+  if (provisioned) {
+    lines.push("Acesso ao site — criado");
+  }
+
   if (passwordChanged) {
-    lines.push("Senha — alterada");
+    lines.push(provisioned ? "Senha — definida" : "Senha — alterada");
   }
 
   if (newEmail) {
     lines.push(
-      `E-mail de login — anterior: ${previousEmail || "não informado"} | novo: ${newEmail}`,
+      provisioned
+        ? `E-mail de login — ${newEmail}`
+        : `E-mail de login — anterior: ${previousEmail || "não informado"} | novo: ${newEmail}`,
     );
   }
 

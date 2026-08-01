@@ -131,6 +131,9 @@ export default function ModelAdminClient({
                                         modelName={model.fullName}
                                         currentEmail={model.email}
                                         whatsapp={model.whatsapp}
+                                        hasLogin={Boolean(
+                                            model.profileId,
+                                        )}
                                     />
                                 </div>
 

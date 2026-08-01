@@ -10,6 +10,12 @@ type ModelCredentialsResetProps = {
   modelName: string;
   currentEmail: string | null;
   whatsapp: string | null;
+  /**
+   * False when the model has no auth account yet — most model records are
+   * created by /aplicar or the importer and never get one. The same action
+   * then creates her login instead of changing it.
+   */
+  hasLogin: boolean;
 };
 
 type Step = "form" | "confirm" | "success";
@@ -21,6 +27,7 @@ type SuccessPayload = {
   password: string | null;
   emailChanged: boolean;
   passwordChanged: boolean;
+  accessCreated: boolean;
   sessionsRevoked: boolean;
   warnings: string[];
 };
@@ -32,13 +39,18 @@ export default function ModelCredentialsReset({
   modelName,
   currentEmail,
   whatsapp,
+  hasLogin,
 }: ModelCredentialsResetProps) {
   const router = useRouter();
 
   const [isOpen, setIsOpen] = useState(false);
   const [step, setStep] = useState<Step>("form");
 
-  const [passwordMode, setPasswordMode] = useState<PasswordMode>("none");
+  // Creating an access requires a password, so "leave it alone" is not an
+  // option in that mode.
+  const [passwordMode, setPasswordMode] = useState<PasswordMode>(
+    hasLogin ? "none" : "preset",
+  );
   const [customPassword, setCustomPassword] = useState("");
   const [newEmail, setNewEmail] = useState("");
 
@@ -71,12 +83,16 @@ export default function ModelCredentialsReset({
     trimmedEmail.length > 0 &&
     trimmedEmail.toLowerCase() !== (currentEmail ?? "").toLowerCase();
 
-  const hasSomethingToApply =
-    effectivePassword.length > 0 || emailWillChange;
+  // Creating an access needs a password and an address to register it under —
+  // either newly typed or the one already on her record.
+  const hasSomethingToApply = hasLogin
+    ? effectivePassword.length > 0 || emailWillChange
+    : effectivePassword.length > 0 &&
+      (trimmedEmail.length > 0 || Boolean(currentEmail));
 
   function resetState() {
     setStep("form");
-    setPasswordMode("none");
+    setPasswordMode(hasLogin ? "none" : "preset");
     setCustomPassword("");
     setNewEmail("");
     setErrorMessage("");
@@ -104,6 +120,16 @@ export default function ModelCredentialsReset({
     setErrorMessage("");
 
     if (!hasSomethingToApply) {
+      if (!hasLogin && effectivePassword.length === 0) {
+        setErrorMessage("Informe uma senha para criar o acesso desta modelo.");
+        return;
+      }
+
+      if (!hasLogin) {
+        setErrorMessage("Informe um e-mail para criar o acesso desta modelo.");
+        return;
+      }
+
       setErrorMessage("Informe uma nova senha ou um novo e-mail.");
       return;
     }
@@ -132,7 +158,10 @@ export default function ModelCredentialsReset({
         body: JSON.stringify({
           modelId,
           password: effectivePassword || undefined,
-          email: emailWillChange ? trimmedEmail : undefined,
+          email:
+            emailWillChange || (!hasLogin && trimmedEmail)
+              ? trimmedEmail
+              : undefined,
         }),
       });
 
@@ -149,6 +178,7 @@ export default function ModelCredentialsReset({
         password: payload.password ?? null,
         emailChanged: Boolean(payload.emailChanged),
         passwordChanged: Boolean(payload.passwordChanged),
+        accessCreated: Boolean(payload.accessCreated),
         sessionsRevoked: Boolean(payload.sessionsRevoked),
         warnings: Array.isArray(payload.warnings) ? payload.warnings : [],
       });
@@ -174,7 +204,7 @@ export default function ModelCredentialsReset({
         onClick={openModal}
         className="shrink-0 rounded-xl border border-pink-400/40 bg-pink-500/15 px-4 py-2.5 text-sm font-bold text-pink-100 transition hover:bg-pink-500/25"
       >
-        Redefinir acesso
+        {hasLogin ? "Redefinir acesso" : "Criar acesso"}
       </button>
 
       {isOpen && (
@@ -183,13 +213,29 @@ export default function ModelCredentialsReset({
             {step === "form" && (
               <>
                 <h3 className="text-lg font-bold text-white">
-                  Redefinir acesso da modelo
+                  {hasLogin
+                    ? "Redefinir acesso da modelo"
+                    : "Criar acesso da modelo"}
                 </h3>
 
                 <p className="mt-2 text-sm text-white/60">
-                  Altere a senha e/ou o e-mail de login de{" "}
-                  <span className="font-semibold text-white">{modelName}</span>.
-                  Preencha apenas o que deseja alterar.
+                  {hasLogin ? (
+                    <>
+                      Altere a senha e/ou o e-mail de login de{" "}
+                      <span className="font-semibold text-white">
+                        {modelName}
+                      </span>
+                      . Preencha apenas o que deseja alterar.
+                    </>
+                  ) : (
+                    <>
+                      <span className="font-semibold text-white">
+                        {modelName}
+                      </span>{" "}
+                      ainda não tem login no site. Defina uma senha e o e-mail
+                      de acesso para criar o login dela agora.
+                    </>
+                  )}
                 </p>
 
                 <section className="mt-6">
@@ -198,12 +244,14 @@ export default function ModelCredentialsReset({
                   </h4>
 
                   <div className="mt-3 space-y-2">
-                    <RadioRow
-                      name="password-mode"
-                      checked={passwordMode === "none"}
-                      onChange={() => setPasswordMode("none")}
-                      label="Não alterar a senha"
-                    />
+                    {hasLogin && (
+                      <RadioRow
+                        name="password-mode"
+                        checked={passwordMode === "none"}
+                        onChange={() => setPasswordMode("none")}
+                        label="Não alterar a senha"
+                      />
+                    )}
 
                     <RadioRow
                       name="password-mode"
@@ -252,7 +300,11 @@ export default function ModelCredentialsReset({
                   </h4>
 
                   <p className="mt-2 text-xs text-white/45">
-                    E-mail atual: {currentEmail || "não informado"}
+                    {hasLogin
+                      ? `E-mail atual: ${currentEmail || "não informado"}`
+                      : currentEmail
+                        ? `Deixe em branco para usar o e-mail da ficha: ${currentEmail}`
+                        : "Obrigatório: esta modelo ainda não tem e-mail cadastrado."}
                   </p>
 
                   <input
@@ -300,23 +352,45 @@ export default function ModelCredentialsReset({
             {step === "confirm" && (
               <>
                 <h3 className="text-lg font-bold text-white">
-                  Confirmar alterações
+                  {hasLogin ? "Confirmar alterações" : "Confirmar criação de acesso"}
                 </h3>
 
                 <p className="mt-2 text-sm text-white/60">
-                  Esta ação altera o acesso de{" "}
-                  <span className="font-semibold text-white">{modelName}</span>{" "}
-                  imediatamente. Deseja continuar?
+                  {hasLogin ? (
+                    <>
+                      Esta ação altera o acesso de{" "}
+                      <span className="font-semibold text-white">
+                        {modelName}
+                      </span>{" "}
+                      imediatamente. Deseja continuar?
+                    </>
+                  ) : (
+                    <>
+                      Esta ação cria o login de{" "}
+                      <span className="font-semibold text-white">
+                        {modelName}
+                      </span>{" "}
+                      imediatamente. Deseja continuar?
+                    </>
+                  )}
                 </p>
 
                 <ul className="mt-5 space-y-2 rounded-xl border border-white/10 bg-black/30 p-4 text-sm text-white/75">
-                  {effectivePassword && <li>• A senha será alterada.</li>}
+                  {!hasLogin && <li>• O login da modelo será criado.</li>}
 
-                  {emailWillChange && (
+                  {effectivePassword && (
                     <li>
-                      • O e-mail de login passará a ser{" "}
+                      {hasLogin
+                        ? "• A senha será alterada."
+                        : "• A senha será definida."}
+                    </li>
+                  )}
+
+                  {(emailWillChange || (!hasLogin && currentEmail)) && (
+                    <li>
+                      • O e-mail de login {hasLogin ? "passará a ser" : "será"}{" "}
                       <span className="font-semibold text-white">
-                        {trimmedEmail}
+                        {trimmedEmail || currentEmail}
                       </span>
                       .
                     </li>
@@ -354,7 +428,9 @@ export default function ModelCredentialsReset({
             {step === "success" && result && (
               <>
                 <h3 className="text-lg font-bold text-emerald-300">
-                  Acesso atualizado com sucesso
+                  {result.accessCreated
+                    ? "Acesso criado com sucesso"
+                    : "Acesso atualizado com sucesso"}
                 </h3>
 
                 <p className="mt-2 text-sm text-amber-200">
