@@ -2,10 +2,16 @@
 
 import { useRef, useState } from "react";
 
+import LogoutButton from "@/components/LogoutButton";
 import { WHATSAPP_URL } from "@/lib/constants/whatsapp";
 import { countryCodeToFlag } from "@/lib/countries";
 import { formatDatePtBr } from "@/lib/earnings/period";
 import { describeLedgerEntry } from "@/lib/ledger/entries";
+import {
+  AVATAR_ACCEPT_ATTRIBUTE,
+  uploadModelAvatar,
+  validateAvatarFile,
+} from "@/lib/models/avatarUpload";
 import { BRL, USD, formatFxRate, formatMoney } from "@/lib/money/currency";
 
 import type { LedgerEntry } from "@/types/ledger";
@@ -65,6 +71,7 @@ export default function ModelDashboardView({
             setModel((current) => ({ ...current, profilePhotoUrl: url }))
           }
           canEditAvatar={canEditAvatar}
+          viewerRole={viewerRole}
         />
 
         <EarningsCard model={model} earnings={earnings} />
@@ -104,13 +111,15 @@ function Header({
   model,
   canEditAvatar,
   onAvatarUpdated,
+  viewerRole,
 }: {
   model: ModelDashboardModel;
   canEditAvatar: boolean;
   onAvatarUpdated: (url: string) => void;
+  viewerRole: ModelDashboardRole;
 }) {
   return (
-    <header className="flex items-center justify-between gap-4 pt-2">
+    <header className="flex items-start justify-between gap-4 pt-2">
       <div>
         <p className="text-[11px] font-black uppercase tracking-[0.3em] text-[#e8b84b]">
           KARAY MODELS
@@ -123,11 +132,24 @@ function Header({
         <StatusBadge active={model.active} />
       </div>
 
-      <Avatar
-        model={model}
-        canEdit={canEditAvatar}
-        onAvatarUpdated={onAvatarUpdated}
-      />
+      <div className="flex shrink-0 flex-col items-center gap-3">
+        <Avatar
+          model={model}
+          canEdit={canEditAvatar}
+          onAvatarUpdated={onAvatarUpdated}
+        />
+
+        {/*
+          Models are on phones, so this sits in the normal flow at the top of
+          the page — always visible, tappable, never behind a hover menu.
+          Hidden for a representative, who reaches this same view through
+          /representative/models/[id]: signing her out of her own account from
+          inside a model's page would be a nasty surprise.
+        */}
+        {viewerRole === "model" && (
+          <LogoutButton className="rounded-full border border-white/20 bg-white/5 px-4 py-2 text-xs font-bold uppercase tracking-[0.14em] text-white/80 transition hover:bg-white/15 hover:text-white disabled:cursor-not-allowed disabled:opacity-60" />
+        )}
+      </div>
     </header>
   );
 }
@@ -160,6 +182,8 @@ function Avatar({
 }) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [preview, setPreview] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   async function handleFileChange(
@@ -172,31 +196,32 @@ function Avatar({
       return;
     }
 
-    setIsUploading(true);
     setError(null);
 
-    try {
-      const formData = new FormData();
-      formData.append("modelId", model.id);
-      formData.append("file", file);
+    // Same limits the admin editor and the server apply — checked here so a
+    // model on mobile data is told before the upload, not after it.
+    const validation = validateAvatarFile(file);
 
-      const response = await fetch("/api/models/avatar", {
-        method: "POST",
-        body: formData,
+    if (!validation.ok) {
+      setError(validation.message);
+      return;
+    }
+
+    const localPreview = URL.createObjectURL(file);
+    setPreview(localPreview);
+    setProgress(0);
+    setIsUploading(true);
+
+    try {
+      const url = await uploadModelAvatar({
+        modelId: model.id,
+        file,
+        onProgress: setProgress,
       });
 
-      const data = (await response.json()) as {
-        success?: boolean;
-        profilePhotoUrl?: string;
-        error?: string;
-      };
-
-      if (!response.ok || !data.success || !data.profilePhotoUrl) {
-        throw new Error(data.error ?? "Não foi possível enviar a foto.");
-      }
-
-      onAvatarUpdated(data.profilePhotoUrl);
+      onAvatarUpdated(url);
     } catch (uploadError) {
+      setPreview(null);
       setError(
         uploadError instanceof Error
           ? uploadError.message
@@ -204,15 +229,16 @@ function Avatar({
       );
     } finally {
       setIsUploading(false);
+      URL.revokeObjectURL(localPreview);
     }
   }
 
   const circle = (
     <div className="relative flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-[#e8b84b]/40 bg-[#1a1620] text-xl font-bold">
-      {model.profilePhotoUrl ? (
+      {preview ?? model.profilePhotoUrl ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img
-          src={model.profilePhotoUrl}
+          src={preview ?? model.profilePhotoUrl ?? ""}
           alt={model.stageName || model.fullName}
           className="h-full w-full object-cover"
         />
@@ -223,8 +249,8 @@ function Avatar({
       )}
 
       {isUploading && (
-        <div className="absolute inset-0 flex items-center justify-center bg-black/50 text-[10px] font-bold">
-          ...
+        <div className="absolute inset-0 flex items-center justify-center bg-black/60 text-[10px] font-bold">
+          {progress}%
         </div>
       )}
     </div>
@@ -249,7 +275,7 @@ function Avatar({
       <input
         ref={fileInputRef}
         type="file"
-        accept="image/jpeg,image/png,image/webp"
+        accept={AVATAR_ACCEPT_ATTRIBUTE}
         className="hidden"
         onChange={(event) => void handleFileChange(event)}
       />
