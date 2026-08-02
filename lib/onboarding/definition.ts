@@ -66,14 +66,16 @@ export const LINKED_FIELDS = {
   drive_twitter: { label: "Drive — X / Twitter", location: "Aba Google Drive" },
   content_drive_url: { label: "Pasta de conteúdo", location: "Aba Google Drive" },
 
+  // These are the columns public.model_payments ACTUALLY has. The names in
+  // 20260722000001_initial_schema.sql (pix_type, bank_agency, bank_account,
+  // account_holder_cpf, payment_frequency) never matched the live table —
+  // confirmed by introspection — so linking them produced a select that
+  // failed on every load and an RPC call that could never have worked.
   pix_key: { label: "Chave PIX", location: "Aba Pagamentos" },
-  pix_type: { label: "Tipo de chave PIX", location: "Aba Pagamentos" },
+  pix_key_type: { label: "Tipo de chave PIX", location: "Aba Pagamentos" },
   bank_name: { label: "Banco", location: "Aba Pagamentos" },
-  bank_agency: { label: "Agência", location: "Aba Pagamentos" },
-  bank_account: { label: "Conta", location: "Aba Pagamentos" },
   account_holder_name: { label: "Titular da conta", location: "Aba Pagamentos" },
-  account_holder_cpf: { label: "CPF do titular", location: "Aba Pagamentos" },
-  payment_frequency: { label: "Frequência de pagamento", location: "Aba Pagamentos" },
+  payout_frequency: { label: "Frequência de pagamento", location: "Aba Pagamentos" },
 } as const;
 
 export type LinkedFieldKey = keyof typeof LINKED_FIELDS;

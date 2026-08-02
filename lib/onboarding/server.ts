@@ -25,27 +25,33 @@ import type { ManagementRole } from "@/types/model";
  */
 const PAYMENT_LINKED_COLUMNS = new Set<LinkedFieldKey>([
   "pix_key",
-  "pix_type",
+  "pix_key_type",
   "bank_name",
-  "bank_agency",
-  "bank_account",
   "account_holder_name",
-  "account_holder_cpf",
-  "payment_frequency",
+  "payout_frequency",
 ]);
 
 /**
- * Everything the checklist can display, writable or not. The read-only keys
- * are read from `models` exactly like the rest — they simply have no path to
- * a write (no entry in the RPC allowlist, refused by the route handler).
+ * Only the columns the CURRENT checklist actually links — not the whole
+ * registry. The registry is a vocabulary of what may be linked; selecting all
+ * of it meant every load queried columns no step uses, and one bad name broke
+ * the whole select for the ones that were in use.
  */
-const LINKED_KEYS = [
-  ...(Object.keys(LINKED_FIELDS) as LinkedFieldKey[]),
-  ...(Object.keys(READ_ONLY_LINKED_FIELDS) as AnyLinkedFieldKey[]),
-] as AnyLinkedFieldKey[];
+const LINKED_KEYS = Array.from(
+  new Set(
+    flattenOnboarding()
+      .flatMap((item) => item.fields ?? [])
+      .map((field) => field.linked)
+      .filter((key): key is AnyLinkedFieldKey => Boolean(key)),
+  ),
+);
 
 const MODEL_LINKED_COLUMNS = LINKED_KEYS.filter(
   (key) => !PAYMENT_LINKED_COLUMNS.has(key as LinkedFieldKey),
+);
+
+const USED_PAYMENT_COLUMNS = LINKED_KEYS.filter((key) =>
+  PAYMENT_LINKED_COLUMNS.has(key as LinkedFieldKey),
 );
 
 export function linkedFieldTable(
@@ -315,18 +321,43 @@ async function loadLinkedValues({
   supabase: SupabaseClient;
   modelId: string;
 }): Promise<Record<string, string>> {
-  const [{ data: modelRow }, { data: paymentsRow }] = await Promise.all([
-    supabase
-      .from("models")
-      .select(MODEL_LINKED_COLUMNS.join(", "))
-      .eq("id", modelId)
-      .maybeSingle(),
-    supabase
-      .from("model_payments")
-      .select(Array.from(PAYMENT_LINKED_COLUMNS).join(", "))
-      .eq("model_id", modelId)
-      .maybeSingle(),
+  const [modelResult, paymentsResult] = await Promise.all([
+    MODEL_LINKED_COLUMNS.length > 0
+      ? supabase
+          .from("models")
+          .select(MODEL_LINKED_COLUMNS.join(", "))
+          .eq("id", modelId)
+          .maybeSingle()
+      : Promise.resolve({ data: null, error: null }),
+    USED_PAYMENT_COLUMNS.length > 0
+      ? supabase
+          .from("model_payments")
+          .select(USED_PAYMENT_COLUMNS.join(", "))
+          .eq("model_id", modelId)
+          .maybeSingle()
+      : Promise.resolve({ data: null, error: null }),
   ]);
+
+  const modelRow = modelResult.data;
+  const paymentsRow = paymentsResult.data;
+
+  // A misspelled linked column used to fail silently here and render the box
+  // empty, which reads exactly like "nobody has filled this in yet". A field
+  // the checklist claims to mirror must either show the real value or say why
+  // it cannot. model_payments is exempt: a model with no payment row yet is
+  // an ordinary state, not an error.
+  if (modelResult.error) {
+    throw new Error(
+      `Falha ao ler os campos vinculados da modelo: ${modelResult.error.message}`,
+    );
+  }
+
+  if (paymentsResult.error && paymentsResult.error.code !== "PGRST116") {
+    console.error(
+      "Erro ao ler os dados de pagamento vinculados:",
+      paymentsResult.error,
+    );
+  }
 
   const values: Record<string, string> = {};
 

@@ -232,9 +232,12 @@ declare
     'tiktok', 'youtube', 'facebook', 'drive_onlyfans', 'drive_instagram',
     'drive_twitter', 'content_drive_url'
   ];
+  -- The columns public.model_payments actually has. The names in
+  -- 20260722000001_initial_schema.sql (pix_type, bank_agency, bank_account,
+  -- account_holder_cpf, payment_frequency) do not exist on the live table.
   payment_columns text[] := array[
-    'pix_key', 'pix_type', 'bank_name', 'bank_agency', 'bank_account',
-    'account_holder_name', 'account_holder_cpf', 'payment_frequency'
+    'pix_key', 'pix_key_type', 'bank_name', 'account_holder_name',
+    'payout_frequency'
   ];
   cleaned      text := nullif(btrim(coalesce(new_value, '')), '');
   locked       boolean;
@@ -275,6 +278,14 @@ begin
        and attnum > 0
        and not attisdropped;
 
+    -- A name in the allowlist that the table does not actually have would
+    -- otherwise build 'cast($1 as )' and fail with a syntax error. Say what
+    -- is really wrong instead.
+    if column_type is null then
+      raise exception 'Coluna de onboarding ausente em models: %', field_key
+        using errcode = '42703';
+    end if;
+
     execute format(
       'update public.models set %I = cast($1 as %s) where id = $2',
       field_key, column_type
@@ -288,6 +299,11 @@ begin
        and attname = field_key
        and attnum > 0
        and not attisdropped;
+
+    if column_type is null then
+      raise exception 'Coluna de onboarding ausente em model_payments: %', field_key
+        using errcode = '42703';
+    end if;
 
     -- model_payments has no unique constraint on model_id, so this is an
     -- update-then-insert rather than an upsert. FOUND is deliberately not
