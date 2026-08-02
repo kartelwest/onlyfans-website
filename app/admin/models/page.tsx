@@ -615,6 +615,25 @@ export default async function AdminModelsPage({
                               Abrir perfil
                             </Link>
 
+                            {/*
+                              Every admin gets both previews from the row
+                              itself: the model's own dashboard, and the same
+                              model as her representative sees her.
+                            */}
+                            <Link
+                              href={`/admin/view-as/model/${model.id}/representative`}
+                              className="rounded-lg border border-purple-400/30 bg-purple-500/10 px-4 py-2 text-xs font-bold text-purple-200 transition hover:bg-purple-500/20"
+                            >
+                              Visão do representante
+                            </Link>
+
+                            <Link
+                              href={`/admin/view-as/model/${model.id}`}
+                              className="rounded-lg border border-purple-400/30 bg-purple-500/10 px-4 py-2 text-xs font-bold text-purple-200 transition hover:bg-purple-500/20"
+                            >
+                              Visão da modelo
+                            </Link>
+
                             {canManage && (
                               <ModelRowActions
                                 modelId={model.id}

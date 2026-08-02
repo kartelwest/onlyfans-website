@@ -3,12 +3,12 @@ import { notFound, redirect } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import ModelDashboardView from "@/components/model-dashboard/ModelDashboardView";
+import { isStaffRole } from "@/lib/auth/roles";
 import {
-  buildDashboardChecklist,
-  buildDashboardModel,
-  loadDashboardFinance,
+  loadModelDashboard,
   DASHBOARD_MODEL_COLUMNS,
 } from "@/lib/models/modelDashboardData";
+import type { ManagementRole } from "@/types/model";
 
 export const dynamic = "force-dynamic";
 
@@ -34,7 +34,17 @@ export default async function RepresentativeModelDashboardPage({
     .eq("id", user.id)
     .maybeSingle();
 
-  if (!profile || !profile.active || profile.role !== "representative") {
+  if (!profile || !profile.active) {
+    redirect("/login");
+  }
+
+  // Staff outrank a representative: the same screen is theirs to see, through
+  // the admin preview of it, rather than a bounce to the login page.
+  if (isStaffRole(profile.role as ManagementRole)) {
+    redirect(`/admin/view-as/model/${id}/representative`);
+  }
+
+  if (profile.role !== "representative") {
     redirect("/login");
   }
 
@@ -52,37 +62,17 @@ export default async function RepresentativeModelDashboardPage({
     notFound();
   }
 
-  const [{ data: checklistRow }, { data: paymentsRow }] = await Promise.all([
-    supabase
-      .from("model_checklist")
-      .select(
-        "onlyfans_status, instagram_status, twitter_status, proxy_browser_status, contract_status, content_received_status",
-      )
-      .eq("model_id", id)
-      .maybeSingle(),
-    supabase
-      .from("model_payments")
-      .select("model_percentage, agency_percentage, marketing_percentage")
-      .eq("model_id", id)
-      .maybeSingle(),
-  ]);
-
-  const dashboardModel = buildDashboardModel(modelRow);
-  const dashboardChecklist = buildDashboardChecklist(modelRow, checklistRow);
-
-  const { earnings, ledger } = await loadDashboardFinance({
+  const { model, checklist, earnings, ledger } = await loadModelDashboard({
     supabase,
     admin: createAdminClient(),
-    model: dashboardModel,
-    paymentsRow,
-    expensesEnabled: modelRow.expenses_enabled === true,
+    modelRow,
   });
 
   return (
     <ModelDashboardView
       viewerRole="representative"
-      model={dashboardModel}
-      checklist={dashboardChecklist}
+      model={model}
+      checklist={checklist}
       earnings={earnings}
       ledger={ledger}
       canEditAvatar={false}

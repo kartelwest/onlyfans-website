@@ -179,7 +179,7 @@ export default async function ViewAsRepresentativePage({
                 return (
                   <Link
                     key={model.id}
-                    href={`/admin/view-as/representative/${repId}/models/${model.id}`}
+                    href={`/admin/view-as/model/${model.id}/representative`}
                     className="block rounded-2xl border border-[#eadfd8] bg-white p-6 shadow-sm transition hover:shadow-md hover:border-[#b06a87]"
                   >
                     <div className="flex items-center justify-between gap-4">

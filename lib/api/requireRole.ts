@@ -3,9 +3,12 @@ import "server-only";
 import { NextResponse } from "next/server";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
+import { isStaffRole, STAFF_ROLES } from "@/lib/auth/roles";
 import { createClient } from "@/lib/supabase/server";
 
 import type { ManagementRole } from "@/types/model";
+
+export { isStaffRole };
 
 // Every route handler in this feature enforces its own permissions in addition
 // to RLS — the two layers are independent on purpose, so a policy that is ever
@@ -20,8 +23,6 @@ export type RouteProfile = {
 export type RouteAuth =
   | { ok: true; supabase: SupabaseClient; profile: RouteProfile }
   | { ok: false; response: NextResponse };
-
-const STAFF_ROLES: ManagementRole[] = ["owner", "administrator"];
 
 export async function authenticate(): Promise<RouteAuth> {
   const supabase = await createClient();
@@ -87,10 +88,6 @@ export async function requireStaff(): Promise<RouteAuth> {
   }
 
   return auth;
-}
-
-export function isStaffRole(role: ManagementRole): boolean {
-  return STAFF_ROLES.includes(role);
 }
 
 /**

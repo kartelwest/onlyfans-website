@@ -4,8 +4,9 @@ import {
   normalizeModelStatus,
   sortByModelStatus,
 } from "@/lib/models/modelStatusOrder";
+import { isStaffRole } from "@/lib/auth/roles";
 import { createClient } from "@/lib/supabase/server";
-import type { ModelStatus } from "@/types/model";
+import type { ManagementRole, ModelStatus } from "@/types/model";
 
 type Model = {
   id: string;
@@ -43,11 +44,17 @@ export default async function RepresentativePage() {
     .eq("id", user.id)
     .single();
 
-  if (
-    !profile ||
-    !profile.active ||
-    profile.role !== "representative"
-  ) {
+  if (!profile || !profile.active) {
+    redirect("/login");
+  }
+
+  // Staff outrank a representative, so they are not turned away here — they are
+  // sent to the list that holds every model, with a rep preview per row.
+  if (isStaffRole(profile.role as ManagementRole)) {
+    redirect("/admin/models");
+  }
+
+  if (profile.role !== "representative") {
     redirect("/login");
   }
 

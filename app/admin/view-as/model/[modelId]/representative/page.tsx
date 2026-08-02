@@ -13,14 +13,14 @@ import type { ManagementRole } from "@/types/model";
 export const dynamic = "force-dynamic";
 
 /**
- * The model view: her own dashboard, exactly as she sees it.
+ * The representative view: this model as her rep sees her, which is the same
+ * dashboard with the model's own controls taken away.
  *
- * It renders the very component /area-da-modelo renders, from the very same
- * loader — a hand-written replica drifts the moment the real screen changes,
- * and a preview that lies is worse than no preview. Only the acting parts are
- * off (previewMode), because the viewer is an admin, not the model.
+ * Keyed by the model, not by the rep: an admin opens it from the model's row,
+ * and a model with nobody assigned yet still has a rep view to preview — that
+ * is the whole point of checking before assigning one.
  */
-export default async function ViewAsModelPage({
+export default async function ViewAsRepresentativeModelPage({
   params,
 }: {
   params: Promise<{ modelId: string }>;
@@ -62,6 +62,17 @@ export default async function ViewAsModelPage({
     notFound();
   }
 
+  const { data: representative } = modelRow.representative_id
+    ? await supabase
+        .from("profiles")
+        .select("full_name")
+        .eq("id", modelRow.representative_id)
+        .maybeSingle()
+    : { data: null };
+
+  const representativeName =
+    (representative?.full_name as string | null)?.trim() || null;
+
   const { model, checklist, earnings, ledger } = await loadModelDashboard({
     supabase,
     admin: createAdminClient(),
@@ -71,12 +82,16 @@ export default async function ViewAsModelPage({
   return (
     <>
       <ViewAsBanner
-        label={`Vendo como a modelo ${model.stageName} veria`}
+        label={
+          representativeName
+            ? `Vendo ${model.stageName} como o representante ${representativeName} veria`
+            : `Vendo ${model.stageName} como um representante veria (nenhum atribuído)`
+        }
         backHref="/admin/models"
       />
 
       <ModelDashboardView
-        viewerRole="model"
+        viewerRole="representative"
         model={model}
         checklist={checklist}
         earnings={earnings}
