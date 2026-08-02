@@ -18,7 +18,6 @@ type Model = {
   onboarding_percentage: number;
   status: string | null;
   active: boolean;
-  latest_note_summary: string | null;
   last_login_at: string | null;
 };
 
@@ -90,7 +89,6 @@ export default async function ViewAsRepresentativePage({
         onboarding_percentage,
         status,
         active,
-        latest_note_summary,
         last_login_at
       `,
     )
@@ -239,12 +237,6 @@ export default async function ViewAsRepresentativePage({
                           }}
                         />
                       </div>
-
-                      {model.latest_note_summary && (
-                        <p className="mt-3 text-xs text-[#765c68] line-clamp-2">
-                          {model.latest_note_summary}
-                        </p>
-                      )}
 
                       {model.last_login_at && (
                         <p className="mt-2 text-xs text-[#765c68]">

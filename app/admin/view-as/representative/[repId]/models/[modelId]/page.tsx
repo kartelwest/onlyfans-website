@@ -76,7 +76,6 @@ export default async function ViewAsRepresentativeModelPage({
         onlyfans,
         onboarding_percentage,
         active,
-        latest_note_summary,
         last_login_at,
         created_at
       `,

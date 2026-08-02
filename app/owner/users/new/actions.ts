@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { generateTemporaryPassword } from "@/lib/admin/modelOnboardingHelpers";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { ensureOnlyFansEnrollmentForModel } from "@/lib/brand/talent";
@@ -101,7 +102,15 @@ export async function createUserAction(
     };
   }
 
-  let password = requestedPassword;
+  // Models always get the agency's standard first password: the last 4 digits
+  // of the WhatsApp number followed by 1234567, the same value
+  // /api/admin/users derives. The form hides the password field for models, so
+  // before this the blank field fell through to generateStrongPassword() and
+  // every model created here got a random 16-character password instead.
+  let password =
+    role === "model"
+      ? generateTemporaryPassword(normalizePhone(whatsapp))
+      : requestedPassword;
 
   if (!password) {
     // Generate strong random password for all roles if not provided
@@ -215,6 +224,10 @@ export async function createUserAction(
           profile_id: createdUserId,
           display_name: fullName,
           slug: modelSlug,
+          // Without these the model record has no WhatsApp, so her standard
+          // password could never be re-derived when an admin later resets it.
+          email,
+          whatsapp,
           onboarding_complete: false,
           active: true,
           created_by: user.id,

@@ -87,8 +87,8 @@ export default function NewUserForm({
           />
 
           <p className="mt-2 text-xs text-zinc-500">
-            A senha temporária será formada pelo último sobrenome
-            e pelos quatro últimos números do WhatsApp.
+            A senha temporária será formada pelos quatro últimos
+            números do WhatsApp seguidos de 1234567.
           </p>
         </div>
       )}

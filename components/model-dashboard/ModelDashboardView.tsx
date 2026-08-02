@@ -2,11 +2,23 @@
 
 import { useRef, useState } from "react";
 
+import LogoutButton from "@/components/LogoutButton";
 import { WHATSAPP_URL } from "@/lib/constants/whatsapp";
+import { countryCodeToFlag } from "@/lib/countries";
+import { formatDatePtBr } from "@/lib/earnings/period";
+import { describeLedgerEntry } from "@/lib/ledger/entries";
+import {
+  AVATAR_ACCEPT_ATTRIBUTE,
+  uploadModelAvatar,
+  validateAvatarFile,
+} from "@/lib/models/avatarUpload";
+import { BRL, USD, formatFxRate, formatMoney } from "@/lib/money/currency";
 
+import type { LedgerEntry } from "@/types/ledger";
 import type {
   ModelDashboardChecklist,
   ModelDashboardEarnings,
+  ModelDashboardLedger,
   ModelDashboardModel,
   ModelDashboardRole,
 } from "@/types/modelDashboard";
@@ -16,6 +28,8 @@ type ModelDashboardViewProps = {
   model: ModelDashboardModel;
   checklist: ModelDashboardChecklist;
   earnings: ModelDashboardEarnings;
+  /** Null when the model is not on the expenses/loans feature. */
+  ledger: ModelDashboardLedger | null;
   canEditAvatar: boolean;
 };
 
@@ -26,6 +40,7 @@ export default function ModelDashboardView({
   model: initialModel,
   checklist,
   earnings,
+  ledger,
   canEditAvatar,
 }: ModelDashboardViewProps) {
   const [model, setModel] = useState(initialModel);
@@ -56,11 +71,18 @@ export default function ModelDashboardView({
             setModel((current) => ({ ...current, profilePhotoUrl: url }))
           }
           canEditAvatar={canEditAvatar}
+          viewerRole={viewerRole}
         />
 
         <EarningsCard model={model} earnings={earnings} />
 
-        <StatsRow model={model} />
+        {ledger && (
+          <>
+            <ExpensesSection ledger={ledger} />
+            <LoansSection ledger={ledger} />
+            <LedgerNotesSection ledger={ledger} />
+          </>
+        )}
 
         <OnboardingChecklist
           steps={checklistSteps}
@@ -89,13 +111,15 @@ function Header({
   model,
   canEditAvatar,
   onAvatarUpdated,
+  viewerRole,
 }: {
   model: ModelDashboardModel;
   canEditAvatar: boolean;
   onAvatarUpdated: (url: string) => void;
+  viewerRole: ModelDashboardRole;
 }) {
   return (
-    <header className="flex items-center justify-between gap-4 pt-2">
+    <header className="flex items-start justify-between gap-4 pt-2">
       <div>
         <p className="text-[11px] font-black uppercase tracking-[0.3em] text-[#e8b84b]">
           KARAY MODELS
@@ -108,11 +132,24 @@ function Header({
         <StatusBadge active={model.active} />
       </div>
 
-      <Avatar
-        model={model}
-        canEdit={canEditAvatar}
-        onAvatarUpdated={onAvatarUpdated}
-      />
+      <div className="flex shrink-0 flex-col items-center gap-3">
+        <Avatar
+          model={model}
+          canEdit={canEditAvatar}
+          onAvatarUpdated={onAvatarUpdated}
+        />
+
+        {/*
+          Models are on phones, so this sits in the normal flow at the top of
+          the page — always visible, tappable, never behind a hover menu.
+          Hidden for a representative, who reaches this same view through
+          /representative/models/[id]: signing her out of her own account from
+          inside a model's page would be a nasty surprise.
+        */}
+        {viewerRole === "model" && (
+          <LogoutButton className="rounded-full border border-white/20 bg-white/5 px-4 py-2 text-xs font-bold uppercase tracking-[0.14em] text-white/80 transition hover:bg-white/15 hover:text-white disabled:cursor-not-allowed disabled:opacity-60" />
+        )}
+      </div>
     </header>
   );
 }
@@ -145,6 +182,8 @@ function Avatar({
 }) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [preview, setPreview] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   async function handleFileChange(
@@ -157,31 +196,32 @@ function Avatar({
       return;
     }
 
-    setIsUploading(true);
     setError(null);
 
-    try {
-      const formData = new FormData();
-      formData.append("modelId", model.id);
-      formData.append("file", file);
+    // Same limits the admin editor and the server apply — checked here so a
+    // model on mobile data is told before the upload, not after it.
+    const validation = validateAvatarFile(file);
 
-      const response = await fetch("/api/models/avatar", {
-        method: "POST",
-        body: formData,
+    if (!validation.ok) {
+      setError(validation.message);
+      return;
+    }
+
+    const localPreview = URL.createObjectURL(file);
+    setPreview(localPreview);
+    setProgress(0);
+    setIsUploading(true);
+
+    try {
+      const url = await uploadModelAvatar({
+        modelId: model.id,
+        file,
+        onProgress: setProgress,
       });
 
-      const data = (await response.json()) as {
-        success?: boolean;
-        profilePhotoUrl?: string;
-        error?: string;
-      };
-
-      if (!response.ok || !data.success || !data.profilePhotoUrl) {
-        throw new Error(data.error ?? "Não foi possível enviar a foto.");
-      }
-
-      onAvatarUpdated(data.profilePhotoUrl);
+      onAvatarUpdated(url);
     } catch (uploadError) {
+      setPreview(null);
       setError(
         uploadError instanceof Error
           ? uploadError.message
@@ -189,15 +229,16 @@ function Avatar({
       );
     } finally {
       setIsUploading(false);
+      URL.revokeObjectURL(localPreview);
     }
   }
 
   const circle = (
     <div className="relative flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-[#e8b84b]/40 bg-[#1a1620] text-xl font-bold">
-      {model.profilePhotoUrl ? (
+      {preview ?? model.profilePhotoUrl ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img
-          src={model.profilePhotoUrl}
+          src={preview ?? model.profilePhotoUrl ?? ""}
           alt={model.stageName || model.fullName}
           className="h-full w-full object-cover"
         />
@@ -208,8 +249,8 @@ function Avatar({
       )}
 
       {isUploading && (
-        <div className="absolute inset-0 flex items-center justify-center bg-black/50 text-[10px] font-bold">
-          ...
+        <div className="absolute inset-0 flex items-center justify-center bg-black/60 text-[10px] font-bold">
+          {progress}%
         </div>
       )}
     </div>
@@ -234,7 +275,7 @@ function Avatar({
       <input
         ref={fileInputRef}
         type="file"
-        accept="image/jpeg,image/png,image/webp"
+        accept={AVATAR_ACCEPT_ATTRIBUTE}
         className="hidden"
         onChange={(event) => void handleFileChange(event)}
       />
@@ -263,27 +304,159 @@ function EarningsCard({
   model: ModelDashboardModel;
   earnings: ModelDashboardEarnings;
 }) {
-  const total = earnings.totalThisMonth || 0;
-  const modelAmount = earnings.modelShareAmount || 0;
+  const [showDeductions, setShowDeductions] = useState(false);
+
   const modelPct = earnings.modelPct;
   const agencyPct = earnings.agencyPct;
   const marketingPct = earnings.marketingPct;
 
+  const flag = model.countryCode ? countryCodeToFlag(model.countryCode) : "";
+  const rate = earnings.displayRate;
+
+  // A model paid in USD has nothing to convert; everyone else sees her own
+  // currency next to the USD figure the agency reports in.
+  const converts = model.currency !== USD && rate !== null;
+
+  const inCurrency = (amountUsd: number) =>
+    rate ? amountUsd * rate.rate : null;
+
+  const withFlag = (text: string) => (flag ? `${flag} ${text}` : text);
+
   return (
     <section className="rounded-2xl border border-[#e8b84b]/20 bg-gradient-to-b from-[#1a1620] to-[#141019] p-5">
       <p className="text-xs font-bold uppercase tracking-[0.16em] text-white/50">
-        Seus ganhos este mês
+        Seus ganhos de {earnings.periodTitle}
       </p>
 
-      <p className="mt-2 text-3xl font-black text-[#e8b84b]">
-        {formatMoney(total, model.preferredCurrency)}
-      </p>
+      {earnings.published ? (
+        <p className="mt-2 flex flex-wrap items-baseline gap-x-2 gap-y-1 text-3xl font-black text-[#e8b84b]">
+          <span>
+            {converts
+              ? formatMoney(earnings.grossUsd, USD, { withCode: true })
+              : withFlag(formatMoney(earnings.grossUsd, USD, { withCode: true }))}
+          </span>
 
-      <p className="mt-2 text-sm text-white/60">
-        Sua parte ({modelPct}%): {formatMoney(modelAmount, model.preferredCurrency)} ·
-        atualizado{" "}
-        {earnings.lastUpdated ? formatDate(earnings.lastUpdated) : "—"}
-      </p>
+          {converts && (
+            <span className="text-xl text-white/70">
+              ·{" "}
+              {withFlag(
+                formatMoney(inCurrency(earnings.grossUsd) ?? 0, model.currency),
+              )}
+            </span>
+          )}
+        </p>
+      ) : (
+        <>
+          <p className="mt-2 text-3xl font-black text-[#e8b84b]">—</p>
+
+          <p className="mt-1 text-sm text-white/55">
+            Aguardando atualização da agência.
+          </p>
+        </>
+      )}
+
+      {earnings.published && (
+        <div className="mt-3 space-y-1.5 text-sm text-white/70">
+          <p>
+            Sua parte ({modelPct}%):{" "}
+            <span className="font-semibold text-white">
+              {formatMoney(earnings.modelShareUsd, USD, { withCode: true })}
+            </span>
+          </p>
+
+          {earnings.deductionsUsd > 0 && (
+            <div>
+              <button
+                type="button"
+                onClick={() => setShowDeductions((current) => !current)}
+                className="flex w-full items-center gap-1.5 text-left"
+                aria-expanded={showDeductions}
+              >
+                <span>
+                  Descontos de {earnings.periodMonthName}:{" "}
+                  <span className="font-semibold text-red-300">
+                    {formatMoney(earnings.deductionsUsd, USD, {
+                      withCode: true,
+                      negative: true,
+                    })}
+                  </span>{" "}
+                  <span className="text-white/45">
+                    ({formatMoney(earnings.deductionsBrl, BRL)})
+                  </span>
+                </span>
+
+                <span className="text-[10px] text-white/40">
+                  {showDeductions ? "▲" : "▼"}
+                </span>
+              </button>
+
+              {showDeductions && (
+                <ul className="mt-2 space-y-1 rounded-xl border border-white/10 bg-black/25 p-3 text-xs text-white/60">
+                  {earnings.deductions.map((deduction) => (
+                    <li
+                      key={deduction.id}
+                      className="flex items-start justify-between gap-3"
+                    >
+                      <span>
+                        {deduction.label}
+                        <span className="block text-[10px] text-white/35">
+                          {formatDatePtBr(deduction.deductOn)}
+                        </span>
+                      </span>
+
+                      <span className="whitespace-nowrap text-right">
+                        {formatMoney(deduction.amountUsd, USD, {
+                          negative: true,
+                        })}
+                        <span className="block text-[10px] text-white/35">
+                          {formatMoney(deduction.amountBrl, BRL)}
+                        </span>
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
+
+          <p className="flex flex-wrap items-baseline gap-x-2">
+            <span>
+              A receber:{" "}
+              <span className="font-semibold text-white">
+                {formatMoney(earnings.payableUsd, USD, { withCode: true })}
+              </span>
+            </span>
+
+            {converts && (
+              <span className="text-white/55">
+                ·{" "}
+                {withFlag(
+                  formatMoney(
+                    inCurrency(earnings.payableUsd) ?? 0,
+                    model.currency,
+                  ),
+                )}
+              </span>
+            )}
+          </p>
+
+          {earnings.remainingUsd > 0 && (
+            <p className="text-red-300">
+              Saldo a descontar:{" "}
+              <span className="font-semibold">
+                {formatMoney(earnings.remainingUsd, USD, { withCode: true })}
+              </span>
+            </p>
+          )}
+        </div>
+      )}
+
+      {converts && rate && (
+        <p className="mt-3 text-[11px] text-white/40">
+          Câmbio de {formatDatePtBr(rate.rateDate)}:{" "}
+          {formatFxRate(rate.rate, USD, model.currency)}
+        </p>
+      )}
 
       <div className="mt-4">
         <div className="flex h-3 w-full overflow-hidden rounded-full bg-black/40">
@@ -324,30 +497,142 @@ function LegendDot({ color, label }: { color: string; label: string }) {
 }
 
 // ---------------------------------------------------------------------------
-// Section 3 — Stats row
+// Section 3 — Despesas / Empréstimos / Notas (ledger, read-only)
+//
+// Rendered only when the agency has the expenses feature on for this model:
+// the parent gets `ledger = null` otherwise, so these sections are absent from
+// the payload as well as from the DOM.
 // ---------------------------------------------------------------------------
 
-function StatsRow({ model }: { model: ModelDashboardModel }) {
+function ExpensesSection({ ledger }: { ledger: ModelDashboardLedger }) {
   return (
-    <section className="grid grid-cols-3 gap-3">
-      <StatCard label="Assinantes" value={model.subscribersCount.toLocaleString("pt-BR")} />
-      <StatCard label="PPV Vendidos" value={model.ppvSoldCount.toLocaleString("pt-BR")} />
-      <StatCard
-        label="Gorjetas"
-        value={formatMoney(model.tipsAmount, model.preferredCurrency)}
-      />
+    <LedgerSection
+      title="Despesas"
+      emptyLabel="Nenhuma despesa registrada."
+      entries={ledger.expenses}
+      totalLabel="Total"
+      total={ledger.expensesTotalBrl}
+    />
+  );
+}
+
+function LoansSection({ ledger }: { ledger: ModelDashboardLedger }) {
+  return (
+    <LedgerSection
+      title="Empréstimos"
+      emptyLabel="Nenhum empréstimo registrado."
+      entries={ledger.loans}
+      totalLabel="Em aberto"
+      total={ledger.loansOutstandingBrl}
+    />
+  );
+}
+
+function LedgerSection({
+  title,
+  emptyLabel,
+  entries,
+  totalLabel,
+  total,
+}: {
+  title: string;
+  emptyLabel: string;
+  entries: LedgerEntry[];
+  totalLabel: string;
+  total: number;
+}) {
+  return (
+    <section className="rounded-2xl border border-white/10 bg-[#161219] p-5">
+      <p className="text-xs font-bold uppercase tracking-[0.16em] text-white/50">
+        {title}
+      </p>
+
+      {entries.length === 0 ? (
+        <p className="mt-4 text-sm text-white/45">{emptyLabel}</p>
+      ) : (
+        <>
+          <ul className="mt-4 space-y-3">
+            {entries.map((entry) => (
+              <li
+                key={entry.id}
+                className="flex items-start justify-between gap-3 border-b border-white/5 pb-3 last:border-b-0 last:pb-0"
+              >
+                <div>
+                  <p className="text-sm font-semibold text-white">
+                    {describeLedgerEntry(entry)}
+                  </p>
+
+                  <p className="mt-0.5 text-[11px] text-white/40">
+                    {formatDatePtBr(entry.incurredOn)}
+                  </p>
+
+                  <LedgerStatusBadge entry={entry} />
+                </div>
+
+                <p className="whitespace-nowrap text-sm font-semibold text-white">
+                  {formatMoney(entry.amountBrl, BRL)}
+                </p>
+              </li>
+            ))}
+          </ul>
+
+          <div className="mt-4 flex items-center justify-between border-t border-white/10 pt-3 text-sm">
+            <span className="text-white/55">{totalLabel}</span>
+
+            <span className="font-bold text-white">
+              {formatMoney(total, BRL)}
+            </span>
+          </div>
+        </>
+      )}
     </section>
   );
 }
 
-function StatCard({ label, value }: { label: string; value: string }) {
+function LedgerStatusBadge({ entry }: { entry: LedgerEntry }) {
+  const styles: Record<string, string> = {
+    pendente: "border-white/15 bg-white/5 text-white/55",
+    agendado: "border-yellow-400/30 bg-yellow-500/10 text-yellow-200",
+    descontado: "border-emerald-400/30 bg-emerald-500/10 text-emerald-200",
+  };
+
   return (
-    <div className="rounded-2xl border border-white/10 bg-[#161219] p-3 text-center">
-      <p className="text-[10px] font-bold uppercase tracking-[0.1em] text-white/45">
-        {label}
+    <span
+      className={`mt-2 inline-flex rounded-full border px-2.5 py-0.5 text-[10px] font-semibold ${
+        styles[entry.status.kind]
+      }`}
+    >
+      {entry.status.label}
+    </span>
+  );
+}
+
+function LedgerNotesSection({ ledger }: { ledger: ModelDashboardLedger }) {
+  return (
+    <section className="rounded-2xl border border-white/10 bg-[#161219] p-5">
+      <p className="text-xs font-bold uppercase tracking-[0.16em] text-white/50">
+        Notas
       </p>
-      <p className="mt-1.5 text-lg font-bold text-white">{value}</p>
-    </div>
+
+      {ledger.notes.length === 0 ? (
+        <p className="mt-4 text-sm text-white/45">Nenhuma nota registrada.</p>
+      ) : (
+        <ul className="mt-4 space-y-3">
+          {ledger.notes.map((note) => (
+            <li
+              key={note.id}
+              className="border-b border-white/5 pb-3 last:border-b-0 last:pb-0"
+            >
+              <p className="text-sm text-white/80">{note.body}</p>
+
+              <p className="mt-1 text-[11px] text-white/35">
+                {formatDate(note.createdAt)}
+              </p>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
   );
 }
 
@@ -421,7 +706,7 @@ function ProfileInfoSection({ model }: { model: ModelDashboardModel }) {
     { label: "Localização", value: showValue(model.location) },
     { label: "E-mail", value: showValue(model.email) },
     { label: "WhatsApp", value: showValue(model.whatsapp) },
-    { label: "Moeda preferida", value: showValue(model.preferredCurrency) },
+    { label: "Moeda", value: model.currency },
     {
       label: "Frequência de conteúdo",
       value: showValue(model.contentFrequency),
@@ -639,31 +924,6 @@ function showValue(value: string | null | undefined) {
   }
 
   return value;
-}
-
-function formatMoney(amount: number, currency: string | null) {
-  const formatted = new Intl.NumberFormat("pt-BR", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(amount || 0);
-
-  const symbol = currencySymbol(currency);
-
-  return `${symbol}${formatted}`;
-}
-
-function currencySymbol(currency: string | null) {
-  const normalized = (currency || "").trim().toUpperCase();
-
-  if (normalized === "EUR") {
-    return "€";
-  }
-
-  if (normalized === "BRL" || normalized === "R$") {
-    return "R$";
-  }
-
-  return "$";
 }
 
 function formatDate(value: string | null) {

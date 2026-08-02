@@ -2,6 +2,8 @@ import { notFound, redirect } from "next/navigation";
 
 import ModelAdminClient from "./ModelAdminClient";
 
+import { describeLogin } from "@/lib/auth/loginIdentifier";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
 import type {
@@ -137,18 +139,16 @@ export default async function ModelAdminPage({
         drive_twitter,
         content_drive_url,
         preferred_currency,
+        country_code,
+        expenses_enabled,
         content_frequency,
         block_brazil,
         show_face,
         referral_source,
-        subscribers_count,
-        ppv_sold_count,
-        tips_amount,
         status,
         onboarding_complete,
         active,
         profile_photo_url,
-        latest_note_summary,
         last_login_at,
         created_at,
         updated_at
@@ -294,6 +294,12 @@ export default async function ModelAdminPage({
     preferredCurrency:
       modelRow.preferred_currency ?? null,
 
+    countryCode:
+      modelRow.country_code ?? null,
+
+    expensesEnabled:
+      modelRow.expenses_enabled ?? false,
+
     contentFrequency:
       modelRow.content_frequency ?? null,
 
@@ -306,15 +312,6 @@ export default async function ModelAdminPage({
     referralSource:
       modelRow.referral_source ?? null,
 
-    subscribersCount:
-      modelRow.subscribers_count ?? 0,
-
-    ppvSoldCount:
-      modelRow.ppv_sold_count ?? 0,
-
-    tipsAmount:
-      modelRow.tips_amount ?? 0,
-
     status:
       modelRow.status ?? null,
 
@@ -326,9 +323,6 @@ export default async function ModelAdminPage({
 
     profilePhotoUrl:
       modelRow.profile_photo_url ?? null,
-
-    latestNoteSummary:
-      modelRow.latest_note_summary ?? null,
 
     lastLoginAt:
       modelRow.last_login_at ?? null,
@@ -494,9 +488,12 @@ export default async function ModelAdminPage({
         checklistRow?.proxy_browser_status,
       ),
 
+    // models.onboarding_percentage is the trigger-maintained projection of the
+    // onboarding checklist items and therefore the authority. The column of
+    // the same name on model_checklist is legacy and no longer written.
     onboardingPercentage:
-      checklistRow?.onboarding_percentage ??
       model.onboardingPercentage ??
+      checklistRow?.onboarding_percentage ??
       0,
 
     createdAt:
@@ -544,12 +541,34 @@ export default async function ModelAdminPage({
       proxyRow?.proxy_country ?? null,
   };
 
+  // Her login lives in auth.users.email, which no anon/authenticated client
+  // can read, and it is not necessarily her contact e-mail: once she has a
+  // username the two diverge. This page is owner/administrator-only, so the
+  // lookup happens here with the admin client and only the display form
+  // (username or address) is handed to the client component.
+  let currentLogin: string | null = null;
+
+  if (model.profileId) {
+    const { data: authUser, error: authUserError } = await createAdminClient()
+      .auth.admin.getUserById(model.profileId);
+
+    if (authUserError) {
+      console.error(
+        "Erro ao carregar o login da modelo:",
+        authUserError,
+      );
+    }
+
+    currentLogin = describeLogin(authUser?.user?.email ?? null);
+  }
+
   return (
     <ModelAdminClient
       model={model}
       checklist={checklist}
       currentUserRole={currentUserRole}
       proxyDetails={proxyDetails}
+      currentLogin={currentLogin}
     />
   );
 }

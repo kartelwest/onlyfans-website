@@ -6,7 +6,10 @@ import OnlyFansTab from "@/components/admin/model/OnlyFansTab";
 import PlatformsTab from "@/components/admin/model/PlatformsTab";
 import OverviewTab from "@/components/admin/model/OverviewTab";
 import ModelProxyPanel from "@/components/admin/model/ModelProxyPanel";
+import ModelCredentialsReset from "@/components/admin/model/ModelCredentialsReset";
+import ModelAvatarEditor from "@/components/admin/model/ModelAvatarEditor";
 import ChecklistTab from "@/components/admin/model/ChecklistTab";
+import EarningsTab from "@/components/admin/model/EarningsTab";
 import PaymentsTab from "@/components/admin/model/PaymentsTab";
 import BrandGrowthTab from "@/components/brand/BrandGrowthTab";
 import HistoryTab from "@/components/admin/model/HistoryTab";
@@ -27,6 +30,11 @@ type ModelAdminClientProps = {
     checklist: ModelChecklist;
     currentUserRole: ManagementRole;
     proxyDetails: ModelProxyDetails;
+    /**
+     * What she signs in with — a username or an e-mail address — resolved
+     * server-side from auth.users. Null when she has no login yet.
+     */
+    currentLogin: string | null;
 };
 
 type TabId =
@@ -37,6 +45,7 @@ type TabId =
     | "fansly"
     | "drive"
     | "documents"
+    | "earnings"
     | "payments"
     | "notes"
     | "history"
@@ -53,6 +62,7 @@ const tabs: {
         { id: "fansly", label: "Fansly" },
         { id: "drive", label: "Google Drive" },
         { id: "documents", label: "Documentos" },
+        { id: "earnings", label: "Ganhos e lançamentos" },
         { id: "payments", label: "Pagamentos" },
         { id: "notes", label: "Notas" },
         { id: "history", label: "Histórico" },
@@ -64,6 +74,7 @@ export default function ModelAdminClient({
     checklist,
     currentUserRole,
     proxyDetails,
+    currentLogin,
 }: ModelAdminClientProps) {
     const [activeTab, setActiveTab] =
         useState<TabId>("summary");
@@ -90,38 +101,51 @@ export default function ModelAdminClient({
                     <header className="border-b border-pink-400/20 bg-gradient-to-r from-[#4b2438] via-[#321725] to-[#211018] p-6 sm:p-8">
                         <div className="flex flex-col gap-6 xl:flex-row xl:items-center xl:justify-between">
                             <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
-                                <div className="flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-full border-4 border-white/20 bg-black/30 text-3xl font-bold">
-                                    {model.profilePhotoUrl ? (
-                                        <img
-                                            src={model.profilePhotoUrl}
-                                            alt={model.fullName}
-                                            className="h-full w-full object-cover"
-                                        />
-                                    ) : (
-                                        model.fullName
-                                            .charAt(0)
-                                            .toUpperCase()
-                                    )}
-                                </div>
+                                <ModelAvatarEditor
+                                    modelId={model.id}
+                                    modelName={model.fullName}
+                                    profilePhotoUrl={
+                                        model.profilePhotoUrl
+                                    }
+                                    onPhotoChange={(url) =>
+                                        setModel((current) => ({
+                                            ...current,
+                                            profilePhotoUrl: url,
+                                        }))
+                                    }
+                                />
 
-                                <div>
-                                    <p className="text-xs font-semibold uppercase tracking-[0.25em] text-pink-200">
-                                        Perfil da modelo
-                                    </p>
+                                <div className="flex flex-1 items-start justify-between gap-4">
+                                    <div>
+                                        <p className="text-xs font-semibold uppercase tracking-[0.25em] text-pink-200">
+                                            Perfil da modelo
+                                        </p>
 
-                                    <h1 className="mt-2 text-3xl font-bold sm:text-4xl">
-                                        {model.fullName}
-                                    </h1>
+                                        <h1 className="mt-2 text-3xl font-bold sm:text-4xl">
+                                            {model.fullName}
+                                        </h1>
 
-                                    <p className="mt-2 text-sm text-white/70">
-                                        {model.stageName
-                                            ? `Nome artístico: ${model.stageName}`
-                                            : "Nome artístico não informado"}
-                                    </p>
+                                        <p className="mt-2 text-sm text-white/70">
+                                            {model.stageName
+                                                ? `Nome artístico: ${model.stageName}`
+                                                : "Nome artístico não informado"}
+                                        </p>
 
-                                    <p className="mt-1 text-sm text-white/50">
-                                        Modelo #{model.modelNumber ?? "—"}
-                                    </p>
+                                        <p className="mt-1 text-sm text-white/50">
+                                            Modelo #{model.modelNumber ?? "—"}
+                                        </p>
+                                    </div>
+
+                                    <ModelCredentialsReset
+                                        modelId={model.id}
+                                        modelName={model.fullName}
+                                        currentEmail={model.email}
+                                        currentLogin={currentLogin}
+                                        whatsapp={model.whatsapp}
+                                        hasLogin={Boolean(
+                                            model.profileId,
+                                        )}
+                                    />
                                 </div>
 
                                 <div className="w-full sm:w-72">
@@ -249,6 +273,10 @@ export default function ModelAdminClient({
                                 model={model}
                                 currentUserRole={currentUserRole}
                             />
+                        )}
+
+                        {activeTab === "earnings" && (
+                            <EarningsTab model={model} />
                         )}
 
                         {activeTab === "payments" && (

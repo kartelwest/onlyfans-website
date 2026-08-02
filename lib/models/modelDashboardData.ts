@@ -1,8 +1,28 @@
 import "server-only";
 
+import type { SupabaseClient } from "@supabase/supabase-js";
+
+import { agencyToday, previousMonthPeriod } from "@/lib/earnings/period";
+import { getFxRate } from "@/lib/fx/rates";
+import { computePayout } from "@/lib/earnings/payout";
+import {
+  LEDGER_ENTRY_COLUMNS,
+  mapLedgerEntry,
+  selectDeductionsForPeriod,
+  type LedgerEntryRow,
+} from "@/lib/ledger/entries";
+import { snapshotDueLedgerEntries } from "@/lib/ledger/snapshot";
+import {
+  USD,
+  currencyForCountry,
+  normalizeCurrencyCode,
+} from "@/lib/money/currency";
+
+import type { LedgerEntry } from "@/types/ledger";
 import type {
   ModelDashboardChecklist,
   ModelDashboardEarnings,
+  ModelDashboardLedger,
   ModelDashboardModel,
 } from "@/types/modelDashboard";
 
@@ -24,16 +44,15 @@ export const DASHBOARD_MODEL_COLUMNS = `
   birthday,
   city,
   nationality,
+  country_code,
   email,
   whatsapp,
   preferred_currency,
+  expenses_enabled,
   content_frequency,
   block_brazil,
   show_face,
   referral_source,
-  subscribers_count,
-  ppv_sold_count,
-  tips_amount,
   content_drive_url
 `;
 
@@ -47,16 +66,15 @@ type DashboardModelRow = {
   birthday: string | null;
   city: string | null;
   nationality: string | null;
+  country_code: string | null;
   email: string | null;
   whatsapp: string | null;
   preferred_currency: string | null;
+  expenses_enabled: boolean;
   content_frequency: string | null;
   block_brazil: boolean;
   show_face: boolean;
   referral_source: string | null;
-  subscribers_count: number;
-  ppv_sold_count: number;
-  tips_amount: number;
   content_drive_url: string | null;
 };
 
@@ -75,16 +93,6 @@ type PaymentsRow = {
   marketing_percentage: number | null;
 } | null;
 
-type EarningsReportRow = {
-  gross_revenue: number | null;
-  model_share: number | null;
-  agency_share: number | null;
-  marketing_share: number | null;
-  report_date: string | null;
-  created_at: string;
-  updated_at: string;
-};
-
 export function buildDashboardModel(
   row: DashboardModelRow,
 ): ModelDashboardModel {
@@ -99,15 +107,16 @@ export function buildDashboardModel(
     location: buildLocation(row.city, row.nationality),
     email: row.email,
     whatsapp: row.whatsapp,
-    preferredCurrency: row.preferred_currency,
+    // An explicit currency wins; otherwise the country decides, and USD is the
+    // last resort — earnings are stored in USD, so that is never nonsense.
+    currency:
+      normalizeCurrencyCode(row.preferred_currency) ??
+      currencyForCountry(row.country_code),
+    countryCode: row.country_code,
     contentFrequency: row.content_frequency,
     blockBrazil: row.block_brazil,
     showFace: row.show_face,
     referralSource: row.referral_source,
-
-    subscribersCount: row.subscribers_count ?? 0,
-    ppvSoldCount: row.ppv_sold_count ?? 0,
-    tipsAmount: Number(row.tips_amount ?? 0),
 
     contentDriveUrl: row.content_drive_url,
   };
@@ -153,61 +162,187 @@ const DEFAULT_MODEL_PCT = 60;
 const DEFAULT_AGENCY_PCT = 20;
 const DEFAULT_MARKETING_PCT = 20;
 
-export function buildDashboardEarnings(
-  paymentsRow: PaymentsRow,
-  earningsRows: EarningsReportRow[],
-): ModelDashboardEarnings {
-  const now = new Date();
-  const currentYear = now.getFullYear();
-  const currentMonth = now.getMonth();
+export type DashboardFinance = {
+  earnings: ModelDashboardEarnings;
+  /** Null — not an empty object — when the model is not on the ledger
+   *  feature, so the sections are absent from the payload entirely. */
+  ledger: ModelDashboardLedger | null;
+};
 
-  const thisMonthRows = earningsRows.filter((report) => {
-    const dateValue = report.report_date ?? report.created_at;
-    const date = new Date(dateValue);
+/**
+ * Everything money-related on the dashboard, for the previous calendar month.
+ *
+ * `supabase` is the request-scoped client, so every read is RLS-checked as the
+ * viewer (model or assigned rep). `admin` is only used for the FX cache and the
+ * lazy deduction snapshot, which are system operations with no acting user.
+ */
+export async function loadDashboardFinance({
+  supabase,
+  admin,
+  model,
+  paymentsRow,
+  expensesEnabled,
+  now = new Date(),
+}: {
+  supabase: SupabaseClient;
+  admin: SupabaseClient;
+  model: ModelDashboardModel;
+  paymentsRow: PaymentsRow;
+  expensesEnabled: boolean;
+  now?: Date;
+}): Promise<DashboardFinance> {
+  const period = previousMonthPeriod(now);
 
-    if (Number.isNaN(date.getTime())) {
-      return false;
-    }
+  const modelPct = Math.round(
+    paymentsRow?.model_percentage ?? DEFAULT_MODEL_PCT,
+  );
 
-    return (
-      date.getFullYear() === currentYear && date.getMonth() === currentMonth
-    );
+  // A missed cron must never leave a due deduction unapplied, so the snapshot
+  // also runs here, on read, before anything is summed.
+  if (expensesEnabled) {
+    await snapshotDueLedgerEntries(admin, { modelId: model.id, now });
+  }
+
+  const [{ data: earningsRow }, entries] = await Promise.all([
+    supabase
+      .from("model_earnings_reports")
+      .select("gross_revenue")
+      .eq("model_id", model.id)
+      .eq("period_month", period.periodMonth)
+      .eq("visible_to_model", true)
+      .maybeSingle(),
+    expensesEnabled ? loadLedgerEntries(supabase, model.id) : [],
+  ]);
+
+  const grossUsd = earningsRow ? Number(earningsRow.gross_revenue ?? 0) : 0;
+
+  const deductions = selectDeductionsForPeriod(entries, period.periodMonth);
+
+  const deductionsUsd = deductions.reduce(
+    (total, deduction) => total + deduction.amountUsd,
+    0,
+  );
+
+  const deductionsBrl = deductions.reduce(
+    (total, deduction) => total + deduction.amountBrl,
+    0,
+  );
+
+  const { modelShareUsd, payableUsd, remainingUsd } = computePayout({
+    grossUsd,
+    modelPct,
+    deductionsUsd,
   });
 
-  const totalThisMonth = sum(thisMonthRows, (r) => r.gross_revenue);
-  const modelShareAmount = sum(thisMonthRows, (r) => r.model_share);
-  const agencyShareAmount = sum(thisMonthRows, (r) => r.agency_share);
-  const marketingShareAmount = sum(thisMonthRows, (r) => r.marketing_share);
+  const displayRate = await loadDisplayRate(admin, model.currency, now);
 
-  const lastUpdated = thisMonthRows.reduce<string | null>((latest, report) => {
-    if (!latest) {
-      return report.updated_at;
-    }
-
-    return new Date(report.updated_at) > new Date(latest)
-      ? report.updated_at
-      : latest;
-  }, null);
-
-  return {
-    totalThisMonth,
-    modelShareAmount,
-    agencyShareAmount,
-    marketingShareAmount,
-    modelPct: Math.round(paymentsRow?.model_percentage ?? DEFAULT_MODEL_PCT),
+  const earnings: ModelDashboardEarnings = {
+    periodTitle: period.title,
+    periodMonthName: period.monthName,
+    published: Boolean(earningsRow),
+    grossUsd,
+    modelShareUsd,
+    deductionsUsd,
+    deductionsBrl,
+    payableUsd,
+    remainingUsd,
+    modelPct,
     agencyPct: Math.round(
       paymentsRow?.agency_percentage ?? DEFAULT_AGENCY_PCT,
     ),
     marketingPct: Math.round(
       paymentsRow?.marketing_percentage ?? DEFAULT_MARKETING_PCT,
     ),
-    lastUpdated,
+    displayRate,
+    deductions,
+  };
+
+  if (!expensesEnabled) {
+    return { earnings, ledger: null };
+  }
+
+  const expenses = entries.filter(
+    (entry) => entry.entryType === "transporte" || entry.entryType === "hotel",
+  );
+
+  const loans = entries.filter((entry) => entry.entryType === "emprestimo");
+
+  const notes = await loadLedgerNotes(supabase, model.id);
+
+  return {
+    earnings,
+    ledger: {
+      expenses,
+      loans,
+      expensesTotalBrl: sumBrl(expenses),
+      loansOutstandingBrl: sumBrl(
+        loans.filter((entry) => entry.deductedAt === null),
+      ),
+      notes,
+    },
   };
 }
 
-function sum(
-  rows: EarningsReportRow[],
-  pick: (row: EarningsReportRow) => number | null,
-): number {
-  return rows.reduce((total, row) => total + Number(pick(row) ?? 0), 0);
+async function loadLedgerEntries(
+  supabase: SupabaseClient,
+  modelId: string,
+): Promise<LedgerEntry[]> {
+  const { data, error } = await supabase
+    .from("model_ledger_entries")
+    .select(LEDGER_ENTRY_COLUMNS)
+    .eq("model_id", modelId)
+    .is("deleted_at", null)
+    .order("incurred_on", { ascending: false });
+
+  if (error) {
+    console.error("Falha ao carregar lançamentos da modelo:", error);
+    return [];
+  }
+
+  return ((data ?? []) as unknown as LedgerEntryRow[]).map(mapLedgerEntry);
+}
+
+/**
+ * Only `source = 'ledger'` notes ever reach a model or a rep. The filter is in
+ * the query (and backed by the notes_select_ledger policy), not in the
+ * component, so internal notes are absent from the payload, not just hidden.
+ */
+async function loadLedgerNotes(supabase: SupabaseClient, modelId: string) {
+  const { data, error } = await supabase
+    .from("model_notes")
+    .select("id, body, created_at")
+    .eq("model_id", modelId)
+    .eq("source", "ledger")
+    .eq("archived", false)
+    .order("created_at", { ascending: false })
+    .limit(50);
+
+  if (error) {
+    console.error("Falha ao carregar notas de lançamentos:", error);
+    return [];
+  }
+
+  return (data ?? []).map((row) => ({
+    id: row.id as string,
+    body: row.body as string,
+    createdAt: row.created_at as string,
+  }));
+}
+
+async function loadDisplayRate(
+  admin: SupabaseClient,
+  currency: string,
+  now: Date,
+) {
+  const rate = await getFxRate(admin, USD, currency, agencyToday(now), now);
+
+  if (!rate) {
+    return null;
+  }
+
+  return { rate: rate.rate, rateDate: rate.rateDate, stale: rate.stale };
+}
+
+function sumBrl(entries: LedgerEntry[]): number {
+  return entries.reduce((total, entry) => total + entry.amountBrl, 0);
 }

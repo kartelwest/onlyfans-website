@@ -30,10 +30,12 @@ type AuthenticatedProfile = {
     role: ManagementRole;
 };
 
+// Notes are internal agency records: owner and administrator only. This
+// mirrors the staff-only RLS policies on model_notes / model_note_history —
+// a representative is denied at both layers, never just one.
 const allowedRoles: ManagementRole[] = [
     "owner",
     "administrator",
-    "representative",
 ];
 
 const notePriorities: NotePriority[] = [
@@ -101,6 +103,8 @@ export async function GET(
                     priority,
                     pinned,
                     archived,
+                    source,
+                    ledger_entry_id,
                     created_by,
                     created_by_name,
                     created_by_role,
@@ -276,9 +280,7 @@ export async function POST(
         if (
             profile.role !== "owner" &&
             profile.role !==
-                "administrator" &&
-            profile.role !==
-                "representative"
+                "administrator"
         ) {
             return NextResponse.json(
                 {
@@ -386,6 +388,8 @@ export async function POST(
                     priority,
                     pinned,
                     archived,
+                    source,
+                    ledger_entry_id,
                     created_by,
                     created_by_name,
                     created_by_role,
@@ -552,6 +556,8 @@ export async function PATCH(
                     priority,
                     pinned,
                     archived,
+                    source,
+                    ledger_entry_id,
                     created_by,
                     created_by_name,
                     created_by_role,
@@ -630,6 +636,157 @@ export async function PATCH(
             {
                 error:
                     "Ocorreu um erro inesperado ao atualizar a nota.",
+            },
+            {
+                status: 500,
+            },
+        );
+    }
+}
+
+/**
+ * Owner-only. Deletes any note; when the note is a financial one
+ * (source = 'ledger') the linked expense/loan is soft-deleted in the same
+ * transaction, so it also disappears from the model's Despesas / Empréstimos
+ * and stops being deducted from her month. See delete_model_note.
+ */
+export async function DELETE(
+    request: NextRequest,
+) {
+    try {
+        const authentication =
+            await getAuthenticatedProfile();
+
+        if (!authentication.ok) {
+            return authentication.response;
+        }
+
+        const { profile } = authentication;
+
+        if (profile.role !== "owner") {
+            return NextResponse.json(
+                {
+                    error:
+                        "Somente o proprietário pode excluir notas.",
+                },
+                {
+                    status: 403,
+                },
+            );
+        }
+
+        const requestBody =
+            (await request.json()) as NotesRequestBody;
+
+        const modelId = readRequiredString(
+            requestBody.modelId,
+        );
+
+        const noteId = readRequiredString(
+            requestBody.noteId,
+        );
+
+        if (!modelId || !noteId) {
+            return NextResponse.json(
+                {
+                    error:
+                        "Modelo e nota são obrigatórios.",
+                },
+                {
+                    status: 400,
+                },
+            );
+        }
+
+        const supabase =
+            await createClient();
+
+        const modelAccess =
+            await verifyModelAccess(
+                supabase,
+                modelId,
+                profile,
+            );
+
+        if (!modelAccess.ok) {
+            return modelAccess.response;
+        }
+
+        const {
+            data: existingNote,
+            error: existingNoteError,
+        } = await supabase
+            .from("model_notes")
+            .select("id, source, ledger_entry_id")
+            .eq("id", noteId)
+            .eq("model_id", modelId)
+            .maybeSingle();
+
+        if (
+            existingNoteError ||
+            !existingNote
+        ) {
+            return NextResponse.json(
+                {
+                    error:
+                        "A nota solicitada não foi encontrada.",
+                },
+                {
+                    status: 404,
+                },
+            );
+        }
+
+        const { data, error } =
+            await supabase.rpc(
+                "delete_model_note",
+                {
+                    p_note_id: noteId,
+                },
+            );
+
+        if (error) {
+            console.error(
+                "Erro ao excluir nota:",
+                error,
+            );
+
+            return NextResponse.json(
+                {
+                    error:
+                        error.code === "42501"
+                            ? "Somente o proprietário pode excluir notas."
+                            : "Não foi possível excluir a nota.",
+                },
+                {
+                    status:
+                        error.code === "42501"
+                            ? 403
+                            : 500,
+                },
+            );
+        }
+
+        const result = (data ?? {}) as {
+            ledger_entry_id?: string | null;
+        };
+
+        return NextResponse.json({
+            success: true,
+            // Non-null when an expense/loan was removed alongside the note.
+            ledgerEntryId:
+                result.ledger_entry_id ?? null,
+        });
+    } catch (error) {
+        console.error(
+            "Erro inesperado ao excluir nota:",
+            error,
+        );
+
+        return NextResponse.json(
+            {
+                error:
+                    "Ocorreu um erro inesperado ao excluir a nota.",
             },
             {
                 status: 500,
@@ -1378,9 +1535,7 @@ function createPermissions(
         canCreate:
             role === "owner" ||
             role ===
-                "administrator" ||
-            role ===
-                "representative",
+                "administrator",
         canEdit: role === "owner",
         canPin:
             role === "owner" ||
@@ -1390,6 +1545,8 @@ function createPermissions(
             role === "owner" ||
             role ===
                 "administrator",
+        // Deleting is owner-only: administrators may archive, never remove.
+        canDelete: role === "owner",
     };
 }
 
@@ -1418,6 +1575,16 @@ function mapNote(
         archived: Boolean(
             note.archived,
         ),
+        // 'ledger' notes are the model-facing face of an expense or loan:
+        // deleting one also removes the entry, so the UI has to say so.
+        source:
+            note.source === "ledger"
+                ? "ledger"
+                : "manual",
+        ledgerEntryId:
+            readRequiredString(
+                note.ledger_entry_id,
+            ),
         createdByName:
             readRequiredString(
                 note.created_by_name,

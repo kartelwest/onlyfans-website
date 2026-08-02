@@ -42,6 +42,7 @@ export default function ModelStatusDropdown({
     const [currentStatus, setCurrentStatus] = useState<ModelStatus>(status);
     const [isSaving, setIsSaving] = useState(false);
     const [error, setError] = useState("");
+    const [warning, setWarning] = useState("");
 
     async function handleChange(nextStatus: ModelStatus) {
         if (nextStatus === currentStatus || isSaving) {
@@ -51,6 +52,7 @@ export default function ModelStatusDropdown({
         const previousStatus = currentStatus;
         setCurrentStatus(nextStatus);
         setError("");
+        setWarning("");
         setIsSaving(true);
 
         try {
@@ -69,6 +71,13 @@ export default function ModelStatusDropdown({
                 throw new Error(
                     result.error || "Não foi possível alterar o status.",
                 );
+            }
+
+            // Activating a model who has no portal login still succeeds — it
+            // just does not grant her anything to log in with. Say so, instead
+            // of leaving the admin to find out when she cannot get in.
+            if (typeof result.warning === "string" && result.warning) {
+                setWarning(result.warning);
             }
 
             router.refresh();
@@ -108,6 +117,12 @@ export default function ModelStatusDropdown({
             </select>
 
             {error && <p className="text-xs text-red-400">{error}</p>}
+
+            {warning && (
+                <p className="max-w-[16rem] text-xs leading-5 text-amber-300">
+                    {warning}
+                </p>
+            )}
         </div>
     );
 }

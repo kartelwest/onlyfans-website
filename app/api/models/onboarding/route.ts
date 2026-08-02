@@ -1,43 +1,43 @@
 import { NextResponse } from "next/server";
 
-import { createClient } from "@/lib/supabase/server";
 import { logAuditEntry } from "@/lib/audit/auditLogger";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { createClient } from "@/lib/supabase/server";
+import {
+  ONBOARDING_PLATFORM,
+  findOnboardingField,
+  findOnboardingItem,
+  isReadOnlyLinkedFieldKey,
+  linkedFieldLocation,
+} from "@/lib/onboarding/definition";
+import {
+  syncOnboardingItems,
+  loadOnboarding,
+  resolveOnboardingAccess,
+} from "@/lib/onboarding/server";
 
 import type { ManagementRole } from "@/types/model";
 
 type ProfileRecord = {
   id: string;
-  full_name: string;
+  full_name: string | null;
   role: ManagementRole;
   active: boolean;
 };
 
-type OnboardingItemRecord = {
-  id: string;
-  model_id: string;
-  item_key: string;
-  platform: string;
-  section_key: string;
-  section_title: string;
-  section_order: number;
-  item_title: string;
-  item_description: string | null;
-  item_order: number;
-  responsibility: "model" | "agency" | "both";
-  completed: boolean;
-  completed_at: string | null;
-  completed_by: string | null;
-  notes: string | null;
-  created_at: string;
-  updated_at: string;
-};
-
 type PatchBody = {
   modelId?: string;
-  itemId?: string;
+  itemKey?: string;
   completed?: boolean;
-  notes?: string;
+  field?: {
+    key?: string;
+    value?: string;
+  };
 };
+
+function fail(message: string, status: number) {
+  return NextResponse.json({ error: message }, { status });
+}
 
 async function getAuthenticatedProfile() {
   const supabase = await createClient();
@@ -48,489 +48,300 @@ async function getAuthenticatedProfile() {
   } = await supabase.auth.getUser();
 
   if (userError || !user) {
-    return {
-      error: NextResponse.json(
-        {
-          error: "Não autenticado.",
-        },
-        {
-          status: 401,
-        },
-      ),
-    };
+    return { error: fail("Não autenticado.", 401) };
   }
 
-  const {
-    data: profile,
-    error: profileError,
-  } = await supabase
+  const { data: profile, error: profileError } = await supabase
     .from("profiles")
     .select("id, full_name, role, active")
     .eq("id", user.id)
     .maybeSingle<ProfileRecord>();
 
-  if (
-    profileError ||
-    !profile ||
-    !profile.active
-  ) {
-    return {
-      error: NextResponse.json(
-        {
-          error: "Perfil inválido.",
-        },
-        {
-          status: 403,
-        },
-      ),
-    };
+  if (profileError || !profile || !profile.active) {
+    return { error: fail("Perfil inválido ou inativo.", 403) };
   }
 
-  return {
-    user,
-    profile,
-  };
+  return { supabase, user, profile };
 }
 
-export async function GET(
-  request: Request,
-) {
+export async function GET(request: Request) {
   try {
-    const auth =
-      await getAuthenticatedProfile();
+    const auth = await getAuthenticatedProfile();
 
     if ("error" in auth) {
       return auth.error;
     }
 
-    const url = new URL(request.url);
-
-    const modelId =
-      url.searchParams.get("modelId");
-
-    const platform =
-      url.searchParams.get("platform") ??
-      "onlyfans";
+    const modelId = new URL(request.url).searchParams.get("modelId");
 
     if (!modelId) {
-      return NextResponse.json(
-        {
-          error:
-            "Identificação da modelo não informada.",
-        },
-        {
-          status: 400,
-        },
-      );
+      return fail("Identificação da modelo não informada.", 400);
     }
 
-    // Verify model access based on role
-    const supabaseForCheck = await createClient();
-    let canAccess = false;
+    const access = await resolveOnboardingAccess({
+      supabase: auth.supabase,
+      modelId,
+      userId: auth.user.id,
+      role: auth.profile.role,
+    });
 
-    if (
-      auth.profile.role === "owner" ||
-      auth.profile.role === "administrator"
-    ) {
-      // Staff can access all models
-      const { data: model } = await supabaseForCheck
-        .from("models")
-        .select("id")
-        .eq("id", modelId)
-        .maybeSingle();
-      canAccess = !!model;
-    } else if (auth.profile.role === "representative") {
-      // Rep can only access assigned models
-      const { data: model } = await supabaseForCheck
-        .from("models")
-        .select("id")
-        .eq("id", modelId)
-        .eq("representative_id", auth.user.id)
-        .maybeSingle();
-      canAccess = !!model;
-    } else if (auth.profile.role === "model") {
-      // Model can only access own onboarding
-      const { data: model } = await supabaseForCheck
-        .from("models")
-        .select("id")
-        .eq("id", modelId)
-        .eq("profile_id", auth.user.id)
-        .maybeSingle();
-      canAccess = !!model;
+    if (!access.model || !access.canRead) {
+      return fail("Sem permissão para ver este onboarding.", 403);
     }
 
-    if (!canAccess) {
-      return NextResponse.json(
-        {
-          error: "Sem permissão.",
-        },
-        {
-          status: 403,
-        },
-      );
-    }
+    await syncOnboardingItems({
+      admin: createAdminClient(),
+      modelId,
+      locked: access.locked,
+    });
 
-    // Use request-scoped client for data access (RLS enforced)
-    const {
-      data: items,
-      error: itemsError,
-    } = await supabaseForCheck
-      .from("model_onboarding_items")
-      .select(
-        `
-          id,
-          model_id,
-          item_key,
-          platform,
-          section_key,
-          section_title,
-          section_order,
-          item_title,
-          item_description,
-          item_order,
-          responsibility,
-          completed,
-          completed_at,
-          completed_by,
-          notes,
-          created_at,
-          updated_at
-        `,
-      )
-      .eq("model_id", modelId)
-      .eq("platform", platform)
-      .order("section_order", {
-        ascending: true,
-      })
-      .order("item_order", {
-        ascending: true,
-      });
-
-    if (itemsError) {
-      console.error(
-        "Erro ao carregar onboarding:",
-        itemsError,
-      );
-      return NextResponse.json(
-        {
-          error:
-            "Erro interno ao carregar o onboarding.",
-        },
-        {
-          status: 500,
-        },
-      );
-    }
-
-    const onboardingItems =
-      (items ?? []) as OnboardingItemRecord[];
-
-    const total =
-      onboardingItems.length;
-
-    const completed =
-      onboardingItems.filter(
-        (item) => item.completed,
-      ).length;
-
-    const remaining =
-      Math.max(total - completed, 0);
-
-    const percentage =
-      total === 0
-        ? 0
-        : Math.round(
-            (completed / total) * 100,
-          );
+    const { sections, summary } = await loadOnboarding({
+      supabase: auth.supabase,
+      modelId,
+    });
 
     return NextResponse.json({
-      items: onboardingItems,
-      summary: {
-        total,
-        completed,
-        remaining,
-        percentage,
-      },
-      canEdit:
-        auth.profile.role === "owner" ||
-        auth.profile.role ===
-          "administrator",
+      sections,
+      summary,
+      canEdit: access.canEdit,
+      locked: access.locked,
+      viewerRole: auth.profile.role,
     });
   } catch (error) {
-    console.error(
-      "Erro ao carregar onboarding:",
-      error,
-    );
+    console.error("Erro ao carregar onboarding:", error);
 
-    return NextResponse.json(
-      {
-        error:
-          "Erro interno ao carregar o onboarding.",
-      },
-      {
-        status: 500,
-      },
-    );
+    return fail("Erro interno ao carregar o onboarding.", 500);
   }
 }
 
-export async function PATCH(
-  request: Request,
-) {
+export async function PATCH(request: Request) {
   try {
-    const auth =
-      await getAuthenticatedProfile();
+    const auth = await getAuthenticatedProfile();
 
     if ("error" in auth) {
       return auth.error;
     }
 
-    if (
-      auth.profile.role !== "owner" &&
-      auth.profile.role !==
-        "administrator"
-    ) {
-      return NextResponse.json(
-        {
-          error: "Sem permissão.",
-        },
-        {
-          status: 403,
-        },
+    const body = (await request.json()) as PatchBody;
+
+    const { modelId, itemKey } = body;
+
+    if (!modelId || !itemKey) {
+      return fail("Dados inválidos.", 400);
+    }
+
+    const definition = findOnboardingItem(itemKey);
+
+    if (!definition) {
+      return fail("Etapa de onboarding desconhecida.", 400);
+    }
+
+    const access = await resolveOnboardingAccess({
+      supabase: auth.supabase,
+      modelId,
+      userId: auth.user.id,
+      role: auth.profile.role,
+    });
+
+    if (!access.model || !access.canRead) {
+      return fail("Sem permissão para ver este onboarding.", 403);
+    }
+
+    if (!access.canEdit) {
+      return fail(
+        access.locked
+          ? "Onboarding concluído: apenas o proprietário pode alterá-lo."
+          : "Você não tem permissão para editar este onboarding.",
+        403,
       );
     }
 
-    const body =
-      (await request.json()) as PatchBody;
-
-    if (
-      !body.modelId ||
-      !body.itemId
-    ) {
-      return NextResponse.json(
-        {
-          error: "Dados inválidos.",
-        },
-        {
-          status: 400,
-        },
-      );
-    }
-
-    const supabaseForUpdate = await createClient();
-
-    const {
-      data: existingItem,
-      error: existingItemError,
-    } = await supabaseForUpdate
+    const { data: existing, error: existingError } = await auth.supabase
       .from("model_onboarding_items")
-      .select(
-        "id, model_id, completed, notes",
-      )
-      .eq("id", body.itemId)
-      .eq("model_id", body.modelId)
-      .maybeSingle();
+      .select("id, completed, field_values")
+      .eq("model_id", modelId)
+      .eq("platform", ONBOARDING_PLATFORM)
+      .eq("item_key", itemKey)
+      .maybeSingle<{
+        id: string;
+        completed: boolean;
+        field_values: Record<string, unknown> | null;
+      }>();
 
-    if (existingItemError) {
-      console.error(
-        "Erro ao buscar etapa:",
-        existingItemError,
-      );
-      return NextResponse.json(
-        {
-          error:
-            "Erro interno ao buscar etapa.",
-        },
-        {
-          status: 500,
-        },
-      );
+    if (existingError) {
+      console.error("Erro ao buscar etapa:", existingError);
+
+      return fail("Erro interno ao buscar a etapa.", 500);
     }
 
-    if (!existingItem) {
-      return NextResponse.json(
-        {
-          error:
-            "Etapa de onboarding não encontrada.",
-        },
-        {
-          status: 404,
-        },
-      );
+    if (!existing) {
+      return fail("Etapa de onboarding não encontrada.", 404);
     }
 
-    const updateValues: {
-      completed?: boolean;
-      completed_by?: string | null;
-      notes?: string;
-    } = {};
+    // ----- a fill-in box -----------------------------------------------------
+    if (body.field?.key) {
+      const fieldDefinition = findOnboardingField(itemKey, body.field.key);
 
-    if (
-      typeof body.completed ===
-      "boolean"
-    ) {
-      updateValues.completed =
-        body.completed;
+      if (!fieldDefinition) {
+        return fail("Campo de onboarding desconhecido.", 400);
+      }
 
-      updateValues.completed_by =
-        body.completed
-          ? auth.user.id
-          : null;
-    }
+      const value = (body.field.value ?? "").trim();
 
-    if (
-      typeof body.notes === "string"
-    ) {
-      updateValues.notes =
-        body.notes.trim();
-    }
+      // The actress's legal name and anything else read-only is shown for
+      // reference only. The RPC would refuse it anyway (no allowlist entry);
+      // this turns that into a clear message instead of a 400 from Postgres.
+      if (
+        fieldDefinition.linked &&
+        isReadOnlyLinkedFieldKey(fieldDefinition.linked)
+      ) {
+        return fail(
+          `"${fieldDefinition.label}" não é editável pelo onboarding. Altere em ${linkedFieldLocation(fieldDefinition.linked)}.`,
+          400,
+        );
+      }
 
-    if (
-      Object.keys(updateValues).length ===
-      0
-    ) {
-      return NextResponse.json(
-        {
-          error:
-            "Nenhuma alteração informada.",
-        },
-        {
-          status: 400,
-        },
-      );
-    }
+      if (fieldDefinition.linked) {
+        // Goes to the column that already holds this value elsewhere in the
+        // app, so it shows up there too — and stays editable there.
+        const { error: rpcError } = await auth.supabase.rpc(
+          "set_onboarding_linked_field",
+          {
+            target_model: modelId,
+            field_key: fieldDefinition.linked,
+            new_value: value,
+          },
+        );
 
-    const {
-      data: updatedItem,
-      error: updateError,
-    } = await supabaseForUpdate
-      .from("model_onboarding_items")
-      .update(updateValues)
-      .eq("id", body.itemId)
-      .eq("model_id", body.modelId)
-      .select(
-        `
-          id,
-          model_id,
-          item_key,
-          platform,
-          section_key,
-          section_title,
-          section_order,
-          item_title,
-          item_description,
-          item_order,
-          responsibility,
-          completed,
-          completed_at,
-          completed_by,
-          notes,
-          created_at,
-          updated_at
-        `,
-      )
-      .single<OnboardingItemRecord>();
+        if (rpcError) {
+          console.error("Erro ao salvar campo vinculado:", rpcError);
 
-    if (updateError) {
-      console.error(
-        "Erro ao atualizar etapa:",
-        updateError,
-      );
-      return NextResponse.json(
-        {
-          error:
-            "Erro interno ao atualizar etapa.",
-        },
-        {
-          status: 500,
-        },
-      );
-    }
-
-    const {
-      data: allItems,
-      error: summaryError,
-    } = await supabaseForUpdate
-      .from("model_onboarding_items")
-      .select("completed")
-      .eq("model_id", body.modelId)
-      .eq(
-        "platform",
-        updatedItem.platform,
-      );
-
-    if (summaryError) {
-      console.error(
-        "Erro ao calcular resumo:",
-        summaryError,
-      );
-      return NextResponse.json(
-        {
-          error:
-            "Erro interno ao calcular resumo.",
-        },
-        {
-          status: 500,
-        },
-      );
-    }
-
-    const total =
-      allItems?.length ?? 0;
-
-    const completed =
-      allItems?.filter(
-        (item) => item.completed,
-      ).length ?? 0;
-
-    const remaining =
-      Math.max(total - completed, 0);
-
-    const percentage =
-      total === 0
-        ? 0
-        : Math.round(
-            (completed / total) * 100,
+          return fail(
+            rpcError.message || "Não foi possível salvar este campo.",
+            400,
           );
+        }
+      } else {
+        const merged = {
+          ...(existing.field_values ?? {}),
+          [fieldDefinition.key]: value,
+        };
 
-    await logAuditEntry(supabaseForUpdate, {
-      modelId: body.modelId,
-      action: "onboarding_update",
-      fieldName: updatedItem.item_key,
-      previousValue: existingItem.completed ? "completed" : "pending",
-      newValue: updatedItem.completed ? "completed" : "pending",
-      actor: {
-        id: auth.profile.id,
-        fullName: auth.profile.full_name || "Usuário",
-        role: auth.profile.role,
-      },
-      source: "api:/api/models/onboarding",
-      summary: `Onboarding "${updatedItem.item_title}" marcado como ${updatedItem.completed ? "concluído" : "pendente"} (${percentage}%)`,
+        if (value === "") {
+          delete merged[fieldDefinition.key];
+        }
+
+        const { error: updateError } = await auth.supabase
+          .from("model_onboarding_items")
+          .update({ field_values: merged, updated_by: auth.user.id })
+          .eq("id", existing.id);
+
+        if (updateError) {
+          console.error("Erro ao salvar campo:", updateError);
+
+          return fail(
+            updateError.message || "Não foi possível salvar este campo.",
+            400,
+          );
+        }
+      }
+
+      await logAuditEntry(auth.supabase, {
+        modelId,
+        action: "onboarding_update",
+        fieldName: `${itemKey}.${fieldDefinition.key}`,
+        previousValue: null,
+        newValue: value || null,
+        actor: {
+          id: auth.profile.id,
+          fullName: auth.profile.full_name || "Usuário",
+          role: auth.profile.role,
+        },
+        source: "api:/api/models/onboarding",
+        summary: `Onboarding — "${definition.title}": ${fieldDefinition.label} atualizado`,
+      });
+    }
+
+    // ----- the checkbox ------------------------------------------------------
+    if (typeof body.completed === "boolean") {
+      // Re-read after any field write above, so a box being ticked in the same
+      // request as its last required field is judged on the new values.
+      const { sections } = await loadOnboarding({
+        supabase: auth.supabase,
+        modelId,
+      });
+
+      const current = sections
+        .flatMap((section) => section.items)
+        .find((item) => item.itemKey === itemKey);
+
+      if (body.completed && current && current.missingRequired.length > 0) {
+        return fail(
+          `Preencha antes: ${current.missingRequired.join(", ")}.`,
+          400,
+        );
+      }
+
+      const { error: toggleError } = await auth.supabase
+        .from("model_onboarding_items")
+        .update({
+          completed: body.completed,
+          completed_by: body.completed ? auth.user.id : null,
+          updated_by: auth.user.id,
+        })
+        .eq("id", existing.id);
+
+      if (toggleError) {
+        console.error("Erro ao atualizar etapa:", toggleError);
+
+        return fail(
+          toggleError.message || "Não foi possível atualizar esta etapa.",
+          400,
+        );
+      }
+
+      await logAuditEntry(auth.supabase, {
+        modelId,
+        action: "onboarding_update",
+        fieldName: itemKey,
+        previousValue: existing.completed ? "completed" : "pending",
+        newValue: body.completed ? "completed" : "pending",
+        actor: {
+          id: auth.profile.id,
+          fullName: auth.profile.full_name || "Usuário",
+          role: auth.profile.role,
+        },
+        source: "api:/api/models/onboarding",
+        summary: `Onboarding — "${definition.title}" marcado como ${
+          body.completed ? "concluído" : "pendente"
+        }`,
+      });
+    }
+
+    // The percentage is maintained by trg_onboarding_progress, so re-reading
+    // here is what the client gets back — never a number computed twice.
+    const { sections, summary } = await loadOnboarding({
+      supabase: auth.supabase,
+      modelId,
+    });
+
+    const refreshed = await resolveOnboardingAccess({
+      supabase: auth.supabase,
+      modelId,
+      userId: auth.user.id,
+      role: auth.profile.role,
     });
 
     return NextResponse.json({
-      item: updatedItem,
-      summary: {
-        total,
-        completed,
-        remaining,
-        percentage,
-      },
+      sections,
+      summary,
+      canEdit: refreshed.canEdit,
+      locked: refreshed.locked,
+      viewerRole: auth.profile.role,
     });
   } catch (error) {
-    console.error(
-      "Erro ao atualizar onboarding:",
-      error,
-    );
+    console.error("Erro ao atualizar onboarding:", error);
 
-    return NextResponse.json(
-      {
-        error:
-          "Erro interno ao atualizar o onboarding.",
-      },
-      {
-        status: 500,
-      },
-    );
+    return fail("Erro interno ao atualizar o onboarding.", 500);
   }
 }

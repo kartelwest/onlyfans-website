@@ -140,10 +140,18 @@ export async function GET(request: NextRequest) {
     const isNoteAction =
       Boolean(action) && action!.startsWith(NOTE_ACTION_PREFIX);
 
+    // Note events carry the note text itself in original_body / updated_body.
+    // Notes are internal to owner/administrator, so a representative gets the
+    // profile-change half of the history and never the note half. RLS on
+    // model_note_history enforces the same thing independently — this is the
+    // API-layer half of that pair, not a substitute for it.
+    const isStaff = role === "owner" || role === "administrator";
+
     // A field filter only ever matches profile changes; a note-scoped action
     // filter only ever matches note events. Skip the source that cannot match.
     const skipAudit = isNoteAction;
-    const skipNotes = Boolean(fieldName) || (Boolean(action) && !isNoteAction);
+    const skipNotes =
+      !isStaff || Boolean(fieldName) || (Boolean(action) && !isNoteAction);
 
     const auditPromise = skipAudit
       ? null

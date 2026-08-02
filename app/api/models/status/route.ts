@@ -123,7 +123,7 @@ export async function PATCH(request: Request) {
 
     const { data: existingModel } = await supabase
       .from("models")
-      .select("status, active")
+      .select("status, active, profile_id")
       .eq("id", body.modelId)
       .maybeSingle();
 
@@ -139,6 +139,14 @@ export async function PATCH(request: Request) {
       );
     }
 
+    // models.active and models.status move together here, and the
+    // trg_sync_profile_active_from_model trigger carries models.active over to
+    // profiles.active inside this same statement's transaction. That is the
+    // whole point of doing it in the database rather than with a second call
+    // from here: profiles.active is the ONLY column the login gate reads
+    // (see LoginForm and lib/api/requireRole.ts), and a second round trip
+    // could fail on its own and leave the model authenticated-but-locked-out —
+    // exactly the split brain this endpoint used to create.
     const { error: updateError } = await supabase
       .from("models")
       .update({
@@ -152,6 +160,36 @@ export async function PATCH(request: Request) {
         { error: updateError.message },
         { status: 500 },
       );
+    }
+
+    const profileId = existingModel?.profile_id ?? null;
+
+    // A model with no linked profile has no portal login at all. Activating
+    // her must not look like it granted access it did not grant.
+    let warning: string | null = null;
+
+    if (profileId) {
+      // Belt and braces: confirm the trigger actually did its job rather than
+      // trusting that it is installed. If this ever reads back out of step the
+      // admin needs to know now, not the next time a model cannot log in.
+      const { data: linkedProfile } = await supabase
+        .from("profiles")
+        .select("active")
+        .eq("id", profileId)
+        .maybeSingle();
+
+      if (linkedProfile && linkedProfile.active !== willBeActive) {
+        return NextResponse.json(
+          {
+            error:
+              "O status foi alterado, mas o acesso ao portal não acompanhou a mudança. Avise o suporte antes de entregar o login.",
+          },
+          { status: 500 },
+        );
+      }
+    } else if (willBeActive) {
+      warning =
+        'Status alterado para ativo, mas esta modelo ainda não tem login no portal. Use "Criar acesso" na ficha dela para liberar a entrada.';
     }
 
     await logAuditEntry(supabase, {
@@ -173,6 +211,8 @@ export async function PATCH(request: Request) {
       success: true,
       status,
       active: willBeActive,
+      portalAccess: profileId ? willBeActive : null,
+      warning,
     });
   } catch (error) {
     console.error("Erro ao alterar status da modelo:", error);

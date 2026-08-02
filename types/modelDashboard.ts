@@ -3,6 +3,8 @@
 // type): this view only ever needs a small, fixed slice of fields, and
 // keeping it separate means the two never drift into needing the same shape.
 
+import type { LedgerDeduction, LedgerEntry } from "@/types/ledger";
+
 export type ModelDashboardRole = "representative" | "model";
 
 export interface ModelDashboardModel {
@@ -16,15 +18,14 @@ export interface ModelDashboardModel {
   location: string | null;
   email: string | null;
   whatsapp: string | null;
-  preferredCurrency: string | null;
+  /** ISO 4217 — the currency every amount on this dashboard is shown in. */
+  currency: string;
+  /** ISO 3166-1 alpha-2, drives the flag emoji. Null when not set. */
+  countryCode: string | null;
   contentFrequency: string | null;
   blockBrazil: boolean;
   showFace: boolean;
   referralSource: string | null;
-
-  subscribersCount: number;
-  ppvSoldCount: number;
-  tipsAmount: number;
 
   contentDriveUrl: string | null;
 }
@@ -38,13 +39,50 @@ export interface ModelDashboardChecklist {
   contractSigned: boolean;
 }
 
+export interface ModelDashboardFxRate {
+  rate: number;
+  rateDate: string;
+  /** The live fetch failed and this is the last cached rate for the pair. */
+  stale: boolean;
+}
+
 export interface ModelDashboardEarnings {
-  totalThisMonth: number;
-  modelShareAmount: number;
-  agencyShareAmount: number;
-  marketingShareAmount: number;
+  /** `JULHO`, or `DEZEMBRO 2026` when the month is in a previous year. */
+  periodTitle: string;
+  /** `julho` — for the "Descontos de julho" line. */
+  periodMonthName: string;
+  /** False when the agency has not published that month yet. */
+  published: boolean;
+
+  grossUsd: number;
+  modelShareUsd: number;
+  deductionsUsd: number;
+  deductionsBrl: number;
+  /** Never negative: deductions beyond the share go to `remainingUsd`. */
+  payableUsd: number;
+  remainingUsd: number;
+
   modelPct: number;
   agencyPct: number;
   marketingPct: number;
-  lastUpdated: string | null;
+
+  /** USD -> the model's currency, today's rate. Null when unavailable. */
+  displayRate: ModelDashboardFxRate | null;
+  deductions: LedgerDeduction[];
+}
+
+export interface ModelDashboardLedger {
+  /** Transporte + hotel. */
+  expenses: LedgerEntry[];
+  loans: LedgerEntry[];
+  expensesTotalBrl: number;
+  /** Loans not yet deducted. */
+  loansOutstandingBrl: number;
+  notes: ModelDashboardNote[];
+}
+
+export interface ModelDashboardNote {
+  id: string;
+  body: string;
+  createdAt: string;
 }
