@@ -37,6 +37,30 @@ alter table public.model_onboarding_items
   add constraint onboarding_field_values_is_object
   check (jsonb_typeof(field_values) = 'object');
 
+-- ----- 1b. completed_at, which the live database never got -------------------
+-- 20260722000001 declared sync_onboarding_completed_at() and its trigger, but
+-- neither reached the live database (introspection: the only trigger on the
+-- table is set_model_onboarding_updated_at). Without it `completed_at` stays
+-- null forever and the "Concluída em …" line can never render. Recreated here
+-- rather than by editing the old migration, so an already-migrated database
+-- and a fresh one end up in the same place.
+create or replace function public.sync_onboarding_completed_at()
+returns trigger language plpgsql set search_path = public as $$
+begin
+  if new.completed and (old.completed is distinct from true) then
+    new.completed_at = now();
+  elsif not new.completed then
+    new.completed_at = null;
+    new.completed_by = null;
+  end if;
+  return new;
+end $$;
+
+drop trigger if exists trg_onboarding_completed_at on public.model_onboarding_items;
+create trigger trg_onboarding_completed_at
+  before update on public.model_onboarding_items
+  for each row execute function public.sync_onboarding_completed_at();
+
 -- ----- 2. Percentage is derived, never typed in ------------------------------
 -- Recomputed from the items on every insert/update/delete, across all
 -- platforms for the model, so "100%" always means "every seeded step done".
@@ -175,6 +199,13 @@ create policy onboarding_delete on public.model_onboarding_items
   using ( public.is_owner() );
 
 grant select, insert, update, delete on public.model_onboarding_items to authenticated;
+
+-- anon holds a full set of table grants here purely from Supabase's default
+-- privileges. RLS denies it every row regardless (there is no policy granting
+-- anon anything), but an unauthenticated role has no business holding write
+-- privileges on a model's onboarding — drop them rather than relying on RLS
+-- alone to be the only thing standing in the way.
+revoke all on public.model_onboarding_items from anon;
 
 -- ----- 5. Checklist fields that live in other tables -------------------------
 -- A rep must be able to fill in "Chave PIX" or "Perfil OnlyFans" from the
