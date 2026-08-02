@@ -306,6 +306,13 @@ export default async function AdminModelsPage({
             </Link>
 
             <Link
+              href="/admin/pageview"
+              className="rounded-xl border border-purple-400/40 bg-purple-500/10 px-5 py-3 text-sm font-semibold text-purple-200 transition hover:bg-purple-500/20"
+            >
+              Pageview
+            </Link>
+
+            <Link
               href="/admin/assistant"
               className="rounded-xl border border-purple-400/40 bg-purple-500/10 px-5 py-3 text-sm font-semibold text-purple-200 transition hover:bg-purple-500/20"
             >

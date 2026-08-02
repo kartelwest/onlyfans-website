@@ -1,0 +1,304 @@
+import Link from "next/link";
+import { redirect } from "next/navigation";
+
+import { isStaffRole } from "@/lib/auth/roles";
+import {
+  normalizeModelStatus,
+  sortByModelStatus,
+} from "@/lib/models/modelStatusOrder";
+import { createClient } from "@/lib/supabase/server";
+import type { ManagementRole, ModelStatus } from "@/types/model";
+
+export const dynamic = "force-dynamic";
+
+/**
+ * Pageview — the screen a model is looking at while she is on the phone.
+ *
+ * Pick her here, see exactly what she sees, then switch to the admin side of
+ * the same model from the banner without going back and hunting for her again.
+ */
+
+type PageviewModelRow = {
+  id: string;
+  model_number: number | null;
+  slug: string;
+  display_name: string;
+  stage_name: string | null;
+  status: string | null;
+  active: boolean | null;
+  last_login_at: string | null;
+  profile: { full_name: string | null } | null;
+  representative: { full_name: string | null } | null;
+};
+
+const statusStyles: Record<
+  ModelStatus,
+  { dot: string; label: string; text: string }
+> = {
+  active: { dot: "bg-emerald-400", label: "Ativa", text: "text-emerald-300" },
+  inactive: { dot: "bg-white/40", label: "Inativa", text: "text-white/50" },
+  candidate: {
+    dot: "bg-yellow-400",
+    label: "Candidata",
+    text: "text-yellow-300",
+  },
+  denied: { dot: "bg-red-400", label: "Negada", text: "text-red-300" },
+};
+
+export default async function AdminPageviewPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string }>;
+}) {
+  const { q } = await searchParams;
+  const search = (q ?? "").trim();
+
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    redirect("/login");
+  }
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("full_name, role, active")
+    .eq("id", user.id)
+    .maybeSingle();
+
+  if (!profile || !profile.active) {
+    redirect("/login");
+  }
+
+  if (!isStaffRole(profile.role as ManagementRole)) {
+    redirect("/login");
+  }
+
+  const { data: modelRows, error: modelsError } = await supabase
+    .from("models")
+    .select(
+      `
+        id,
+        model_number,
+        slug,
+        display_name,
+        stage_name,
+        status,
+        active,
+        last_login_at,
+        profile:profiles!profile_id ( full_name ),
+        representative:profiles!representative_id ( full_name )
+      `,
+    )
+    .order("model_number", { ascending: true, nullsFirst: false })
+    .order("created_at", { ascending: true });
+
+  if (modelsError) {
+    console.error("Erro ao carregar modelos:", modelsError);
+  }
+
+  const models = sortByModelStatus(
+    (modelRows ?? []) as unknown as PageviewModelRow[],
+    (model) => ({ status: model.status, active: model.active }),
+  );
+
+  const needle = search.toLowerCase();
+
+  const filteredModels = needle
+    ? models.filter((model) =>
+        [
+          model.display_name,
+          model.stage_name,
+          model.profile?.full_name,
+          model.representative?.full_name,
+          model.model_number === null ? null : `#${model.model_number}`,
+        ]
+          .filter((field): field is string => Boolean(field))
+          .some((field) => field.toLowerCase().includes(needle)),
+      )
+    : models;
+
+  return (
+    <main className="min-h-screen bg-[#08080a] px-4 py-8 text-white sm:px-6 lg:px-10">
+      <div className="mx-auto max-w-[1400px]">
+        <header className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.28em] text-pink-300">
+              KARAY Models
+            </p>
+
+            <h1 className="mt-2 text-3xl font-bold sm:text-4xl">Pageview</h1>
+
+            <p className="mt-3 max-w-2xl text-sm leading-6 text-white/55">
+              A tela exata que a modelo está vendo. Quando ela ligar, abra a
+              tela dela primeiro para acompanhar o que ela descreve — o próprio
+              painel de visualização leva você ao lado admin da mesma modelo.
+            </p>
+          </div>
+
+          <div className="flex flex-wrap gap-3">
+            <Link
+              href="/admin/models"
+              className="rounded-xl border border-white/10 bg-white/5 px-5 py-3 text-sm font-semibold text-white/80 transition hover:bg-white/10"
+            >
+              Lista de modelos
+            </Link>
+
+            <Link
+              href="/admin"
+              className="rounded-xl border border-white/10 bg-white/5 px-5 py-3 text-sm font-semibold text-white/80 transition hover:bg-white/10"
+            >
+              Dashboard
+            </Link>
+          </div>
+        </header>
+
+        <form
+          method="get"
+          className="mt-8 flex flex-wrap items-center gap-3 rounded-2xl border border-white/10 bg-[#111115] p-4"
+        >
+          <label
+            htmlFor="pageview-search"
+            className="text-xs font-bold uppercase tracking-[0.12em] text-white/50"
+          >
+            Buscar modelo
+          </label>
+
+          <input
+            id="pageview-search"
+            name="q"
+            defaultValue={search}
+            placeholder="Nome, nome artístico, número ou representante"
+            className="min-w-[260px] flex-1 rounded-lg border border-white/15 bg-[#1a1a1f] px-4 py-2 text-sm text-white outline-none placeholder:text-white/30 focus:border-pink-400/60"
+          />
+
+          <button
+            type="submit"
+            className="rounded-lg bg-pink-500 px-5 py-2 text-xs font-bold uppercase tracking-wider text-white transition hover:bg-pink-400"
+          >
+            Buscar
+          </button>
+
+          {search && (
+            <Link
+              href="/admin/pageview"
+              className="rounded-lg border border-white/15 px-4 py-2 text-xs font-bold uppercase tracking-wider text-white/70 transition hover:bg-white/10"
+            >
+              Limpar
+            </Link>
+          )}
+
+          <span className="text-xs text-white/40">
+            {filteredModels.length} de {models.length} modelo(s)
+          </span>
+        </form>
+
+        {filteredModels.length === 0 ? (
+          <div className="mt-6 rounded-2xl border border-white/10 bg-[#111115] p-12 text-center">
+            <p className="text-lg font-bold">Nenhuma modelo encontrada</p>
+
+            <p className="mt-2 text-sm text-white/50">
+              {search
+                ? "Tente outro nome ou limpe a busca."
+                : "Adicione a primeira modelo para começar."}
+            </p>
+          </div>
+        ) : (
+          <section className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            {filteredModels.map((model) => {
+              const status = normalizeModelStatus(model.status, model.active);
+              const style = statusStyles[status];
+
+              const displayName =
+                model.profile?.full_name?.trim() || model.display_name;
+
+              return (
+                <article
+                  key={model.id}
+                  className="flex flex-col justify-between rounded-2xl border border-white/10 bg-[#111115] p-5"
+                >
+                  <div>
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="truncate text-lg font-bold">
+                          {displayName}
+                        </p>
+
+                        {model.stage_name &&
+                          model.stage_name !== displayName && (
+                            <p className="mt-1 truncate text-xs text-white/45">
+                              {model.stage_name}
+                            </p>
+                          )}
+                      </div>
+
+                      <span className="shrink-0 text-sm font-bold text-pink-300">
+                        {model.model_number === null
+                          ? ""
+                          : `#${model.model_number}`}
+                      </span>
+                    </div>
+
+                    <div className="mt-3 flex items-center gap-2 text-xs font-semibold">
+                      <span className={`h-2 w-2 rounded-full ${style.dot}`} />
+                      <span className={style.text}>{style.label}</span>
+                    </div>
+
+                    <dl className="mt-4 space-y-1 text-xs text-white/50">
+                      <div className="flex justify-between gap-3">
+                        <dt>Representante</dt>
+                        <dd className="truncate text-white/70">
+                          {model.representative?.full_name?.trim() ||
+                            "Nenhum"}
+                        </dd>
+                      </div>
+
+                      <div className="flex justify-between gap-3">
+                        <dt>Último acesso</dt>
+                        <dd className="text-white/70">
+                          {model.last_login_at
+                            ? new Date(
+                                model.last_login_at,
+                              ).toLocaleDateString("pt-BR")
+                            : "Nunca"}
+                        </dd>
+                      </div>
+                    </dl>
+                  </div>
+
+                  <div className="mt-5 flex flex-col gap-2">
+                    <Link
+                      href={`/admin/view-as/model/${model.id}`}
+                      className="rounded-lg bg-pink-500 px-4 py-2 text-center text-xs font-bold uppercase tracking-wider text-white transition hover:bg-pink-400"
+                    >
+                      Ver a tela da modelo
+                    </Link>
+
+                    <div className="grid grid-cols-2 gap-2">
+                      <Link
+                        href={`/admin/view-as/model/${model.id}/representative`}
+                        className="rounded-lg border border-purple-400/30 bg-purple-500/10 px-3 py-2 text-center text-xs font-bold text-purple-200 transition hover:bg-purple-500/20"
+                      >
+                        Tela do rep.
+                      </Link>
+
+                      <Link
+                        href={`/admin/models/${model.slug}`}
+                        className="rounded-lg border border-pink-400/30 bg-pink-500/10 px-3 py-2 text-center text-xs font-bold text-pink-200 transition hover:bg-pink-500/20"
+                      >
+                        Painel admin
+                      </Link>
+                    </div>
+                  </div>
+                </article>
+              );
+            })}
+          </section>
+        )}
+      </div>
+    </main>
+  );
+}

@@ -52,9 +52,11 @@ export default async function ViewAsRepresentativeModelPage({
     redirect("/admin/models");
   }
 
+  // slug rides along only to point the banner at the admin side of the same
+  // model — the dashboard itself never uses it.
   const { data: modelRow, error: modelError } = await supabase
     .from("models")
-    .select(DASHBOARD_MODEL_COLUMNS)
+    .select(`${DASHBOARD_MODEL_COLUMNS}, slug`)
     .eq("id", modelId)
     .maybeSingle();
 
@@ -87,7 +89,12 @@ export default async function ViewAsRepresentativeModelPage({
             ? `Vendo ${model.stageName} como o representante ${representativeName} veria`
             : `Vendo ${model.stageName} como um representante veria (nenhum atribuído)`
         }
-        backHref="/admin/models"
+        backHref="/admin/pageview"
+        switcher={{
+          modelId: model.id,
+          modelSlug: (modelRow.slug as string | null) ?? null,
+          current: "representative",
+        }}
       />
 
       <ModelDashboardView
