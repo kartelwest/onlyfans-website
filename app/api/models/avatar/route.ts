@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { logAuditEntry } from "@/lib/audit/auditLogger";
+import { storagePathFromPublicUrl } from "@/lib/models/avatarStorage";
 
 import type { ManagementRole } from "@/types/model";
 
@@ -12,6 +13,7 @@ const ALLOWED_MIME_TYPES = [
   "image/png",
   "image/webp",
 ];
+
 
 // Avatar is the ONE field a model may edit about herself. A representative
 // may never edit it — her only write capability anywhere in the dashboard is
@@ -153,6 +155,31 @@ export async function POST(request: Request) {
         { error: "Erro ao salvar avatar." },
         { status: 500 },
       );
+    }
+
+    // The new photo is live and recorded. Only now is the previous object
+    // safe to drop — doing it earlier would leave her with no photo at all if
+    // the upload or the row update then failed. Each upload lands on a fresh
+    // uuid path rather than overwriting a stable one, because the bucket is
+    // public and a stable path would keep serving the old image from the CDN
+    // cache long after it was replaced. That makes cleanup our job.
+    const previousPath = storagePathFromPublicUrl(
+      existingModel?.profile_photo_url ?? null,
+    );
+
+    if (previousPath && previousPath !== path) {
+      const { error: removeError } = await admin.storage
+        .from("model-avatars")
+        .remove([previousPath]);
+
+      // A failed cleanup is not worth failing the request over — she has her
+      // new photo. Log it so an orphan is traceable rather than invisible.
+      if (removeError) {
+        console.error(
+          "Erro ao remover a foto anterior:",
+          removeError,
+        );
+      }
     }
 
     await logAuditEntry(supabase, {

@@ -198,10 +198,37 @@ export default async function OwnerUserManagePage({
                     redirect("/admin/models");
                   }
 
-                  // Toggle active status
+                  const nextActive = !userProfile.active;
+
+                  // The linked model record goes first, because the
+                  // trg_sync_profile_active_from_model trigger carries
+                  // models.active over to profiles.active in the same
+                  // transaction — so for a model this single write settles
+                  // both columns. Toggling profiles.active on its own here was
+                  // the mirror image of the admin status bug: portal access
+                  // moved while the CRM roster flag stayed behind.
+                  const { data: linkedModel } = await supabase
+                    .from("models")
+                    .select("id")
+                    .eq("profile_id", params.id)
+                    .maybeSingle();
+
+                  if (linkedModel) {
+                    await supabase
+                      .from("models")
+                      .update({
+                        active: nextActive,
+                        status: nextActive ? "active" : "inactive",
+                      })
+                      .eq("id", linkedModel.id);
+                  }
+
+                  // Staff accounts have no model record, so they still need
+                  // the direct write. For a model this is a no-op the trigger
+                  // has already performed.
                   await supabase
                     .from("profiles")
-                    .update({ active: !userProfile.active })
+                    .update({ active: nextActive })
                     .eq("id", params.id);
 
                   redirect(`/owner/users/${params.id}`);

@@ -5,6 +5,10 @@ import Image from "next/image";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { resolveLoginIdentifier } from "@/lib/auth/loginIdentifier";
+import {
+  classifyAuthError,
+  loginFailureMessage,
+} from "@/lib/auth/loginErrors";
 
 type ProfileRole =
   | "owner"
@@ -33,7 +37,7 @@ export default function LoginForm({ returnTo, expired }: { returnTo?: string; ex
       const resolved = resolveLoginIdentifier(identifier);
 
       if (!resolved.ok) {
-        throw new Error("Email, usuário ou senha incorretos.");
+        throw new Error(loginFailureMessage("invalid_identifier"));
       }
 
       const { data: loginData, error: loginError } =
@@ -43,29 +47,37 @@ export default function LoginForm({ returnTo, expired }: { returnTo?: string; ex
         });
 
       if (loginError) {
-        throw new Error("Email, usuário ou senha incorretos.");
+        // A request that never reached the auth server is not a wrong
+        // password, and saying so sends her to reset a password that was
+        // never the problem.
+        throw new Error(loginFailureMessage(classifyAuthError(loginError)));
       }
 
       const user = loginData.user;
 
       if (!user) {
-        throw new Error("Não foi possível acessar esta conta.");
+        throw new Error(loginFailureMessage("unknown"));
       }
 
+      // Everything below this line runs AFTER the password was accepted, so
+      // these messages must never read like a credential problem. They used to
+      // all collapse into "Esta conta está desativada.", which sent an admin
+      // hunting through the auth records of an account that had authenticated
+      // perfectly well.
       const { data: profile, error: profileError } = await supabase
         .from("profiles")
         .select("role, active, must_change_password")
         .eq("id", user.id)
-        .single();
+        .maybeSingle();
 
       if (profileError || !profile) {
         await supabase.auth.signOut();
-        throw new Error("Perfil de acesso não encontrado.");
+        throw new Error(loginFailureMessage("no_profile"));
       }
 
       if (!profile.active) {
         await supabase.auth.signOut();
-        throw new Error("Esta conta está desativada.");
+        throw new Error(loginFailureMessage("account_disabled"));
       }
 
       if (profile.must_change_password) {
@@ -75,6 +87,22 @@ export default function LoginForm({ returnTo, expired }: { returnTo?: string; ex
 
       const role = profile.role as ProfileRole;
 
+      // A login can exist without ever having been attached to a model record.
+      // She would otherwise reach /area-da-modelo and meet a bare
+      // "Perfil não encontrado" with no idea what to do about it.
+      if (role === "model") {
+        const { data: linkedModel } = await supabase
+          .from("models")
+          .select("id")
+          .eq("profile_id", user.id)
+          .maybeSingle();
+
+        if (!linkedModel) {
+          await supabase.auth.signOut();
+          throw new Error(loginFailureMessage("no_model_record"));
+        }
+      }
+
       const redirectPath = resolveRedirectPath(role, returnTo ?? null);
       window.location.replace(redirectPath);
       return;
@@ -82,7 +110,7 @@ export default function LoginForm({ returnTo, expired }: { returnTo?: string; ex
       const message =
         error instanceof Error
           ? error.message
-          : "Ocorreu um erro ao entrar.";
+          : loginFailureMessage("unknown");
 
       setErrorMessage(message);
     } finally {
