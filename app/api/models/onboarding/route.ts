@@ -7,9 +7,11 @@ import {
   ONBOARDING_PLATFORM,
   findOnboardingField,
   findOnboardingItem,
+  isReadOnlyLinkedFieldKey,
+  linkedFieldLocation,
 } from "@/lib/onboarding/definition";
 import {
-  ensureOnboardingSeeded,
+  syncOnboardingItems,
   loadOnboarding,
   resolveOnboardingAccess,
 } from "@/lib/onboarding/server";
@@ -87,7 +89,7 @@ export async function GET(request: Request) {
       return fail("Sem permissão para ver este onboarding.", 403);
     }
 
-    await ensureOnboardingSeeded({
+    await syncOnboardingItems({
       admin: createAdminClient(),
       modelId,
       locked: access.locked,
@@ -185,6 +187,19 @@ export async function PATCH(request: Request) {
       }
 
       const value = (body.field.value ?? "").trim();
+
+      // The actress's legal name and anything else read-only is shown for
+      // reference only. The RPC would refuse it anyway (no allowlist entry);
+      // this turns that into a clear message instead of a 400 from Postgres.
+      if (
+        fieldDefinition.linked &&
+        isReadOnlyLinkedFieldKey(fieldDefinition.linked)
+      ) {
+        return fail(
+          `"${fieldDefinition.label}" não é editável pelo onboarding. Altere em ${linkedFieldLocation(fieldDefinition.linked)}.`,
+          400,
+        );
+      }
 
       if (fieldDefinition.linked) {
         // Goes to the column that already holds this value elsewhere in the

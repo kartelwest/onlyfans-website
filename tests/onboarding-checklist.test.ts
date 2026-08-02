@@ -7,11 +7,13 @@ import {
   LINKED_FIELDS,
   ONBOARDING_ITEM_COUNT,
   ONBOARDING_SECTIONS,
+  READ_ONLY_LINKED_FIELDS,
   buildItemKey,
   findOnboardingField,
   findOnboardingItem,
   flattenOnboarding,
   isLinkedFieldKey,
+  isReadOnlyLinkedFieldKey,
 } from "../lib/onboarding/definition";
 
 const MIGRATION_PATH = fileURLToPath(
@@ -85,7 +87,8 @@ describe("onboarding definition", () => {
         if (!field.linked) continue;
 
         assert.ok(
-          isLinkedFieldKey(field.linked),
+          isLinkedFieldKey(field.linked) ||
+            isReadOnlyLinkedFieldKey(field.linked),
           `item "${item.key}" links unknown field "${field.linked}"`,
         );
       }
@@ -160,7 +163,7 @@ describe("linked fields stay in step with the database", () => {
     }
   });
 
-  it("does not allow columns the UI never offers", () => {
+  it("allows exactly the registry, nothing more", () => {
     const registered = new Set(Object.keys(LINKED_FIELDS));
 
     for (const key of [
@@ -169,8 +172,54 @@ describe("linked fields stay in step with the database", () => {
     ]) {
       assert.ok(
         registered.has(key),
-        `set_onboarding_linked_field accepts "${key}", which no checklist field uses`,
+        `set_onboarding_linked_field accepts "${key}", which is not a linkable field`,
       );
     }
+  });
+
+  it("never allows a read-only column to be written", () => {
+    // The whole point of READ_ONLY_LINKED_FIELDS: the actress's legal name has
+    // no path to a write. If one of these ever appears in the RPC allowlist,
+    // onboarding could overwrite her name with her OnlyFans username.
+    const allowed = new Set([
+      ...sqlAllowlist("model_columns"),
+      ...sqlAllowlist("payment_columns"),
+    ]);
+
+    for (const key of Object.keys(READ_ONLY_LINKED_FIELDS)) {
+      assert.ok(
+        !allowed.has(key),
+        `"${key}" is read-only but set_onboarding_linked_field would write it`,
+      );
+
+      assert.ok(
+        !isLinkedFieldKey(key),
+        `"${key}" is read-only but also registered as writable`,
+      );
+    }
+  });
+
+  it("keeps the actress name and the OnlyFans username apart", () => {
+    // They are different values by design. One step carries both, and the name
+    // must be the read-only one.
+    const fields = flattenOnboarding()
+      .flatMap((item) => item.fields ?? [])
+      .filter((field) => field.linked);
+
+    const nameField = fields.find((field) => field.linked === "display_name");
+    const usernameField = fields.find((field) => field.linked === "onlyfans");
+
+    assert.ok(nameField, "the actress name is not shown anywhere");
+    assert.ok(usernameField, "the OnlyFans username is not captured anywhere");
+    assert.notEqual(nameField?.key, usernameField?.key);
+
+    assert.ok(
+      isReadOnlyLinkedFieldKey(String(nameField?.linked)),
+      "the actress name must be read-only in the checklist",
+    );
+    assert.ok(
+      isLinkedFieldKey(String(usernameField?.linked)),
+      "the OnlyFans username must be writable",
+    );
   });
 });

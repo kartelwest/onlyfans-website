@@ -6,9 +6,12 @@ import {
   LINKED_FIELDS,
   ONBOARDING_PLATFORM,
   ONBOARDING_SECTIONS,
+  READ_ONLY_LINKED_FIELDS,
   buildItemKey,
   flattenOnboarding,
-  isLinkedFieldKey,
+  isReadOnlyLinkedFieldKey,
+  linkedFieldLocation,
+  type AnyLinkedFieldKey,
   type LinkedFieldKey,
   type OnboardingResponsibility,
 } from "./definition";
@@ -31,10 +34,18 @@ const PAYMENT_LINKED_COLUMNS = new Set<LinkedFieldKey>([
   "payment_frequency",
 ]);
 
-const LINKED_KEYS = Object.keys(LINKED_FIELDS) as LinkedFieldKey[];
+/**
+ * Everything the checklist can display, writable or not. The read-only keys
+ * are read from `models` exactly like the rest — they simply have no path to
+ * a write (no entry in the RPC allowlist, refused by the route handler).
+ */
+const LINKED_KEYS = [
+  ...(Object.keys(LINKED_FIELDS) as LinkedFieldKey[]),
+  ...(Object.keys(READ_ONLY_LINKED_FIELDS) as AnyLinkedFieldKey[]),
+] as AnyLinkedFieldKey[];
 
 const MODEL_LINKED_COLUMNS = LINKED_KEYS.filter(
-  (key) => !PAYMENT_LINKED_COLUMNS.has(key),
+  (key) => !PAYMENT_LINKED_COLUMNS.has(key as LinkedFieldKey),
 );
 
 export function linkedFieldTable(
@@ -105,16 +116,19 @@ export async function resolveOnboardingAccess({
 }
 
 /**
- * Creates the rows this model is missing so the checklist in
- * lib/onboarding/definition.ts is what she is actually measured against.
+ * Brings this model's rows in line with lib/onboarding/definition.ts: adds the
+ * steps she is missing and drops the ones that are no longer part of the
+ * process. That second half matters — a step left behind after the checklist
+ * was rewritten still counts towards her total, so her percentage could never
+ * reach 100 again.
  *
- * Runs with the admin client: seeding is driven by the canonical list, never
+ * Runs with the admin client: the work is driven by the canonical list, never
  * by user input, and a representative holds no INSERT on a model she is not
- * assigned to. Rows are matched by (model_id, platform, item_key), so this is
- * safe to call on every read — existing progress is never overwritten, and
- * the section/title columns are refreshed so reworded steps show through.
+ * assigned to (nor DELETE on any). Rows are matched by
+ * (model_id, platform, item_key), so this is safe to call on every read —
+ * recorded progress against a step that still exists is never touched.
  */
-export async function ensureOnboardingSeeded({
+export async function syncOnboardingItems({
   admin,
   modelId,
   locked,
@@ -135,40 +149,63 @@ export async function ensureOnboardingSeeded({
 
   const seen = new Set((existing ?? []).map((row) => row.item_key as string));
 
-  const missing = flattenOnboarding().filter(
+  const canonical = flattenOnboarding();
+
+  const canonicalKeys = new Set(
+    canonical.map((item) => buildItemKey(item.sectionKey, item.key)),
+  );
+
+  const missing = canonical.filter(
     (item) => !seen.has(buildItemKey(item.sectionKey, item.key)),
   );
 
-  if (missing.length === 0) {
+  const stale = Array.from(seen).filter((key) => !canonicalKeys.has(key));
+
+  if (missing.length === 0 && stale.length === 0) {
     return;
   }
 
-  // A completed onboarding is frozen for everyone but the owner. Inserting
-  // new steps would silently drop her below 100%, so a locked model keeps the
-  // list she finished until an owner reopens it.
+  // A completed onboarding is frozen for everyone but the owner, and the lock
+  // trigger rejects both halves of this. She keeps the list she finished until
+  // an owner reopens it.
   if (locked) {
     return;
   }
 
-  const { error: insertError } = await admin
-    .from("model_onboarding_items")
-    .insert(
-      missing.map((item) => ({
-        model_id: modelId,
-        platform: ONBOARDING_PLATFORM,
-        item_key: buildItemKey(item.sectionKey, item.key),
-        section_key: item.sectionKey,
-        section_title: item.sectionTitle,
-        section_order: item.sectionOrder,
-        item_title: item.title,
-        item_description: item.description ?? null,
-        item_order: item.itemOrder,
-        responsibility: item.responsibility,
-      })),
-    );
+  if (stale.length > 0) {
+    const { error: deleteError } = await admin
+      .from("model_onboarding_items")
+      .delete()
+      .eq("model_id", modelId)
+      .eq("platform", ONBOARDING_PLATFORM)
+      .in("item_key", stale);
 
-  if (insertError) {
-    throw new Error(insertError.message);
+    if (deleteError) {
+      throw new Error(deleteError.message);
+    }
+  }
+
+  if (missing.length > 0) {
+    const { error: insertError } = await admin
+      .from("model_onboarding_items")
+      .insert(
+        missing.map((item) => ({
+          model_id: modelId,
+          platform: ONBOARDING_PLATFORM,
+          item_key: buildItemKey(item.sectionKey, item.key),
+          section_key: item.sectionKey,
+          section_title: item.sectionTitle,
+          section_order: item.sectionOrder,
+          item_title: item.title,
+          item_description: item.description ?? null,
+          item_order: item.itemOrder,
+          responsibility: item.responsibility,
+        })),
+      );
+
+    if (insertError) {
+      throw new Error(insertError.message);
+    }
   }
 }
 
@@ -180,9 +217,11 @@ export type OnboardingFieldValue = {
   options: string[] | null;
   required: boolean;
   /** Null for a field stored on the step itself. */
-  linked: LinkedFieldKey | null;
+  linked: AnyLinkedFieldKey | null;
   /** Where else in the app the same value appears — UI hint only. */
   linkedLocation: string | null;
+  /** Shown for reference, editable only where it actually lives. */
+  readOnly: boolean;
   value: string;
 };
 
@@ -293,7 +332,7 @@ async function loadLinkedValues({
 
   for (const key of LINKED_KEYS) {
     const source = (
-      PAYMENT_LINKED_COLUMNS.has(key) ? paymentsRow : modelRow
+      PAYMENT_LINKED_COLUMNS.has(key as LinkedFieldKey) ? paymentsRow : modelRow
     ) as Record<string, unknown> | null;
 
     values[key] = asText(source?.[key]);
@@ -364,10 +403,7 @@ export async function loadOnboarding({
 
       const fields: OnboardingFieldValue[] = (item.fields ?? []).map(
         (field) => {
-          const linked =
-            field.linked && isLinkedFieldKey(field.linked)
-              ? field.linked
-              : null;
+          const linked = field.linked ?? null;
 
           return {
             key: field.key,
@@ -377,7 +413,8 @@ export async function loadOnboarding({
             options: field.options ?? null,
             required: field.required === true,
             linked,
-            linkedLocation: linked ? LINKED_FIELDS[linked].location : null,
+            linkedLocation: linked ? linkedFieldLocation(linked) : null,
+            readOnly: linked ? isReadOnlyLinkedFieldKey(linked) : false,
             value: linked
               ? (linkedValues[linked] ?? "")
               : asText(stored[field.key]),

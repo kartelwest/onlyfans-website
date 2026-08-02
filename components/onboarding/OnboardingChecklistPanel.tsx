@@ -15,6 +15,7 @@ type FieldView = {
   required: boolean;
   linked: string | null;
   linkedLocation: string | null;
+  readOnly: boolean;
   value: string;
 };
 
@@ -482,7 +483,7 @@ function ItemRow({
                 <FieldInput
                   key={field.key}
                   field={field}
-                  disabled={!canEdit}
+                  disabled={!canEdit || field.readOnly}
                   isSaving={savingKey === `${item.itemKey}.${field.key}`}
                   onSave={(value) => onSaveField(field.key, value)}
                 />
@@ -563,12 +564,21 @@ function FieldInput({
 
         {field.required && <span className="text-pink-300">obrigatório</span>}
 
-        {field.linkedLocation && (
+        {field.linkedLocation && !field.readOnly && (
           <span
             className="rounded-full border border-blue-400/25 bg-blue-500/10 px-2 py-0.5 text-[9px] font-bold normal-case tracking-normal text-blue-200"
             title={`Este campo é o mesmo de ${field.linkedLocation} — salvar aqui atualiza lá, e vice-versa.`}
           >
             também em {field.linkedLocation}
+          </span>
+        )}
+
+        {field.readOnly && (
+          <span
+            className="rounded-full border border-white/15 bg-white/5 px-2 py-0.5 text-[9px] font-bold normal-case tracking-normal text-white/60"
+            title={`Somente leitura aqui — o onboarding nunca altera este campo. Edite em ${field.linkedLocation}.`}
+          >
+            somente leitura — edite em {field.linkedLocation}
           </span>
         )}
 
