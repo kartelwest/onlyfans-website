@@ -326,6 +326,9 @@ revoke execute on function public.sync_model_onboarding_progress() from authenti
 revoke execute on function public.guard_onboarding_lock() from public;
 revoke execute on function public.guard_onboarding_lock() from anon;
 revoke execute on function public.guard_onboarding_lock() from authenticated;
+revoke execute on function public.sync_onboarding_completed_at() from public;
+revoke execute on function public.sync_onboarding_completed_at() from anon;
+revoke execute on function public.sync_onboarding_completed_at() from authenticated;
 
 -- ----- 6. Audit: a rep's onboarding edits have to be recorded too -------------
 -- audit_history_insert was staff-only (20260730000000) because only staff could
