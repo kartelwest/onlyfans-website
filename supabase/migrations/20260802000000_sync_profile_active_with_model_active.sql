@@ -68,6 +68,21 @@ end $$;
 -- own. The live profiles_update_management_only policy would permit it today,
 -- but this keeps the sync working independently of future policy edits.
 
+-- Supabase's default privileges hand every new public-schema function an
+-- EXECUTE grant to anon and authenticated, which the security advisor flags as
+-- {anon,authenticated}_security_definer_function_executable. Calling a trigger
+-- function over /rest/v1/rpc only ever raises "trigger functions can only be
+-- called as triggers", so this is not exploitable — but the grant is noise in
+-- the advisor and the project already cleans these up by name (20260731010000,
+-- 20260724000003). `revoke ... from public` alone does not remove the two role
+-- grants, so both are named explicitly.
+--
+-- Revoking EXECUTE does NOT stop the trigger: PostgreSQL checks that privilege
+-- when CREATE TRIGGER runs, not on each fire.
+revoke execute on function public.sync_profile_active_from_model() from public;
+revoke execute on function public.sync_profile_active_from_model() from anon;
+revoke execute on function public.sync_profile_active_from_model() from authenticated;
+
 drop trigger if exists trg_sync_profile_active_from_model on public.models;
 create trigger trg_sync_profile_active_from_model
 after insert or update of active, profile_id on public.models
