@@ -488,9 +488,12 @@ export default async function ModelAdminPage({
         checklistRow?.proxy_browser_status,
       ),
 
+    // models.onboarding_percentage is the trigger-maintained projection of the
+    // onboarding checklist items and therefore the authority. The column of
+    // the same name on model_checklist is legacy and no longer written.
     onboardingPercentage:
-      checklistRow?.onboarding_percentage ??
       model.onboardingPercentage ??
+      checklistRow?.onboarding_percentage ??
       0,
 
     createdAt:

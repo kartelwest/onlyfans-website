@@ -286,35 +286,12 @@ export async function PATCH(request: Request) {
       );
     }
 
-    const {
-      error: modelUpdateError,
-    } = await supabase
-      .from("models")
-      .update({
-        onboarding_percentage:
-          onboardingPercentage,
-        onboarding_complete:
-          onboardingPercentage === 100,
-        updated_at: now,
-      })
-      .eq("id", modelId);
-
-    if (modelUpdateError) {
-      console.error(
-        "Erro ao atualizar progresso da modelo:",
-        modelUpdateError,
-      );
-
-      return NextResponse.json(
-        {
-          error:
-            "O checklist foi salvo, mas o progresso geral não foi atualizado.",
-        },
-        {
-          status: 500,
-        },
-      );
-    }
+    // models.onboarding_percentage is deliberately NOT written here anymore.
+    // It is a trigger-maintained projection of model_onboarding_items (see
+    // 20260803000000_onboarding_checklist_rework.sql) — the onboarding
+    // checklist under the "Status" tab is the single source of that number,
+    // and writing it from these platform statuses too would make the two
+    // fight over the same column.
 
     await logAuditEntry(supabase, {
       modelId,

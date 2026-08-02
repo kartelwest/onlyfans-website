@@ -140,12 +140,14 @@ export default async function RepresentativePage() {
               const statusDot = statusDotConfig[modelStatus];
 
               return (
-              <Link
+              <div
                 key={model.id}
-                href={`/representative/models/${model.id}`}
-                className="block rounded-2xl border border-[#eadfd8] bg-white p-6 shadow-sm transition hover:shadow-md hover:border-[#b06a87]"
+                className="rounded-2xl border border-[#eadfd8] bg-white p-6 shadow-sm transition hover:shadow-md hover:border-[#b06a87]"
               >
-                <div className="flex items-center justify-between gap-4">
+                <Link
+                  href={`/representative/models/${model.id}`}
+                  className="flex items-center justify-between gap-4"
+                >
                   <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-[#eadfd8] bg-[#f7f1ec] text-2xl font-bold text-[#4b2438]">
                     {model.display_name.charAt(0).toUpperCase()}
                   </div>
@@ -166,7 +168,7 @@ export default async function RepresentativePage() {
                     title={statusDot.label}
                     className={`h-3 w-3 shrink-0 rounded-full ${statusDot.className}`}
                   />
-                </div>
+                </Link>
 
                 <div className="mt-4 space-y-2">
                   <div className="flex items-center justify-between text-sm">
@@ -203,7 +205,16 @@ export default async function RepresentativePage() {
                     </p>
                   )}
                 </div>
-              </Link>
+
+                <Link
+                  href={`/representative/models/${model.id}/onboarding`}
+                  className="mt-4 block rounded-xl border border-[#b06a87] px-4 py-2 text-center text-sm font-semibold text-[#b06a87] transition hover:bg-[#b06a87] hover:text-white"
+                >
+                  {model.onboarding_percentage === 100
+                    ? "Ver onboarding"
+                    : "Preencher onboarding"}
+                </Link>
+              </div>
               );
             })}
           </div>

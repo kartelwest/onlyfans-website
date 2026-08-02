@@ -40,6 +40,12 @@ type ModelRow = {
   status: string | null;
   active: boolean | null;
   website_login_enabled: boolean | null;
+  /**
+   * Trigger-maintained projection of the onboarding checklist items — the
+   * authority for this number. The identically named column on
+   * model_checklist is legacy and no longer written.
+   */
+  onboarding_percentage: number | null;
   profile: { full_name: string | null } | null;
 };
 
@@ -128,6 +134,7 @@ export default async function AdminModelsPage({
         status,
         active,
         website_login_enabled,
+        onboarding_percentage,
         profile:profiles!profile_id ( full_name )
       `,
     )
@@ -244,16 +251,13 @@ export default async function AdminModelsPage({
   ).length;
 
   const onboardingModels = models.filter((model) => {
-    const percentage =
-      model.checklist?.onboarding_percentage ?? 0;
+    const percentage = model.onboarding_percentage ?? 0;
 
     return percentage > 0 && percentage < 100;
   }).length;
 
   const completedModels = models.filter(
-    (model) =>
-      (model.checklist?.onboarding_percentage ?? 0) ===
-      100,
+    (model) => (model.onboarding_percentage ?? 0) === 100,
   ).length;
 
   const filteredModels =
@@ -496,8 +500,7 @@ export default async function AdminModelsPage({
                 ) : (
                   filteredModels.map((model, index) => {
                     const onboarding =
-                      model.checklist
-                        ?.onboarding_percentage ?? 0;
+                      model.onboarding_percentage ?? 0;
 
                     const canManage =
                       role === "owner" ||
