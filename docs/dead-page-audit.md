@@ -23,20 +23,27 @@ targets that logins rely on.
 | Claude assistant | `/admin/assistant` | Chat assistant | 1 link from `/admin/models` | None found | Keep | — |
 | PDF/image importer | `/admin/import` | Bulk model import | 1 link from `/admin/models` | None found | Keep | — |
 
-## Components with no importer
+## Components with no importer — DELETED 3 Aug 2026
 
-Reference-counted by import specifier across the whole tree. All seven are dead code today; none is
-referenced by any page, API route or other component.
+Reference-counted by import specifier across the whole tree, twice: at audit time and again
+immediately before deletion. All seven had zero references from any page, API route, component,
+test or config. 3,897 lines removed.
 
-| Component | Overlaps / replaced by | Recommendation |
+They are recoverable in full from git — the commit before the deletion is `be7a8ea`:
+
+```
+git checkout be7a8ea -- components/admin/ModelNotesAndTasks.tsx
+```
+
+| Component | Overlaps / replaced by | Outcome |
 | --- | --- | --- |
-| `components/admin/ModelNotesAndTasks.tsx` | `components/admin/model/NotesTab.tsx` | Candidate for deletion — duplicate of the live notes UI, and the one that still contains the old delete flow |
-| `components/admin/model/DriveTab.tsx` | `components/admin/MediaDrivePanel.tsx` / `MediaDrivePanel` | Candidate for deletion |
-| `components/admin/model/GoogleDriveTab.tsx` | as above | Candidate for deletion |
-| `components/admin/MediaDrivePanel.tsx` | superseded by the media panel in `ModelAdminClient` | Requires owner decision |
-| `components/admin/model/FanslyTab.tsx` | `FanslyBackofficePanel` | Candidate for deletion |
-| `components/admin/FanslyBackofficePanel.tsx` | — | Requires owner decision — Fansly back-office may be planned work |
-| `components/admin/EditableModelInfo.tsx` | `ModelAdminClient` inline editing | Candidate for deletion |
+| `components/admin/ModelNotesAndTasks.tsx` | `components/admin/model/NotesTab.tsx` | **Deleted** — duplicate of the live notes UI, and it still carried the old window.confirm delete flow |
+| `components/admin/model/DriveTab.tsx` | `components/admin/MediaDrivePanel.tsx` / `MediaDrivePanel` | **Deleted** |
+| `components/admin/model/GoogleDriveTab.tsx` | as above | **Deleted** |
+| `components/admin/MediaDrivePanel.tsx` | superseded by the media panel in `ModelAdminClient` | **Deleted** — recoverable from git if the work resumes |
+| `components/admin/model/FanslyTab.tsx` | `FanslyBackofficePanel` | **Deleted** |
+| `components/admin/FanslyBackofficePanel.tsx` | — | **Deleted** — recoverable from git if the Fansly back-office work resumes |
+| `components/admin/EditableModelInfo.tsx` | `ModelAdminClient` inline editing | **Deleted** |
 
 ## Behaviour found broken or half-wired
 
@@ -81,4 +88,5 @@ override the lock.
 
 ## Deleted in this pass
 
-Nothing.
+The seven unreferenced components above, and nothing else. No page, route, API endpoint,
+database record or feature was removed.
