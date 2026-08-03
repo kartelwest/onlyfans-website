@@ -30,6 +30,7 @@ type ItemView = {
   completedAt: string | null;
   fields: FieldView[];
   missingRequired: string[];
+  locked: boolean;
 };
 
 type SectionView = {
@@ -427,6 +428,7 @@ function ItemRow({
   onSaveField: (fieldKey: string, value: string) => Promise<boolean>;
 }) {
   const blocked = item.missingRequired.length > 0 && !item.completed;
+  const itemDisabled = !canEdit || isSaving || blocked || item.locked;
 
   return (
     <div
@@ -437,15 +439,17 @@ function ItemRow({
       <div className="flex gap-4">
         <button
           type="button"
-          disabled={!canEdit || isSaving || blocked}
+          disabled={itemDisabled}
           onClick={() => void onToggle(!item.completed)}
           aria-label={
             item.completed ? "Marcar como pendente" : "Marcar como concluída"
           }
           title={
-            blocked
-              ? `Preencha antes: ${item.missingRequired.join(", ")}`
-              : undefined
+            item.locked
+              ? "Concluída e bloqueada para o representante"
+              : blocked
+                ? `Preencha antes: ${item.missingRequired.join(", ")}`
+                : undefined
           }
           className={`mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border text-sm font-black transition ${
             item.completed
@@ -483,7 +487,7 @@ function ItemRow({
                 <FieldInput
                   key={field.key}
                   field={field}
-                  disabled={!canEdit || field.readOnly}
+                  disabled={!canEdit || field.readOnly || item.locked}
                   isSaving={savingKey === `${item.itemKey}.${field.key}`}
                   onSave={(value) => onSaveField(field.key, value)}
                 />
@@ -494,6 +498,12 @@ function ItemRow({
           {blocked && (
             <p className="mt-3 text-xs font-semibold text-yellow-200">
               Preencha para poder concluir: {item.missingRequired.join(", ")}
+            </p>
+          )}
+
+          {item.locked && (
+            <p className="mt-3 text-xs font-semibold text-white/55">
+              Esta etapa foi concluída e está bloqueada para o representante.
             </p>
           )}
 

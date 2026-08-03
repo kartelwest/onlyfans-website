@@ -43,7 +43,7 @@ export async function authenticate(): Promise<RouteAuth> {
 
   const { data: profile, error: profileError } = await supabase
     .from("profiles")
-    .select("id, full_name, role, active")
+    .select("id, full_name, role, active, status")
     .eq("id", user.id)
     .maybeSingle();
 
@@ -52,6 +52,19 @@ export async function authenticate(): Promise<RouteAuth> {
       ok: false,
       response: NextResponse.json(
         { error: "Perfil inválido." },
+        { status: 403 },
+      ),
+    };
+  }
+
+  if (
+    profile.role === "representative" &&
+    profile.status !== "ativa"
+  ) {
+    return {
+      ok: false,
+      response: NextResponse.json(
+        { error: "Representante inativo." },
         { status: 403 },
       ),
     };

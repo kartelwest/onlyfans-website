@@ -6,7 +6,7 @@ import {
   sortByModelStatus,
 } from "@/lib/models/modelStatusOrder";
 import { createClient } from "@/lib/supabase/server";
-import ViewAsBanner from "@/components/admin/ViewAsBanner";
+import ViewAsRepresentativeBanner from "@/components/admin/ViewAsRepresentativeBanner";
 import type { ManagementRole, ModelStatus } from "@/types/model";
 
 type Model = {
@@ -68,12 +68,12 @@ export default async function ViewAsRepresentativePage({
   const { data: representative, error: representativeError } =
     await supabase
       .from("profiles")
-      .select("id, full_name, role, active")
+      .select("id, full_name, role, active, status")
       .eq("id", repId)
       .eq("role", "representative")
       .maybeSingle();
 
-  if (representativeError || !representative) {
+  if (representativeError || !representative || representative.status !== "ativa" || !representative.active) {
     notFound();
   }
 
@@ -98,9 +98,10 @@ export default async function ViewAsRepresentativePage({
   if (error) {
     return (
       <>
-        <ViewAsBanner
+        <ViewAsRepresentativeBanner
           label={`Vendo como o representante ${representative.full_name ?? ""} veria`}
           backHref="/admin/models"
+          representativeId={representative.id}
         />
 
         <main className="min-h-screen bg-[#f7f1ec] px-6 py-12">
@@ -133,9 +134,10 @@ export default async function ViewAsRepresentativePage({
 
   return (
     <>
-      <ViewAsBanner
+      <ViewAsRepresentativeBanner
         label={`Vendo como o representante ${representative.full_name ?? ""} veria`}
         backHref="/admin/models"
+        representativeId={representative.id}
       />
 
       <main className="min-h-screen bg-[#f7f1ec] px-6 py-12">

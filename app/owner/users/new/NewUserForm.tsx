@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
+import Link from "next/link";
 
 import {
   createUserAction,
@@ -9,8 +10,15 @@ import {
 
 type UserRole = "model" | "administrator" | "representative";
 
+type RepresentativeOption = {
+  id: string;
+  fullName: string;
+  role: string;
+};
+
 type NewUserFormProps = {
   role: UserRole;
+  representatives: RepresentativeOption[];
 };
 
 const initialState: CreateUserState = {
@@ -20,6 +28,7 @@ const initialState: CreateUserState = {
 
 export default function NewUserForm({
   role,
+  representatives,
 }: NewUserFormProps) {
   const [state, formAction, pending] = useActionState(
     createUserAction,
@@ -89,6 +98,47 @@ export default function NewUserForm({
           <p className="mt-2 text-xs text-zinc-500">
             A senha temporária será formada pelos quatro últimos
             números do WhatsApp seguidos de 1234567.
+          </p>
+        </div>
+      )}
+
+      {isModel && (
+        <div>
+          <label
+            htmlFor="representativeId"
+            className="mb-2 block text-sm font-semibold text-zinc-200"
+          >
+            Representante / responsável
+          </label>
+
+          <select
+            id="representativeId"
+            name="representativeId"
+            required
+            className="w-full rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none transition focus:border-pink-400"
+          >
+            <option value="">Selecione um responsável</option>
+
+            {representatives.map((rep) => (
+              <option key={rep.id} value={rep.id}>
+                {rep.fullName}
+                {rep.role === "owner"
+                  ? " (Proprietário)"
+                  : rep.role === "administrator"
+                    ? " (Administrador)"
+                    : " (Representante)"}
+              </option>
+            ))}
+          </select>
+
+          <p className="mt-2 text-xs text-zinc-500">
+            Não encontrou o representante?{" "}
+            <Link
+              href="/owner/users/new?role=representative"
+              className="text-pink-400 underline transition hover:text-pink-300"
+            >
+              Cadastre um novo.
+            </Link>
           </p>
         </div>
       )}

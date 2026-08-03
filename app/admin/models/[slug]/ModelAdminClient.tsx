@@ -17,6 +17,8 @@ import HistoryTab from "@/components/admin/model/HistoryTab";
 import { useState } from "react";
 import Link from "next/link";
 
+import ReassignRepresentativePanel from "@/components/admin/model/ReassignRepresentativePanel";
+
 import type {
     ChecklistStatus,
     ManagementRole,
@@ -24,6 +26,12 @@ import type {
     ModelChecklist,
     ModelProxyDetails,
 } from "@/types/model";
+
+type RepresentativeOption = {
+    id: string;
+    fullName: string;
+    role: string;
+};
 
 type ModelAdminClientProps = {
     model: Model;
@@ -35,6 +43,8 @@ type ModelAdminClientProps = {
      * server-side from auth.users. Null when she has no login yet.
      */
     currentLogin: string | null;
+    representatives: RepresentativeOption[];
+    isOwner: boolean;
 };
 
 type TabId =
@@ -75,6 +85,8 @@ export default function ModelAdminClient({
     currentUserRole,
     proxyDetails,
     currentLogin,
+    representatives,
+    isOwner,
 }: ModelAdminClientProps) {
     const [activeTab, setActiveTab] =
         useState<TabId>("summary");
@@ -224,12 +236,24 @@ export default function ModelAdminClient({
 
                     <div className="p-5 sm:p-8">
                         {activeTab === "summary" && (
-                            <OverviewTab
-                                model={model}
-                                checklist={checklist}
-                                currentUserRole={currentUserRole}
-                                onModelUpdate={setModel}
-                            />
+                            <>
+                                <OverviewTab
+                                    model={model}
+                                    checklist={checklist}
+                                    currentUserRole={currentUserRole}
+                                    onModelUpdate={setModel}
+                                />
+
+                                <div className="mt-8">
+                                    <ReassignRepresentativePanel
+                                        modelId={model.id}
+                                        modelSlug={model.slug}
+                                        currentRepresentativeId={model.representativeId}
+                                        representatives={representatives}
+                                        isOwner={isOwner}
+                                    />
+                                </div>
+                            </>
                         )}
 
                         {activeTab === "checklist" && (

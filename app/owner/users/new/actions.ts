@@ -63,6 +63,10 @@ export async function createUserAction(
     formData.get("password") ?? "",
   ).trim();
 
+  const representativeId = String(
+    formData.get("representativeId") ?? "",
+  ).trim();
+
   const role = String(
     formData.get("role") ?? "",
   ) as UserRole;
@@ -163,6 +167,34 @@ export async function createUserAction(
 
   const adminSupabase = createAdminClient();
 
+  if (role === "model") {
+    const assignedRepresentativeId = representativeId || user.id;
+
+    const { data: representative } = await adminSupabase
+      .from("profiles")
+      .select("id, role, active, status")
+      .eq("id", assignedRepresentativeId)
+      .in("role", ["owner", "administrator", "representative"])
+      .maybeSingle();
+
+    if (!representative || !representative.active) {
+      return {
+        success: false,
+        message: "O representante selecionado não está ativo.",
+      };
+    }
+
+    if (
+      representative.role === "representative" &&
+      representative.status !== "ativa"
+    ) {
+      return {
+        success: false,
+        message: "O representante selecionado não está ativo.",
+      };
+    }
+  }
+
   const {
     data: createdUserData,
     error: createUserError,
@@ -228,6 +260,7 @@ export async function createUserAction(
           // password could never be re-derived when an admin later resets it.
           email,
           whatsapp,
+          representative_id: representativeId || user.id,
           onboarding_complete: false,
           active: true,
           created_by: user.id,

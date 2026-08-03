@@ -21,6 +21,20 @@ export type AuditEntry = {
   summary: string;
 };
 
+export type SystemAuditEntry = {
+  action: string;
+  targetType?: string | null;
+  targetId?: string | null;
+  targetName?: string | null;
+  modelId?: string | null;
+  previousValue?: unknown | null;
+  newValue?: unknown | null;
+  actor: AuditActor;
+  source?: string | null;
+  summary: string;
+  impersonated?: { id: string; fullName: string } | null;
+};
+
 export type AuditLogResult = {
   error: Error | null;
 };
@@ -132,6 +146,56 @@ export async function logAuditEntries(
 
   if (error) {
     console.error("Erro ao registrar histórico de auditoria (lote):", error);
+    return { error: new Error(error.message) };
+  }
+
+  return { error: null };
+}
+
+function sanitizeJson(value: unknown): unknown {
+  if (value === null || value === undefined) return null;
+
+  if (typeof value === "string") {
+    return value.length > MAX_VALUE_LENGTH
+      ? value.slice(0, MAX_VALUE_LENGTH) + "…(truncado)"
+      : value;
+  }
+
+  if (typeof value === "boolean" || typeof value === "number") {
+    return value;
+  }
+
+  const str = JSON.stringify(value);
+  return str.length > MAX_VALUE_LENGTH
+    ? str.slice(0, MAX_VALUE_LENGTH) + "…(truncado)"
+    : value;
+}
+
+export async function logSystemAuditEntry(
+  supabase: SupabaseClient,
+  entry: SystemAuditEntry,
+): Promise<AuditLogResult> {
+  const { error } = await supabase
+    .from("system_audit_log")
+    .insert({
+      action: entry.action,
+      target_type: entry.targetType ?? null,
+      target_id: entry.targetId ?? null,
+      target_name: entry.targetName ?? null,
+      model_id: entry.modelId ?? null,
+      previous_value: sanitizeJson(entry.previousValue),
+      new_value: sanitizeJson(entry.newValue),
+      actor_id: entry.actor.id,
+      actor_name: entry.actor.fullName,
+      actor_role: entry.actor.role,
+      source: entry.source ?? null,
+      summary: entry.summary,
+      impersonated_user_id: entry.impersonated?.id ?? null,
+      impersonated_user_name: entry.impersonated?.fullName ?? null,
+    });
+
+  if (error) {
+    console.error("Erro ao registrar auditoria do sistema:", error);
     return { error: new Error(error.message) };
   }
 

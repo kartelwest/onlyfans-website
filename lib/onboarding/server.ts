@@ -3,10 +3,8 @@ import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 import {
-  LINKED_FIELDS,
   ONBOARDING_PLATFORM,
   ONBOARDING_SECTIONS,
-  READ_ONLY_LINKED_FIELDS,
   buildItemKey,
   flattenOnboarding,
   isReadOnlyLinkedFieldKey,
@@ -246,6 +244,8 @@ export type OnboardingItemView = {
   fields: OnboardingFieldValue[];
   /** Required fill-in boxes still empty — the step cannot be ticked yet. */
   missingRequired: string[];
+  /** True when a representative may no longer change this completed item. */
+  locked: boolean;
 };
 
 export type OnboardingSectionView = {
@@ -385,13 +385,16 @@ function percentageOf(completed: number, total: number): number {
 export async function loadOnboarding({
   supabase,
   modelId,
+  viewerRole,
 }: {
   supabase: SupabaseClient;
   modelId: string;
+  viewerRole?: ManagementRole | null;
 }): Promise<{
   sections: OnboardingSectionView[];
   summary: OnboardingSummary;
 }> {
+  const isRep = viewerRole === "representative";
   const [{ data: rows, error: rowsError }, linkedValues] = await Promise.all([
     supabase
       .from("model_onboarding_items")
@@ -471,6 +474,7 @@ export async function loadOnboarding({
         completedAt: row.completed_at,
         fields,
         missingRequired,
+        locked: isRep && row.completed,
       });
 
       total += 1;

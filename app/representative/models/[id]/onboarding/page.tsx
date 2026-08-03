@@ -24,11 +24,16 @@ export default async function RepresentativeOnboardingPage({
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("role, active")
+    .select("role, active, status")
     .eq("id", user.id)
     .maybeSingle();
 
-  if (!profile || !profile.active || profile.role !== "representative") {
+  if (
+    !profile ||
+    !profile.active ||
+    profile.status !== "ativa" ||
+    profile.role !== "representative"
+  ) {
     redirect("/login");
   }
 

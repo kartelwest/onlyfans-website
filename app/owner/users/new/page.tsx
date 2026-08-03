@@ -6,6 +6,12 @@ import { createClient } from "@/lib/supabase/server";
 
 type UserRole = "model" | "administrator" | "representative";
 
+type RepresentativeOption = {
+    id: string;
+    fullName: string;
+    role: string;
+};
+
 type PageProps = {
     searchParams: Promise<{
         role?: string;
@@ -78,6 +84,21 @@ export default async function NewUserPage({
 
     const roleInformation = getRoleInformation(role);
 
+    const { data: representatives } = await supabase
+        .from("profiles")
+        .select("id, full_name, role")
+        .in("role", ["owner", "administrator", "representative"])
+        .eq("active", true)
+        .order("full_name", { ascending: true });
+
+    const representativeOptions: RepresentativeOption[] = (representatives ?? [])
+        .filter((row): row is { id: string; full_name: string; role: string } => Boolean(row.id && row.full_name))
+        .map((row) => ({
+            id: row.id,
+            fullName: row.full_name,
+            role: row.role,
+        }));
+
     return (
         <main className="min-h-screen bg-[#08080a] px-4 py-10 text-white lg:px-8">
             <section className="mx-auto max-w-4xl">
@@ -114,7 +135,10 @@ export default async function NewUserPage({
                     </div>
 
                     <div className="mt-6">
-                        <NewUserForm role={role} />
+                        <NewUserForm
+                            role={role}
+                            representatives={role === "model" ? representativeOptions : []}
+                        />
                     </div>
                 </div>
             </section>
