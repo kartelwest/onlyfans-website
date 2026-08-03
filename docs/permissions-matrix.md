@@ -24,6 +24,7 @@ relaxed by mistake in one place does not silently open the system:
 | Activate / deactivate representative | Yes | Yes | No | No |
 | Archive / restore representative | Yes | Yes | No | No |
 | Permanently delete representative | Yes | No — archive instead | No | No |
+| _(enforced in the database, not only the UI — see 20260803020000)_ | | | | |
 | Manage administrators | Yes | No | No | No |
 | Change own account status | No (nobody may, from these screens) | No | No | No |
 

@@ -52,6 +52,25 @@ referenced by any page, API route or other component.
 | Unapplied migration | `20260803000001_representative_system.sql` was **not applied to production** when its code went live: `/api/representatives/public` logged `column profiles.status does not exist` | **Applied** — profiles lifecycle columns, `system_audit_log`, note soft-delete columns, the new note policies and the onboarding rep-lock trigger are all live, and the migration is recorded in `supabase_migrations.schema_migrations` |
 | Migration was not re-runnable | Its `create or replace function is_assigned_representative(target_model uuid)` clashes with production's `(target_model_id uuid)` — Postgres refuses to rename an input parameter (42P13), and dropping the function would take every dependent RLS policy with it | **Fixed** — the function is now created only where it is absent, and left untouched where it already exists |
 
+## Role testing (production, every write rolled back)
+
+20 authorization checks run as each real role, with RLS active:
+
+Passing — a representative sees only her assigned models and nothing when she
+addresses another rep's model by id; she cannot read that model's onboarding
+items, cannot read staff notes, cannot write a note on a model that is not
+hers, cannot forge a staff member's authorship, cannot promote herself, cannot
+archive or delete another account, and cannot reactivate herself once
+deactivated (42501 from `manage_profile_columns`). Deactivating a rep flips
+`active` automatically. A model sees only her own record. An administrator can
+archive a rep but cannot promote anyone to owner. Owner and admin see all 16
+models.
+
+| Gap found | Severity | Status |
+| --- | --- | --- |
+| An administrator could DELETE a profile row directly — permanent deletion is owner-only in the UI, but `profiles` carried a second, wider delete policy (`profiles_delete_management`) | High — bypassed the rule by calling the API directly | **Fixed** in 20260803020000; re-tested (admin rows=0, owner rows=1) |
+| A representative can rename her own profile (`full_name`) — self-update is permitted, and only status/active/role are guarded | Low — her name is what appears in audit trails | Open — awaiting a decision |
+
 ## Deleted in this pass
 
 Nothing.
