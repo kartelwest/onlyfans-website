@@ -18,14 +18,20 @@ deleted — spec §10 asks for the findings first.
 
 | Representative | E-mail | Models | Note |
 | --- | --- | --- | --- |
-| Kartel West | — | **9** | Carries every assigned model |
+| ~~Kartel West~~ | — | 9 → 0 | Deleted 3 Aug 2026; its 9 models were unassigned first |
 | ~~Alex Harris~~ | alexharris@karraymodels.com | 0 | Deleted 3 Aug 2026 |
 | ~~ALEX HARRIS~~ | — | 0 | Deleted 3 Aug 2026 |
 
-After those deletions **one representative account remains**, and it holds all 9 assigned
-models. Anyone hired from here needs a fresh account.
+**There are now no representative accounts, and all 16 models are unassigned** — the owner's
+decision, to be rebuilt deliberately. The nine models that were attached to the deleted
+account are listed in its `system_audit_log` row (`previous_value`), so the old distribution
+can be read back at any time.
 
-**7 of 16 models have no representative at all**, four of them active:
+Until a representative exists and is assigned, the rep back office, the rep view-as preview
+and the onboarding lock have nobody to apply to.
+
+At the time of the audit, 7 of 16 models had no representative — that is now all 16. These
+seven were the ones that never had one:
 
 | # | Model | Status | Onboarding | Has login |
 | --- | --- | --- | --- | --- |
@@ -49,10 +55,12 @@ rep back office, and the onboarding lock has never applied to her.
    neither had created anything — zero rows across every table referencing `profiles` —
    so nothing historical was lost. Both deletions are in `system_audit_log`.
 
-2. **The rep carrying the roster may be you** — "Kartel West" is a *representative* account
-   with no e-mail, while the owner account is "Kartel Oginga West"
-   (kartelwest007@gmail.com). If those are the same person, the entire roster is assigned
-   to a second account of the owner rather than to a working representative.
+2. ~~The rep carrying the roster may be you~~ — **deleted, on the owner's instruction.**
+   "Kartel West" (no e-mail) was a second representative account alongside the owner's own.
+   It was removed permanently on 3 Aug 2026; its 9 model assignments were cleared
+   explicitly first, since production has no foreign key on `models.representative_id` to
+   do it. It had created nothing else anywhere. The nine models are recorded in the audit
+   row for reassignment.
 
 3. ~~A model also holds an administrator account~~ — **intended, confirmed by the owner.**
    "Raíssa de Sousa Vieira" (albetiza.teamo.123@gmail.com) is an administrator who is also
