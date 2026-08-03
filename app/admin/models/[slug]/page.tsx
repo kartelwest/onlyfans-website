@@ -567,8 +567,6 @@ export default async function ModelAdminPage({
       role: row.role,
     }));
 
-  const isOwner = currentUserRole === "owner";
-
   let currentLogin: string | null = null;
 
   if (model.profileId) {
@@ -593,7 +591,6 @@ export default async function ModelAdminPage({
       proxyDetails={proxyDetails}
       currentLogin={currentLogin}
       representatives={representatives}
-      isOwner={isOwner}
     />
   );
 }

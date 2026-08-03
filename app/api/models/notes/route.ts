@@ -64,6 +64,8 @@ const NOTE_COLUMNS = `
     updated_by,
     updated_by_name,
     updated_by_role,
+    previous_representative_id,
+    new_representative_id,
     created_at,
     updated_at
 `;
@@ -1663,6 +1665,14 @@ function mapNote(
         createdContext:
             readRequiredString(
                 note.created_context,
+            ),
+        previousRepresentativeId:
+            readRequiredString(
+                note.previous_representative_id,
+            ),
+        newRepresentativeId:
+            readRequiredString(
+                note.new_representative_id,
             ),
         deletedAt:
             note.deleted_at === null

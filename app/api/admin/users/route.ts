@@ -398,6 +398,8 @@ export async function POST(request: Request) {
         email,
         whatsapp: phone,
         representative_id: assignedRepresentativeId,
+        representative_changed_by: currentProfile.id,
+        representative_changed_at: new Date().toISOString(),
         status: active ? "active" as const : "inactive" as const,
         active,
         website_login_enabled: websiteLoginEnabled,

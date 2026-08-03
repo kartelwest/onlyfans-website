@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useEffect } from "react";
 
 import {
   reassignRepresentative,
@@ -15,10 +15,9 @@ type RepresentativeOption = {
 
 type ReassignRepresentativePanelProps = {
   modelId: string;
-  modelSlug: string;
   currentRepresentativeId: string | null;
   representatives: RepresentativeOption[];
-  isOwner: boolean;
+  canReassign: boolean;
 };
 
 const initialState: ReassignState = {
@@ -30,14 +29,20 @@ export default function ReassignRepresentativePanel({
   modelId,
   currentRepresentativeId,
   representatives,
-  isOwner,
+  canReassign,
 }: ReassignRepresentativePanelProps) {
   const [state, formAction, pending] = useActionState(
     reassignRepresentative,
     initialState,
   );
 
-  if (!isOwner) {
+  useEffect(() => {
+    if (state.success && typeof window !== "undefined") {
+      window.location.reload();
+    }
+  }, [state]);
+
+  if (!canReassign) {
     return null;
   }
 
@@ -81,11 +86,10 @@ export default function ReassignRepresentativePanel({
       <select
         id="representativeId"
         name="representativeId"
-        required
         defaultValue={currentRepresentativeId ?? ""}
         className="mt-5 w-full rounded-xl border border-white/10 bg-black/40 px-4 py-3 text-sm text-white outline-none transition focus:border-pink-400"
       >
-        <option value="">Selecione um novo responsável</option>
+        <option value="">Nenhum (remover responsável)</option>
 
         {options.map((rep) => (
           <option key={rep.id} value={rep.id}>
