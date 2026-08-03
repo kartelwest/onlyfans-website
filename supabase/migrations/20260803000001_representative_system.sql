@@ -8,18 +8,36 @@
 -- =============================================================================
 
 -- ----- Helper: ensure the representative-assignment predicate exists --------
--- Production already knows this name; fresh environments get it here.
-create or replace function public.is_assigned_representative(target_model uuid)
-returns boolean language sql stable security definer set search_path = public as $$
-  select public.is_active_user()
-    and exists (
-      select 1 from public.models m
-       where m.id = target_model
-         and m.representative_id = auth.uid()
-    )
-$$;
+-- Production already has this function, declared as
+-- is_assigned_representative(target_model_id uuid). `create or replace` cannot
+-- rename an input parameter — it fails with 42P13 — and dropping the function
+-- would take every RLS policy that depends on it with it. So it is only
+-- created where it is genuinely absent (a fresh environment), and left exactly
+-- as it is everywhere else.
+do $$
+begin
+  if not exists (
+    select 1
+      from pg_proc p
+      join pg_namespace n on n.oid = p.pronamespace
+     where n.nspname = 'public'
+       and p.proname = 'is_assigned_representative'
+  ) then
+    execute $fn$
+      create function public.is_assigned_representative(target_model uuid)
+      returns boolean language sql stable security definer set search_path = public as $body$
+        select public.is_active_user()
+          and exists (
+            select 1 from public.models m
+             where m.id = target_model
+               and m.representative_id = auth.uid()
+          )
+      $body$;
+    $fn$;
 
-grant execute on function public.is_assigned_representative(uuid) to authenticated;
+    execute 'grant execute on function public.is_assigned_representative(uuid) to authenticated';
+  end if;
+end $$;
 
 -- ----- Profiles: contact, status, and audit columns -------------------------
 alter table public.profiles
