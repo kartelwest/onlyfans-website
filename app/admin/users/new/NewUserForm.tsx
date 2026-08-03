@@ -25,11 +25,20 @@ type DraftModel = {
   nationality: string | null;
 };
 
+export type AssigneeOption = {
+  id: string;
+  fullName: string;
+  role: string;
+  email: string | null;
+};
+
 type NewUserFormProps = {
   role: NewUserRole;
   currentUserRole: string;
   drafts: DraftModel[];
   selectedDraft: DraftModel | null;
+  /** Active representatives and admins — who a new model may be assigned to. */
+  assignees: AssigneeOption[];
 };
 
 type FormState = {
@@ -42,6 +51,8 @@ type FormState = {
   temporaryPassword: string;
   active: boolean;
   websiteLoginEnabled: boolean;
+  /** Empty string means "Não atribuído". */
+  representativeId: string;
 };
 
 const initialFormState: FormState = {
@@ -54,6 +65,7 @@ const initialFormState: FormState = {
   temporaryPassword: "",
   active: true,
   websiteLoginEnabled: true,
+  representativeId: "",
 };
 
 type ExtractedFields = {
@@ -96,6 +108,7 @@ function buildInitialFormState(
     temporaryPassword: "",
     active: true,
     websiteLoginEnabled: true,
+    representativeId: "",
   };
 }
 
@@ -104,6 +117,7 @@ export default function NewUserForm({
   currentUserRole,
   drafts,
   selectedDraft,
+  assignees,
 }: NewUserFormProps) {
   const router = useRouter();
 
@@ -199,6 +213,7 @@ export default function NewUserForm({
       temporaryPassword: "",
       active: true,
       websiteLoginEnabled: true,
+      representativeId: "",
     });
 
     setDraftModelId(draft.id);
@@ -418,6 +433,8 @@ export default function NewUserForm({
           temporaryPassword,
           active: form.active,
           websiteLoginEnabled: form.websiteLoginEnabled,
+          representativeId:
+            form.representativeId || null,
           draftModelId,
           originalText: useAI ? aiText.trim() : "",
         }),
@@ -714,6 +731,47 @@ export default function NewUserForm({
             className={`${inputClassName} cursor-not-allowed opacity-60`}
           />
         </FormField>
+
+        {isModel && (
+          <FormField label="Representante responsável">
+            <select
+              value={form.representativeId}
+              onChange={(event) =>
+                updateField(
+                  "representativeId",
+                  event.target.value,
+                )
+              }
+              className={inputClassName}
+            >
+              <option value="">Não atribuído</option>
+
+              {assignees.map((assignee) => (
+                <option key={assignee.id} value={assignee.id}>
+                  {assignee.fullName} — {assignee.role}
+                  {assignee.email ? ` — ${assignee.email}` : ""}
+                </option>
+              ))}
+            </select>
+
+            {/*
+              Only accounts that can actually work the model appear above:
+              active representatives and admins, never an inactive or archived
+              one. When the right person is missing, the answer is to create
+              the account properly, not to invent a half-filled record here.
+            */}
+            <p className="mt-2 text-xs leading-5 text-white/45">
+              Só aparecem contas ativas.{" "}
+              <a
+                href="/admin/users/new?role=representative"
+                className="font-semibold text-pink-300 underline-offset-2 hover:underline"
+              >
+                Adicionar representante
+              </a>{" "}
+              se quem você procura não está na lista.
+            </p>
+          </FormField>
+        )}
       </div>
 
       <div className="mt-8 grid gap-4 sm:grid-cols-2">

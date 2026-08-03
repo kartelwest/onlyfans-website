@@ -1,0 +1,54 @@
+# Dead page / dead feature audit
+
+Nothing in this report has been deleted. It is a list of findings with the evidence behind each one,
+for the owner to decide on.
+
+Method: every route under `app/` was enumerated, then reference-counted across `app/`, `components/`
+and `lib/` (imports, `href=`, `redirect()` targets, `fetch()` call sites). "No inbound link" means no
+navigation reaches it; it does **not** mean nothing depends on it — several of these are redirect
+targets that logins rely on.
+
+## Pages
+
+| Item | Path | Current purpose | Evidence of usage | Problem | Recommendation | Risk of removal |
+| --- | --- | --- | --- | --- | --- | --- |
+| Owner landing | `/owner` | 4-line file, redirects to `/admin/models` | 10 references to `/owner*` | Does nothing on its own | Keep | Medium — old bookmarks/links |
+| Administrator landing | `/administrator` | Redirects to `/admin/models` | 2 references | Same | Keep | Medium |
+| Portal | `/portal` | Sends each role to its own home | **0 inbound links** | Unreachable from the UI | Keep, hide from nav | Medium — good post-login fallback |
+| Owner user management | `/owner/users`, `/owner/users/[id]`, `/owner/users/new` | Account management, owner-only | Linked from `/admin/models` and now `/admin/representatives` | Overlaps the new `/admin/representatives` for reps; still the only place to reset a password or promote to admin | **Merge** — fold password reset + role change into the rep profile, then retire | High until merged |
+| Rep view of a model (old) | `/admin/view-as/representative/[repId]/models/[modelId]` | Was a hand-written replica of the rep's model screen | Was linked from the rep view-as list | Replica had drifted from the real screen | Already **repaired**: now redirects to `/admin/view-as/model/[modelId]/representative` | Low |
+| Google Photos guide | `/como-compartilhar-google-photos` | Public help page | **0 inbound links** | Unreachable | Requires owner decision — link it from onboarding or archive | Low |
+| Recording guidelines | `/diretrizes-de-gravacao` | Public help page | 1 reference (model dashboard) | None | Keep | — |
+| Amplia portal | `/admin/socialmediamodels/**` | Brand-growth product | Linked from `AdminHeader` | None found | Keep | — |
+| Claude assistant | `/admin/assistant` | Chat assistant | 1 link from `/admin/models` | None found | Keep | — |
+| PDF/image importer | `/admin/import` | Bulk model import | 1 link from `/admin/models` | None found | Keep | — |
+
+## Components with no importer
+
+Reference-counted by import specifier across the whole tree. All seven are dead code today; none is
+referenced by any page, API route or other component.
+
+| Component | Overlaps / replaced by | Recommendation |
+| --- | --- | --- |
+| `components/admin/ModelNotesAndTasks.tsx` | `components/admin/model/NotesTab.tsx` | Candidate for deletion — duplicate of the live notes UI, and the one that still contains the old delete flow |
+| `components/admin/model/DriveTab.tsx` | `components/admin/MediaDrivePanel.tsx` / `MediaDrivePanel` | Candidate for deletion |
+| `components/admin/model/GoogleDriveTab.tsx` | as above | Candidate for deletion |
+| `components/admin/MediaDrivePanel.tsx` | superseded by the media panel in `ModelAdminClient` | Requires owner decision |
+| `components/admin/model/FanslyTab.tsx` | `FanslyBackofficePanel` | Candidate for deletion |
+| `components/admin/FanslyBackofficePanel.tsx` | — | Requires owner decision — Fansly back-office may be planned work |
+| `components/admin/EditableModelInfo.tsx` | `ModelAdminClient` inline editing | Candidate for deletion |
+
+## Behaviour found broken or half-wired
+
+| Item | Finding | Status |
+| --- | --- | --- |
+| `models.last_login_at` | Rendered on three screens since launch; **nothing ever wrote it**, so it was always "Nunca" | **Fixed** — `/api/auth/record-login` now stamps it (and `profiles.last_login_at`) after each sign-in |
+| Note deletion | The API and the `delete_model_note` RPC both work (verified against production with a throw-away note inside an aborted transaction). The button used `window.confirm`, which mobile in-app browsers may suppress — a suppressed confirm returns `false`, so the click silently did nothing | **Fixed** — in-page confirmation modal with loading, success and error states |
+| Representative assignment | An admin creating a model had **no way to assign a representative**; only the public `/aplicar` referral path and the PDF importer ever set `representative_id` | **Fixed** — assignment dropdown on the model creation form, active accounts only, server-validated |
+| Rep view-as screens | Were hand-written replicas; the model one even showed internal notes the model never sees | **Fixed** — both now render the real components through the real loaders |
+| `window.confirm` elsewhere | Same suppression risk in `MediaDrivePanel`, `ModelEarningsPanel`, `LedgerPanel` | Open — recommend the same modal treatment |
+| Two role enums | Migrations declare `public.management_role`; production actually has `public.app_role` (4 labels, `management_role` absent). SQL written against the repo's name would fail on production | Open — worth reconciling before the next function migration |
+
+## Deleted in this pass
+
+Nothing.

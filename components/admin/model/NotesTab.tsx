@@ -120,6 +120,16 @@ export default function NotesTab({
     const [errorMessage, setErrorMessage] =
         useState<string | null>(null);
 
+    const [successMessage, setSuccessMessage] =
+        useState<string | null>(null);
+
+    // The note waiting on the confirmation modal. window.confirm used to stand
+    // here, and on a phone that is a dialog the browser is free to suppress —
+    // when it does, it returns false and the click silently does nothing,
+    // which is exactly how "the Excluir button does not delete" looks.
+    const [pendingDelete, setPendingDelete] =
+        useState<ModelNote | null>(null);
+
     const isOwner =
         currentUserRole === "owner";
 
@@ -528,24 +538,20 @@ export default function NotesTab({
         }
     }
 
-    async function deleteNote(
-        note: ModelNote,
-    ) {
+    function requestDelete(note: ModelNote) {
         if (!canDelete || actionNoteId) {
             return;
         }
 
-        // A ledger note is not just text: it is what the model sees for an
-        // expense or a loan, so say plainly what else goes with it.
-        const confirmed = window.confirm(
-            note.source === "ledger"
-                ? "Esta nota veio de um lançamento financeiro.\n\n" +
-                      "Ao excluí-la, a despesa ou o empréstimo também sai da área da modelo e deixa de ser descontado do mês. " +
-                      "O registro fica no histórico.\n\nDeseja continuar?"
-                : "Excluir esta nota permanentemente? O conteúdo fica registrado no histórico.",
-        );
+        setErrorMessage(null);
+        setSuccessMessage(null);
+        setPendingDelete(note);
+    }
 
-        if (!confirmed) {
+    async function confirmDelete() {
+        const note = pendingDelete;
+
+        if (!note || !canDelete || actionNoteId) {
             return;
         }
 
@@ -579,6 +585,13 @@ export default function NotesTab({
                         "Não foi possível excluir a nota.",
                 );
             }
+
+            setPendingDelete(null);
+            setSuccessMessage(
+                note.source === "ledger"
+                    ? "Nota e lançamento removidos da área da modelo. O histórico foi mantido."
+                    : "Nota excluída. O conteúdo continua no histórico.",
+            );
 
             await loadNotes();
         } catch (error) {
@@ -615,6 +628,12 @@ export default function NotesTab({
             {errorMessage && (
                 <div className="mb-5 rounded-2xl border border-red-400/30 bg-red-500/10 px-5 py-4 text-sm text-red-200">
                     {errorMessage}
+                </div>
+            )}
+
+            {successMessage && (
+                <div className="mb-5 rounded-2xl border border-emerald-400/30 bg-emerald-500/10 px-5 py-4 text-sm text-emerald-200">
+                    {successMessage}
                 </div>
             )}
 
@@ -795,7 +814,7 @@ export default function NotesTab({
                                             )
                                         }
                                         onDelete={() =>
-                                            void deleteNote(
+                                            requestDelete(
                                                 note,
                                             )
                                         }
@@ -834,7 +853,103 @@ export default function NotesTab({
                     }
                 />
             )}
+
+            {pendingDelete && (
+                <DeleteConfirmationModal
+                    note={pendingDelete}
+                    isDeleting={
+                        actionNoteId ===
+                        pendingDelete.id
+                    }
+                    onCancel={() =>
+                        setPendingDelete(null)
+                    }
+                    onConfirm={() =>
+                        void confirmDelete()
+                    }
+                />
+            )}
         </>
+    );
+}
+
+/**
+ * Deletion asks in the page, not through window.confirm: a browser dialog can
+ * be suppressed (notably in mobile in-app browsers), and a suppressed confirm
+ * returns false, so the button appears to do nothing at all.
+ */
+function DeleteConfirmationModal({
+    note,
+    isDeleting,
+    onCancel,
+    onConfirm,
+}: {
+    note: ModelNote;
+    isDeleting: boolean;
+    onCancel: () => void;
+    onConfirm: () => void;
+}) {
+    return (
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 p-4 sm:items-center">
+            <div
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="delete-note-title"
+                className="w-full max-w-lg rounded-2xl border border-red-400/30 bg-[#141118] p-6"
+            >
+                <h2
+                    id="delete-note-title"
+                    className="text-lg font-bold text-white"
+                >
+                    Excluir esta nota?
+                </h2>
+
+                <div className="mt-4 space-y-3 text-sm leading-6 text-white/70">
+                    <p>
+                        A nota sai da área de notas ativas. O
+                        conteúdo continua registrado no
+                        histórico da modelo, com quem excluiu e
+                        quando.
+                    </p>
+
+                    {note.source === "ledger" && (
+                        <p className="rounded-xl border border-amber-400/30 bg-amber-500/10 p-3 text-amber-200">
+                            Esta nota veio de um lançamento
+                            financeiro. Ao excluí-la, a despesa
+                            ou o empréstimo também sai da área
+                            da modelo e deixa de ser descontado
+                            do mês.
+                        </p>
+                    )}
+
+                    <blockquote className="max-h-40 overflow-y-auto rounded-xl border border-white/10 bg-black/30 p-3 text-xs italic text-white/60">
+                        {note.body}
+                    </blockquote>
+                </div>
+
+                <div className="mt-6 flex flex-wrap justify-end gap-3">
+                    <button
+                        type="button"
+                        onClick={onCancel}
+                        disabled={isDeleting}
+                        className="rounded-xl border border-white/15 px-5 py-3 text-xs font-bold uppercase tracking-wider text-white/70 transition hover:bg-white/10 disabled:opacity-50"
+                    >
+                        Cancelar
+                    </button>
+
+                    <button
+                        type="button"
+                        onClick={onConfirm}
+                        disabled={isDeleting}
+                        className="rounded-xl bg-red-500 px-5 py-3 text-xs font-bold uppercase tracking-wider text-white transition hover:bg-red-400 disabled:opacity-50"
+                    >
+                        {isDeleting
+                            ? "Excluindo..."
+                            : "Excluir nota"}
+                    </button>
+                </div>
+            </div>
+        </div>
     );
 }
 

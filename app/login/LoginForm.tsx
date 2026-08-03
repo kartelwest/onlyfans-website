@@ -103,6 +103,11 @@ export default function LoginForm({ returnTo, expired }: { returnTo?: string; ex
         }
       }
 
+      // "Último acesso" on the admin screens comes from here. Failing to
+      // record it must never stand between somebody and their dashboard, so
+      // the call is fire-and-forget.
+      void fetch("/api/auth/record-login", { method: "POST" }).catch(() => {});
+
       const redirectPath = resolveRedirectPath(role, returnTo ?? null);
       window.location.replace(redirectPath);
       return;

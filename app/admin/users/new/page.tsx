@@ -4,7 +4,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { createClient } from "@/lib/supabase/server";
-import NewUserForm from "./NewUserForm";
+import NewUserForm, { type AssigneeOption } from "./NewUserForm";
 
 export const dynamic = "force-dynamic";
 
@@ -86,8 +86,30 @@ export default async function NewUserPage({
 
   let drafts: DraftModel[] = [];
   let selectedDraft: DraftModel | null = null;
+  let assignees: AssigneeOption[] = [];
 
   if (role === "model") {
+    // Who a new model may be handed to: active representatives and admins,
+    // never an inactive or archived account. Loaded from the database, and
+    // filtered here rather than in the browser.
+    const { data: assignableRows } = await supabase
+      .from("profiles")
+      .select("id, full_name, email, role, active")
+      .in("role", ["representative", "administrator"])
+      .eq("active", true)
+      .order("role", { ascending: true })
+      .order("full_name", { ascending: true });
+
+    assignees = (assignableRows ?? []).map((row) => ({
+      id: row.id as string,
+      fullName: (row.full_name as string | null)?.trim() || "Sem nome",
+      role:
+        row.role === "administrator"
+          ? "Administrador"
+          : "Representante",
+      email: (row.email as string | null) ?? null,
+    }));
+
     const { data: draftModels } = await supabase
       .from("models")
       .select(
@@ -165,6 +187,7 @@ export default async function NewUserPage({
           currentUserRole={profile.role}
           drafts={drafts}
           selectedDraft={selectedDraft}
+          assignees={assignees}
         />
       </div>
     </main>

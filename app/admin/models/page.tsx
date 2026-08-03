@@ -3,6 +3,16 @@ import { redirect } from "next/navigation";
 
 import ModelRowActions from "@/components/admin/ModelRowActions";
 import ModelStatusDropdown from "@/components/admin/ModelStatusDropdown";
+import RepresentativeModelsDropdown, {
+  type RepresentativeModel,
+} from "@/components/admin/RepresentativeModelsDropdown";
+import {
+  accountStatus,
+  loadStaffProfiles,
+  STAFF_STATUS_BADGE,
+  STAFF_STATUS_LABELS,
+  type StaffProfileRow,
+} from "@/lib/staff/representatives";
 import {
   normalizeModelStatus,
   sortByModelStatus,
@@ -40,6 +50,7 @@ type ModelRow = {
   status: string | null;
   active: boolean | null;
   website_login_enabled: boolean | null;
+  representative_id: string | null;
   /**
    * Trigger-maintained projection of the onboarding checklist items — the
    * authority for this number. The identically named column on
@@ -57,14 +68,6 @@ type NoteSummaryRow = {
 type DashboardModel = ModelRow & {
   checklist: ChecklistRow | null;
   latest_note_summary: string | null;
-};
-
-type SimpleProfileRow = {
-  id: string;
-  full_name: string | null;
-  email: string | null;
-  active: boolean | null;
-  created_at: string | null;
 };
 
 type AdminModelsPageProps = {
@@ -135,6 +138,7 @@ export default async function AdminModelsPage({
         active,
         website_login_enabled,
         onboarding_percentage,
+        representative_id,
         profile:profiles!profile_id ( full_name )
       `,
     )
@@ -203,39 +207,31 @@ export default async function AdminModelsPage({
     checklistMap.set(checklist.model_id, checklist);
   }
 
-  const { data: representativeRows, error: representativesError } =
-    await supabase
-      .from("profiles")
-      .select("id, full_name, email, active, created_at")
-      .eq("role", "representative")
-      .order("full_name", { ascending: true });
+  const [
+    { profiles: representatives },
+    { profiles: administrators },
+  ] = await Promise.all([
+    loadStaffProfiles(supabase, "representative"),
+    loadStaffProfiles(supabase, "administrator"),
+  ]);
 
-  if (representativesError) {
-    console.error(
-      "Erro ao carregar representantes:",
-      representativesError,
-    );
+  // Each representative's models, for the dropdown on her row — the way into
+  // her model pages is through the screen she sees.
+  const modelsByRepresentative = new Map<string, RepresentativeModel[]>();
+
+  for (const row of modelRows ?? []) {
+    const repId = (row as unknown as ModelRow).representative_id;
+
+    if (!repId) {
+      continue;
+    }
+
+    const list = modelsByRepresentative.get(repId) ?? [];
+
+    list.push(row as unknown as RepresentativeModel);
+
+    modelsByRepresentative.set(repId, list);
   }
-
-  const { data: administratorRows, error: administratorsError } =
-    await supabase
-      .from("profiles")
-      .select("id, full_name, email, active, created_at")
-      .eq("role", "administrator")
-      .order("full_name", { ascending: true });
-
-  if (administratorsError) {
-    console.error(
-      "Erro ao carregar administradores:",
-      administratorsError,
-    );
-  }
-
-  const representatives =
-    (representativeRows ?? []) as SimpleProfileRow[];
-
-  const administrators =
-    (administratorRows ?? []) as SimpleProfileRow[];
 
   const models: DashboardModel[] = sortByModelStatus(
     (modelRows ?? []).map((model) => ({
@@ -676,8 +672,13 @@ export default async function AdminModelsPage({
           profiles={representatives}
           emptyMessage="Nenhum representante cadastrado."
           isOwner={role === "owner"}
-          viewAsBasePath="/admin/view-as/representative"
-          viewAsFieldLabel="Visualizar como o representante veria"
+          manageAllHref="/admin/representatives"
+          manageAllLabel="Gerenciar representantes"
+          profileHref={(profileId) => `/admin/representatives/${profileId}`}
+          viewAsHref={(profileId) =>
+            `/admin/view-as/representative/${profileId}`
+          }
+          modelsByProfile={modelsByRepresentative}
         />
 
         <ProfileListSection
@@ -745,16 +746,29 @@ function ProfileListSection({
   profiles,
   emptyMessage,
   isOwner,
-  viewAsBasePath,
-  viewAsFieldLabel,
+  manageAllHref,
+  manageAllLabel,
+  profileHref,
+  viewAsHref,
+  modelsByProfile,
 }: {
   title: string;
-  profiles: SimpleProfileRow[];
+  profiles: StaffProfileRow[];
   emptyMessage: string;
   isOwner: boolean;
-  viewAsBasePath?: string;
-  viewAsFieldLabel?: string;
+  /** Link to the full management screen for this kind of account. */
+  manageAllHref?: string;
+  manageAllLabel?: string;
+  profileHref?: (profileId: string) => string;
+  viewAsHref?: (profileId: string) => string;
+  modelsByProfile?: Map<string, RepresentativeModel[]>;
 }) {
+  const showModels = Boolean(modelsByProfile);
+
+  const showActions = Boolean(viewAsHref || profileHref || isOwner);
+
+  const columnCount = 3 + (showModels ? 1 : 0) + (showActions ? 1 : 0);
+
   return (
     <details className="group mt-6 overflow-hidden rounded-2xl border border-white/10 bg-[#111115]">
       <summary className="flex cursor-pointer list-none items-center justify-between gap-4 border-b border-pink-400/20 bg-[#2a1521] px-6 py-4 [&::-webkit-details-marker]:hidden">
@@ -768,14 +782,26 @@ function ProfileListSection({
         <ChevronIcon />
       </summary>
 
+      {manageAllHref && (
+        <div className="border-b border-white/10 bg-[#171017] px-6 py-3">
+          <Link
+            href={manageAllHref}
+            className="text-xs font-bold uppercase tracking-[0.12em] text-pink-300 transition hover:text-pink-200"
+          >
+            {manageAllLabel ?? "Gerenciar"} →
+          </Link>
+        </div>
+      )}
+
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[700px] border-collapse">
+        <table className="w-full min-w-[820px] border-collapse">
           <thead className="bg-[#2a1521] text-left">
             <tr className="border-b border-pink-400/20">
               <TableHeading>Nome</TableHeading>
               <TableHeading>Email</TableHeading>
               <TableHeading>Status</TableHeading>
-              {isOwner && <TableHeading>Ações</TableHeading>}
+              {showModels && <TableHeading>Modelos</TableHeading>}
+              {showActions && <TableHeading>Ações</TableHeading>}
             </tr>
           </thead>
 
@@ -783,73 +809,100 @@ function ProfileListSection({
             {profiles.length === 0 ? (
               <tr>
                 <td
-                  colSpan={isOwner ? 4 : 3}
+                  colSpan={columnCount}
                   className="px-6 py-12 text-center text-sm text-white/50"
                 >
                   {emptyMessage}
                 </td>
               </tr>
             ) : (
-              profiles.map((profile) => (
-                <tr
-                  key={profile.id}
-                  className={`border-b border-white/10 transition hover:bg-white/[0.03] ${
-                    !profile.active ? "opacity-50" : ""
-                  }`}
-                >
-                  <TableCell>
-                    <span className="font-bold text-white">
-                      {profile.full_name || "Sem nome"}
-                    </span>
-                  </TableCell>
+              profiles.map((profile) => {
+                const status = accountStatus(profile);
 
-                  <TableCell>
-                    <span className="text-sm text-white/60">
-                      {profile.email || "—"}
-                    </span>
-                  </TableCell>
-
-                  <TableCell>
-                    <span
-                      className={`inline-flex rounded-full px-3 py-1 text-xs font-bold ring-1 ${
-                        profile.active
-                          ? "bg-emerald-500/10 text-emerald-300 ring-emerald-500/30"
-                          : "bg-red-500/10 text-red-300 ring-red-500/30"
-                      }`}
-                    >
-                      {profile.active ? "Ativo" : "Inativo"}
-                    </span>
-                  </TableCell>
-
-                  {isOwner && (
+                return (
+                  <tr
+                    key={profile.id}
+                    className={`border-b border-white/10 align-top transition hover:bg-white/[0.03] ${
+                      status === "active" ? "" : "opacity-60"
+                    }`}
+                  >
                     <TableCell>
-                      <Link
-                        href={`/owner/users/${profile.id}`}
-                        className="rounded-lg border border-pink-400/30 bg-pink-500/10 px-4 py-2 text-xs font-bold text-pink-200 transition hover:bg-pink-500/20"
-                      >
-                        Gerenciar
-                      </Link>
+                      {profileHref ? (
+                        <Link
+                          href={profileHref(profile.id)}
+                          className="font-bold text-white transition hover:text-pink-300"
+                        >
+                          {profile.full_name || "Sem nome"}
+                        </Link>
+                      ) : (
+                        <span className="font-bold text-white">
+                          {profile.full_name || "Sem nome"}
+                        </span>
+                      )}
                     </TableCell>
-                  )}
-                </tr>
-              ))
+
+                    <TableCell>
+                      <span className="text-sm text-white/60">
+                        {profile.email || "—"}
+                      </span>
+                    </TableCell>
+
+                    <TableCell>
+                      <span
+                        className={`inline-flex rounded-full px-3 py-1 text-xs font-bold ring-1 ${STAFF_STATUS_BADGE[status]}`}
+                      >
+                        {STAFF_STATUS_LABELS[status]}
+                      </span>
+                    </TableCell>
+
+                    {showModels && (
+                      <TableCell>
+                        <RepresentativeModelsDropdown
+                          representativeId={profile.id}
+                          models={modelsByProfile?.get(profile.id) ?? []}
+                        />
+                      </TableCell>
+                    )}
+
+                    {showActions && (
+                      <TableCell>
+                        <div className="flex flex-col gap-2">
+                          {viewAsHref && (
+                            <Link
+                              href={viewAsHref(profile.id)}
+                              className="rounded-lg border border-purple-400/30 bg-purple-500/10 px-4 py-2 text-center text-xs font-bold text-purple-200 transition hover:bg-purple-500/20"
+                            >
+                              Ver como ele vê
+                            </Link>
+                          )}
+
+                          {profileHref && (
+                            <Link
+                              href={profileHref(profile.id)}
+                              className="rounded-lg border border-pink-400/30 bg-pink-500/10 px-4 py-2 text-center text-xs font-bold text-pink-200 transition hover:bg-pink-500/20"
+                            >
+                              Abrir perfil
+                            </Link>
+                          )}
+
+                          {isOwner && (
+                            <Link
+                              href={`/owner/users/${profile.id}`}
+                              className="rounded-lg border border-white/15 px-4 py-2 text-center text-xs font-bold text-white/70 transition hover:bg-white/10"
+                            >
+                              Gerenciar conta
+                            </Link>
+                          )}
+                        </div>
+                      </TableCell>
+                    )}
+                  </tr>
+                );
+              })
             )}
           </tbody>
         </table>
       </div>
-
-      {viewAsBasePath && profiles.length > 0 && (
-        <ViewAsPicker
-          options={profiles.map((profile) => ({
-            id: profile.id,
-            label: profile.full_name || "Sem nome",
-          }))}
-          basePath={viewAsBasePath}
-          fieldLabel={
-            viewAsFieldLabel ?? "Visualizar como"
-          }
-        />
-      )}
     </details>
   );
 }
