@@ -49,10 +49,12 @@ rep back office, and the onboarding lock has never applied to her.
    (kartelwest007@gmail.com). If those are the same person, the entire roster is assigned
    to a second account of the owner rather than to a working representative.
 
-3. **A model also holds an administrator account** — "Raíssa de Sousa Vieira"
-   (albetiza.teamo.123@gmail.com) is an *administrator*, and "Raíssa de Sousa Viera" is
-   model #9 with her own model login. If that is one person, her admin account can read
-   every model's earnings, notes and payment details.
+3. ~~A model also holds an administrator account~~ — **intended, confirmed by the owner.**
+   "Raíssa de Sousa Vieira" (albetiza.teamo.123@gmail.com) is an administrator who is also
+   model #9; the two are deliberately separate accounts, and the model area is reached
+   through its own sign-in. Her admin account can read every model's data, which is what
+   being an administrator means — noted here so the pairing is not raised again as a
+   defect.
 
 4. **A test account has full admin rights in production** — "Teste Administrador", no
    e-mail, role `administrator`, created on day one.
