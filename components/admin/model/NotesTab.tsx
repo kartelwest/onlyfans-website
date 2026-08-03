@@ -31,6 +31,8 @@ type ModelNote = {
     createdByRole: string;
     updatedByName: string | null;
     updatedByRole: string | null;
+    previousRepresentativeId?: string | null;
+    newRepresentativeId?: string | null;
     createdAt: string;
     updatedAt: string;
 };
@@ -1681,6 +1683,16 @@ function normalizeNote(
                 value.updatedByRole,
                 value.updated_by_role,
             ),
+        previousRepresentativeId:
+            readString(
+                value.previousRepresentativeId,
+                value.previous_representative_id,
+            ) ?? null,
+        newRepresentativeId:
+            readString(
+                value.newRepresentativeId,
+                value.new_representative_id,
+            ) ?? null,
         createdAt:
             readString(
                 value.createdAt,

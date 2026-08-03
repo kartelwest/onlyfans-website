@@ -18,6 +18,7 @@ import { useState } from "react";
 import Link from "next/link";
 
 import ReassignRepresentativePanel from "@/components/admin/model/ReassignRepresentativePanel";
+import { isStaffRole } from "@/lib/auth/roles";
 
 import type {
     ChecklistStatus,
@@ -44,7 +45,6 @@ type ModelAdminClientProps = {
      */
     currentLogin: string | null;
     representatives: RepresentativeOption[];
-    isOwner: boolean;
 };
 
 type TabId =
@@ -86,7 +86,6 @@ export default function ModelAdminClient({
     proxyDetails,
     currentLogin,
     representatives,
-    isOwner,
 }: ModelAdminClientProps) {
     const [activeTab, setActiveTab] =
         useState<TabId>("summary");
@@ -247,10 +246,9 @@ export default function ModelAdminClient({
                                 <div className="mt-8">
                                     <ReassignRepresentativePanel
                                         modelId={model.id}
-                                        modelSlug={model.slug}
                                         currentRepresentativeId={model.representativeId}
                                         representatives={representatives}
-                                        isOwner={isOwner}
+                                        canReassign={isStaffRole(currentUserRole)}
                                     />
                                 </div>
                             </>

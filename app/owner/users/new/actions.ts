@@ -261,6 +261,8 @@ export async function createUserAction(
           email,
           whatsapp,
           representative_id: representativeId || user.id,
+          representative_changed_by: user.id,
+          representative_changed_at: new Date().toISOString(),
           onboarding_complete: false,
           active: true,
           created_by: user.id,
