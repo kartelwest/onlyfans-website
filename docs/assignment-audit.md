@@ -19,8 +19,11 @@ deleted — spec §10 asks for the findings first.
 | Representative | E-mail | Models | Note |
 | --- | --- | --- | --- |
 | Kartel West | — | **9** | Carries every assigned model |
-| Alex Harris | alexharris@karraymodels.com | 0 | Never assigned anything |
-| ALEX HARRIS | — | 0 | Never assigned anything |
+| ~~Alex Harris~~ | alexharris@karraymodels.com | 0 | Deleted 3 Aug 2026 |
+| ~~ALEX HARRIS~~ | — | 0 | Deleted 3 Aug 2026 |
+
+After those deletions **one representative account remains**, and it holds all 9 assigned
+models. Anyone hired from here needs a fresh account.
 
 **7 of 16 models have no representative at all**, four of them active:
 
@@ -40,9 +43,11 @@ rep back office, and the onboarding lock has never applied to her.
 
 ## Accounts worth a decision
 
-1. **Duplicate representative** — "Alex Harris" (created 20 Jul, has an e-mail) and
-   "ALEX HARRIS" (created 22 Jul, no e-mail) are the same person. Both active, neither
-   holds a model. One should almost certainly be archived.
+1. ~~Duplicate representative~~ — **both deleted, on the owner's instruction.** "Alex
+   Harris" (20 Jul, alexharris@karraymodels.com) and "ALEX HARRIS" (22 Jul, no e-mail)
+   were removed permanently on 3 Aug 2026, logins included. Neither held a model and
+   neither had created anything — zero rows across every table referencing `profiles` —
+   so nothing historical was lost. Both deletions are in `system_audit_log`.
 
 2. **The rep carrying the roster may be you** — "Kartel West" is a *representative* account
    with no e-mail, while the owner account is "Kartel Oginga West"
