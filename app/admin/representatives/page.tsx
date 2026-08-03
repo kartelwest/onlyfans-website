@@ -1,6 +1,8 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 
+import { type RepresentativeModel } from "@/components/admin/RepresentativeModelsDropdown";
+
 import { createClient } from "@/lib/supabase/server";
 import RepresentativesClient from "./RepresentativesClient";
 
@@ -79,22 +81,33 @@ export default async function RepresentativesPage({
 
   const representativeIds = ((representatives ?? []) as RepresentativeRow[]).map((row) => row.id);
 
+  // The models themselves, not just how many: each row carries a dropdown
+  // that opens the model as HER representative sees her.
   const { data: modelRows } = await supabase
     .from("models")
-    .select("representative_id")
-    .in("representative_id", representativeIds.length > 0 ? representativeIds : ["00000000-0000-0000-0000-000000000000"]);
+    .select(
+      "id, slug, display_name, stage_name, status, active, onboarding_percentage, representative_id",
+    )
+    .in(
+      "representative_id",
+      representativeIds.length > 0
+        ? representativeIds
+        : ["00000000-0000-0000-0000-000000000000"],
+    )
+    .order("display_name", { ascending: true });
 
-  const modelCountMap = new Map<string, number>();
+  const modelsByRepresentative = new Map<string, RepresentativeModel[]>();
 
   for (const row of modelRows ?? []) {
     if (!row.representative_id) {
       continue;
     }
 
-    modelCountMap.set(
-      row.representative_id,
-      (modelCountMap.get(row.representative_id) ?? 0) + 1,
-    );
+    const list = modelsByRepresentative.get(row.representative_id) ?? [];
+
+    list.push(row as unknown as RepresentativeModel);
+
+    modelsByRepresentative.set(row.representative_id, list);
   }
 
   return (
@@ -126,7 +139,7 @@ export default async function RepresentativesPage({
         <RepresentativesClient
           initialStatusFilter={statusFilter}
           representatives={(representatives ?? []) as RepresentativeRow[]}
-          modelCountMap={modelCountMap}
+          modelsByRepresentative={modelsByRepresentative}
           isOwner={isOwner}
         />
       </div>

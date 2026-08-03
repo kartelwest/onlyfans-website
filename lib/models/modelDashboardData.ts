@@ -56,7 +56,7 @@ export const DASHBOARD_MODEL_COLUMNS = `
   content_drive_url
 `;
 
-type DashboardModelRow = {
+export type DashboardModelRow = {
   id: string;
   stage_name: string | null;
   display_name: string;
@@ -281,6 +281,59 @@ export async function loadDashboardFinance({
       notes,
     },
   };
+}
+
+export type ModelDashboardData = {
+  model: ModelDashboardModel;
+  checklist: ModelDashboardChecklist;
+  earnings: ModelDashboardEarnings;
+  ledger: ModelDashboardLedger | null;
+};
+
+/**
+ * The whole dashboard payload for one already-loaded model row.
+ *
+ * Every entry point into this screen goes through here — the model's own
+ * /area-da-modelo, the rep's /representative/models/[id], and the two admin
+ * previews of each. They render the same component, so they must read the same
+ * way; the caller only decides WHICH row it is allowed to fetch.
+ */
+export async function loadModelDashboard({
+  supabase,
+  admin,
+  modelRow,
+}: {
+  supabase: SupabaseClient;
+  admin: SupabaseClient;
+  modelRow: DashboardModelRow;
+}): Promise<ModelDashboardData> {
+  const [{ data: checklistRow }, { data: paymentsRow }] = await Promise.all([
+    supabase
+      .from("model_checklist")
+      .select(
+        "onlyfans_status, instagram_status, twitter_status, proxy_browser_status, contract_status, content_received_status",
+      )
+      .eq("model_id", modelRow.id)
+      .maybeSingle(),
+    supabase
+      .from("model_payments")
+      .select("model_percentage, agency_percentage, marketing_percentage")
+      .eq("model_id", modelRow.id)
+      .maybeSingle(),
+  ]);
+
+  const model = buildDashboardModel(modelRow);
+  const checklist = buildDashboardChecklist(modelRow, checklistRow);
+
+  const { earnings, ledger } = await loadDashboardFinance({
+    supabase,
+    admin,
+    model,
+    paymentsRow,
+    expensesEnabled: modelRow.expenses_enabled === true,
+  });
+
+  return { model, checklist, earnings, ledger };
 }
 
 async function loadLedgerEntries(

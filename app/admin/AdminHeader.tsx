@@ -8,6 +8,13 @@ import LogoutButton from "@/components/LogoutButton";
 export default function AdminHeader() {
   const pathname = usePathname();
 
+  // A view-as page is meant to be the other person's screen, exactly. Our own
+  // chrome on top of it is the one thing that is certainly not on hers — and
+  // the view banner already carries the way back.
+  if (pathname?.startsWith("/admin/view-as")) {
+    return null;
+  }
+
   const portal = getPortalLabel(pathname);
 
   return (
@@ -51,6 +58,13 @@ function getPortalLabel(pathname: string | null): { title: string; subtitle: str
     return {
       title: "PORTAL DE MODELOS",
       subtitle: "Painel de gestão OnlyFans",
+    };
+  }
+
+  if (pathname?.startsWith("/admin/pageview")) {
+    return {
+      title: "PAGEVIEW",
+      subtitle: "A tela que a modelo está vendo",
     };
   }
 

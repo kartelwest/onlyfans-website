@@ -4,9 +4,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import ModelDashboardView from "@/components/model-dashboard/ModelDashboardView";
 import {
-  buildDashboardChecklist,
-  buildDashboardModel,
-  loadDashboardFinance,
+  loadModelDashboard,
   DASHBOARD_MODEL_COLUMNS,
 } from "@/lib/models/modelDashboardData";
 
@@ -56,37 +54,17 @@ export default async function AreaDaModeloPage() {
     );
   }
 
-  const [{ data: checklistRow }, { data: paymentsRow }] = await Promise.all([
-    supabase
-      .from("model_checklist")
-      .select(
-        "onlyfans_status, instagram_status, twitter_status, proxy_browser_status, contract_status, content_received_status",
-      )
-      .eq("model_id", modelRow.id)
-      .maybeSingle(),
-    supabase
-      .from("model_payments")
-      .select("model_percentage, agency_percentage, marketing_percentage")
-      .eq("model_id", modelRow.id)
-      .maybeSingle(),
-  ]);
-
-  const dashboardModel = buildDashboardModel(modelRow);
-  const dashboardChecklist = buildDashboardChecklist(modelRow, checklistRow);
-
-  const { earnings, ledger } = await loadDashboardFinance({
+  const { model, checklist, earnings, ledger } = await loadModelDashboard({
     supabase,
     admin: createAdminClient(),
-    model: dashboardModel,
-    paymentsRow,
-    expensesEnabled: modelRow.expenses_enabled === true,
+    modelRow,
   });
 
   return (
     <ModelDashboardView
       viewerRole="model"
-      model={dashboardModel}
-      checklist={dashboardChecklist}
+      model={model}
+      checklist={checklist}
       earnings={earnings}
       ledger={ledger}
       canEditAvatar

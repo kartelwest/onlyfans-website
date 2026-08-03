@@ -1,30 +1,14 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
-import {
-  normalizeModelStatus,
-  sortByModelStatus,
-} from "@/lib/models/modelStatusOrder";
+
+import RepresentativeDashboardView, {
+  type RepresentativeDashboardModel,
+} from "@/components/representative/RepresentativeDashboardView";
+import { isStaffRole } from "@/lib/auth/roles";
+import { sortByModelStatus } from "@/lib/models/modelStatusOrder";
 import { createClient } from "@/lib/supabase/server";
-import type { ModelStatus } from "@/types/model";
+import type { ManagementRole } from "@/types/model";
 
-type Model = {
-  id: string;
-  display_name: string;
-  stage_name: string | null;
-  instagram: string | null;
-  whatsapp: string | null;
-  onboarding_percentage: number;
-  status: string | null;
-  active: boolean;
-  last_login_at: string | null;
-};
-
-const statusDotConfig: Record<ModelStatus, { className: string; label: string }> = {
-  active: { className: "bg-green-500", label: "Ativo" },
-  inactive: { className: "bg-gray-400", label: "Inativo" },
-  candidate: { className: "bg-yellow-400", label: "Candidata" },
-  denied: { className: "bg-red-500", label: "Negada" },
-};
+export const dynamic = "force-dynamic";
 
 export default async function RepresentativePage() {
   const supabase = await createClient();
@@ -43,11 +27,21 @@ export default async function RepresentativePage() {
     .eq("id", user.id)
     .single();
 
+  if (!profile || !profile.active) {
+    redirect("/login");
+  }
+
+  // Staff outrank a representative, so they are not turned away here — they are
+  // sent to the list that holds every model, with a rep preview per row.
+  if (isStaffRole(profile.role as ManagementRole)) {
+    redirect("/admin/models");
+  }
+
+  // An inactive or archived representative keeps the account and every record
+  // attached to it, and loses the back office.
   if (
-    !profile ||
-    !profile.active ||
-    profile.status !== "ativa" ||
-    profile.role !== "representative"
+    profile.role !== "representative" ||
+    profile.status !== "ativa"
   ) {
     redirect("/login");
   }
@@ -68,7 +62,7 @@ export default async function RepresentativePage() {
         status,
         active,
         last_login_at
-      `
+      `,
     )
     .eq("representative_id", user.id)
     .order("display_name", { ascending: true });
@@ -85,16 +79,14 @@ export default async function RepresentativePage() {
             Área do Representante
           </h1>
 
-          <p className="mt-3 text-red-600">
-            Erro ao carregar modelos.
-          </p>
+          <p className="mt-3 text-red-600">Erro ao carregar modelos.</p>
         </div>
       </main>
     );
   }
 
   const assignedModels = sortByModelStatus(
-    (models ?? []) as Model[],
+    (models ?? []) as RepresentativeDashboardModel[],
     (model) => ({
       status: model.status,
       active: model.active,
@@ -103,124 +95,14 @@ export default async function RepresentativePage() {
   );
 
   return (
-    <main className="min-h-screen bg-[#f7f1ec] px-6 py-12">
-      <div className="mx-auto max-w-7xl">
-        <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.24em] text-[#b06a87]">
-              KARAY Models
-            </p>
-
-            <h1 className="mt-3 text-4xl font-bold text-[#4b2438]">
-              Área do Representante
-            </h1>
-
-            <p className="mt-3 text-[#765c68]">
-              Bem-vindo, {profile.full_name}.
-            </p>
-          </div>
-
-          <div className="text-sm text-[#765c68]">
-            {assignedModels.length} modelo(s) atribuída(s)
-          </div>
-        </div>
-
-        {assignedModels.length === 0 ? (
-          <div className="rounded-2xl border border-[#eadfd8] bg-white p-8 text-center">
-            <p className="text-[#765c68]">
-              Nenhuma modelo atribuída a você ainda.
-            </p>
-          </div>
-        ) : (
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {assignedModels.map((model) => {
-              const modelStatus = normalizeModelStatus(
-                model.status,
-                model.active,
-              );
-              const statusDot = statusDotConfig[modelStatus];
-
-              return (
-              <div
-                key={model.id}
-                className="rounded-2xl border border-[#eadfd8] bg-white p-6 shadow-sm transition hover:shadow-md hover:border-[#b06a87]"
-              >
-                <Link
-                  href={`/representative/models/${model.id}`}
-                  className="flex items-center justify-between gap-4"
-                >
-                  <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-[#eadfd8] bg-[#f7f1ec] text-2xl font-bold text-[#4b2438]">
-                    {model.display_name.charAt(0).toUpperCase()}
-                  </div>
-
-                  <div className="flex-1 min-w-0">
-                    <h3 className="truncate text-lg font-bold text-[#4b2438]">
-                      {model.display_name}
-                    </h3>
-
-                    {model.stage_name && (
-                      <p className="text-sm text-[#765c68]">
-                        {model.stage_name}
-                      </p>
-                    )}
-                  </div>
-
-                  <div
-                    title={statusDot.label}
-                    className={`h-3 w-3 shrink-0 rounded-full ${statusDot.className}`}
-                  />
-                </Link>
-
-                <div className="mt-4 space-y-2">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-[#765c68]">Onboarding</span>
-                    <span className="font-semibold text-[#4b2438]">
-                      {model.onboarding_percentage}%
-                    </span>
-                  </div>
-
-                  <div className="h-2 overflow-hidden rounded-full bg-[#eadfd8]">
-                    <div
-                      className={`h-full rounded-full ${
-                        model.onboarding_percentage === 100
-                          ? "bg-green-500"
-                          : model.onboarding_percentage > 0
-                            ? "bg-yellow-400"
-                            : "bg-red-400"
-                      }`}
-                      style={{
-                        width: `${Math.min(
-                          Math.max(model.onboarding_percentage, 0),
-                          100
-                        )}%`,
-                      }}
-                    />
-                  </div>
-
-                  {model.last_login_at && (
-                    <p className="mt-2 text-xs text-[#765c68]">
-                      Último acesso:{" "}
-                      {new Date(
-                        model.last_login_at
-                      ).toLocaleDateString("pt-BR")}
-                    </p>
-                  )}
-                </div>
-
-                <Link
-                  href={`/representative/models/${model.id}/onboarding`}
-                  className="mt-4 block rounded-xl border border-[#b06a87] px-4 py-2 text-center text-sm font-semibold text-[#b06a87] transition hover:bg-[#b06a87] hover:text-white"
-                >
-                  {model.onboarding_percentage === 100
-                    ? "Ver onboarding"
-                    : "Preencher onboarding"}
-                </Link>
-              </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
-    </main>
+    <RepresentativeDashboardView
+      representativeName={profile.full_name ?? ""}
+      models={assignedModels}
+      hrefs={{
+        model: (model) => `/representative/models/${model.id}`,
+        onboarding: (model) =>
+          `/representative/models/${model.id}/onboarding`,
+      }}
+    />
   );
 }

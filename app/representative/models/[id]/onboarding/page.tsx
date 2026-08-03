@@ -2,7 +2,9 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
 import OnboardingChecklistPanel from "@/components/onboarding/OnboardingChecklistPanel";
+import { isStaffRole } from "@/lib/auth/roles";
 import { createClient } from "@/lib/supabase/server";
+import type { ManagementRole } from "@/types/model";
 
 export const dynamic = "force-dynamic";
 
@@ -28,11 +30,30 @@ export default async function RepresentativeOnboardingPage({
     .eq("id", user.id)
     .maybeSingle();
 
+  if (!profile || !profile.active) {
+    redirect("/login");
+  }
+
+  // Staff outrank a representative: the checklist a rep edits here is the same
+  // one an admin edits on the model's own page, so send them there instead of
+  // to the login screen.
+  if (isStaffRole(profile.role as ManagementRole)) {
+    const { data: staffModel } = await supabase
+      .from("models")
+      .select("slug")
+      .eq("id", id)
+      .maybeSingle();
+
+    redirect(
+      staffModel?.slug
+        ? `/admin/models/${staffModel.slug}`
+        : "/admin/models",
+    );
+  }
+
   if (
-    !profile ||
-    !profile.active ||
-    profile.status !== "ativa" ||
-    profile.role !== "representative"
+    profile.role !== "representative" ||
+    profile.status !== "ativa"
   ) {
     redirect("/login");
   }

@@ -124,6 +124,19 @@ export default function NotesTab({
     const [errorMessage, setErrorMessage] =
         useState<string | null>(null);
 
+    const [successMessage, setSuccessMessage] =
+        useState<string | null>(null);
+
+    // The note waiting on the confirmation modal, and which kind of removal it
+    // is waiting for. window.confirm / window.prompt used to stand here, and on
+    // a phone those are dialogs the browser is free to suppress — when it does,
+    // they return null and the click silently does nothing, which is exactly
+    // how "the Excluir button does not delete" looks.
+    const [pendingRemoval, setPendingRemoval] = useState<{
+        note: ModelNote;
+        kind: "soft" | "purge";
+    } | null>(null);
+
     const isOwner =
         currentUserRole === "owner";
 
@@ -534,18 +547,27 @@ export default function NotesTab({
         }
     }
 
+    function requestRemoval(
+        note: ModelNote,
+        kind: "soft" | "purge",
+    ) {
+        if (actionNoteId) {
+            return;
+        }
+
+        if (kind === "soft" ? !canSoftDelete : !canPurge) {
+            return;
+        }
+
+        setErrorMessage(null);
+        setSuccessMessage(null);
+        setPendingRemoval({ note, kind });
+    }
+
     async function softDeleteNote(
         note: ModelNote,
     ) {
         if (!canSoftDelete || actionNoteId) {
-            return;
-        }
-
-        const confirmed = window.confirm(
-            "Excluir esta nota? Ela será arquivada e poderá ser removida permanentemente depois.",
-        );
-
-        if (!confirmed) {
             return;
         }
 
@@ -581,6 +603,11 @@ export default function NotesTab({
                 );
             }
 
+            setPendingRemoval(null);
+            setSuccessMessage(
+                "Nota excluída. Ela fica arquivada e o histórico foi mantido.",
+            );
+
             await loadNotes();
         } catch (error) {
             setErrorMessage(
@@ -597,18 +624,6 @@ export default function NotesTab({
         note: ModelNote,
     ) {
         if (!canPurge || actionNoteId) {
-            return;
-        }
-
-        const promptMessage =
-            note.source === "ledger"
-                ? "ATENÇÃO: esta ação é irreversível.\n\nO lançamento financeiro vinculado também será removido permanentemente. " +
-                  `Digite EXCLUIR para remover permanentemente a nota de ${note.createdByName}.`
-                : `ATENÇÃO: esta ação é irreversível.\n\nDigite EXCLUIR para remover permanentemente a nota de ${note.createdByName}.`;
-
-        const phrase = window.prompt(promptMessage);
-
-        if (phrase !== "EXCLUIR") {
             return;
         }
 
@@ -642,6 +657,13 @@ export default function NotesTab({
                         "Não foi possível excluir a nota permanentemente.",
                 );
             }
+
+            setPendingRemoval(null);
+            setSuccessMessage(
+                note.source === "ledger"
+                    ? "Nota e lançamento removidos em definitivo. O conteúdo continua no histórico."
+                    : "Nota removida em definitivo. O conteúdo continua no histórico.",
+            );
 
             await loadNotes();
         } catch (error) {
@@ -678,6 +700,12 @@ export default function NotesTab({
             {errorMessage && (
                 <div className="mb-5 rounded-2xl border border-red-400/30 bg-red-500/10 px-5 py-4 text-sm text-red-200">
                     {errorMessage}
+                </div>
+            )}
+
+            {successMessage && (
+                <div className="mb-5 rounded-2xl border border-emerald-400/30 bg-emerald-500/10 px-5 py-4 text-sm text-emerald-200">
+                    {successMessage}
                 </div>
             )}
 
@@ -861,13 +889,15 @@ export default function NotesTab({
                                             )
                                         }
                                         onSoftDelete={() =>
-                                            void softDeleteNote(
+                                            requestRemoval(
                                                 note,
+                                                "soft",
                                             )
                                         }
                                         onPurge={() =>
-                                            void purgeNote(
+                                            requestRemoval(
                                                 note,
+                                                "purge",
                                             )
                                         }
                                     />
@@ -905,7 +935,124 @@ export default function NotesTab({
                     }
                 />
             )}
+
+            {pendingRemoval && (
+                <RemoveNoteModal
+                    note={pendingRemoval.note}
+                    kind={pendingRemoval.kind}
+                    isWorking={
+                        actionNoteId ===
+                        pendingRemoval.note.id
+                    }
+                    onCancel={() =>
+                        setPendingRemoval(null)
+                    }
+                    onConfirm={() => {
+                        if (
+                            pendingRemoval.kind ===
+                            "soft"
+                        ) {
+                            void softDeleteNote(
+                                pendingRemoval.note,
+                            );
+                            return;
+                        }
+
+                        void purgeNote(
+                            pendingRemoval.note,
+                        );
+                    }}
+                />
+            )}
         </>
+    );
+}
+
+/**
+ * Removal asks in the page, not through window.confirm / window.prompt: those
+ * are dialogs a browser may suppress — notably mobile in-app browsers — and a
+ * suppressed dialog returns nothing, so the button appears to do nothing at
+ * all. That is what "the Excluir button does not delete the note" was.
+ */
+function RemoveNoteModal({
+    note,
+    kind,
+    isWorking,
+    onCancel,
+    onConfirm,
+}: {
+    note: ModelNote;
+    kind: "soft" | "purge";
+    isWorking: boolean;
+    onCancel: () => void;
+    onConfirm: () => void;
+}) {
+    const isPurge = kind === "purge";
+
+    return (
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 p-4 sm:items-center">
+            <div
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="remove-note-title"
+                className="w-full max-w-lg rounded-2xl border border-red-400/30 bg-[#141118] p-6"
+            >
+                <h2
+                    id="remove-note-title"
+                    className="text-lg font-bold text-white"
+                >
+                    {isPurge
+                        ? "Excluir esta nota em definitivo?"
+                        : "Excluir esta nota?"}
+                </h2>
+
+                <div className="mt-4 space-y-3 text-sm leading-6 text-white/70">
+                    <p>
+                        {isPurge
+                            ? "A nota é removida do banco de dados e não pode ser recuperada. O conteúdo fica registrado no histórico da modelo, com quem excluiu e quando."
+                            : "A nota sai da lista ativa e fica arquivada. Ela pode ser restaurada, ou removida em definitivo depois."}
+                    </p>
+
+                    {note.source === "ledger" && isPurge && (
+                        <p className="rounded-xl border border-amber-400/30 bg-amber-500/10 p-3 text-amber-200">
+                            Esta nota veio de um lançamento
+                            financeiro. Ao removê-la, a despesa
+                            ou o empréstimo também sai da área
+                            da modelo e deixa de ser descontado
+                            do mês.
+                        </p>
+                    )}
+
+                    <blockquote className="max-h-40 overflow-y-auto rounded-xl border border-white/10 bg-black/30 p-3 text-xs italic text-white/60">
+                        {note.body}
+                    </blockquote>
+                </div>
+
+                <div className="mt-6 flex flex-wrap justify-end gap-3">
+                    <button
+                        type="button"
+                        onClick={onCancel}
+                        disabled={isWorking}
+                        className="rounded-xl border border-white/15 px-5 py-3 text-xs font-bold uppercase tracking-wider text-white/70 transition hover:bg-white/10 disabled:opacity-50"
+                    >
+                        Cancelar
+                    </button>
+
+                    <button
+                        type="button"
+                        onClick={onConfirm}
+                        disabled={isWorking}
+                        className="rounded-xl bg-red-500 px-5 py-3 text-xs font-bold uppercase tracking-wider text-white transition hover:bg-red-400 disabled:opacity-50"
+                    >
+                        {isWorking
+                            ? "Excluindo..."
+                            : isPurge
+                              ? "Excluir para sempre"
+                              : "Excluir nota"}
+                    </button>
+                </div>
+            </div>
+        </div>
     );
 }
 

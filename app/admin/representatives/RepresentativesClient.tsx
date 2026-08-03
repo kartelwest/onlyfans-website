@@ -3,6 +3,10 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 
+import RepresentativeModelsDropdown, {
+  type RepresentativeModel,
+} from "@/components/admin/RepresentativeModelsDropdown";
+
 import {
   deleteRepresentative,
   updateRepresentativeStatus,
@@ -25,7 +29,7 @@ type RepresentativeRow = {
 type RepresentativesClientProps = {
   initialStatusFilter: "all" | "ativa" | "inativa" | "arquivada";
   representatives: RepresentativeRow[];
-  modelCountMap: Map<string, number>;
+  modelsByRepresentative: Map<string, RepresentativeModel[]>;
   isOwner: boolean;
 };
 
@@ -65,7 +69,7 @@ function formatDate(value: string | null) {
 export default function RepresentativesClient({
   initialStatusFilter,
   representatives,
-  modelCountMap,
+  modelsByRepresentative,
   isOwner,
 }: RepresentativesClientProps) {
   const router = useRouter();
@@ -220,7 +224,10 @@ export default function RepresentativesClient({
                     </td>
 
                     <td className="px-5 py-4 align-top text-white/70">
-                      {modelCountMap.get(rep.id) ?? 0}
+                      <RepresentativeModelsDropdown
+                        representativeId={rep.id}
+                        models={modelsByRepresentative.get(rep.id) ?? []}
+                      />
                     </td>
 
                     <td className="px-5 py-4 align-top text-white/50">
@@ -273,7 +280,7 @@ export default function RepresentativesClient({
                             onClick={() => handleViewAs(rep.id)}
                             className="rounded-lg border border-pink-400/30 bg-pink-500/10 px-3 py-2 text-xs font-bold text-pink-200 transition hover:bg-pink-500/20 disabled:opacity-40"
                           >
-                            Visualizar
+                            Ver como ele vê
                           </button>
                         )}
 

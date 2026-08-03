@@ -31,6 +31,12 @@ type ModelDashboardViewProps = {
   /** Null when the model is not on the expenses/loans feature. */
   ledger: ModelDashboardLedger | null;
   canEditAvatar: boolean;
+  /**
+   * An admin looking at this screen as somebody else. Everything reads the
+   * same, but nothing acts: no signing the admin out of her own account from
+   * inside a model's page, and no uploading to the model's Drive by accident.
+   */
+  previewMode?: boolean;
   /** Extra section rendered before the footer; used by the representative notes panel. */
   children?: ReactNode;
 };
@@ -44,6 +50,7 @@ export default function ModelDashboardView({
   earnings,
   ledger,
   canEditAvatar,
+  previewMode = false,
   children,
 }: ModelDashboardViewProps) {
   const [model, setModel] = useState(initialModel);
@@ -75,6 +82,7 @@ export default function ModelDashboardView({
           }
           canEditAvatar={canEditAvatar}
           viewerRole={viewerRole}
+          previewMode={previewMode}
         />
 
         <EarningsCard model={model} earnings={earnings} />
@@ -96,7 +104,11 @@ export default function ModelDashboardView({
 
         <ProfileInfoSection model={model} />
 
-        <ContentSection model={model} viewerRole={viewerRole} />
+        <ContentSection
+          model={model}
+          viewerRole={viewerRole}
+          previewMode={previewMode}
+        />
 
         <SupportSection />
 
@@ -117,11 +129,13 @@ function Header({
   canEditAvatar,
   onAvatarUpdated,
   viewerRole,
+  previewMode,
 }: {
   model: ModelDashboardModel;
   canEditAvatar: boolean;
   onAvatarUpdated: (url: string) => void;
   viewerRole: ModelDashboardRole;
+  previewMode: boolean;
 }) {
   return (
     <header className="flex items-start justify-between gap-4 pt-2">
@@ -148,10 +162,11 @@ function Header({
           Models are on phones, so this sits in the normal flow at the top of
           the page — always visible, tappable, never behind a hover menu.
           Hidden for a representative, who reaches this same view through
-          /representative/models/[id]: signing her out of her own account from
-          inside a model's page would be a nasty surprise.
+          /representative/models/[id], and for an admin previewing the page:
+          signing them out of their own account from inside a model's page
+          would be a nasty surprise.
         */}
-        {viewerRole === "model" && (
+        {viewerRole === "model" && !previewMode && (
           <LogoutButton className="rounded-full border border-white/20 bg-white/5 px-4 py-2 text-xs font-bold uppercase tracking-[0.14em] text-white/80 transition hover:bg-white/15 hover:text-white disabled:cursor-not-allowed disabled:opacity-60" />
         )}
       </div>
@@ -751,9 +766,11 @@ function ProfileInfoSection({ model }: { model: ModelDashboardModel }) {
 function ContentSection({
   model,
   viewerRole,
+  previewMode,
 }: {
   model: ModelDashboardModel;
   viewerRole: ModelDashboardRole;
+  previewMode: boolean;
 }) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isUploading, setIsUploading] = useState(false);
@@ -843,7 +860,7 @@ function ContentSection({
         <button
           type="button"
           onClick={() => fileInputRef.current?.click()}
-          disabled={isUploading || !model.contentDriveUrl}
+          disabled={previewMode || isUploading || !model.contentDriveUrl}
           className="flex items-center justify-center rounded-xl bg-[#e8b84b] px-4 py-3 text-sm font-black uppercase tracking-[0.06em] text-[#1a1620] transition hover:bg-[#f2c869] disabled:cursor-not-allowed disabled:opacity-40"
         >
           {isUploading ? "Enviando..." : "Enviar conteúdo para o Drive"}
@@ -875,10 +892,16 @@ function ContentSection({
         </a>
       </div>
 
-      {viewerRole === "representative" && (
+      {previewMode ? (
         <p className="mt-3 text-[11px] text-white/35">
-          Este é o único envio permitido para o representante.
+          O envio de conteúdo fica desativado no modo de visualização.
         </p>
+      ) : (
+        viewerRole === "representative" && (
+          <p className="mt-3 text-[11px] text-white/35">
+            Este é o único envio permitido para o representante.
+          </p>
+        )
       )}
     </section>
   );
