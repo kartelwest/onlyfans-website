@@ -14,12 +14,15 @@ export async function GET() {
   try {
     const supabase = createAdminClient();
 
+    // Filtered on active, not on status: profiles.active is what the
+    // lifecycle trigger keeps in step with status for representatives, and it
+    // is the column that exists whether or not the lifecycle migration has
+    // run. An archived account is inactive, so it never reaches this list.
     const { data, error } = await supabase
       .from("profiles")
       .select("id, full_name, role")
       .in("role", ["owner", "administrator", "representative"])
       .eq("active", true)
-      .eq("status", "ativa")
       .order("full_name", { ascending: true });
 
     if (error) {

@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import ModelDashboardView from "@/components/model-dashboard/ModelDashboardView";
 import NotesTab from "@/components/admin/model/NotesTab";
 import { isStaffRole } from "@/lib/auth/roles";
+import { loadProfileWithStatus } from "@/lib/staff/profileLifecycle";
 import {
   loadModelDashboard,
   DASHBOARD_MODEL_COLUMNS,
@@ -29,11 +30,11 @@ export default async function RepresentativeModelDashboardPage({
     redirect("/login");
   }
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role, active, status")
-    .eq("id", user.id)
-    .maybeSingle();
+  const profile = await loadProfileWithStatus(
+    supabase,
+    user.id,
+    "role, active",
+  );
 
   if (!profile || !profile.active) {
     redirect("/login");

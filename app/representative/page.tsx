@@ -4,6 +4,7 @@ import RepresentativeDashboardView, {
   type RepresentativeDashboardModel,
 } from "@/components/representative/RepresentativeDashboardView";
 import { isStaffRole } from "@/lib/auth/roles";
+import { loadProfileWithStatus } from "@/lib/staff/profileLifecycle";
 import { sortByModelStatus } from "@/lib/models/modelStatusOrder";
 import { createClient } from "@/lib/supabase/server";
 import type { ManagementRole } from "@/types/model";
@@ -21,11 +22,11 @@ export default async function RepresentativePage() {
     redirect("/login");
   }
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("full_name, role, active, status")
-    .eq("id", user.id)
-    .single();
+  const profile = await loadProfileWithStatus(
+    supabase,
+    user.id,
+    "full_name, role, active",
+  );
 
   if (!profile || !profile.active) {
     redirect("/login");
@@ -96,7 +97,7 @@ export default async function RepresentativePage() {
 
   return (
     <RepresentativeDashboardView
-      representativeName={profile.full_name ?? ""}
+      representativeName={(profile.full_name as string | null) ?? ""}
       models={assignedModels}
       hrefs={{
         model: (model) => `/representative/models/${model.id}`,

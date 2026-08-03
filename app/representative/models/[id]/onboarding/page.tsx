@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 
 import OnboardingChecklistPanel from "@/components/onboarding/OnboardingChecklistPanel";
 import { isStaffRole } from "@/lib/auth/roles";
+import { loadProfileWithStatus } from "@/lib/staff/profileLifecycle";
 import { createClient } from "@/lib/supabase/server";
 import type { ManagementRole } from "@/types/model";
 
@@ -24,11 +25,11 @@ export default async function RepresentativeOnboardingPage({
     redirect("/login");
   }
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role, active, status")
-    .eq("id", user.id)
-    .maybeSingle();
+  const profile = await loadProfileWithStatus(
+    supabase,
+    user.id,
+    "role, active",
+  );
 
   if (!profile || !profile.active) {
     redirect("/login");

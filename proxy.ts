@@ -88,7 +88,7 @@ export async function proxy(request: NextRequest) {
 
     const { data: profile } = await supabase
       .from("profiles")
-      .select("role, active, status")
+      .select("role, active")
       .eq("id", user.id)
       .single();
 
@@ -115,9 +115,13 @@ export async function proxy(request: NextRequest) {
       return redirectWithCookies(redirectUrl, response);
     }
 
+    // profiles.active is the column the lifecycle trigger keeps in step with
+    // status for representatives, and the one that exists on every database —
+    // selecting status here would fail the whole query (42703) wherever the
+    // lifecycle migration has not run, and lock every representative out.
     if (
       profile.role === "representative" &&
-      profile.status !== "ativa"
+      !profile.active
     ) {
       const blockedUrl = new URL("/login", request.url);
       blockedUrl.searchParams.set("blocked", "1");
