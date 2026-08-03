@@ -56,8 +56,12 @@ rep back office, and the onboarding lock has never applied to her.
    being an administrator means — noted here so the pairing is not raised again as a
    defect.
 
-4. **A test account has full admin rights in production** — "Teste Administrador", no
-   e-mail, role `administrator`, created on day one.
+4. ~~A test account has full admin rights in production~~ — **deleted, on the owner's
+   instruction.** "Teste Administrador" (no e-mail, role `administrator`, created on day
+   one) was removed permanently on 3 Aug 2026, login and all. It had created nothing
+   anywhere — zero rows across every table that references `profiles` — so no historical
+   record was destroyed. The deletion is recorded in `system_audit_log` with the owner as
+   actor and `claude-code:assistant` as the source. One administrator account remains.
 
 ## Also observed
 
