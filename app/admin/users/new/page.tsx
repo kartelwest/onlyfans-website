@@ -31,6 +31,12 @@ type DraftModel = {
   nationality: string | null;
 };
 
+type RepresentativeOption = {
+  id: string;
+  fullName: string;
+  role: string;
+};
+
 export default async function NewUserPage({
   searchParams,
 }: NewUserPageProps) {
@@ -109,6 +115,21 @@ export default async function NewUserPage({
     }
   }
 
+  const { data: representatives } = await supabase
+    .from("profiles")
+    .select("id, full_name, role")
+    .in("role", ["owner", "administrator", "representative"])
+    .eq("active", true)
+    .order("full_name", { ascending: true });
+
+  const representativeOptions: RepresentativeOption[] = (representatives ?? [])
+    .filter((row): row is { id: string; full_name: string; role: string } => Boolean(row.id && row.full_name))
+    .map((row) => ({
+      id: row.id,
+      fullName: row.full_name,
+      role: row.role,
+    }));
+
   return (
     <main className="min-h-screen bg-[#08080a] px-4 py-8 text-white sm:px-6 lg:px-10">
       <div className="mx-auto max-w-4xl">
@@ -165,6 +186,7 @@ export default async function NewUserPage({
           currentUserRole={profile.role}
           drafts={drafts}
           selectedDraft={selectedDraft}
+          representatives={representativeOptions}
         />
       </div>
     </main>

@@ -45,7 +45,7 @@ export default function IdleTimeoutProvider({
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const warningRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const channelRef = useRef<BroadcastChannel | null>(null);
-  const lastActivityRef = useRef<number>(Date.now());
+  const lastActivityRef = useRef<number>(0);
   const [showWarning, setShowWarning] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -218,9 +218,13 @@ export default function IdleTimeoutProvider({
       document.addEventListener(event, debouncedResetTimer, { passive: true });
     });
 
-    resetTimer();
+    // Kick off the timer outside the effect body to avoid a synchronous setState.
+    const initialTimer = setTimeout(() => {
+      resetTimer();
+    }, 0);
 
     return () => {
+      clearTimeout(initialTimer);
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
       }

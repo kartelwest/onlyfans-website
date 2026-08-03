@@ -5,6 +5,12 @@ import { useEffect, useState } from "react";
 import { WHATSAPP_URL } from "@/lib/constants/whatsapp";
 import BirthdayDatePicker from "@/components/ui/BirthdayDatePicker";
 
+type PublicRepresentative = {
+    id: string;
+    fullName: string;
+    role: string;
+};
+
 type FormState = {
     nomeCompleto: string;
     nomeArtisticoDesejado: string;
@@ -16,7 +22,8 @@ type FormState = {
     email: string;
     instagram: string;
     twitter: string;
-    representanteIndicacao: string;
+    representativeId: string;
+    otherRepresentative: string;
     possuiOnlyfans: string;
     entendeNovaConta: boolean;
     administrarContaExistente: string;
@@ -39,7 +46,8 @@ const initialFormState: FormState = {
     email: "",
     instagram: "",
     twitter: "",
-    representanteIndicacao: "",
+    representativeId: "",
+    otherRepresentative: "",
     possuiOnlyfans: "",
     entendeNovaConta: false,
     administrarContaExistente: "",
@@ -53,9 +61,33 @@ const initialFormState: FormState = {
 
 export default function ApplyPage() {
     const [form, setForm] = useState<FormState>(initialFormState);
+    const [representatives, setRepresentatives] = useState<PublicRepresentative[]>([]);
+    const [isLoadingRepresentatives, setIsLoadingRepresentatives] = useState(true);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [errorMessage, setErrorMessage] = useState("");
     const [isSubmitted, setIsSubmitted] = useState(false);
+
+    useEffect(() => {
+        async function loadRepresentatives() {
+            try {
+                const response = await fetch("/api/representatives/public");
+                const result = (await response.json()) as {
+                    representatives?: PublicRepresentative[];
+                    error?: string;
+                };
+
+                if (response.ok && Array.isArray(result.representatives)) {
+                    setRepresentatives(result.representatives);
+                }
+            } catch (error) {
+                console.error("Erro ao carregar representantes:", error);
+            } finally {
+                setIsLoadingRepresentatives(false);
+            }
+        }
+
+        void loadRepresentatives();
+    }, []);
 
     function updateField<FieldName extends keyof FormState>(
         field: FieldName,
@@ -90,6 +122,13 @@ export default function ApplyPage() {
             return;
         }
 
+        if (form.representativeId === "other" && !form.otherRepresentative.trim()) {
+            setErrorMessage(
+                "Informe o nome do representante que indicou você.",
+            );
+            return;
+        }
+
         if (!form.confirmacaoIdade) {
             setErrorMessage(
                 "Confirme que tem pelo menos 18 anos para continuar.",
@@ -103,7 +142,13 @@ export default function ApplyPage() {
             const response = await fetch("/api/aplicar", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(form),
+                body: JSON.stringify({
+                    ...form,
+                    representativeId:
+                        form.representativeId === "other"
+                            ? undefined
+                            : form.representativeId,
+                }),
             });
 
             const result = await response.json();
@@ -374,24 +419,51 @@ export default function ApplyPage() {
 
                                     <select
                                         required
-                                        value={form.representanteIndicacao}
+                                        value={form.representativeId}
                                         onChange={(event) =>
                                             updateField(
-                                                "representanteIndicacao",
+                                                "representativeId",
                                                 event.target.value,
                                             )
                                         }
+                                        disabled={isLoadingRepresentatives}
                                         className="mt-3 w-full rounded-xl border border-[#dfcbd2] bg-[#fffdfb] px-4 py-4 outline-none transition focus:border-[#c65f7c]"
                                     >
                                         <option value="" disabled>
-                                            Selecione uma opção
+                                            {isLoadingRepresentatives
+                                                ? "Carregando..."
+                                                : "Selecione uma opção"}
                                         </option>
 
-                                        <option value="Kartel">Kartel</option>
-                                        <option value="Rayssa">Rayssa</option>
-                                        <option value="Antonio (Tony)">Antonio (Tony)</option>
-                                        <option value="Boca a boca">Fiquei sabendo por indicação / boca a boca</option>
+                                        {representatives.map((rep) => (
+                                            <option key={rep.id} value={rep.id}>
+                                                {rep.fullName}
+                                                {rep.role === "owner"
+                                                    ? " (Proprietário)"
+                                                    : rep.role === "administrator"
+                                                      ? " (Administrador)"
+                                                      : " (Representante)"}
+                                            </option>
+                                        ))}
+
+                                        <option value="other">Outro</option>
                                     </select>
+
+                                    {form.representativeId === "other" && (
+                                        <input
+                                            type="text"
+                                            required
+                                            value={form.otherRepresentative}
+                                            onChange={(event) =>
+                                                updateField(
+                                                    "otherRepresentative",
+                                                    event.target.value,
+                                                )
+                                            }
+                                            placeholder="Informe o nome do representante"
+                                            className="mt-3 w-full rounded-xl border border-[#dfcbd2] bg-[#fffdfb] px-4 py-4 outline-none transition focus:border-[#c65f7c]"
+                                        />
+                                    )}
                                 </label>
 
                                 <label className="block md:col-span-2">

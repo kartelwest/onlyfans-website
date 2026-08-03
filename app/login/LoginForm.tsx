@@ -80,6 +80,12 @@ export default function LoginForm({ returnTo, expired }: { returnTo?: string; ex
         throw new Error(loginFailureMessage("account_disabled"));
       }
 
+      // Track the login timestamp for the management lists.
+      await supabase
+        .from("profiles")
+        .update({ last_login_at: new Date().toISOString() })
+        .eq("id", user.id);
+
       if (profile.must_change_password) {
         window.location.replace("/alterar-senha");
         return;

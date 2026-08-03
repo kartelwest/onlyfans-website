@@ -6,10 +6,7 @@ import {
   createUniqueModelSlug,
   getNextModelNumber,
 } from "@/lib/models/createModelSlug";
-import {
-  createApplicationNotes,
-  findReferredRepresentativeId,
-} from "@/lib/models/applicantIntake";
+import { createApplicationNotes } from "@/lib/models/applicantIntake";
 import { logAuditEntry } from "@/lib/audit/auditLogger";
 
 export const dynamic = "force-dynamic";
@@ -25,7 +22,8 @@ type ApplyBody = {
   email?: string;
   instagram?: string;
   twitter?: string;
-  representanteIndicacao?: string;
+  representativeId?: string;
+  otherRepresentative?: string;
   possuiOnlyfans?: string;
   entendeNovaConta?: boolean;
   administrarContaExistente?: string;
@@ -50,7 +48,8 @@ export async function POST(request: Request) {
     const pais = body.pais?.trim();
     const whatsapp = body.whatsapp?.trim();
     const email = body.email?.trim().toLowerCase();
-    const representanteIndicacao = body.representanteIndicacao?.trim();
+    const representativeId = body.representativeId?.trim();
+    const otherRepresentative = body.otherRepresentative?.trim();
     const possuiOnlyfans = body.possuiOnlyfans?.trim();
     const bloquearBrasil = body.bloquearBrasil?.trim();
     const mostrarRosto = body.mostrarRosto?.trim();
@@ -66,7 +65,7 @@ export async function POST(request: Request) {
       !pais ||
       !whatsapp ||
       !email ||
-      !representanteIndicacao ||
+      (!representativeId && !otherRepresentative) ||
       !possuiOnlyfans ||
       !bloquearBrasil ||
       !mostrarRosto ||
@@ -110,10 +109,24 @@ export async function POST(request: Request) {
 
     const modelNumber = await getNextModelNumber(adminSupabase);
 
-    const representativeId = await findReferredRepresentativeId(
-      adminSupabase,
-      representanteIndicacao,
-    );
+    const validRepresentativeId =
+      representativeId && isValidUuid(representativeId)
+        ? representativeId
+        : null;
+
+    let referralSource = otherRepresentative || null;
+
+    if (validRepresentativeId) {
+      const { data: repRow } = await adminSupabase
+        .from("profiles")
+        .select("full_name")
+        .eq("id", validRepresentativeId)
+        .maybeSingle();
+
+      if (repRow?.full_name) {
+        referralSource = repRow.full_name;
+      }
+    }
 
     const { data: createdModel, error: createModelError } =
       await adminSupabase
@@ -130,7 +143,8 @@ export async function POST(request: Request) {
           whatsapp,
           instagram: body.instagram?.trim() || null,
           twitter: body.twitter?.trim() || null,
-          representative_id: representativeId,
+          representative_id: validRepresentativeId,
+          referral_source: referralSource,
           status: "candidate",
           active: false,
           onboarding_percentage: 0,
@@ -160,7 +174,8 @@ export async function POST(request: Request) {
         cidade,
         estado,
         pais,
-        representanteIndicacao,
+        representanteIndicacao:
+          referralSource ?? "Não informado",
         possuiOnlyfans,
         entendeNovaConta: body.entendeNovaConta ?? false,
         administrarContaExistente:
@@ -214,6 +229,16 @@ function getApplicantInsertErrorMessage(
     default:
       return "Não foi possível registrar a candidatura. Tente novamente em instantes ou entre em contato com o suporte.";
   }
+}
+
+function isValidUuid(value: string | undefined): value is string {
+  if (!value) {
+    return false;
+  }
+
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+    value,
+  );
 }
 
 function isAtLeast18(dateOfBirth: string): boolean {

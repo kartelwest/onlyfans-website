@@ -39,13 +39,14 @@ export default async function RepresentativePage() {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("full_name, role, active")
+    .select("full_name, role, active, status")
     .eq("id", user.id)
     .single();
 
   if (
     !profile ||
     !profile.active ||
+    profile.status !== "ativa" ||
     profile.role !== "representative"
   ) {
     redirect("/login");

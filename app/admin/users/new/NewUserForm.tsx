@@ -25,11 +25,18 @@ type DraftModel = {
   nationality: string | null;
 };
 
+type RepresentativeOption = {
+  id: string;
+  fullName: string;
+  role: string;
+};
+
 type NewUserFormProps = {
   role: NewUserRole;
   currentUserRole: string;
   drafts: DraftModel[];
   selectedDraft: DraftModel | null;
+  representatives: RepresentativeOption[];
 };
 
 type FormState = {
@@ -40,6 +47,7 @@ type FormState = {
   dateOfBirth: string;
   country: string;
   temporaryPassword: string;
+  representativeId: string;
   active: boolean;
   websiteLoginEnabled: boolean;
 };
@@ -52,6 +60,7 @@ const initialFormState: FormState = {
   dateOfBirth: "",
   country: "Brasil",
   temporaryPassword: "",
+  representativeId: "",
   active: true,
   websiteLoginEnabled: true,
 };
@@ -94,6 +103,7 @@ function buildInitialFormState(
     dateOfBirth: selectedDraft.birthday ?? "",
     country: selectedDraft.nationality ?? "Brasil",
     temporaryPassword: "",
+    representativeId: "",
     active: true,
     websiteLoginEnabled: true,
   };
@@ -104,6 +114,7 @@ export default function NewUserForm({
   currentUserRole,
   drafts,
   selectedDraft,
+  representatives,
 }: NewUserFormProps) {
   const router = useRouter();
 
@@ -197,6 +208,7 @@ export default function NewUserForm({
       dateOfBirth: draft.birthday ?? "",
       country: draft.nationality ?? "Brasil",
       temporaryPassword: "",
+      representativeId: "",
       active: true,
       websiteLoginEnabled: true,
     });
@@ -373,6 +385,11 @@ export default function NewUserForm({
       return;
     }
 
+    if (isModel && !form.representativeId) {
+      setErrorMessage("Selecione um representante para a modelo.");
+      return;
+    }
+
     if (
       role === "administrator" &&
       currentUserRole !== "owner"
@@ -416,6 +433,7 @@ export default function NewUserForm({
           dateOfBirth: form.dateOfBirth || null,
           country: form.country.trim(),
           temporaryPassword,
+          representativeId: form.representativeId,
           active: form.active,
           websiteLoginEnabled: form.websiteLoginEnabled,
           draftModelId,
@@ -705,6 +723,45 @@ export default function NewUserForm({
             className={`${inputClassName} ${isModel ? "cursor-not-allowed opacity-60" : ""}`}
           />
         </FormField>
+
+        {isModel && (
+          <FormField
+            label="Representante / responsável"
+            required
+            description="O responsável pode ser um proprietário, administrador ou representante ativo."
+          >
+            <select
+              value={form.representativeId}
+              onChange={(event) =>
+                updateField("representativeId", event.target.value)
+              }
+              className={`${inputClassName} appearance-none bg-black/30`}
+            >
+              <option value="">Selecione um responsável</option>
+
+              {representatives.map((rep) => (
+                <option key={rep.id} value={rep.id}>
+                  {rep.fullName}
+                  {rep.role === "owner"
+                    ? " (Proprietário)"
+                    : rep.role === "administrator"
+                      ? " (Administrador)"
+                      : " (Representante)"}
+                </option>
+              ))}
+            </select>
+
+            <p className="mt-2 text-xs text-zinc-500">
+              Não encontrou o representante?{" "}
+              <a
+                href="/admin/users/new?role=representative"
+                className="text-pink-400 underline transition hover:text-pink-300"
+              >
+                Cadastre um novo.
+              </a>
+            </p>
+          </FormField>
+        )}
 
         <FormField label="Tipo de usuário">
           <input

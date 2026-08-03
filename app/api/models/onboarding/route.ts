@@ -23,6 +23,7 @@ type ProfileRecord = {
   full_name: string | null;
   role: ManagementRole;
   active: boolean;
+  status: string | null;
 };
 
 type PatchBody = {
@@ -53,12 +54,19 @@ async function getAuthenticatedProfile() {
 
   const { data: profile, error: profileError } = await supabase
     .from("profiles")
-    .select("id, full_name, role, active")
+    .select("id, full_name, role, active, status")
     .eq("id", user.id)
     .maybeSingle<ProfileRecord>();
 
   if (profileError || !profile || !profile.active) {
     return { error: fail("Perfil inválido ou inativo.", 403) };
+  }
+
+  if (
+    profile.role === "representative" &&
+    profile.status !== "ativa"
+  ) {
+    return { error: fail("Representante inativo.", 403) };
   }
 
   return { supabase, user, profile };
@@ -98,6 +106,7 @@ export async function GET(request: Request) {
     const { sections, summary } = await loadOnboarding({
       supabase: auth.supabase,
       modelId,
+      viewerRole: auth.profile.role,
     });
 
     return NextResponse.json({
@@ -176,6 +185,13 @@ export async function PATCH(request: Request) {
 
     if (!existing) {
       return fail("Etapa de onboarding não encontrada.", 404);
+    }
+
+    // A representative cannot change a step that is already complete. The same
+    // rule is enforced by the per-item lock trigger; this pre-check gives a
+    // clearer message and avoids a Postgres round-trip.
+    if (existing.completed && auth.profile.role === "representative") {
+      return fail("Etapa concluída: o representante não pode alterá-la.", 403);
     }
 
     // ----- a fill-in box -----------------------------------------------------
@@ -269,6 +285,7 @@ export async function PATCH(request: Request) {
       const { sections } = await loadOnboarding({
         supabase: auth.supabase,
         modelId,
+        viewerRole: auth.profile.role,
       });
 
       const current = sections
@@ -320,16 +337,17 @@ export async function PATCH(request: Request) {
 
     // The percentage is maintained by trg_onboarding_progress, so re-reading
     // here is what the client gets back — never a number computed twice.
-    const { sections, summary } = await loadOnboarding({
-      supabase: auth.supabase,
-      modelId,
-    });
-
     const refreshed = await resolveOnboardingAccess({
       supabase: auth.supabase,
       modelId,
       userId: auth.user.id,
       role: auth.profile.role,
+    });
+
+    const { sections, summary } = await loadOnboarding({
+      supabase: auth.supabase,
+      modelId,
+      viewerRole: auth.profile.role,
     });
 
     return NextResponse.json({

@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
 import { createClient } from "@/lib/supabase/server";
-import ViewAsBanner from "@/components/admin/ViewAsBanner";
+import ViewAsRepresentativeBanner from "@/components/admin/ViewAsRepresentativeBanner";
 import type { ManagementRole } from "@/types/model";
 
 type ModelNote = {
@@ -49,12 +49,12 @@ export default async function ViewAsRepresentativeModelPage({
 
   const { data: representative } = await supabase
     .from("profiles")
-    .select("id, full_name")
+    .select("id, full_name, active, status")
     .eq("id", repId)
     .eq("role", "representative")
     .maybeSingle();
 
-  if (!representative) {
+  if (!representative || representative.status !== "ativa" || !representative.active) {
     notFound();
   }
 
@@ -92,6 +92,8 @@ export default async function ViewAsRepresentativeModelPage({
     .from("model_notes")
     .select("id, body, created_by_name, created_by_role, created_at")
     .eq("model_id", modelId)
+    .eq("author_id", repId)
+    .is("deleted_at", null)
     .order("created_at", { ascending: false })
     .limit(10);
 
@@ -99,9 +101,10 @@ export default async function ViewAsRepresentativeModelPage({
 
   return (
     <>
-      <ViewAsBanner
+      <ViewAsRepresentativeBanner
         label={`Vendo como o representante ${representative.full_name ?? ""} veria`}
         backHref={`/admin/view-as/representative/${repId}`}
+        representativeId={representative.id}
       />
 
       <main className="min-h-screen bg-[#f7f1ec] px-6 py-12">

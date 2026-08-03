@@ -30,12 +30,13 @@ type AuthenticatedProfile = {
     role: ManagementRole;
 };
 
-// Notes are internal agency records: owner and administrator only. This
-// mirrors the staff-only RLS policies on model_notes / model_note_history —
-// a representative is denied at both layers, never just one.
+// Notes are internal agency records: owner, administrator, and the model's
+// assigned representative (who may read only their own notes). RLS enforces
+// the rep boundary, so the API lets them in and trusts the database filter.
 const allowedRoles: ManagementRole[] = [
     "owner",
     "administrator",
+    "representative",
 ];
 
 const notePriorities: NotePriority[] = [
@@ -43,6 +44,29 @@ const notePriorities: NotePriority[] = [
     "important",
     "urgent",
 ];
+
+const NOTE_COLUMNS = `
+    id,
+    model_id,
+    body,
+    priority,
+    pinned,
+    archived,
+    deleted_at,
+    deleted_by,
+    deleted_by_name,
+    created_context,
+    source,
+    ledger_entry_id,
+    created_by,
+    created_by_name,
+    created_by_role,
+    updated_by,
+    updated_by_name,
+    updated_by_role,
+    created_at,
+    updated_at
+`;
 
 export const dynamic = "force-dynamic";
 
@@ -90,31 +114,14 @@ export async function GET(
         }
 
         // Use request-scoped client for data access (RLS enforced)
+        const isRep = profile.role === "representative";
+
         const {
             data: notes,
             error: notesError,
         } = await supabase
             .from("model_notes")
-            .select(
-                `
-                    id,
-                    model_id,
-                    body,
-                    priority,
-                    pinned,
-                    archived,
-                    source,
-                    ledger_entry_id,
-                    created_by,
-                    created_by_name,
-                    created_by_role,
-                    updated_by,
-                    updated_by_name,
-                    updated_by_role,
-                    created_at,
-                    updated_at
-                `,
-            )
+            .select(NOTE_COLUMNS)
             .eq("model_id", modelId)
             .order("pinned", {
                 ascending: false,
@@ -140,83 +147,94 @@ export async function GET(
             );
         }
 
-        const {
-            data: history,
-            error: historyError,
-        } = await supabase
-            .from("model_note_history")
-            .select(
-                `
-                    id,
-                    note_id,
-                    model_id,
-                    action,
-                    original_body,
-                    updated_body,
-                    editor_id,
-                    editor_name,
-                    editor_role,
-                    created_at
-                `,
-            )
-            .eq("model_id", modelId)
-            .order("created_at", {
-                ascending: false,
-            })
-            .limit(100);
+        // The note history and full audit trail are internal agency records.
+        // Representatives read only their own notes; they do not see the history.
+        let history: Record<string, unknown>[] = [];
+        let auditHistory: Record<string, unknown>[] = [];
 
-        if (historyError) {
-            console.error(
-                "Erro ao carregar histórico das notas:",
-                historyError,
-            );
+        if (!isRep) {
+            const {
+                data: historyData,
+                error: historyError,
+            } = await supabase
+                .from("model_note_history")
+                .select(
+                    `
+                        id,
+                        note_id,
+                        model_id,
+                        action,
+                        original_body,
+                        updated_body,
+                        editor_id,
+                        editor_name,
+                        editor_role,
+                        created_at
+                    `,
+                )
+                .eq("model_id", modelId)
+                .order("created_at", {
+                    ascending: false,
+                })
+                .limit(100);
 
-            return NextResponse.json(
-                {
-                    error:
-                        "Não foi possível carregar o histórico das notas.",
-                },
-                {
-                    status: 500,
-                },
-            );
-        }
+            if (historyError) {
+                console.error(
+                    "Erro ao carregar histórico das notas:",
+                    historyError,
+                );
 
-        // The recent-history panel shows the same unified timeline as the
-        // Histórico tab: note events plus every other change to the account.
-        // Models are excluded from `model_audit_history` by RLS, so for them
-        // this simply comes back empty rather than erroring.
-        const {
-            data: auditHistory,
-            error: auditHistoryError,
-        } = await supabase
-            .from("model_audit_history")
-            .select(
-                `
-                    id,
-                    model_id,
-                    action,
-                    field_name,
-                    previous_value,
-                    new_value,
-                    actor_id,
-                    actor_name,
-                    actor_role,
-                    summary,
-                    created_at
-                `,
-            )
-            .eq("model_id", modelId)
-            .order("created_at", {
-                ascending: false,
-            })
-            .limit(100);
+                return NextResponse.json(
+                    {
+                        error:
+                            "Não foi possível carregar o histórico das notas.",
+                    },
+                    {
+                        status: 500,
+                    },
+                );
+            }
 
-        if (auditHistoryError) {
-            console.error(
-                "Erro ao carregar histórico de auditoria das notas:",
-                auditHistoryError,
-            );
+            history = historyData ?? [];
+
+            // The recent-history panel shows the same unified timeline as the
+            // Histórico tab: note events plus every other change to the account.
+            // Models are excluded from `model_audit_history` by RLS, so for them
+            // this simply comes back empty rather than erroring.
+            const {
+                data: auditData,
+                error: auditHistoryError,
+            } = await supabase
+                .from("model_audit_history")
+                .select(
+                    `
+                        id,
+                        model_id,
+                        action,
+                        field_name,
+                        previous_value,
+                        new_value,
+                        actor_id,
+                        actor_name,
+                        actor_role,
+                        summary,
+                        created_at
+                    `,
+                )
+                .eq("model_id", modelId)
+                .order("created_at", {
+                    ascending: false,
+                })
+                .limit(100);
+
+            if (auditHistoryError) {
+                console.error(
+                    "Erro ao carregar histórico de auditoria das notas:",
+                    auditHistoryError,
+                );
+            }
+
+            auditHistory = auditData ?? [];
         }
 
         const recentHistory = [
@@ -276,22 +294,9 @@ export async function POST(
         }
 
         const { profile } = authentication;
-
-        if (
-            profile.role !== "owner" &&
-            profile.role !==
-                "administrator"
-        ) {
-            return NextResponse.json(
-                {
-                    error:
-                        "Você não tem permissão para adicionar notas.",
-                },
-                {
-                    status: 403,
-                },
-            );
-        }
+        const isStaff =
+            profile.role === "owner" ||
+            profile.role === "administrator";
 
         const requestBody =
             (await request.json()) as NotesRequestBody;
@@ -369,6 +374,11 @@ export async function POST(
                 priority,
                 pinned: false,
                 archived: false,
+                created_context:
+                    isStaff ? "staff" : "representative",
+                author_id: profile.id,
+                author_name: profile.fullName,
+                author_role: profile.role,
                 created_by: profile.id,
                 created_by_name:
                     profile.fullName,
@@ -380,26 +390,7 @@ export async function POST(
                 updated_by_role:
                     profile.role,
             })
-            .select(
-                `
-                    id,
-                    model_id,
-                    body,
-                    priority,
-                    pinned,
-                    archived,
-                    source,
-                    ledger_entry_id,
-                    created_by,
-                    created_by_name,
-                    created_by_role,
-                    updated_by,
-                    updated_by_name,
-                    updated_by_role,
-                    created_at,
-                    updated_at
-                `,
-            )
+            .select(NOTE_COLUMNS)
             .single();
 
         if (createError || !createdNote) {
@@ -419,18 +410,19 @@ export async function POST(
             );
         }
 
-        const historyError =
-            await createHistoryEntry(
-                supabase,
-                {
-                    noteId: createdNote.id,
-                    modelId,
-                    action: "created",
-                    originalBody: null,
-                    updatedBody: body,
-                    profile,
-                },
-            );
+        const historyError = isStaff
+            ? await createHistoryEntry(
+                  supabase,
+                  {
+                      noteId: createdNote.id,
+                      modelId,
+                      action: "created",
+                      originalBody: null,
+                      updatedBody: body,
+                      profile,
+                  },
+              )
+            : null;
 
         if (historyError) {
             await supabase
@@ -548,26 +540,7 @@ export async function PATCH(
             error: existingNoteError,
         } = await supabase
             .from("model_notes")
-            .select(
-                `
-                    id,
-                    model_id,
-                    body,
-                    priority,
-                    pinned,
-                    archived,
-                    source,
-                    ledger_entry_id,
-                    created_by,
-                    created_by_name,
-                    created_by_role,
-                    updated_by,
-                    updated_by_name,
-                    updated_by_role,
-                    created_at,
-                    updated_at
-                `,
-            )
+            .select(NOTE_COLUMNS)
             .eq("id", noteId)
             .eq("model_id", modelId)
             .single();
@@ -614,6 +587,15 @@ export async function PATCH(
                 existingNote,
                 modelId,
                 requestBody,
+            });
+        }
+
+        if (action === "soft-delete") {
+            return softDeleteNote({
+                supabase,
+                profile,
+                existingNote,
+                modelId,
             });
         }
 
@@ -892,24 +874,7 @@ async function editNote({
         })
         .eq("id", existingNote.id)
         .eq("model_id", modelId)
-        .select(
-            `
-                id,
-                model_id,
-                body,
-                priority,
-                pinned,
-                archived,
-                created_by,
-                created_by_name,
-                created_by_role,
-                updated_by,
-                updated_by_name,
-                updated_by_role,
-                created_at,
-                updated_at
-            `,
-        )
+        .select(NOTE_COLUMNS)
         .single();
 
     if (updateError || !updatedNote) {
@@ -1035,24 +1000,7 @@ async function togglePin({
         })
         .eq("id", existingNote.id)
         .eq("model_id", modelId)
-        .select(
-            `
-                id,
-                model_id,
-                body,
-                priority,
-                pinned,
-                archived,
-                created_by,
-                created_by_name,
-                created_by_role,
-                updated_by,
-                updated_by_name,
-                updated_by_role,
-                created_at,
-                updated_at
-            `,
-        )
+        .select(NOTE_COLUMNS)
         .single();
 
     if (updateError || !updatedNote) {
@@ -1169,24 +1117,7 @@ async function toggleArchive({
         })
         .eq("id", existingNote.id)
         .eq("model_id", modelId)
-        .select(
-            `
-                id,
-                model_id,
-                body,
-                priority,
-                pinned,
-                archived,
-                created_by,
-                created_by_name,
-                created_by_role,
-                updated_by,
-                updated_by_name,
-                updated_by_role,
-                created_at,
-                updated_at
-            `,
-        )
+        .select(NOTE_COLUMNS)
         .single();
 
     if (updateError || !updatedNote) {
@@ -1251,6 +1182,119 @@ async function toggleArchive({
     });
 }
 
+async function softDeleteNote({
+    supabase,
+    profile,
+    existingNote,
+    modelId,
+}: {
+    supabase: SupabaseClient;
+    profile: AuthenticatedProfile;
+    existingNote: Record<string, unknown>;
+    modelId: string;
+}) {
+    if (profile.role !== "owner") {
+        return NextResponse.json(
+            {
+                error:
+                    "Somente o proprietário pode excluir notas.",
+            },
+            {
+                status: 403,
+            },
+        );
+    }
+
+    if (existingNote.deleted_at) {
+        return NextResponse.json(
+            {
+                error:
+                    "Esta nota já foi excluída.",
+            },
+            {
+                status: 400,
+            },
+        );
+    }
+
+    const {
+        data: updatedNote,
+        error: updateError,
+    } = await supabase
+        .from("model_notes")
+        .update({
+            archived: true,
+            deleted_at:
+                new Date().toISOString(),
+            deleted_by: profile.id,
+            deleted_by_name:
+                profile.fullName,
+            updated_by: profile.id,
+            updated_by_name:
+                profile.fullName,
+            updated_by_role:
+                profile.role,
+            updated_at:
+                new Date().toISOString(),
+        })
+        .eq("id", existingNote.id)
+        .eq("model_id", modelId)
+        .select(NOTE_COLUMNS)
+        .single();
+
+    if (updateError || !updatedNote) {
+        console.error(
+            "Erro ao excluir nota:",
+            updateError,
+        );
+
+        return NextResponse.json(
+            {
+                error:
+                    "Não foi possível excluir a nota.",
+            },
+            {
+                status: 500,
+            },
+        );
+    }
+
+    const historyError =
+        await createHistoryEntry(
+            supabase,
+            {
+                noteId: String(
+                    existingNote.id,
+                ),
+                modelId,
+                action: "soft_deleted",
+                originalBody:
+                    readRequiredString(
+                        existingNote.body,
+                    ) ?? "",
+                updatedBody: null,
+                profile,
+            },
+        );
+
+    if (historyError) {
+        // Best-effort history; the note is already soft-deleted.
+        console.error(
+            "Erro ao registrar histórico de exclusão suave:",
+            historyError,
+        );
+    }
+
+    await updateLatestNoteSummary(
+        supabase,
+        modelId,
+    );
+
+    return NextResponse.json({
+        note: mapNote(updatedNote),
+    });
+}
+
 async function getAuthenticatedProfile(): Promise<
     | {
           ok: true;
@@ -1290,7 +1334,7 @@ async function getAuthenticatedProfile(): Promise<
     } = await supabase
         .from("profiles")
         .select(
-            "id, full_name, role, active",
+            "id, full_name, role, active, status",
         )
         .eq("id", user.id)
         .single();
@@ -1317,6 +1361,25 @@ async function getAuthenticatedProfile(): Promise<
 
     const role =
         profile.role as ManagementRole;
+
+    if (
+        role === "representative" &&
+        profile.status !== "ativa"
+    ) {
+        return {
+            ok: false,
+            response:
+                NextResponse.json(
+                    {
+                        error:
+                            "Representante inativo.",
+                    },
+                    {
+                        status: 403,
+                    },
+                ),
+        };
+    }
 
     if (!allowedRoles.includes(role)) {
         return {
@@ -1485,6 +1548,7 @@ async function updateLatestNoteSummary(
         .select("body")
         .eq("model_id", modelId)
         .eq("archived", false)
+        .is("deleted_at", null)
         .order("pinned", {
             ascending: false,
         })
@@ -1531,22 +1595,19 @@ async function updateLatestNoteSummary(
 function createPermissions(
     role: ManagementRole,
 ) {
+    const isStaff =
+        role === "owner" ||
+        role === "administrator";
+    const isRep = role === "representative";
+
     return {
-        canCreate:
-            role === "owner" ||
-            role ===
-                "administrator",
+        canCreate: isStaff || isRep,
         canEdit: role === "owner",
-        canPin:
-            role === "owner" ||
-            role ===
-                "administrator",
-        canArchive:
-            role === "owner" ||
-            role ===
-                "administrator",
-        // Deleting is owner-only: administrators may archive, never remove.
-        canDelete: role === "owner",
+        canPin: isStaff,
+        canArchive: isStaff,
+        // Soft delete (Excluir) is owner-only. Admins may archive; reps may create.
+        canSoftDelete: role === "owner",
+        canPurge: role === "owner",
     };
 }
 
@@ -1601,6 +1662,24 @@ function mapNote(
         updatedByRole:
             readRequiredString(
                 note.updated_by_role,
+            ),
+        createdContext:
+            readRequiredString(
+                note.created_context,
+            ),
+        deletedAt:
+            note.deleted_at === null
+                ? null
+                : readRequiredString(
+                      note.deleted_at,
+                  ) ?? null,
+        deletedBy:
+            readRequiredString(
+                note.deleted_by,
+            ),
+        deletedByName:
+            readRequiredString(
+                note.deleted_by_name,
             ),
         createdAt:
             readRequiredString(

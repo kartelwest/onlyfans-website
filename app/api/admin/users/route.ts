@@ -31,6 +31,7 @@ type CreateUserRequest = {
   temporaryPassword?: string;
   active?: boolean;
   websiteLoginEnabled?: boolean;
+  representativeId?: string;
   draftModelId?: string;
   originalText?: string;
 };
@@ -196,6 +197,37 @@ export async function POST(request: Request) {
     }
 
     const adminSupabase = createAdminClient();
+
+    let assignedRepresentativeId: string | null = null;
+
+    if (role === "model") {
+      const representativeId = body.representativeId?.trim();
+      assignedRepresentativeId = representativeId || currentProfile.id;
+
+      const { data: representative } = await adminSupabase
+        .from("profiles")
+        .select("id, role, active, status")
+        .eq("id", assignedRepresentativeId)
+        .in("role", ["owner", "administrator", "representative"])
+        .maybeSingle();
+
+      if (!representative || !representative.active) {
+        return NextResponse.json(
+          { error: "O representante selecionado não está ativo." },
+          { status: 400 },
+        );
+      }
+
+      if (
+        representative.role === "representative" &&
+        representative.status !== "ativa"
+      ) {
+        return NextResponse.json(
+          { error: "O representante selecionado não está ativo." },
+          { status: 400 },
+        );
+      }
+    }
 
     let existingDraft:
       | { id: string; slug: string; model_number: number | null }
@@ -365,6 +397,7 @@ export async function POST(request: Request) {
         nationality: country,
         email,
         whatsapp: phone,
+        representative_id: assignedRepresentativeId,
         status: active ? "active" as const : "inactive" as const,
         active,
         website_login_enabled: websiteLoginEnabled,
