@@ -169,7 +169,7 @@ create policy notes_select on public.model_notes
   using (
     public.is_staff()
     or (
-      author_id = auth.uid()
+      created_by = auth.uid()
       and public.is_assigned_representative(model_id)
       and deleted_at is null
     )
@@ -180,7 +180,7 @@ create policy notes_insert on public.model_notes
   with check (
     public.is_staff()
     or (
-      author_id = auth.uid()
+      created_by = auth.uid()
       and public.is_assigned_representative(model_id)
     )
   );

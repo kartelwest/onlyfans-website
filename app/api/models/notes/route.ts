@@ -376,9 +376,6 @@ export async function POST(
                 archived: false,
                 created_context:
                     isStaff ? "staff" : "representative",
-                author_id: profile.id,
-                author_name: profile.fullName,
-                author_role: profile.role,
                 created_by: profile.id,
                 created_by_name:
                     profile.fullName,
