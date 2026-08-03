@@ -37,6 +37,11 @@ Lifecycle storage: `profiles.status` holds `ativa` | `inativa` | `arquivada`, an
 `profiles.active` in step for representatives — so the status can never disagree with whether the
 account may log in, which is the column every gate reads.
 
+What `manage_profile_columns` refuses, whoever is asking and however they ask: a role change by
+anyone but the owner, a status or active change by anyone but staff, and a `full_name` change by
+anyone but staff — including on one's own row, because that name is copied onto every note and
+audit entry.
+
 ## Models
 
 | Action | Owner | Administrator | Representative | Model |

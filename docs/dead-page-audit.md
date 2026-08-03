@@ -69,7 +69,7 @@ models.
 | Gap found | Severity | Status |
 | --- | --- | --- |
 | An administrator could DELETE a profile row directly — permanent deletion is owner-only in the UI, but `profiles` carried a second, wider delete policy (`profiles_delete_management`) | High — bypassed the rule by calling the API directly | **Fixed** in 20260803020000; re-tested (admin rows=0, owner rows=1) |
-| A representative can rename her own profile (`full_name`) — self-update is permitted, and only status/active/role are guarded | Low — her name is what appears in audit trails | Open — awaiting a decision |
+| A representative can rename her own profile (`full_name`) — self-update is permitted, and only status/active/role are guarded | Low — her name is copied onto every note and audit row | **Fixed** in 20260803030000; re-tested (rep rename REFUSED 42501, rep phone still allowed, admin rename allowed) |
 
 ## Deleted in this pass
 
