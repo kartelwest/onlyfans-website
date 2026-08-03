@@ -1,12 +1,10 @@
 import { notFound, redirect } from "next/navigation";
 
-import ViewAsBanner from "@/components/admin/ViewAsBanner";
+import ViewAsRepresentativeBanner from "@/components/admin/ViewAsRepresentativeBanner";
 import RepresentativeDashboardView, {
   type RepresentativeDashboardModel,
 } from "@/components/representative/RepresentativeDashboardView";
-import { logStaffAudit } from "@/lib/audit/staffAudit";
 import { sortByModelStatus } from "@/lib/models/modelStatusOrder";
-import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import type { ManagementRole } from "@/types/model";
 
@@ -20,6 +18,9 @@ export const dynamic = "force-dynamic";
  * all — rather than a replica that drifts. The admin keeps their own session
  * throughout: nothing here is signed in as the rep, and every read still runs
  * under the admin's own RLS.
+ *
+ * Entering and leaving are both recorded — see enterViewAsRepresentative /
+ * exitViewAsRepresentative in app/admin/representatives/actions.ts.
  */
 export default async function ViewAsRepresentativePage({
   params,
@@ -56,12 +57,17 @@ export default async function ViewAsRepresentativePage({
 
   const { data: representative, error: representativeError } = await supabase
     .from("profiles")
-    .select("id, full_name, role, active")
+    .select("id, full_name, role, active, status")
     .eq("id", repId)
     .eq("role", "representative")
     .maybeSingle();
 
-  if (representativeError || !representative) {
+  if (
+    representativeError ||
+    !representative ||
+    !representative.active ||
+    representative.status !== "ativa"
+  ) {
     notFound();
   }
 
@@ -88,7 +94,11 @@ export default async function ViewAsRepresentativePage({
   if (error) {
     return (
       <>
-        <ViewAsBanner label={label} backHref="/admin/representatives" />
+        <ViewAsRepresentativeBanner
+          label={label}
+          backHref="/admin/representatives"
+          representativeId={representative.id}
+        />
 
         <main className="min-h-screen bg-[#f7f1ec] px-6 py-12">
           <div className="mx-auto max-w-6xl">
@@ -112,25 +122,13 @@ export default async function ViewAsRepresentativePage({
     }),
   );
 
-  // Who looked at whose back office, and when. Best-effort: a log that cannot
-  // be written must not take the screen down with it.
-  await logStaffAudit(createAdminClient(), {
-    action: "view_as_representative",
-    actor: {
-      id: viewerProfile.id as string,
-      fullName: viewerProfile.full_name as string | null,
-      role: viewerRole,
-    },
-    targetType: "representative",
-    targetId: representative.id as string,
-    targetName: representative.full_name as string | null,
-    newValue: `${assignedModels.length} modelo(s) visíveis`,
-    context: { viewAs: true },
-  });
-
   return (
     <>
-      <ViewAsBanner label={label} backHref="/admin/representatives" />
+      <ViewAsRepresentativeBanner
+        label={label}
+        backHref="/admin/representatives"
+        representativeId={representative.id}
+      />
 
       <RepresentativeDashboardView
         representativeName={representative.full_name ?? ""}

@@ -11,6 +11,7 @@ relaxed by mistake in one place does not silently open the system:
 | Page guard | each `app/**/page.tsx` (role read from `profiles`, `redirect()` on refusal) |
 | API route | `lib/api/requireRole.ts` (`requireStaff`, `requireModelAccess`), per-route checks |
 | Shared role helper | `lib/auth/roles.ts` (`STAFF_ROLES`, `isStaffRole`) |
+| Middleware | `proxy.ts` (route guards by role and representative status) |
 | Onboarding | `lib/onboarding/server.ts` (`resolveOnboardingAccess`) |
 | Database | RLS policies + `public.is_staff()` / `public.is_owner()` / `public.is_active_user()` |
 
@@ -26,9 +27,14 @@ relaxed by mistake in one place does not silently open the system:
 | Manage administrators | Yes | No | No | No |
 | Change own account status | No (nobody may, from these screens) | No | No | No |
 
-Enforcement: `app/api/admin/users/[userId]/route.ts` (`authorize()` — target role, self-target and
-owner-target checks), `app/admin/representatives/**` for the interface, `profiles.active` as the one
-column every login gate reads.
+Enforcement: `app/admin/representatives/actions.ts` (server actions: `updateRepresentativeStatus`,
+`deleteRepresentative`, `viewAsRepresentative`), the `manage_profile_columns` trigger (role changes
+owner-only, status/active changes staff-only, enforced in the database), and the
+`profiles_update` / `profiles_delete` RLS policies.
+
+Lifecycle storage: `profiles.status` holds `ativa` | `inativa` | `arquivada`, and the trigger keeps
+`profiles.active` in step for representatives — so the status can never disagree with whether the
+account may log in, which is the column every gate reads.
 
 ## Models
 
@@ -53,16 +59,21 @@ Enforcement: `models_select` RLS (`is_management() OR is_own_model() OR is_assig
 | Create internal note | Yes | Yes | No | No |
 | Edit note | Yes | No | No | No |
 | Pin / archive note | Yes | Yes | No | No |
-| Delete any note | Yes | No | No | No |
+| Soft-delete (archive) a note | Yes | Yes | No | No |
+| Purge a note permanently | Yes | No | No | No |
 | Read ledger notes (expenses/loans) | Yes | Yes | Assigned models | Own record |
 
 Enforcement: `notes_staff_only_access` migration (staff-only RLS), `notes_delete_owner` policy +
 `public.delete_model_note()` RPC (`is_owner()` check inside the function), `/api/models/notes`
-(`allowedRoles`, `profile.role !== "owner"` on DELETE).
+(`allowedRoles`, `profile.role !== "owner"` on DELETE for the permanent purge).
 
-Not yet built (spec §7): representative-authored notes flowing into the central history. Decided
-behaviour for when it lands — a rep may read back the notes **they** wrote on **their** models, and
-never an owner's, an admin's, or another rep's.
+Representative notes: a rep may write a note on a model assigned to them and read back their own —
+never an owner's, an admin's, or another representative's. Rep-authored notes flow into the same
+central notes and history area the owner and admins read.
+
+Removal is two-step: soft-delete archives the note (owner and admins), and only the owner may purge
+it from the database afterwards. Both steps confirm in an in-page modal — never `window.confirm` or
+`window.prompt`, which mobile in-app browsers may suppress.
 
 ## View-as
 
@@ -77,15 +88,15 @@ no impersonation token is minted, no session is swapped, every query still runs 
 RLS. Acting controls are removed in preview (`previewMode` in `ModelDashboardView`: no logout button,
 no Drive upload), and a persistent banner names whose screen is on display with a way back.
 
-Opening a rep's back office writes `view_as_representative` to `public.staff_audit_log`
-(who looked, at whom, when).
+Entering and leaving a rep's back office both write to `public.system_audit_log`
+(`view_as_representative_enter` / `_exit`) — who looked, at whom, when.
 
 ## Audit trails
 
 | Trail | Table | Written by |
 | --- | --- | --- |
-| Everything about one model | `model_audit_history` | `lib/audit/auditLogger.ts`, DB RPCs |
-| Account lifecycle + view-as | `staff_audit_log` | `lib/audit/staffAudit.ts` (service role only) |
+| Everything about one model | `model_audit_history` | `lib/audit/auditLogger.ts` (`logAuditEntry`), DB RPCs |
+| Account lifecycle, note removal, view-as | `system_audit_log` | `lib/audit/auditLogger.ts` (`logSystemAuditEntry`) |
 
-`staff_audit_log` grants `authenticated` SELECT and nothing else, and its RLS restricts even that to
-staff: a representative can neither forge an entry nor erase one.
+Both logs are readable by staff and writable by nobody from a session: a representative can neither
+forge an entry nor erase one.

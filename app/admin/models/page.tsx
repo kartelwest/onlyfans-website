@@ -823,7 +823,7 @@ function ProfileListSection({
                   <tr
                     key={profile.id}
                     className={`border-b border-white/10 align-top transition hover:bg-white/[0.03] ${
-                      status === "active" ? "" : "opacity-60"
+                      status === "ativa" ? "" : "opacity-60"
                     }`}
                   >
                     <TableCell>

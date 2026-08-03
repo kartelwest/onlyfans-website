@@ -31,9 +31,9 @@ type CreateUserRequest = {
   temporaryPassword?: string;
   active?: boolean;
   websiteLoginEnabled?: boolean;
+  representativeId?: string;
   draftModelId?: string;
   originalText?: string;
-  representativeId?: string | null;
 };
 
 const ALLOWED_CREATION_ROLES: ManagementRole[] = [
@@ -126,14 +126,6 @@ export async function POST(request: Request) {
         ? body.draftModelId
         : null;
 
-    // Who the new model answers to. Validated below against the accounts that
-    // may actually hold an assignment — an id posted by hand never becomes an
-    // assignment to an inactive, archived or non-existent account.
-    const requestedRepresentativeId =
-      typeof body.representativeId === "string" && body.representativeId
-        ? body.representativeId
-        : null;
-
     if (
       !role ||
       !ALLOWED_CREATION_ROLES.includes(role)
@@ -146,32 +138,6 @@ export async function POST(request: Request) {
           status: 400,
         },
       );
-    }
-
-    let representativeId: string | null = null;
-
-    if (role === "model" && requestedRepresentativeId) {
-      const { data: assignable } = await supabase
-        .from("profiles")
-        .select("id")
-        .eq("id", requestedRepresentativeId)
-        .in("role", ["representative", "administrator"])
-        .eq("active", true)
-        .maybeSingle();
-
-      if (!assignable) {
-        return NextResponse.json(
-          {
-            error:
-              "O responsável selecionado não está disponível. Escolha uma conta ativa.",
-          },
-          {
-            status: 400,
-          },
-        );
-      }
-
-      representativeId = assignable.id as string;
     }
 
     if (
@@ -231,6 +197,37 @@ export async function POST(request: Request) {
     }
 
     const adminSupabase = createAdminClient();
+
+    let assignedRepresentativeId: string | null = null;
+
+    if (role === "model") {
+      const representativeId = body.representativeId?.trim();
+      assignedRepresentativeId = representativeId || currentProfile.id;
+
+      const { data: representative } = await adminSupabase
+        .from("profiles")
+        .select("id, role, active, status")
+        .eq("id", assignedRepresentativeId)
+        .in("role", ["owner", "administrator", "representative"])
+        .maybeSingle();
+
+      if (!representative || !representative.active) {
+        return NextResponse.json(
+          { error: "O representante selecionado não está ativo." },
+          { status: 400 },
+        );
+      }
+
+      if (
+        representative.role === "representative" &&
+        representative.status !== "ativa"
+      ) {
+        return NextResponse.json(
+          { error: "O representante selecionado não está ativo." },
+          { status: 400 },
+        );
+      }
+    }
 
     let existingDraft:
       | { id: string; slug: string; model_number: number | null }
@@ -400,7 +397,7 @@ export async function POST(request: Request) {
         nationality: country,
         email,
         whatsapp: phone,
-        representative_id: representativeId,
+        representative_id: assignedRepresentativeId,
         status: active ? "active" as const : "inactive" as const,
         active,
         website_login_enabled: websiteLoginEnabled,

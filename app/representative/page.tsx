@@ -23,7 +23,7 @@ export default async function RepresentativePage() {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("full_name, role, active")
+    .select("full_name, role, active, status")
     .eq("id", user.id)
     .single();
 
@@ -37,7 +37,12 @@ export default async function RepresentativePage() {
     redirect("/admin/models");
   }
 
-  if (profile.role !== "representative") {
+  // An inactive or archived representative keeps the account and every record
+  // attached to it, and loses the back office.
+  if (
+    profile.role !== "representative" ||
+    profile.status !== "ativa"
+  ) {
     redirect("/login");
   }
 

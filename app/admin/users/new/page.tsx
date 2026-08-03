@@ -4,7 +4,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { createClient } from "@/lib/supabase/server";
-import NewUserForm, { type AssigneeOption } from "./NewUserForm";
+import NewUserForm from "./NewUserForm";
 
 export const dynamic = "force-dynamic";
 
@@ -29,6 +29,12 @@ type DraftModel = {
   whatsapp: string | null;
   birthday: string | null;
   nationality: string | null;
+};
+
+type RepresentativeOption = {
+  id: string;
+  fullName: string;
+  role: string;
 };
 
 export default async function NewUserPage({
@@ -86,30 +92,8 @@ export default async function NewUserPage({
 
   let drafts: DraftModel[] = [];
   let selectedDraft: DraftModel | null = null;
-  let assignees: AssigneeOption[] = [];
 
   if (role === "model") {
-    // Who a new model may be handed to: active representatives and admins,
-    // never an inactive or archived account. Loaded from the database, and
-    // filtered here rather than in the browser.
-    const { data: assignableRows } = await supabase
-      .from("profiles")
-      .select("id, full_name, email, role, active")
-      .in("role", ["representative", "administrator"])
-      .eq("active", true)
-      .order("role", { ascending: true })
-      .order("full_name", { ascending: true });
-
-    assignees = (assignableRows ?? []).map((row) => ({
-      id: row.id as string,
-      fullName: (row.full_name as string | null)?.trim() || "Sem nome",
-      role:
-        row.role === "administrator"
-          ? "Administrador"
-          : "Representante",
-      email: (row.email as string | null) ?? null,
-    }));
-
     const { data: draftModels } = await supabase
       .from("models")
       .select(
@@ -130,6 +114,21 @@ export default async function NewUserPage({
       selectedDraft = matchingDraft ?? null;
     }
   }
+
+  const { data: representatives } = await supabase
+    .from("profiles")
+    .select("id, full_name, role")
+    .in("role", ["owner", "administrator", "representative"])
+    .eq("active", true)
+    .order("full_name", { ascending: true });
+
+  const representativeOptions: RepresentativeOption[] = (representatives ?? [])
+    .filter((row): row is { id: string; full_name: string; role: string } => Boolean(row.id && row.full_name))
+    .map((row) => ({
+      id: row.id,
+      fullName: row.full_name,
+      role: row.role,
+    }));
 
   return (
     <main className="min-h-screen bg-[#08080a] px-4 py-8 text-white sm:px-6 lg:px-10">
@@ -187,7 +186,7 @@ export default async function NewUserPage({
           currentUserRole={profile.role}
           drafts={drafts}
           selectedDraft={selectedDraft}
-          assignees={assignees}
+          representatives={representativeOptions}
         />
       </div>
     </main>

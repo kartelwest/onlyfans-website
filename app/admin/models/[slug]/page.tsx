@@ -15,6 +15,12 @@ import type {
   ProxyCompany,
 } from "@/types/model";
 
+type RepresentativeOption = {
+  id: string;
+  fullName: string;
+  role: string;
+};
+
 export const dynamic = "force-dynamic";
 
 type ModelPageProps = {
@@ -546,6 +552,23 @@ export default async function ModelAdminPage({
   // username the two diverge. This page is owner/administrator-only, so the
   // lookup happens here with the admin client and only the display form
   // (username or address) is handed to the client component.
+  const { data: representativeProfiles } = await supabase
+    .from("profiles")
+    .select("id, full_name, role")
+    .in("role", ["owner", "administrator", "representative"])
+    .eq("active", true)
+    .order("full_name", { ascending: true });
+
+  const representatives: RepresentativeOption[] = (representativeProfiles ?? [])
+    .filter((row): row is { id: string; full_name: string; role: string } => Boolean(row.id && row.full_name))
+    .map((row) => ({
+      id: row.id,
+      fullName: row.full_name,
+      role: row.role,
+    }));
+
+  const isOwner = currentUserRole === "owner";
+
   let currentLogin: string | null = null;
 
   if (model.profileId) {
@@ -569,6 +592,8 @@ export default async function ModelAdminPage({
       currentUserRole={currentUserRole}
       proxyDetails={proxyDetails}
       currentLogin={currentLogin}
+      representatives={representatives}
+      isOwner={isOwner}
     />
   );
 }

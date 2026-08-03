@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import ModelDashboardView from "@/components/model-dashboard/ModelDashboardView";
+import NotesTab from "@/components/admin/model/NotesTab";
 import { isStaffRole } from "@/lib/auth/roles";
 import {
   loadModelDashboard,
@@ -30,7 +31,7 @@ export default async function RepresentativeModelDashboardPage({
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("role, active")
+    .select("role, active, status")
     .eq("id", user.id)
     .maybeSingle();
 
@@ -44,7 +45,10 @@ export default async function RepresentativeModelDashboardPage({
     redirect(`/admin/view-as/model/${id}/representative`);
   }
 
-  if (profile.role !== "representative") {
+  if (
+    profile.role !== "representative" ||
+    profile.status !== "ativa"
+  ) {
     redirect("/login");
   }
 
@@ -76,6 +80,13 @@ export default async function RepresentativeModelDashboardPage({
       earnings={earnings}
       ledger={ledger}
       canEditAvatar={false}
-    />
+    >
+      <div className="mt-6">
+        <NotesTab
+          modelId={id}
+          currentUserRole="representative"
+        />
+      </div>
+    </ModelDashboardView>
   );
 }

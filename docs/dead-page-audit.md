@@ -43,11 +43,13 @@ referenced by any page, API route or other component.
 | Item | Finding | Status |
 | --- | --- | --- |
 | `models.last_login_at` | Rendered on three screens since launch; **nothing ever wrote it**, so it was always "Nunca" | **Fixed** — `/api/auth/record-login` now stamps it (and `profiles.last_login_at`) after each sign-in |
-| Note deletion | The API and the `delete_model_note` RPC both work (verified against production with a throw-away note inside an aborted transaction). The button used `window.confirm`, which mobile in-app browsers may suppress — a suppressed confirm returns `false`, so the click silently did nothing | **Fixed** — in-page confirmation modal with loading, success and error states |
+| Note deletion | The API and the `delete_model_note` RPC both work (verified against production with a throw-away note inside an aborted transaction). The buttons used `window.confirm` / `window.prompt`, which mobile in-app browsers may suppress — a suppressed dialog returns nothing, so the click silently did nothing | **Fixed** — in-page confirmation modal over the soft-delete and purge flows, with loading, success and error states |
 | Representative assignment | An admin creating a model had **no way to assign a representative**; only the public `/aplicar` referral path and the PDF importer ever set `representative_id` | **Fixed** — assignment dropdown on the model creation form, active accounts only, server-validated |
 | Rep view-as screens | Were hand-written replicas; the model one even showed internal notes the model never sees | **Fixed** — both now render the real components through the real loaders |
 | `window.confirm` elsewhere | Same suppression risk in `MediaDrivePanel`, `ModelEarningsPanel`, `LedgerPanel` | Open — recommend the same modal treatment |
 | Two role enums | Migrations declare `public.management_role`; production actually has `public.app_role` (4 labels, `management_role` absent). SQL written against the repo's name would fail on production | Open — worth reconciling before the next function migration |
+| Missing foreign key | `models.representative_id` has **no FK** in production (only `profile_id` and `created_by` do). PostgREST therefore cannot resolve `profiles!representative_id` embeds — it answered PGRST200 and failed the whole query — and deleting a representative does not null out her models | Partly fixed — the embed was replaced with a second query, and the delete path clears assignments itself. Adding the constraint is still recommended |
+| Unapplied migration | `20260803000001_representative_system.sql` was **not applied to production** when its code went live: `/api/representatives/public` logged `column profiles.status does not exist` | Open — the migration must run before this release is trusted |
 
 ## Deleted in this pass
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef, useState, type ReactNode } from "react";
 
 import LogoutButton from "@/components/LogoutButton";
 import { WHATSAPP_URL } from "@/lib/constants/whatsapp";
@@ -37,6 +37,8 @@ type ModelDashboardViewProps = {
    * inside a model's page, and no uploading to the model's Drive by accident.
    */
   previewMode?: boolean;
+  /** Extra section rendered before the footer; used by the representative notes panel. */
+  children?: ReactNode;
 };
 
 const RECORDING_GUIDELINES_URL = "/diretrizes-de-gravacao";
@@ -49,6 +51,7 @@ export default function ModelDashboardView({
   ledger,
   canEditAvatar,
   previewMode = false,
+  children,
 }: ModelDashboardViewProps) {
   const [model, setModel] = useState(initialModel);
 
@@ -108,6 +111,8 @@ export default function ModelDashboardView({
         />
 
         <SupportSection />
+
+        {children}
 
         <Footer />
       </div>

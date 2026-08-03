@@ -25,11 +25,10 @@ type DraftModel = {
   nationality: string | null;
 };
 
-export type AssigneeOption = {
+type RepresentativeOption = {
   id: string;
   fullName: string;
   role: string;
-  email: string | null;
 };
 
 type NewUserFormProps = {
@@ -37,8 +36,7 @@ type NewUserFormProps = {
   currentUserRole: string;
   drafts: DraftModel[];
   selectedDraft: DraftModel | null;
-  /** Active representatives and admins — who a new model may be assigned to. */
-  assignees: AssigneeOption[];
+  representatives: RepresentativeOption[];
 };
 
 type FormState = {
@@ -49,10 +47,9 @@ type FormState = {
   dateOfBirth: string;
   country: string;
   temporaryPassword: string;
+  representativeId: string;
   active: boolean;
   websiteLoginEnabled: boolean;
-  /** Empty string means "Não atribuído". */
-  representativeId: string;
 };
 
 const initialFormState: FormState = {
@@ -63,9 +60,9 @@ const initialFormState: FormState = {
   dateOfBirth: "",
   country: "Brasil",
   temporaryPassword: "",
+  representativeId: "",
   active: true,
   websiteLoginEnabled: true,
-  representativeId: "",
 };
 
 type ExtractedFields = {
@@ -106,9 +103,9 @@ function buildInitialFormState(
     dateOfBirth: selectedDraft.birthday ?? "",
     country: selectedDraft.nationality ?? "Brasil",
     temporaryPassword: "",
+    representativeId: "",
     active: true,
     websiteLoginEnabled: true,
-    representativeId: "",
   };
 }
 
@@ -117,7 +114,7 @@ export default function NewUserForm({
   currentUserRole,
   drafts,
   selectedDraft,
-  assignees,
+  representatives,
 }: NewUserFormProps) {
   const router = useRouter();
 
@@ -211,9 +208,9 @@ export default function NewUserForm({
       dateOfBirth: draft.birthday ?? "",
       country: draft.nationality ?? "Brasil",
       temporaryPassword: "",
+      representativeId: "",
       active: true,
       websiteLoginEnabled: true,
-      representativeId: "",
     });
 
     setDraftModelId(draft.id);
@@ -388,6 +385,11 @@ export default function NewUserForm({
       return;
     }
 
+    if (isModel && !form.representativeId) {
+      setErrorMessage("Selecione um representante para a modelo.");
+      return;
+    }
+
     if (
       role === "administrator" &&
       currentUserRole !== "owner"
@@ -431,10 +433,9 @@ export default function NewUserForm({
           dateOfBirth: form.dateOfBirth || null,
           country: form.country.trim(),
           temporaryPassword,
+          representativeId: form.representativeId,
           active: form.active,
           websiteLoginEnabled: form.websiteLoginEnabled,
-          representativeId:
-            form.representativeId || null,
           draftModelId,
           originalText: useAI ? aiText.trim() : "",
         }),
@@ -723,6 +724,45 @@ export default function NewUserForm({
           />
         </FormField>
 
+        {isModel && (
+          <FormField
+            label="Representante / responsável"
+            required
+            description="O responsável pode ser um proprietário, administrador ou representante ativo."
+          >
+            <select
+              value={form.representativeId}
+              onChange={(event) =>
+                updateField("representativeId", event.target.value)
+              }
+              className={`${inputClassName} appearance-none bg-black/30`}
+            >
+              <option value="">Selecione um responsável</option>
+
+              {representatives.map((rep) => (
+                <option key={rep.id} value={rep.id}>
+                  {rep.fullName}
+                  {rep.role === "owner"
+                    ? " (Proprietário)"
+                    : rep.role === "administrator"
+                      ? " (Administrador)"
+                      : " (Representante)"}
+                </option>
+              ))}
+            </select>
+
+            <p className="mt-2 text-xs text-zinc-500">
+              Não encontrou o representante?{" "}
+              <a
+                href="/admin/users/new?role=representative"
+                className="text-pink-400 underline transition hover:text-pink-300"
+              >
+                Cadastre um novo.
+              </a>
+            </p>
+          </FormField>
+        )}
+
         <FormField label="Tipo de usuário">
           <input
             type="text"
@@ -731,47 +771,6 @@ export default function NewUserForm({
             className={`${inputClassName} cursor-not-allowed opacity-60`}
           />
         </FormField>
-
-        {isModel && (
-          <FormField label="Representante responsável">
-            <select
-              value={form.representativeId}
-              onChange={(event) =>
-                updateField(
-                  "representativeId",
-                  event.target.value,
-                )
-              }
-              className={inputClassName}
-            >
-              <option value="">Não atribuído</option>
-
-              {assignees.map((assignee) => (
-                <option key={assignee.id} value={assignee.id}>
-                  {assignee.fullName} — {assignee.role}
-                  {assignee.email ? ` — ${assignee.email}` : ""}
-                </option>
-              ))}
-            </select>
-
-            {/*
-              Only accounts that can actually work the model appear above:
-              active representatives and admins, never an inactive or archived
-              one. When the right person is missing, the answer is to create
-              the account properly, not to invent a half-filled record here.
-            */}
-            <p className="mt-2 text-xs leading-5 text-white/45">
-              Só aparecem contas ativas.{" "}
-              <a
-                href="/admin/users/new?role=representative"
-                className="font-semibold text-pink-300 underline-offset-2 hover:underline"
-              >
-                Adicionar representante
-              </a>{" "}
-              se quem você procura não está na lista.
-            </p>
-          </FormField>
-        )}
       </div>
 
       <div className="mt-8 grid gap-4 sm:grid-cols-2">

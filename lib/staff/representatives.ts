@@ -3,55 +3,43 @@ import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 /**
- * The three states a staff account can be in, derived from two columns rather
- * than stored in a third — see
- * supabase/migrations/20260803010000_representative_lifecycle_and_staff_audit.sql.
+ * The representative lifecycle, as stored by
+ * supabase/migrations/20260803000001_representative_system.sql:
+ * profiles.status holds 'ativa' | 'inativa' | 'arquivada', and a trigger keeps
+ * profiles.active in step for representatives (active = status = 'ativa').
  *
- *   Ativo     active = true,  archived_at null
- *   Inativo   active = false, archived_at null
- *   Arquivado active = false, archived_at set
- *
- * Deriving it means the status can never disagree with whether the account can
- * actually log in, because profiles.active is what the login gates read.
+ * This module is the read side of that column for the screens that only need
+ * to show it — the writes live in app/admin/representatives/actions.ts.
  */
-export type StaffAccountStatus = "active" | "inactive" | "archived";
+export type StaffAccountStatus = "ativa" | "inativa" | "arquivada";
 
 export const STAFF_STATUS_LABELS: Record<StaffAccountStatus, string> = {
-  active: "Ativo",
-  inactive: "Inativo",
-  archived: "Arquivado",
+  ativa: "Ativo",
+  inativa: "Inativo",
+  arquivada: "Arquivado",
 };
 
 export const STAFF_STATUS_BADGE: Record<StaffAccountStatus, string> = {
-  active: "bg-emerald-500/10 text-emerald-300 ring-emerald-500/30",
-  inactive: "bg-white/5 text-white/60 ring-white/15",
-  archived: "bg-amber-500/10 text-amber-300 ring-amber-500/30",
+  ativa: "bg-emerald-500/10 text-emerald-300 ring-emerald-500/30",
+  inativa: "bg-white/5 text-white/60 ring-white/15",
+  arquivada: "bg-amber-500/10 text-amber-300 ring-amber-500/30",
 };
 
 export function accountStatus(profile: {
   active: boolean | null;
-  archived_at?: string | null;
+  status?: string | null;
 }): StaffAccountStatus {
-  if (profile.archived_at) {
-    return "archived";
+  if (
+    profile.status === "ativa" ||
+    profile.status === "inativa" ||
+    profile.status === "arquivada"
+  ) {
+    return profile.status;
   }
 
-  return profile.active ? "active" : "inactive";
-}
-
-/** What a status change writes. Archiving always carries the deactivation. */
-export function statusColumns(status: StaffAccountStatus): {
-  active: boolean;
-  archived_at: string | null;
-} {
-  switch (status) {
-    case "active":
-      return { active: true, archived_at: null };
-    case "inactive":
-      return { active: false, archived_at: null };
-    case "archived":
-      return { active: false, archived_at: new Date().toISOString() };
-  }
+  // A database without the lifecycle column yet still has the flag every login
+  // gate reads, so the badge stays truthful instead of blank.
+  return profile.active ? "ativa" : "inativa";
 }
 
 export type StaffProfileRow = {
@@ -60,14 +48,14 @@ export type StaffProfileRow = {
   email: string | null;
   role: string;
   active: boolean | null;
-  archived_at: string | null;
+  status: string | null;
   phone: string | null;
   last_login_at: string | null;
   created_at: string | null;
 };
 
 const EXTENDED_COLUMNS =
-  "id, full_name, email, role, active, archived_at, phone, last_login_at, created_at";
+  "id, full_name, email, role, active, status, phone, last_login_at, created_at";
 
 const BASE_COLUMNS = "id, full_name, email, role, active, created_at";
 
@@ -75,9 +63,9 @@ const BASE_COLUMNS = "id, full_name, email, role, active, created_at";
  * Loads staff profiles of one role.
  *
  * Falls back to the pre-lifecycle column list when the new columns are not on
- * the database yet (undefined_column, 42703). The screens then behave exactly
- * as they did before — active/inactive only — instead of the whole page
- * failing because a deploy landed ahead of its migration.
+ * the database yet (undefined_column, 42703). The screens then behave as they
+ * did before — active/inactive only — instead of the whole page failing
+ * because a deploy landed ahead of its migration.
  */
 export async function loadStaffProfiles(
   supabase: SupabaseClient,
@@ -114,7 +102,7 @@ export async function loadStaffProfiles(
 
   const profiles = (base.data ?? []).map((row) => ({
     ...(row as Record<string, unknown>),
-    archived_at: null,
+    status: null,
     phone: null,
     last_login_at: null,
   })) as unknown as StaffProfileRow[];

@@ -67,6 +67,8 @@ export async function proxy(request: NextRequest) {
     "/area-da-modelo",
     "/alterar-senha",
     "/api/brand",
+    "/api/models",
+    "/api/admin",
   ];
 
   const isProtectedRoute = protectedRoutes.some(
@@ -82,6 +84,44 @@ export async function proxy(request: NextRequest) {
       const loginUrl = new URL("/login", request.url);
       loginUrl.searchParams.set("returnTo", pathname);
       return redirectWithCookies(loginUrl, response);
+    }
+
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("role, active, status")
+      .eq("id", user.id)
+      .single();
+
+    if (!profile || !profile.active) {
+      const logoutUrl = new URL("/login", request.url);
+      logoutUrl.searchParams.set("blocked", "1");
+      return redirectWithCookies(logoutUrl, response);
+    }
+
+    if (
+      pathname.startsWith("/representative") &&
+      profile.role !== "representative"
+    ) {
+      const redirectUrl = profile.role === "owner" || profile.role === "administrator"
+        ? new URL("/admin/models", request.url)
+        : new URL("/area-da-modelo", request.url);
+      return redirectWithCookies(redirectUrl, response);
+    }
+
+    if (pathname.startsWith("/owner") && profile.role !== "owner") {
+      const redirectUrl = profile.role === "representative"
+        ? new URL("/representative", request.url)
+        : new URL("/admin/models", request.url);
+      return redirectWithCookies(redirectUrl, response);
+    }
+
+    if (
+      profile.role === "representative" &&
+      profile.status !== "ativa"
+    ) {
+      const blockedUrl = new URL("/login", request.url);
+      blockedUrl.searchParams.set("blocked", "1");
+      return redirectWithCookies(blockedUrl, response);
     }
 
     const lastActivityCookie = request.cookies.get(LAST_ACTIVITY_COOKIE);
