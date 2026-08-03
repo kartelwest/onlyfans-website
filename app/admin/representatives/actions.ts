@@ -92,6 +92,111 @@ export async function updateRepresentativeStatus(
   };
 }
 
+/**
+ * Name, e-mail and phone on a representative's profile.
+ *
+ * The name is guarded in the database too (manage_profile_columns refuses a
+ * full_name change from anyone who is not staff), because it is copied onto
+ * every note and audit row this person touches.
+ */
+export async function updateRepresentativeDetails(
+  previousState: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
+  const staffCheck = await requireStaff();
+
+  if (staffCheck) {
+    return staffCheck;
+  }
+
+  const representativeId = String(formData.get("representativeId") ?? "");
+  const fullName = String(formData.get("fullName") ?? "").trim();
+  const email = String(formData.get("email") ?? "").trim();
+  const phone = String(formData.get("phone") ?? "").trim();
+
+  if (!representativeId) {
+    return { success: false, message: "Dados inválidos." };
+  }
+
+  if (!fullName) {
+    return { success: false, message: "O nome é obrigatório." };
+  }
+
+  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return { success: false, message: "Informe um e-mail válido." };
+  }
+
+  const supabase = await createClient();
+
+  const { data: target } = await supabase
+    .from("profiles")
+    .select("id, full_name, email, phone, role")
+    .eq("id", representativeId)
+    .single();
+
+  if (target?.role !== "representative") {
+    return {
+      success: false,
+      message: "O perfil selecionado não é um representante.",
+    };
+  }
+
+  const { error } = await supabase
+    .from("profiles")
+    .update({
+      full_name: fullName,
+      email: email || null,
+      phone: phone || null,
+    })
+    .eq("id", representativeId)
+    .eq("role", "representative");
+
+  if (error) {
+    console.error("Erro ao atualizar o representante:", error);
+
+    return { success: false, message: "Não foi possível salvar as alterações." };
+  }
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const { data: actor } = user
+    ? await supabase
+        .from("profiles")
+        .select("id, full_name, role")
+        .eq("id", user.id)
+        .single()
+    : { data: null };
+
+  if (actor) {
+    await logSystemAuditEntry(supabase, {
+      action: "representative_details_updated",
+      targetType: "representative",
+      targetId: representativeId,
+      targetName: fullName,
+      actor: {
+        id: actor.id,
+        fullName: actor.full_name ?? "Usuário",
+        role: actor.role ?? "administrator",
+      },
+      previousValue: {
+        full_name: target.full_name,
+        email: target.email,
+        phone: target.phone,
+      },
+      newValue: { full_name: fullName, email: email || null, phone: phone || null },
+      source: "admin/representatives",
+      summary: `${actor.full_name ?? "Usuário"} atualizou os dados do representante ${fullName}.`,
+    });
+  }
+
+  revalidatePath("/admin/representatives");
+  revalidatePath(`/admin/representatives/${representativeId}`);
+
+  return { success: true, message: "Dados atualizados." };
+}
+
 export async function deleteRepresentative(
   previousState: ActionResult | null,
   formData: FormData,

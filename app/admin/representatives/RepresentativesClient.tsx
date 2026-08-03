@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
@@ -203,9 +204,12 @@ export default function RepresentativesClient({
                     className="transition hover:bg-white/[0.025]"
                   >
                     <td className="px-5 py-4 align-top">
-                      <p className="font-semibold text-white/90">
+                      <Link
+                        href={`/admin/representatives/${rep.id}`}
+                        className="font-semibold text-white/90 transition hover:text-pink-300"
+                      >
                         {rep.full_name || "Sem nome"}
-                      </p>
+                      </Link>
                     </td>
 
                     <td className="px-5 py-4 align-top">
@@ -287,6 +291,13 @@ export default function RepresentativesClient({
                             Ver como ele vê
                           </button>
                         )}
+
+                        <Link
+                          href={`/admin/representatives/${rep.id}`}
+                          className="rounded-lg border border-white/15 px-3 py-2 text-xs font-bold text-white/70 transition hover:bg-white/10"
+                        >
+                          Abrir perfil
+                        </Link>
 
                         {isOwner && (
                           <button
