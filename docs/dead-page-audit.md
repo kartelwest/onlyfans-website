@@ -66,6 +66,14 @@ deactivated (42501 from `manage_profile_columns`). Deactivating a rep flips
 archive a rep but cannot promote anyone to owner. Owner and admin see all 16
 models.
 
+Onboarding lock, tested on a temporary assignment that was rolled back with
+everything else: the assigned representative sees all 31 items and can complete
+a pending step; she cannot uncheck a step that was already complete, and she
+cannot reverse the very step she just saved (42501 from
+`guard_onboarding_item_rep_lock`) — which is the rule as written. A different
+representative cannot touch the items at all (0 rows), and an administrator can
+override the lock.
+
 | Gap found | Severity | Status |
 | --- | --- | --- |
 | An administrator could DELETE a profile row directly — permanent deletion is owner-only in the UI, but `profiles` carried a second, wider delete policy (`profiles_delete_management`) | High — bypassed the rule by calling the API directly | **Fixed** in 20260803020000; re-tested (admin rows=0, owner rows=1) |
