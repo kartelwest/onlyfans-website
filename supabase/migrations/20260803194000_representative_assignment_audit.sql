@@ -30,7 +30,7 @@ declare
   v_new_id          uuid := new.representative_id;
   v_actor_id        uuid;
   v_actor_name      text;
-  v_actor_role      public.management_role;
+  v_actor_role      text;
   v_prev_name       text := null;
   v_new_name        text := null;
   v_role_label      text;
@@ -66,7 +66,7 @@ begin
   end if;
 
   -- Resolve the actor's display name and role from the trusted profiles table.
-  select full_name, role
+  select full_name, role::text
     into v_actor_name, v_actor_role
     from public.profiles
    where id = v_actor_id;
