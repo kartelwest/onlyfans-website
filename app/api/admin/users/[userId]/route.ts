@@ -326,13 +326,37 @@ export async function DELETE(
 
   const admin = createAdminClient();
 
-  // models.representative_id is ON DELETE SET NULL, so her models are not
-  // deleted with her — they are left unassigned, and the caller is told how
-  // many need a new representative.
+  // Her models are not deleted with her — they are left unassigned, and the
+  // caller is told how many need a new representative.
+  //
+  // The assignment is cleared EXPLICITLY rather than left to a cascade:
+  // production carries no foreign key on models.representative_id (only
+  // profile_id and created_by have one), so a delete there leaves the column
+  // pointing at an account that no longer exists.
   const { count: assignedModels } = await admin
     .from("models")
     .select("id", { count: "exact", head: true })
     .eq("representative_id", auth.target.id);
+
+  const { error: unassignError } = await admin
+    .from("models")
+    .update({ representative_id: null })
+    .eq("representative_id", auth.target.id);
+
+  if (unassignError) {
+    console.error(
+      "Erro ao desvincular as modelos do representante:",
+      unassignError,
+    );
+
+    return NextResponse.json(
+      {
+        error:
+          "Não foi possível desvincular as modelos desta conta. Nada foi excluído.",
+      },
+      { status: 500 },
+    );
+  }
 
   const { error: profileError } = await admin
     .from("profiles")

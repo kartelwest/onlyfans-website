@@ -27,8 +27,8 @@ type PageviewModelRow = {
   status: string | null;
   active: boolean | null;
   last_login_at: string | null;
+  representative_id: string | null;
   profile: { full_name: string | null } | null;
-  representative: { full_name: string | null } | null;
 };
 
 const statusStyles: Record<
@@ -89,8 +89,8 @@ export default async function AdminPageviewPage({
         status,
         active,
         last_login_at,
-        profile:profiles!profile_id ( full_name ),
-        representative:profiles!representative_id ( full_name )
+        representative_id,
+        profile:profiles!profile_id ( full_name )
       `,
     )
     .order("model_number", { ascending: true, nullsFirst: false })
@@ -105,6 +105,33 @@ export default async function AdminPageviewPage({
     (model) => ({ status: model.status, active: model.active }),
   );
 
+  // Representative names are fetched separately, NOT through an embedded
+  // profiles!representative_id join: production has no foreign key on that
+  // column, so PostgREST cannot resolve the relationship and answers PGRST200
+  // for the whole query — which is exactly how this page failed in production.
+  const representativeIds = Array.from(
+    new Set(
+      models
+        .map((model) => model.representative_id)
+        .filter((id): id is string => Boolean(id)),
+    ),
+  );
+
+  const { data: representativeRows } =
+    representativeIds.length > 0
+      ? await supabase
+          .from("profiles")
+          .select("id, full_name")
+          .in("id", representativeIds)
+      : { data: [] };
+
+  const representativeNames = new Map<string, string>(
+    (representativeRows ?? []).map((row) => [
+      row.id as string,
+      ((row.full_name as string | null) ?? "").trim(),
+    ]),
+  );
+
   const needle = search.toLowerCase();
 
   const filteredModels = needle
@@ -113,7 +140,9 @@ export default async function AdminPageviewPage({
           model.display_name,
           model.stage_name,
           model.profile?.full_name,
-          model.representative?.full_name,
+          model.representative_id
+            ? representativeNames.get(model.representative_id)
+            : null,
           model.model_number === null ? null : `#${model.model_number}`,
         ]
           .filter((field): field is string => Boolean(field))
@@ -251,8 +280,11 @@ export default async function AdminPageviewPage({
                       <div className="flex justify-between gap-3">
                         <dt>Representante</dt>
                         <dd className="truncate text-white/70">
-                          {model.representative?.full_name?.trim() ||
-                            "Nenhum"}
+                          {(model.representative_id
+                            ? representativeNames.get(
+                                model.representative_id,
+                              )
+                            : "") || "Nenhum"}
                         </dd>
                       </div>
 
