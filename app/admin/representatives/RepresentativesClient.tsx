@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 
+import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import RepresentativeModelsDropdown, {
   type RepresentativeModel,
 } from "@/components/admin/RepresentativeModelsDropdown";
@@ -77,6 +78,10 @@ export default function RepresentativesClient({
   const [statusFilter, setStatusFilter] = useState(initialStatusFilter);
   const [message, setMessage] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<{
+    id: string;
+    name: string;
+  } | null>(null);
 
   const filtered =
     statusFilter === "all"
@@ -99,16 +104,14 @@ export default function RepresentativesClient({
     });
   }
 
-  async function handleDelete(representativeId: string, fullName: string) {
-    const phrase = window.prompt(
-      `ATENÇÃO: esta ação é irreversível.\n\n` +
-        `Digite EXCLUIR para remover permanentemente o representante "${fullName || "sem nome"}".`,
-    );
+  // The confirmation happens in the page (see ConfirmDialog): window.prompt is
+  // suppressed by some mobile in-app browsers, and a suppressed prompt returns
+  // null, so the button silently does nothing.
+  function requestDelete(representativeId: string, fullName: string) {
+    setPendingDelete({ id: representativeId, name: fullName || "sem nome" });
+  }
 
-    if (phrase !== "EXCLUIR") {
-      return;
-    }
-
+  async function handleDelete(representativeId: string) {
     const formData = new FormData();
     formData.set("representativeId", representativeId);
     formData.set("confirmation", "EXCLUIR");
@@ -122,6 +125,7 @@ export default function RepresentativesClient({
       setMessage(result.message);
 
       if (result.success) {
+        setPendingDelete(null);
         router.refresh();
       }
     });
@@ -289,7 +293,7 @@ export default function RepresentativesClient({
                             type="button"
                             disabled={isPending || deletingId === rep.id}
                             onClick={() =>
-                              handleDelete(
+                              requestDelete(
                                 rep.id,
                                 rep.full_name || "",
                               )
@@ -308,6 +312,36 @@ export default function RepresentativesClient({
           </table>
         </div>
       </div>
+
+      <ConfirmDialog
+        open={pendingDelete !== null}
+        title="Excluir este representante em definitivo?"
+        description={
+          <>
+            <p>
+              A conta e o login são apagados e a ação não pode ser desfeita. As
+              modelos atribuídas continuam no sistema, mas ficam sem
+              representante.
+            </p>
+            <p>
+              Prefere manter o histórico acessível? Use <strong>Arquivar</strong>
+              : a conta perde o acesso, sai das listas ativas e pode voltar
+              depois.
+            </p>
+          </>
+        }
+        detail={pendingDelete?.name}
+        requirePhrase="EXCLUIR"
+        confirmLabel="Excluir permanentemente"
+        busyLabel="Excluindo..."
+        busy={deletingId !== null}
+        onCancel={() => setPendingDelete(null)}
+        onConfirm={() => {
+          if (pendingDelete) {
+            void handleDelete(pendingDelete.id);
+          }
+        }}
+      />
     </>
   );
 }

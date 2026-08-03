@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import ConfirmDialog from "@/components/ui/ConfirmDialog";
 
 import { formatDatePtBr } from "@/lib/earnings/period";
 import {
@@ -54,6 +55,7 @@ export default function LedgerPanel({ modelId }: LedgerPanelProps) {
 
   const [form, setForm] = useState(emptyForm);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [deletingEntry, setDeletingEntry] = useState<LedgerEntry | null>(null);
 
   const [typeFilter, setTypeFilter] = useState<TypeFilter>("todos");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("todos");
@@ -192,14 +194,11 @@ export default function LedgerPanel({ modelId }: LedgerPanelProps) {
     await load();
   }
 
+  // Confirmed in the page, not through window.confirm — a mobile in-app
+  // browser may suppress that dialog, and a suppressed confirm reads as
+  // "cancelled", so the button looks dead.
   async function deleteEntry(entry: LedgerEntry) {
-    if (
-      !window.confirm(
-        "Excluir este lançamento? Ele sai da área da modelo, mas o registro e o histórico são mantidos.",
-      )
-    ) {
-      return;
-    }
+    setDeletingEntry(null);
 
     const response = await fetch(`/api/models/ledger/${entry.id}`, {
       method: "DELETE",
@@ -515,7 +514,7 @@ export default function LedgerPanel({ modelId }: LedgerPanelProps) {
 
                       <button
                         type="button"
-                        onClick={() => void deleteEntry(entry)}
+                        onClick={() => setDeletingEntry(entry)}
                         className="rounded-lg border border-red-400/30 px-3 py-1.5 text-xs font-bold text-red-200 transition hover:bg-red-500/10"
                       >
                         Excluir
@@ -528,6 +527,33 @@ export default function LedgerPanel({ modelId }: LedgerPanelProps) {
           </table>
         )}
       </div>
+
+      <ConfirmDialog
+        open={deletingEntry !== null}
+        title="Excluir este lançamento?"
+        description={
+          <p>
+            Ele sai da área da modelo e deixa de ser descontado do mês. O
+            registro e o histórico são mantidos.
+          </p>
+        }
+        detail={
+          deletingEntry
+            ? `${LEDGER_TYPE_LABELS[deletingEntry.entryType]} · ${formatMoney(
+                deletingEntry.amountBrl,
+                BRL,
+              )} · ${formatDatePtBr(deletingEntry.incurredOn)}`
+            : null
+        }
+        confirmLabel="Excluir lançamento"
+        busyLabel="Excluindo..."
+        onCancel={() => setDeletingEntry(null)}
+        onConfirm={() => {
+          if (deletingEntry) {
+            void deleteEntry(deletingEntry);
+          }
+        }}
+      />
     </section>
   );
 }

@@ -8,6 +8,7 @@ import {
   useMemo,
   useState,
 } from "react";
+import ConfirmDialog from "@/components/ui/ConfirmDialog";
 
 import type { ManagementRole } from "@/types/model";
 
@@ -141,6 +142,9 @@ export default function ModelEarningsPanel({
 
   const canSeeFansly =
     agencyOnlyRoles.includes(currentUserRole);
+
+  const [pendingDelete, setPendingDelete] =
+    useState<EarningsReport | null>(null);
 
   const [reports, setReports] = useState<
     EarningsReport[]
@@ -489,18 +493,21 @@ export default function ModelEarningsPanel({
     }
   }
 
-  async function handleDelete(
-    report: EarningsReport,
-  ) {
+  function requestDelete(report: EarningsReport) {
     if (!canManage || deletingId) {
       return;
     }
 
-    const confirmed = window.confirm(
-      `Excluir o relatório de ${report.period}?`,
-    );
+    setPendingDelete(report);
+  }
 
-    if (!confirmed) {
+  // Confirmed in the page, not through window.confirm — a mobile in-app
+  // browser may suppress that dialog, and a suppressed confirm reads as
+  // "cancelled", so the button looks dead.
+  async function handleDelete(
+    report: EarningsReport,
+  ) {
+    if (!canManage || deletingId) {
       return;
     }
 
@@ -973,9 +980,7 @@ export default function ModelEarningsPanel({
                         <button
                           type="button"
                           onClick={() =>
-                            void handleDelete(
-                              report,
-                            )
+                            requestDelete(report)
                           }
                           disabled={
                             deletingId ===
@@ -1049,6 +1054,33 @@ export default function ModelEarningsPanel({
           </div>
         </div>
       )}
+
+      <ConfirmDialog
+        open={pendingDelete !== null}
+        title="Excluir este relatório de ganhos?"
+        description={
+          <p>
+            O relatório sai da área da modelo e deixa de compor o mês. O
+            histórico da alteração é mantido.
+          </p>
+        }
+        detail={
+          pendingDelete
+            ? `${pendingDelete.platform} · ${pendingDelete.period}`
+            : null
+        }
+        confirmLabel="Excluir relatório"
+        busyLabel="Excluindo..."
+        busy={deletingId !== null}
+        onCancel={() => setPendingDelete(null)}
+        onConfirm={() => {
+          if (pendingDelete) {
+            const report = pendingDelete;
+            setPendingDelete(null);
+            void handleDelete(report);
+          }
+        }}
+      />
     </>
   );
 }

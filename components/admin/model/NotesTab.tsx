@@ -489,18 +489,6 @@ export default function NotesTab({
             return;
         }
 
-        const actionLabel = note.archived
-            ? "restaurar"
-            : "arquivar";
-
-        const confirmed = window.confirm(
-            `Tem certeza de que deseja ${actionLabel} esta nota?`,
-        );
-
-        if (!confirmed) {
-            return;
-        }
-
         setActionNoteId(note.id);
         setErrorMessage(null);
 

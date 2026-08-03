@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import ConfirmDialog from "@/components/ui/ConfirmDialog";
 
 import { countryCodeToFlag, listCountries } from "@/lib/countries";
 import {
@@ -31,6 +32,10 @@ export default function FinancialSettingsSection({
 }: FinancialSettingsSectionProps) {
   const [saving, setSaving] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [pendingDisable, setPendingDisable] = useState<{
+    entryCount: number;
+    base: Model;
+  } | null>(null);
 
   async function updateField(
     field: "countryCode" | "preferredCurrency",
@@ -94,7 +99,55 @@ export default function FinancialSettingsSection({
     // Pre-check the ledger flag when a model gets Brazil as her first country.
     // It stays a normal checkbox afterwards — this never forces it back on.
     if (countryCode === "BR" && !model.countryCode && !model.expensesEnabled) {
-      await toggleExpenses(true, updated);
+      await requestToggleExpenses(true, updated);
+    }
+  }
+
+  /**
+   * Turning the ledger off on a model who already has entries asks first — in
+   * the page, never through window.confirm, which a mobile in-app browser may
+   * suppress (a suppressed confirm reads as "cancel", so the switch would
+   * silently snap back).
+   */
+  async function requestToggleExpenses(enabled: boolean, base: Model = model) {
+    if (enabled) {
+      await toggleExpenses(true, base);
+      return;
+    }
+
+    setSaving(true);
+    setErrorMessage(null);
+
+    try {
+      const countResponse = await fetch(
+        `/api/models/expenses-enabled?modelId=${encodeURIComponent(model.id)}`,
+      );
+
+      const countData = (await countResponse.json()) as {
+        entryCount?: number;
+        error?: string;
+      };
+
+      if (!countResponse.ok) {
+        throw new Error(
+          countData.error ?? "Não foi possível ler os lançamentos.",
+        );
+      }
+
+      const entryCount = countData.entryCount ?? 0;
+
+      if (entryCount > 0) {
+        setPendingDisable({ entryCount, base });
+        return;
+      }
+
+      await toggleExpenses(false, base);
+    } catch (error) {
+      setErrorMessage(
+        error instanceof Error ? error.message : "Não foi possível salvar.",
+      );
+    } finally {
+      setSaving(false);
     }
   }
 
@@ -103,36 +156,6 @@ export default function FinancialSettingsSection({
     setErrorMessage(null);
 
     try {
-      if (!enabled) {
-        const countResponse = await fetch(
-          `/api/models/expenses-enabled?modelId=${encodeURIComponent(model.id)}`,
-        );
-
-        const countData = (await countResponse.json()) as {
-          entryCount?: number;
-          error?: string;
-        };
-
-        if (!countResponse.ok) {
-          throw new Error(
-            countData.error ?? "Não foi possível ler os lançamentos.",
-          );
-        }
-
-        const entryCount = countData.entryCount ?? 0;
-
-        if (
-          entryCount > 0 &&
-          !window.confirm(
-            `Esta modelo tem ${entryCount} lançamento(s) registrado(s).\n\n` +
-              "Ao desativar, os registros e o histórico são mantidos, as seções somem da área da modelo e os descontos ainda não aplicados ficam suspensos. " +
-              "Meses já descontados não mudam.\n\nDeseja continuar?",
-          )
-        ) {
-          return;
-        }
-      }
-
       const response = await fetch("/api/models/expenses-enabled", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -237,7 +260,9 @@ export default function FinancialSettingsSection({
           type="checkbox"
           checked={model.expensesEnabled}
           disabled={saving}
-          onChange={(event) => void toggleExpenses(event.target.checked)}
+          onChange={(event) =>
+            void requestToggleExpenses(event.target.checked)
+          }
           className="mt-0.5 h-4 w-4 accent-pink-400"
         />
 
@@ -257,6 +282,35 @@ export default function FinancialSettingsSection({
           {errorMessage}
         </p>
       )}
+
+      <ConfirmDialog
+        open={pendingDisable !== null}
+        title="Desativar despesas e empréstimos?"
+        description={
+          <>
+            <p>
+              Esta modelo tem {pendingDisable?.entryCount ?? 0} lançamento(s)
+              registrado(s). Os registros e o histórico são mantidos.
+            </p>
+            <p>
+              As seções somem da área da modelo e os descontos ainda não
+              aplicados ficam suspensos. Meses já descontados não mudam.
+            </p>
+          </>
+        }
+        confirmLabel="Desativar"
+        busyLabel="Salvando..."
+        busy={saving}
+        onCancel={() => setPendingDisable(null)}
+        onConfirm={() => {
+          const pending = pendingDisable;
+          setPendingDisable(null);
+
+          if (pending) {
+            void toggleExpenses(false, pending.base);
+          }
+        }}
+      />
     </section>
   );
 }
