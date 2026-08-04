@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
 import {
   useMemo,
   useState,
@@ -47,6 +49,11 @@ export default function PlatformsTab({
   model,
   currentUserRole,
 }: PlatformsTabProps) {
+  const t = useTranslations("admin.platforms");
+  const tSocial = useTranslations("admin.social");
+  const tCommon = useTranslations("common.actions");
+  const tErrors = useTranslations("errors");
+
   const [isEditing, setIsEditing] =
     useState(false);
 
@@ -64,64 +71,28 @@ export default function PlatformsTab({
     currentUserRole === "owner" ||
     currentUserRole === "administrator";
 
+  // The platform NAMES are brand names — identical in both languages, so they
+  // stay in code. Only the placeholder and the description come from the
+  // catalog, keyed by the same field name the API writes.
   const platforms: PlatformItem[] = useMemo(
-    () => [
-      {
-        field: "instagram",
-        name: "Instagram",
-        value: platformValues.instagram,
-        placeholder:
-          "@usuario ou https://instagram.com/usuario",
-        description:
-          "Conta principal para divulgação e construção da marca.",
-      },
-      {
-        field: "twitter",
-        name: "X / Twitter",
-        value: platformValues.twitter,
-        placeholder:
-          "@usuario ou https://x.com/usuario",
-        description:
-          "Conta para divulgação, crescimento e aquisição de assinantes.",
-      },
-      {
-        field: "reddit",
-        name: "Reddit",
-        value: platformValues.reddit,
-        placeholder:
-          "usuario ou https://reddit.com/user/usuario",
-        description:
-          "Conta utilizada para comunidades, postagens e tráfego.",
-      },
-      {
-        field: "tiktok",
-        name: "TikTok",
-        value: platformValues.tiktok,
-        placeholder:
-          "@usuario ou https://tiktok.com/@usuario",
-        description:
-          "Conta utilizada para vídeos curtos e crescimento orgânico.",
-      },
-      {
-        field: "youtube",
-        name: "YouTube",
-        value: platformValues.youtube,
-        placeholder:
-          "@canal ou https://youtube.com/@canal",
-        description:
-          "Canal utilizado para vídeos, Shorts e fortalecimento da marca.",
-      },
-      {
-        field: "facebook",
-        name: "Facebook",
-        value: platformValues.facebook,
-        placeholder:
-          "usuario ou https://facebook.com/usuario",
-        description:
-          "Conta ou página utilizada pela operação.",
-      },
-    ],
-    [platformValues],
+    () =>
+      (
+        [
+          ["instagram", "Instagram"],
+          ["twitter", "X / Twitter"],
+          ["reddit", "Reddit"],
+          ["tiktok", "TikTok"],
+          ["youtube", "YouTube"],
+          ["facebook", "Facebook"],
+        ] as const
+      ).map(([field, name]) => ({
+        field,
+        name,
+        value: platformValues[field],
+        placeholder: t(`platforms.${field}.placeholder`),
+        description: t(`platforms.${field}.description`),
+      })),
+    [platformValues, t],
   );
 
   const registeredPlatforms =
@@ -155,7 +126,7 @@ export default function PlatformsTab({
     if (!response.ok || !result.success) {
       throw new Error(
         result.error ??
-          "Não foi possível salvar a plataforma.",
+          tErrors("saveFailed"),
       );
     }
 
@@ -187,7 +158,7 @@ export default function PlatformsTab({
         <div className="flex w-full max-w-xs flex-col gap-3">
           <div className="rounded-2xl border border-white/10 bg-white/[0.03] px-5 py-4">
             <p className="text-xs font-bold uppercase tracking-[0.14em] text-white/40">
-              Plataformas cadastradas
+              {t("title")}
             </p>
 
             <p className="mt-2 text-2xl font-bold text-pink-300">
@@ -214,8 +185,8 @@ export default function PlatformsTab({
               }
             >
               {isEditing
-                ? "Concluir edição"
-                : "Editar"}
+                ? tSocial("finishEditing")
+                : tCommon("edit")}
             </button>
           )}
         </div>
@@ -237,7 +208,7 @@ export default function PlatformsTab({
               <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                 <div>
                   <p className="text-xs font-bold uppercase tracking-[0.14em] text-white/40">
-                    Plataforma
+                    {t("platform")}
                   </p>
 
                   <h3 className="mt-2 text-lg font-bold">
@@ -257,15 +228,15 @@ export default function PlatformsTab({
                   }`}
                 >
                   {platform.value.trim()
-                    ? "Cadastrada"
-                    : "Não cadastrada"}
+                    ? t("registered")
+                    : t("notRegistered")}
                 </span>
               </div>
 
               <div className="mt-5">
                 {isEditing && canEdit ? (
                   <EditableTextField
-                    label="Usuário ou URL do perfil"
+                    label={t("handleOrUrl")}
                     value={platform.value}
                     placeholder={
                       platform.placeholder
@@ -293,7 +264,7 @@ export default function PlatformsTab({
                     rel="noopener noreferrer"
                     className="inline-flex rounded-xl border border-pink-300/30 bg-pink-300/10 px-4 py-2.5 text-xs font-bold uppercase tracking-[0.1em] text-pink-200 transition hover:bg-pink-300/20"
                   >
-                    Abrir plataforma
+                    {t("openPlatform")}
                   </a>
 
                   <button
@@ -322,14 +293,17 @@ function PlatformInfo({
 }: {
   value: string;
 }) {
+  const t = useTranslations("admin.platforms");
+  const tState = useTranslations("common.states");
+
   return (
     <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
       <p className="text-xs font-bold uppercase tracking-[0.14em] text-white/45">
-        Usuário ou URL do perfil
+        {t("handleOrUrl")}
       </p>
 
       <p className="mt-3 break-words text-sm text-white">
-        {value.trim() || "Não informado"}
+        {value.trim() || tState("notInformed")}
       </p>
     </div>
   );

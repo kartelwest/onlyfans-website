@@ -1734,6 +1734,40 @@
       "deleteTitle": "Delete this entry?",
       "deleteBody": "It disappears from the model's area and stops being deducted from the month. The record and its history are kept.",
       "deleteConfirm": "Delete entry"
+    },
+    "platforms": {
+      "title": "Registered platforms",
+      "platform": "Platform",
+      "openPlatform": "Open platform",
+      "registered": "On file",
+      "notRegistered": "Not on file",
+      "handleOrUrl": "Username or profile URL",
+      "platforms": {
+        "instagram": {
+          "placeholder": "@username or https://instagram.com/username",
+          "description": "Main account for promotion and building the brand."
+        },
+        "twitter": {
+          "placeholder": "@username or https://x.com/username",
+          "description": "Account for promotion, growth and subscriber acquisition."
+        },
+        "reddit": {
+          "placeholder": "username or https://reddit.com/user/username",
+          "description": "Account used for communities, posts and traffic."
+        },
+        "tiktok": {
+          "placeholder": "@username or https://tiktok.com/@username",
+          "description": "Account used for short videos and organic growth."
+        },
+        "youtube": {
+          "placeholder": "@channel or https://youtube.com/@channel",
+          "description": "Channel used for videos, Shorts and strengthening the brand."
+        },
+        "facebook": {
+          "placeholder": "username or https://facebook.com/username",
+          "description": "Account or page used by the operation."
+        }
+      }
     }
   },
   "owner": {

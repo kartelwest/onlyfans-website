@@ -1734,6 +1734,40 @@
       "deleteTitle": "Excluir este lançamento?",
       "deleteBody": "Ele sai da área da modelo e deixa de ser descontado do mês. O registro e o histórico são mantidos.",
       "deleteConfirm": "Excluir lançamento"
+    },
+    "platforms": {
+      "title": "Plataformas cadastradas",
+      "platform": "Plataforma",
+      "openPlatform": "Abrir plataforma",
+      "registered": "Cadastrada",
+      "notRegistered": "Não cadastrada",
+      "handleOrUrl": "Usuário ou URL do perfil",
+      "platforms": {
+        "instagram": {
+          "placeholder": "@usuario ou https://instagram.com/usuario",
+          "description": "Conta principal para divulgação e construção da marca."
+        },
+        "twitter": {
+          "placeholder": "@usuario ou https://x.com/usuario",
+          "description": "Conta para divulgação, crescimento e aquisição de assinantes."
+        },
+        "reddit": {
+          "placeholder": "usuario ou https://reddit.com/user/usuario",
+          "description": "Conta utilizada para comunidades, postagens e tráfego."
+        },
+        "tiktok": {
+          "placeholder": "@usuario ou https://tiktok.com/@usuario",
+          "description": "Conta utilizada para vídeos curtos e crescimento orgânico."
+        },
+        "youtube": {
+          "placeholder": "@canal ou https://youtube.com/@canal",
+          "description": "Canal utilizado para vídeos, Shorts e fortalecimento da marca."
+        },
+        "facebook": {
+          "placeholder": "usuario ou https://facebook.com/usuario",
+          "description": "Conta ou página utilizada pela operação."
+        }
+      }
     }
   },
   "owner": {
