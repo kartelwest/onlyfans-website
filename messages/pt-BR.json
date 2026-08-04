@@ -1237,6 +1237,138 @@
       ],
       "selectPlaceholder": "Selecione...",
       "view": "Visualizar"
+    },
+    "modelPage": {
+      "tabs": {
+        "summary": "Resumo",
+        "checklist": "Status",
+        "platforms": "Plataformas",
+        "onlyfans": "OnlyFans",
+        "fansly": "Fansly",
+        "drive": "Google Drive",
+        "documents": "Documentos",
+        "earnings": "Ganhos e lançamentos",
+        "payments": "Pagamentos",
+        "notes": "Notas",
+        "history": "Histórico",
+        "brand_growth": "Amplia"
+      },
+      "fields": {
+        "status": "Status",
+        "onboarding": "Onboarding",
+        "currentAccess": "Acesso atual",
+        "fullName": "Nome completo",
+        "stageName": "Nome artístico",
+        "birthday": "Data de nascimento",
+        "nationality": "Nacionalidade",
+        "city": "Cidade",
+        "language": "Idioma",
+        "email": "E-mail",
+        "whatsapp": "WhatsApp",
+        "lastLogin": "Último login",
+        "createdAt": "Criada em",
+        "updatedAt": "Última atualização"
+      },
+      "sections": {
+        "info": "Informações",
+        "mainData": "Dados principais",
+        "progress": "Progresso",
+        "accounts": "Contas",
+        "files": "Arquivos",
+        "activity": "Atividade",
+        "accountRecord": "Registro da conta",
+        "accountsAndDocs": "Contas e documentos",
+        "checklist": "Checklist da modelo"
+      },
+      "noStageName": "Nome artístico não informado",
+      "registered": "Cadastrado",
+      "never": "Nunca",
+      "onboardingComplete": "Onboarding concluído",
+      "onboardingIncomplete": "Onboarding ainda não concluído",
+      "fanslyDescription": "Informações completas da conta Fansly administrada pela agência.",
+      "driveDescription": "Pastas, links, acesso e envio de conteúdo.",
+      "checklistItems": {
+        "onlyfans": {
+          "title": "OnlyFans",
+          "description": "Conta e operação da modelo no OnlyFans."
+        },
+        "fansly": {
+          "title": "Fansly",
+          "description": "Conta e operação da modelo no Fansly."
+        },
+        "instagram": {
+          "title": "Instagram",
+          "description": "Conta de divulgação e desenvolvimento da marca."
+        },
+        "twitter": {
+          "title": "X / Twitter",
+          "description": "Conta para divulgação e aquisição de assinantes."
+        },
+        "reddit": {
+          "title": "Reddit",
+          "description": "Conta e comunidades de divulgação."
+        },
+        "tiktok": {
+          "title": "TikTok",
+          "description": "Conta de conteúdo e crescimento orgânico."
+        },
+        "youtube": {
+          "title": "YouTube",
+          "description": "Canal para vídeos, Shorts e marca."
+        },
+        "facebook": {
+          "title": "Facebook",
+          "description": "Conta ou página utilizada pela operação."
+        },
+        "googleDrive": {
+          "title": "Google Drive",
+          "description": "Pastas de conteúdo e documentos."
+        },
+        "websiteLogin": {
+          "title": "Login do site",
+          "description": "Acesso individual à Área da Modelo."
+        },
+        "contract": {
+          "title": "Contrato",
+          "description": "Contrato da agência assinado."
+        },
+        "modelRelease": {
+          "title": "Model Release",
+          "description": "Autorização de uso de imagem assinada."
+        },
+        "identityDocument": {
+          "title": "Documento de identidade",
+          "description": "Passaporte, RG ou documento válido."
+        },
+        "cpf": {
+          "title": "CPF",
+          "description": "CPF informado e verificado."
+        },
+        "pix": {
+          "title": "PIX",
+          "description": "Chave PIX cadastrada."
+        },
+        "bankAccount": {
+          "title": "Conta bancária",
+          "description": "Conta bancária vinculada."
+        },
+        "onlyfansVerification": {
+          "title": "Verificação OnlyFans",
+          "description": "Conta aprovada pelo OnlyFans."
+        },
+        "fanslyVerification": {
+          "title": "Verificação Fansly",
+          "description": "Conta aprovada pelo Fansly."
+        },
+        "welcomeCall": {
+          "title": "Chamada de boas-vindas",
+          "description": "Reunião inicial concluída."
+        },
+        "contentReceived": {
+          "title": "Conteúdo inicial",
+          "description": "Fotos e vídeos iniciais recebidos."
+        }
+      }
     }
   }
 }

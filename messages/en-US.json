@@ -1237,6 +1237,138 @@
       ],
       "selectPlaceholder": "Select...",
       "view": "Preview"
+    },
+    "modelPage": {
+      "tabs": {
+        "summary": "Summary",
+        "checklist": "Status",
+        "platforms": "Platforms",
+        "onlyfans": "OnlyFans",
+        "fansly": "Fansly",
+        "drive": "Google Drive",
+        "documents": "Documents",
+        "earnings": "Earnings and entries",
+        "payments": "Payments",
+        "notes": "Notes",
+        "history": "History",
+        "brand_growth": "Amplia"
+      },
+      "fields": {
+        "status": "Status",
+        "onboarding": "Onboarding",
+        "currentAccess": "Current access",
+        "fullName": "Full name",
+        "stageName": "Stage name",
+        "birthday": "Date of birth",
+        "nationality": "Nationality",
+        "city": "City",
+        "language": "Language",
+        "email": "Email",
+        "whatsapp": "WhatsApp",
+        "lastLogin": "Last login",
+        "createdAt": "Created",
+        "updatedAt": "Last updated"
+      },
+      "sections": {
+        "info": "Information",
+        "mainData": "Main details",
+        "progress": "Progress",
+        "accounts": "Accounts",
+        "files": "Files",
+        "activity": "Activity",
+        "accountRecord": "Account record",
+        "accountsAndDocs": "Accounts and documents",
+        "checklist": "Model checklist"
+      },
+      "noStageName": "No stage name on file",
+      "registered": "On file",
+      "never": "Never",
+      "onboardingComplete": "Onboarding complete",
+      "onboardingIncomplete": "Onboarding not complete yet",
+      "fanslyDescription": "Full details of the Fansly account the agency manages.",
+      "driveDescription": "Folders, links, access and content uploads.",
+      "checklistItems": {
+        "onlyfans": {
+          "title": "OnlyFans",
+          "description": "The model's OnlyFans account and operation."
+        },
+        "fansly": {
+          "title": "Fansly",
+          "description": "The model's Fansly account and operation."
+        },
+        "instagram": {
+          "title": "Instagram",
+          "description": "Promotion account and brand development."
+        },
+        "twitter": {
+          "title": "X / Twitter",
+          "description": "Account for promotion and subscriber acquisition."
+        },
+        "reddit": {
+          "title": "Reddit",
+          "description": "Promotion account and communities."
+        },
+        "tiktok": {
+          "title": "TikTok",
+          "description": "Content account and organic growth."
+        },
+        "youtube": {
+          "title": "YouTube",
+          "description": "Channel for videos, Shorts and brand."
+        },
+        "facebook": {
+          "title": "Facebook",
+          "description": "Account or page used by the operation."
+        },
+        "googleDrive": {
+          "title": "Google Drive",
+          "description": "Content and document folders."
+        },
+        "websiteLogin": {
+          "title": "Site login",
+          "description": "Individual access to the Model Area."
+        },
+        "contract": {
+          "title": "Contract",
+          "description": "Agency contract signed."
+        },
+        "modelRelease": {
+          "title": "Model Release",
+          "description": "Signed image-use authorization."
+        },
+        "identityDocument": {
+          "title": "Identity document",
+          "description": "Passport, ID card or other valid document."
+        },
+        "cpf": {
+          "title": "CPF",
+          "description": "CPF provided and verified."
+        },
+        "pix": {
+          "title": "PIX",
+          "description": "PIX key on file."
+        },
+        "bankAccount": {
+          "title": "Bank account",
+          "description": "Bank account linked."
+        },
+        "onlyfansVerification": {
+          "title": "OnlyFans verification",
+          "description": "Account approved by OnlyFans."
+        },
+        "fanslyVerification": {
+          "title": "Fansly verification",
+          "description": "Account approved by Fansly."
+        },
+        "welcomeCall": {
+          "title": "Welcome call",
+          "description": "Kick-off meeting completed."
+        },
+        "contentReceived": {
+          "title": "Initial content",
+          "description": "First photos and videos received."
+        }
+      }
     }
   }
 }

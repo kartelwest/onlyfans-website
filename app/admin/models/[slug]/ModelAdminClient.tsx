@@ -1,5 +1,11 @@
 "use client";
 
+import { useLocale, useTranslations } from "next-intl";
+
+import { formatCalendarDate } from "@/lib/earnings/period";
+import { toLocale, type Locale } from "@/lib/i18n/config";
+import { formatDateTime } from "@/lib/models/formatDateTime";
+
 import NotesTab from "@/components/admin/model/NotesTab";
 import DocumentsTab from "@/components/admin/model/DocumentsTab";
 import OnlyFansTab from "@/components/admin/model/OnlyFansTab";
@@ -61,22 +67,22 @@ type TabId =
     | "history"
     | "brand_growth";
 
+/** The id doubles as the key under `admin.modelPage.tabs`. */
 const tabs: {
     id: TabId;
-    label: string;
 }[] = [
-        { id: "summary", label: "Resumo" },
-        { id: "checklist", label: "Status" },
-        { id: "platforms", label: "Plataformas" },
-        { id: "onlyfans", label: "OnlyFans" },
-        { id: "fansly", label: "Fansly" },
-        { id: "drive", label: "Google Drive" },
-        { id: "documents", label: "Documentos" },
-        { id: "earnings", label: "Ganhos e lançamentos" },
-        { id: "payments", label: "Pagamentos" },
-        { id: "notes", label: "Notas" },
-        { id: "history", label: "Histórico" },
-        { id: "brand_growth", label: "Amplia" },
+        { id: "summary" },
+        { id: "checklist" },
+        { id: "platforms" },
+        { id: "onlyfans" },
+        { id: "fansly" },
+        { id: "drive" },
+        { id: "documents" },
+        { id: "earnings" },
+        { id: "payments" },
+        { id: "notes" },
+        { id: "history" },
+        { id: "brand_growth" },
     ];
 
 export default function ModelAdminClient({
@@ -87,6 +93,10 @@ export default function ModelAdminClient({
     currentLogin,
     representatives,
 }: ModelAdminClientProps) {
+    const t = useTranslations("admin.modelPage");
+    const tStatus = useTranslations("enums.modelStatus");
+    const tRole = useTranslations("enums.role");
+
     const [activeTab, setActiveTab] =
         useState<TabId>("summary");
 
@@ -139,7 +149,7 @@ export default function ModelAdminClient({
                                         <p className="mt-2 text-sm text-white/70">
                                             {model.stageName
                                                 ? `Nome artístico: ${model.stageName}`
-                                                : "Nome artístico não informado"}
+                                                : t("noStageName")}
                                         </p>
 
                                         <p className="mt-1 text-sm text-white/50">
@@ -172,8 +182,12 @@ export default function ModelAdminClient({
 
                             <div className="grid gap-3 sm:grid-cols-3">
                                 <HeaderStatusCard
-                                    label="Status"
-                                    value={model.active ? "Ativa" : "Inativa"}
+                                    label={t("fields.status")}
+                                    value={
+                                        model.active
+                                            ? tStatus("active")
+                                            : tStatus("inactive")
+                                    }
                                     status={
                                         model.active
                                             ? "completed"
@@ -182,7 +196,7 @@ export default function ModelAdminClient({
                                 />
 
                                 <HeaderStatusCard
-                                    label="Onboarding"
+                                    label={t("fields.onboarding")}
                                     value={`${onboardingPercentage}%`}
                                     status={
                                         onboardingPercentage === 100
@@ -194,8 +208,8 @@ export default function ModelAdminClient({
                                 />
 
                                 <HeaderStatusCard
-                                    label="Acesso atual"
-                                    value={roleLabel(currentUserRole)}
+                                    label={t("fields.currentAccess")}
+                                    value={tRole(currentUserRole)}
                                     status="neutral"
                                 />
                             </div>
@@ -226,7 +240,7 @@ export default function ModelAdminClient({
                                             : "border-white/10 bg-white/5 text-white/55 hover:bg-white/10 hover:text-white"
                                             }`}
                                     >
-                                        {tab.label}
+                                        {t(`tabs.${tab.id}`)}
                                     </button>
                                 );
                             })}
@@ -279,14 +293,14 @@ export default function ModelAdminClient({
                         {activeTab === "fansly" && (
                             <TemporarySection
                                 title="Fansly"
-                                description="Informações completas da conta Fansly administrada pela agência."
+                                description={t("fanslyDescription")}
                             />
                         )}
 
                         {activeTab === "drive" && (
                             <TemporarySection
                                 title="Google Drive"
-                                description="Pastas, links, acesso e envio de conteúdo."
+                                description={t("driveDescription")}
                             />
                         )}
 
@@ -339,61 +353,68 @@ function SummarySection({
     model: Model;
     checklist: ModelChecklist;
 }) {
+    const t = useTranslations("admin.modelPage");
+    const tState = useTranslations("common.states");
+    const locale = toLocale(useLocale());
+
+    const notInformed = tState("notInformed");
+    const never = t("never");
+
     return (
         <div className="grid gap-6 lg:grid-cols-3">
             <section className="rounded-2xl border border-white/10 bg-black/20 p-6 lg:col-span-2">
                 <SectionHeading
-                    eyebrow="Informações"
-                    title="Dados principais"
+                    eyebrow={t("sections.info")}
+                    title={t("sections.mainData")}
                 />
 
                 <div className="mt-6 grid gap-5 sm:grid-cols-2">
                     <InfoItem
-                        label="Nome completo"
+                        label={t("fields.fullName")}
                         value={model.fullName}
                     />
 
                     <InfoItem
-                        label="Nome artístico"
-                        value={showValue(model.stageName)}
+                        label={t("fields.stageName")}
+                        value={showValue(model.stageName, notInformed)}
                     />
 
                     <InfoItem
-                        label="Data de nascimento"
-                        value={formatDate(model.birthday)}
+                        label={t("fields.birthday")}
+                        value={formatDate(model.birthday, locale, notInformed)}
                     />
 
                     <InfoItem
-                        label="Nacionalidade"
-                        value={showValue(model.nationality)}
+                        label={t("fields.nationality")}
+                        value={showValue(model.nationality, notInformed)}
                     />
 
                     <InfoItem
-                        label="Cidade"
-                        value={showValue(model.city)}
+                        label={t("fields.city")}
+                        value={showValue(model.city, notInformed)}
                     />
 
                     <InfoItem
-                        label="Idioma"
-                        value={showValue(model.language)}
+                        label={t("fields.language")}
+                        value={showValue(model.language, notInformed)}
                     />
 
                     <InfoItem
-                        label="E-mail"
-                        value={showValue(model.email)}
+                        label={t("fields.email")}
+                        value={showValue(model.email, notInformed)}
                     />
 
                     <InfoItem
-                        label="WhatsApp"
-                        value={showValue(model.whatsapp)}
+                        label={t("fields.whatsapp")}
+                        value={showValue(model.whatsapp, notInformed)}
                     />
                 </div>
             </section>
 
             <section className="rounded-2xl border border-white/10 bg-black/20 p-6">
                 <SectionHeading
-                    eyebrow="Progresso"
-                    title="Onboarding"
+                    eyebrow={t("sections.progress")}
+                    title={t("fields.onboarding")}
                 />
 
                 <div className="mt-6">
@@ -429,16 +450,16 @@ function SummarySection({
 
                     <p className="mt-4 text-sm text-white/60">
                         {checklist.onboardingPercentage === 100
-                            ? "Onboarding concluído"
-                            : "Onboarding ainda não concluído"}
+                            ? t("onboardingComplete")
+                            : t("onboardingIncomplete")}
                     </p>
                 </div>
             </section>
 
             <section className="rounded-2xl border border-white/10 bg-black/20 p-6">
                 <SectionHeading
-                    eyebrow="Contas"
-                    title="Plataformas"
+                    eyebrow={t("sections.accounts")}
+                    title={t("tabs.platforms")}
                 />
 
                 <div className="mt-5 space-y-3">
@@ -466,7 +487,7 @@ function SummarySection({
 
             <section className="rounded-2xl border border-white/10 bg-black/20 p-6">
                 <SectionHeading
-                    eyebrow="Arquivos"
+                    eyebrow={t("sections.files")}
                     title="Google Drive"
                 />
 
@@ -490,29 +511,35 @@ function SummarySection({
 
             <section className="rounded-2xl border border-white/10 bg-black/20 p-6">
                 <SectionHeading
-                    eyebrow="Atividade"
-                    title="Registro da conta"
+                    eyebrow={t("sections.activity")}
+                    title={t("sections.accountRecord")}
                 />
 
                 <div className="mt-5 space-y-5">
                     <InfoItem
-                        label="Último login"
-                        value={formatDateTime(
+                        label={t("fields.lastLogin")}
+                        value={formatTimestamp(
                             model.lastLoginAt,
+                                locale,
+                                never,
                         )}
                     />
 
                     <InfoItem
-                        label="Criada em"
-                        value={formatDateTime(
+                        label={t("fields.createdAt")}
+                        value={formatTimestamp(
                             model.createdAt,
+                                locale,
+                                never,
                         )}
                     />
 
                     <InfoItem
-                        label="Última atualização"
-                        value={formatDateTime(
+                        label={t("fields.updatedAt")}
+                        value={formatTimestamp(
                             model.updatedAt,
+                                locale,
+                                never,
                         )}
                     />
                 </div>
@@ -526,134 +553,39 @@ function ChecklistSection({
 }: {
     checklist: ModelChecklist;
 }) {
+    const t = useTranslations("admin.modelPage");
+    const tItems = useTranslations("admin.modelPage.checklistItems");
+
     const checklistItems: {
-        title: string;
-        description: string;
+        key: string;
         status: ChecklistStatus;
     }[] = [
+            { key: "onlyfans", status: checklist.onlyfansStatus },
+            { key: "fansly", status: checklist.fanslyStatus },
+            { key: "instagram", status: checklist.instagramStatus },
+            { key: "twitter", status: checklist.twitterStatus },
+            { key: "reddit", status: checklist.redditStatus },
+            { key: "tiktok", status: checklist.tiktokStatus },
+            { key: "youtube", status: checklist.youtubeStatus },
+            { key: "facebook", status: checklist.facebookStatus },
+            { key: "googleDrive", status: checklist.googleDriveStatus },
+            { key: "websiteLogin", status: checklist.websiteLoginStatus },
+            { key: "contract", status: checklist.contractStatus },
+            { key: "modelRelease", status: checklist.modelReleaseStatus },
+            { key: "identityDocument", status: checklist.identityDocumentStatus },
+            { key: "cpf", status: checklist.cpfStatus },
+            { key: "pix", status: checklist.pixStatus },
+            { key: "bankAccount", status: checklist.bankAccountStatus },
             {
-                title: "OnlyFans",
-                description:
-                    "Conta e operação da modelo no OnlyFans.",
-                status: checklist.onlyfansStatus,
+                key: "onlyfansVerification",
+                status: checklist.onlyfansVerificationStatus,
             },
             {
-                title: "Fansly",
-                description:
-                    "Conta e operação da modelo no Fansly.",
-                status: checklist.fanslyStatus,
+                key: "fanslyVerification",
+                status: checklist.fanslyVerificationStatus,
             },
-            {
-                title: "Instagram",
-                description:
-                    "Conta de divulgação e desenvolvimento da marca.",
-                status: checklist.instagramStatus,
-            },
-            {
-                title: "X / Twitter",
-                description:
-                    "Conta para divulgação e aquisição de assinantes.",
-                status: checklist.twitterStatus,
-            },
-            {
-                title: "Reddit",
-                description:
-                    "Conta e comunidades de divulgação.",
-                status: checklist.redditStatus,
-            },
-            {
-                title: "TikTok",
-                description:
-                    "Conta de conteúdo e crescimento orgânico.",
-                status: checklist.tiktokStatus,
-            },
-            {
-                title: "YouTube",
-                description:
-                    "Canal para vídeos, Shorts e marca.",
-                status: checklist.youtubeStatus,
-            },
-            {
-                title: "Facebook",
-                description:
-                    "Conta ou página utilizada pela operação.",
-                status: checklist.facebookStatus,
-            },
-            {
-                title: "Google Drive",
-                description:
-                    "Pastas de conteúdo e documentos.",
-                status: checklist.googleDriveStatus,
-            },
-            {
-                title: "Login do site",
-                description:
-                    "Acesso individual à Área da Modelo.",
-                status: checklist.websiteLoginStatus,
-            },
-            {
-                title: "Contrato",
-                description:
-                    "Contrato da agência assinado.",
-                status: checklist.contractStatus,
-            },
-            {
-                title: "Model Release",
-                description:
-                    "Autorização de uso de imagem assinada.",
-                status: checklist.modelReleaseStatus,
-            },
-            {
-                title: "Documento de identidade",
-                description:
-                    "Passaporte, RG ou documento válido.",
-                status:
-                    checklist.identityDocumentStatus,
-            },
-            {
-                title: "CPF",
-                description:
-                    "CPF informado e verificado.",
-                status: checklist.cpfStatus,
-            },
-            {
-                title: "PIX",
-                description:
-                    "Chave PIX cadastrada.",
-                status: checklist.pixStatus,
-            },
-            {
-                title: "Conta bancária",
-                description:
-                    "Conta bancária vinculada.",
-                status: checklist.bankAccountStatus,
-            },
-            {
-                title: "Verificação OnlyFans",
-                description:
-                    "Conta aprovada pelo OnlyFans.",
-                status:
-                    checklist.onlyfansVerificationStatus,
-            },
-            {
-                title: "Verificação Fansly",
-                description:
-                    "Conta aprovada pelo Fansly.",
-                status:
-                    checklist.fanslyVerificationStatus,
-            },
-            {
-                title: "Chamada de boas-vindas",
-                description:
-                    "Reunião inicial concluída.",
-                status: checklist.welcomeCallStatus,
-            },
-            {
-                title: "Conteúdo inicial",
-                description:
-                    "Fotos e vídeos iniciais recebidos.",
-                status: checklist.contentReceivedStatus,
-            },
+            { key: "welcomeCall", status: checklist.welcomeCallStatus },
+            { key: "contentReceived", status: checklist.contentReceivedStatus },
         ];
 
     const completedItems =
@@ -666,8 +598,8 @@ function ChecklistSection({
         <section>
             <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
                 <SectionHeading
-                    eyebrow="Contas e documentos"
-                    title="Checklist da modelo"
+                    eyebrow={t("sections.accountsAndDocs")}
+                    title={t("sections.checklist")}
                 />
 
                 <div className="w-full max-w-md rounded-2xl border border-white/10 bg-black/20 p-4">
@@ -711,9 +643,9 @@ function ChecklistSection({
             <div className="mt-7 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
                 {checklistItems.map((item) => (
                     <ChecklistCard
-                        key={item.title}
-                        title={item.title}
-                        description={item.description}
+                        key={item.key}
+                        title={tItems(`${item.key}.title`)}
+                        description={tItems(`${item.key}.description`)}
                         status={item.status}
                     />
                 ))}
@@ -731,6 +663,8 @@ function ChecklistCard({
     description: string;
     status: ChecklistStatus;
 }) {
+    const tChecklist = useTranslations("enums.checklistStatus");
+
     const config = checklistStatusConfig(status);
 
     return (
@@ -752,7 +686,7 @@ function ChecklistCard({
             </p>
 
             <p className="mt-5 text-xs font-black uppercase tracking-[0.12em]">
-                {config.label}
+                {tChecklist(status)}
             </p>
         </article>
     );
@@ -871,6 +805,9 @@ function SimpleStatusRow({
     label: string;
     value: string | null;
 }) {
+    const t = useTranslations("admin.modelPage");
+    const tChecklist = useTranslations("enums.checklistStatus");
+
     return (
         <div className="flex items-center justify-between gap-4 rounded-xl border border-white/10 bg-white/5 px-4 py-3">
             <span className="text-sm font-semibold">
@@ -883,7 +820,7 @@ function SimpleStatusRow({
                     : "text-red-300"
                     }`}
             >
-                {value ? "Cadastrado" : "Não iniciado"}
+                {value ? t("registered") : tChecklist("not_started")}
             </span>
         </div>
     );
@@ -923,65 +860,58 @@ function DriveLink({
 function checklistStatusConfig(
     status: ChecklistStatus,
 ) {
+    // Colour only. The words come from `enums.checklistStatus`, keyed by the
+    // same database value this function is switching on.
     const configs: Record<
         ChecklistStatus,
         {
-            label: string;
             cardClass: string;
             dotClass: string;
         }
     > = {
         completed: {
-            label: "Concluído",
             cardClass:
                 "border-emerald-400/60 bg-emerald-500/20 text-emerald-100",
             dotClass: "bg-emerald-400",
         },
 
         planned: {
-            label: "Planejado",
             cardClass:
                 "border-yellow-400/60 bg-yellow-500/15 text-yellow-100",
             dotClass: "bg-yellow-400",
         },
 
         in_progress: {
-            label: "Em andamento",
             cardClass:
                 "border-yellow-400/60 bg-yellow-500/15 text-yellow-100",
             dotClass: "bg-yellow-400",
         },
 
         not_started: {
-            label: "Não iniciado",
             cardClass:
                 "border-red-400/55 bg-red-500/15 text-red-100",
             dotClass: "bg-red-400",
         },
 
         missing: {
-            label: "Pendente",
             cardClass:
                 "border-red-400/55 bg-red-500/15 text-red-100",
             dotClass: "bg-red-400",
         },
 
         blocked: {
-            label: "Bloqueado",
             cardClass:
                 "border-red-500/70 bg-red-600/20 text-red-100",
             dotClass: "bg-red-500",
         },
 
         duplicate: {
-            label: "Duplicado",
             cardClass:
                 "border-blue-400/60 bg-blue-500/15 text-blue-100",
             dotClass: "bg-blue-400",
         },
 
         inactive: {
-            label: "Inativo",
             cardClass:
                 "border-white/15 bg-white/5 text-white/45",
             dotClass: "bg-white/35",
@@ -993,72 +923,47 @@ function checklistStatusConfig(
 
 function showValue(
     value: string | number | null | undefined,
+    fallback: string,
 ) {
     if (
         value === null ||
         value === undefined ||
         value === ""
     ) {
-        return "Não informado";
+        return fallback;
     }
 
     return value;
 }
 
-function formatDate(value: string | null) {
-    if (!value) {
-        return "Não informado";
-    }
-
-    const date = new Date(value);
-
-    if (Number.isNaN(date.getTime())) {
-        return value;
-    }
-
-    return new Intl.DateTimeFormat("pt-BR", {
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric",
-    }).format(date);
-}
-
-function formatDateTime(value: string | null) {
-    if (!value) {
-        return "Nunca";
-    }
-
-    const date = new Date(value);
-
-    if (Number.isNaN(date.getTime())) {
-        return value;
-    }
-
-    return new Intl.DateTimeFormat("pt-BR", {
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-    }).format(date);
-}
-
-function roleLabel(
-    role: ManagementRole,
+/** A birthday: a calendar date, reordered by locale, never shifted by a zone. */
+function formatDate(
+    value: string | null,
+    locale: Locale,
+    fallback: string,
 ) {
-    const labels: Record<
-        ManagementRole,
-        string
-    > = {
-        owner: "Proprietário",
-        administrator: "Administrador",
-        brand_manager: "Brand Manager",
-        content_manager: "Content Manager",
-        analyst: "Analista",
-        reviewer: "Revisor",
-        representative: "Representante",
-        model: "Modelo",
-    };
+    if (!value) {
+        return fallback;
+    }
 
-    return labels[role];
+    return formatCalendarDate(value.slice(0, 10), locale);
+}
+
+/** A login or audit instant: São Paulo time, in the reader's field order. */
+function formatTimestamp(
+    value: string | null,
+    locale: Locale,
+    fallback: string,
+) {
+    if (!value) {
+        return fallback;
+    }
+
+    const date = new Date(value);
+
+    if (Number.isNaN(date.getTime())) {
+        return value;
+    }
+
+    return formatDateTime(date, locale);
 }
