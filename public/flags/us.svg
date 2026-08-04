@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 19 10" width="19" height="10" role="img" aria-hidden="true">
+  <title>United States</title>
+
+  <!--
+    Thirteen stripes, seven of them red over a white field. The white stripes
+    are the reason the switcher draws a border around the flag: on a light
+    background the top and bottom of this rectangle would otherwise have no
+    edge at all.
+  -->
+  <rect width="19" height="10" fill="#FFFFFF"/>
+
+  <g fill="#B31942">
+    <rect y="0" width="19" height="0.769"/>
+    <rect y="1.538" width="19" height="0.769"/>
+    <rect y="3.077" width="19" height="0.769"/>
+    <rect y="4.615" width="19" height="0.769"/>
+    <rect y="6.154" width="19" height="0.769"/>
+    <rect y="7.692" width="19" height="0.769"/>
+    <rect y="9.231" width="19" height="0.769"/>
+  </g>
+
+  <rect width="7.6" height="5.385" fill="#0A3161"/>
+
+  <!--
+    A coarser grid than the real fifty stars. At the ~16px height this renders
+    at, fifty marks would each be well under half a pixel and turn the canton
+    into a flat smudge; twenty larger dots still read as a star field.
+  -->
+  <g fill="#FFFFFF">
+    <circle cx="0.95" cy="0.75" r="0.3"/>
+    <circle cx="2.47" cy="0.75" r="0.3"/>
+    <circle cx="3.99" cy="0.75" r="0.3"/>
+    <circle cx="5.51" cy="0.75" r="0.3"/>
+    <circle cx="7.03" cy="0.75" r="0.3"/>
+
+    <circle cx="1.71" cy="2.02" r="0.3"/>
+    <circle cx="3.23" cy="2.02" r="0.3"/>
+    <circle cx="4.75" cy="2.02" r="0.3"/>
+    <circle cx="6.27" cy="2.02" r="0.3"/>
+
+    <circle cx="0.95" cy="3.29" r="0.3"/>
+    <circle cx="2.47" cy="3.29" r="0.3"/>
+    <circle cx="3.99" cy="3.29" r="0.3"/>
+    <circle cx="5.51" cy="3.29" r="0.3"/>
+    <circle cx="7.03" cy="3.29" r="0.3"/>
+
+    <circle cx="1.71" cy="4.56" r="0.3"/>
+    <circle cx="3.23" cy="4.56" r="0.3"/>
+    <circle cx="4.75" cy="4.56" r="0.3"/>
+    <circle cx="6.27" cy="4.56" r="0.3"/>
+  </g>
+</svg>

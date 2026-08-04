@@ -1,0 +1,252 @@
+{
+  "common": {
+    "metadata": {
+      "title": "KARAY Models",
+      "description": "Professional management, marketing and development agency for content creators."
+    },
+    "localeSwitcher": {
+      "ariaLabel": "Language: {language}. Change language",
+      "listLabel": "Choose a language"
+    },
+    "actions": {
+      "save": "Save",
+      "saving": "Saving...",
+      "cancel": "Cancel",
+      "close": "Close",
+      "confirm": "Confirm",
+      "delete": "Delete",
+      "deleting": "Deleting...",
+      "edit": "Edit",
+      "remove": "Remove",
+      "add": "Add",
+      "back": "Back",
+      "next": "Next",
+      "previous": "Previous",
+      "search": "Search",
+      "filter": "Filter",
+      "clear": "Clear",
+      "copy": "Copy",
+      "copied": "Copied",
+      "send": "Send",
+      "sending": "Sending...",
+      "retry": "Try again",
+      "refresh": "Refresh",
+      "viewAll": "View all",
+      "seeMore": "See more",
+      "seeLess": "See less",
+      "download": "Download",
+      "upload": "Upload",
+      "select": "Select",
+      "apply": "Apply",
+      "create": "Create",
+      "update": "Update",
+      "open": "Open"
+    },
+    "states": {
+      "loading": "Loading...",
+      "empty": "Nothing here yet.",
+      "noResults": "No results found.",
+      "saved": "Changes saved.",
+      "notInformed": "Not provided",
+      "optional": "optional",
+      "required": "required",
+      "yes": "Yes",
+      "no": "No",
+      "all": "All",
+      "none": "None",
+      "active": "Active",
+      "inactive": "Inactive"
+    }
+  },
+
+  "site": {
+    "hero": {
+      "imageAlt": "Model on a yacht in Rio de Janeiro",
+      "eyebrow": "Strategic management for creators",
+      "headline": "We turn your content into a profitable, long-term business.",
+      "highlight": "Yes, you can block Brazil (or any other country) on OnlyFans to protect your privacy.",
+      "body": "Strategy, management, marketing and professional support for creators who want to build a strong brand, grow their earnings and reach financial freedom.",
+      "ctaPrimary": "I Want to Join",
+      "ctaSecondary": "Meet Our Agency",
+      "stats": {
+        "activeModels": "Active models at most",
+        "attention": "Personalized strategic attention",
+        "support": "Professional support and management"
+      }
+    },
+    "whyUs": {
+      "eyebrow": "More than an agency",
+      "headline": "We build brands. We change lives.",
+      "cta": "Find Out Why We're Different",
+      "features": {
+        "strategy": {
+          "title": "Strategy",
+          "description": "End-to-end planning for your brand's positioning, identity and growth."
+        },
+        "marketing": {
+          "title": "Marketing",
+          "description": "Promotion across multiple platforms to attract real, qualified and engaged fans."
+        },
+        "chats": {
+          "title": "Chat Management",
+          "description": "Professional chatters focused on relationships, retention and higher sales."
+        },
+        "analytics": {
+          "title": "Analytics and Optimization",
+          "description": "Metrics tracking and continuous improvements to maximize your results."
+        },
+        "security": {
+          "title": "Security",
+          "description": "Professional infrastructure to protect your account, your brand and your information."
+        }
+      }
+    },
+    "difference": {
+      "eyebrow": "Why choose our agency",
+      "headline": "Your business deserves far more than generic management.",
+      "body": "We build a complete structure around your brand so you can focus on creating content while our team works on growing your business.",
+      "cta": "See All the Benefits",
+      "reasons": {
+        "invest": {
+          "title": "We Invest in You",
+          "description": "From day one, we invest time, experience, technology and resources to help you build a professional business that lasts."
+        },
+        "onlyThirty": {
+          "title": "Only 30 Models",
+          "description": "We cap the agency's size to guarantee individual attention, constant communication and genuinely tailored strategies."
+        },
+        "partnership": {
+          "title": "A Real Partnership",
+          "description": "We don't see you as just another account. Your growth is treated as an essential part of our agency's growth."
+        },
+        "transparency": {
+          "title": "Full Transparency",
+          "description": "You can follow results, earnings, metrics and your business's performance with complete clarity."
+        },
+        "management": {
+          "title": "Professional Management",
+          "description": "We handle strategy, content, chats, sales, marketing, pricing, analysis and brand development."
+        },
+        "growth": {
+          "title": "Continuous Growth",
+          "description": "Your account is never on autopilot. We review results and adjust the strategy constantly."
+        }
+      },
+      "split": {
+        "eyebrow": "Transparent revenue split",
+        "headline": "Every party has a clear role in growing the brand.",
+        "body": "After platform fees, revenue is split transparently between the model, the agency's management team and the company responsible for marketing.",
+        "parties": {
+          "model": {
+            "label": "Model",
+            "description": "The largest share of revenue belongs to the creator and her brand."
+          },
+          "agency": {
+            "label": "Agency",
+            "description": "Day-to-day management, strategy, sales, support and optimization."
+          },
+          "marketing": {
+            "label": "Marketing",
+            "description": "Promotion, traffic, campaigns and audience growth."
+          }
+        }
+      }
+    },
+    "footer": {
+      "aboutTitle": "About Us",
+      "aboutBody": "KARAY Models is an agency specializing in the complete management of content creators. Our goal is to turn talent into a profitable business through professional marketing strategies, brand positioning, account management, subscriber care and sustainable growth.",
+      "aboutLimit": "We cap the agency at just 30 models so we can offer personalized service and the highest level of support to every creator.",
+      "navTitle": "Navigation",
+      "contactTitle": "Contact",
+      "serviceTitle": "Who we serve",
+      "serviceBody": "We work with models across Brazil, Latin America and other countries. Recruiting, management and support are handled entirely online.",
+      "whatsappNumber": "{number} (WhatsApp)",
+      "whatsappAria": "Message KARAY Models on WhatsApp",
+      "whatsappFloatingAria": "Message us on WhatsApp",
+      "whatsappPurpose": "Use this number to ask questions, get information about the agency or check on your application.",
+      "whatsappResponse": "Our team usually replies within 24 hours.",
+      "copyright": "© KARAY Models. All rights reserved.",
+      "links": {
+        "home": "Home",
+        "whyUs": "Why Us",
+        "faq": "Frequently Asked Questions",
+        "apply": "Apply now",
+        "modelArea": "Model Area",
+        "privacy": "Privacy Policy",
+        "terms": "Terms of Use"
+      }
+    }
+  },
+
+  "nav": {
+    "primary": "Main navigation",
+    "mobile": "Mobile navigation",
+    "home": "Home",
+    "whyUs": "Why Us",
+    "faq": "FAQ",
+    "login": "Login",
+    "amplia": "AMPLIA",
+    "apply": "Apply now",
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu"
+  },
+
+  "auth": {
+    "signOut": "Sign out",
+    "signingOut": "Signing out...",
+    "signIn": "Sign in",
+    "signingIn": "Signing in...",
+    "email": "Email",
+    "password": "Password",
+    "forgotPassword": "Forgot my password",
+    "changePassword": "Change password"
+  },
+
+  "dashboard": {},
+
+  "models": {},
+
+  "earnings": {},
+
+  "expenses": {},
+
+  "loans": {},
+
+  "settings": {},
+
+  "errors": {},
+
+  "validation": {},
+
+  "admin": {
+    "nav": {
+      "ariaLabel": "Portal navigation",
+      "models": "Models",
+      "representatives": "Representatives",
+      "pageview": "Pageview",
+      "amplia": "Amplia"
+    },
+    "portals": {
+      "amplia": {
+        "title": "AMPLIA PORTAL",
+        "subtitle": "Brand growth dashboard (Amplia)"
+      },
+      "models": {
+        "title": "MODELS PORTAL",
+        "subtitle": "OnlyFans management dashboard"
+      },
+      "representatives": {
+        "title": "REPRESENTATIVES",
+        "subtitle": "Accounts, access and assigned models"
+      },
+      "pageview": {
+        "title": "PAGEVIEW",
+        "subtitle": "The screen the model is looking at"
+      },
+      "crm": {
+        "title": "KARAY MODELS CRM",
+        "subtitle": "Owner / Administrator"
+      }
+    }
+  }
+}

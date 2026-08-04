@@ -1,12 +1,16 @@
+import { useTranslations } from "next-intl";
+
 import { WHATSAPP_URL } from "@/lib/constants/whatsapp";
 
 export default function FloatingWhatsApp() {
+    const t = useTranslations("site.footer");
+
     return (
         <a
             href={WHATSAPP_URL}
             target="_blank"
             rel="noopener noreferrer"
-            aria-label="Falar conosco pelo WhatsApp"
+            aria-label={t("whatsappFloatingAria")}
             style={{
                 position: "fixed",
                 right: "24px",

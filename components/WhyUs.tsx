@@ -1,8 +1,13 @@
+import { useTranslations } from "next-intl";
+
+/**
+ * Icons stay here, copy lives in `site.whyUs.features.*`. The key is what ties
+ * the two together, so reordering this list never desynchronises a title from
+ * its drawing.
+ */
 const features = [
   {
-    title: "Estratégia",
-    description:
-      "Planejamento completo para posicionamento, identidade e crescimento da sua marca.",
+    key: "strategy",
     icon: (
       <svg
         viewBox="0 0 24 24"
@@ -18,9 +23,7 @@ const features = [
     ),
   },
   {
-    title: "Marketing",
-    description:
-      "Divulgação em diversas plataformas para atrair fãs reais, qualificados e engajados.",
+    key: "marketing",
     icon: (
       <svg
         viewBox="0 0 24 24"
@@ -36,9 +39,7 @@ const features = [
     ),
   },
   {
-    title: "Gestão de Chats",
-    description:
-      "Chatters profissionais focados em relacionamento, retenção e aumento de vendas.",
+    key: "chats",
     icon: (
       <svg
         viewBox="0 0 24 24"
@@ -53,9 +54,7 @@ const features = [
     ),
   },
   {
-    title: "Análise e Otimização",
-    description:
-      "Acompanhamento de métricas e melhorias contínuas para maximizar os resultados.",
+    key: "analytics",
     icon: (
       <svg
         viewBox="0 0 24 24"
@@ -71,9 +70,7 @@ const features = [
     ),
   },
   {
-    title: "Segurança",
-    description:
-      "Infraestrutura profissional para proteger sua conta, sua marca e suas informações.",
+    key: "security",
     icon: (
       <svg
         viewBox="0 0 24 24"
@@ -87,41 +84,43 @@ const features = [
       </svg>
     ),
   },
-];
+] as const;
 
 export default function WhyUs() {
+  const t = useTranslations("site.whyUs");
+
   return (
     <section className="bg-[#fffaf5] px-6 py-20 text-[#21181c] lg:px-12 lg:py-24">
       <div className="mx-auto max-w-[1440px]">
         <div className="text-center">
           <p className="text-sm font-semibold uppercase tracking-[0.34em] text-[#b85f79]">
-            Mais que uma agência
+            {t("eyebrow")}
           </p>
 
           <h2 className="mt-4 font-serif text-4xl leading-tight md:text-5xl lg:text-6xl">
-            Construímos marcas. Transformamos vidas.
+            {t("headline")}
           </h2>
 
           <div className="mx-auto mt-6 flex items-center justify-center gap-3 text-[#b85f79]">
             <span className="h-px w-16 bg-[#d8a6b4]" />
-            <span className="text-xl">♕</span>
+            <span aria-hidden="true" className="text-xl">♕</span>
             <span className="h-px w-16 bg-[#d8a6b4]" />
           </div>
         </div>
 
         <div className="mt-16 grid gap-10 sm:grid-cols-2 lg:grid-cols-5 lg:gap-8">
           {features.map((feature) => (
-            <article key={feature.title} className="group text-center lg:text-left">
+            <article key={feature.key} className="group text-center lg:text-left">
               <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-[#f8e8ec] text-[#b85f79] transition duration-300 group-hover:-translate-y-1 group-hover:bg-[#b85f79] group-hover:text-white lg:mx-0">
                 {feature.icon}
               </div>
 
               <h3 className="mt-6 text-sm font-bold uppercase tracking-[0.12em] text-[#a84f69]">
-                {feature.title}
+                {t(`features.${feature.key}.title`)}
               </h3>
 
               <p className="mt-4 text-sm leading-7 text-[#5f5358]">
-                {feature.description}
+                {t(`features.${feature.key}.description`)}
               </p>
             </article>
           ))}
@@ -132,12 +131,10 @@ export default function WhyUs() {
             href="/por-que-nos"
             className="inline-flex rounded-full border border-[#b85f79] px-8 py-4 text-sm font-bold uppercase tracking-[0.1em] text-[#9e4862] transition hover:bg-[#b85f79] hover:text-white"
           >
-            Descubra Por Que Somos Diferentes
+            {t("cta")}
           </a>
         </div>
       </div>
     </section>
   );
 }
-
-

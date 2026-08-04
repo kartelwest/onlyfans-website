@@ -2,7 +2,9 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useTranslations } from "next-intl";
 
+import LocaleSwitcher from "@/components/LocaleSwitcher";
 import LogoutButton from "@/components/LogoutButton";
 import type { ManagementRole } from "@/types/model";
 
@@ -22,16 +24,17 @@ import type { ManagementRole } from "@/types/model";
 
 type NavItem = {
   href: string;
-  label: string;
+  /** A key under the `admin.nav` namespace, not a label. */
+  key: string;
   /** Roles allowed to see the link. Omitted means every staff role. */
   roles?: ManagementRole[];
 };
 
 const NAV_ITEMS: NavItem[] = [
-  { href: "/admin/models", label: "Modelos" },
-  { href: "/admin/representatives", label: "Representantes" },
-  { href: "/admin/pageview", label: "Pageview" },
-  { href: "/admin/socialmediamodels", label: "Amplia" },
+  { href: "/admin/models", key: "models" },
+  { href: "/admin/representatives", key: "representatives" },
+  { href: "/admin/pageview", key: "pageview" },
+  { href: "/admin/socialmediamodels", key: "amplia" },
 ];
 
 const STAFF_ROLES: ManagementRole[] = ["owner", "administrator"];
@@ -42,6 +45,7 @@ export default function AdminHeader({
   /** Null when the viewer has no profile — the pages then redirect anyway. */
   role?: ManagementRole | null;
 }) {
+  const t = useTranslations("admin");
   const pathname = usePathname();
 
   // A view-as page is meant to be the other person's screen, exactly. Our own
@@ -51,7 +55,7 @@ export default function AdminHeader({
     return null;
   }
 
-  const portal = getPortalLabel(pathname);
+  const portalKey = getPortalKey(pathname);
 
   const isStaff = Boolean(role && STAFF_ROLES.includes(role));
 
@@ -66,18 +70,18 @@ export default function AdminHeader({
       <div className="mx-auto flex max-w-[1600px] flex-col gap-4 px-6 py-4 lg:flex-row lg:items-center lg:justify-between">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.28em] text-pink-300">
-            {portal.title}
+            {t(`portals.${portalKey}.title`)}
           </p>
 
           <p className="mt-1 text-sm text-white/50">
-            {portal.subtitle}
+            {t(`portals.${portalKey}.subtitle`)}
           </p>
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
           {visibleItems.length > 0 && (
             <nav
-              aria-label="Navegação do portal"
+              aria-label={t("nav.ariaLabel")}
               className="flex flex-wrap items-center gap-2"
             >
               {visibleItems.map((item) => {
@@ -94,12 +98,19 @@ export default function AdminHeader({
                         : "border-white/10 bg-white/5 text-white/70 hover:bg-white/10"
                     }`}
                   >
-                    {item.label}
+                    {t(`nav.${item.key}`)}
                   </Link>
                 );
               })}
             </nav>
           )}
+
+          {/*
+            Sits with the user controls, at the end of the bar, so it lands in
+            the same place on every admin screen. On a phone the header stacks
+            and this row wraps — the switcher stays on screen either way.
+          */}
+          <LocaleSwitcher variant="admin" />
 
           <LogoutButton />
         </div>
@@ -121,37 +132,23 @@ function isActive(pathname: string | null, href: string): boolean {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
-function getPortalLabel(pathname: string | null): { title: string; subtitle: string } {
+/** Which entry under `admin.portals` titles this section of the back office. */
+function getPortalKey(pathname: string | null): string {
   if (pathname?.startsWith("/admin/socialmediamodels")) {
-    return {
-      title: "PORTAL DA AMPLIA",
-      subtitle: "Painel de crescimento de marca (Amplia)",
-    };
+    return "amplia";
   }
 
   if (pathname?.startsWith("/admin/models")) {
-    return {
-      title: "PORTAL DE MODELOS",
-      subtitle: "Painel de gestão OnlyFans",
-    };
+    return "models";
   }
 
   if (pathname?.startsWith("/admin/representatives")) {
-    return {
-      title: "REPRESENTANTES",
-      subtitle: "Contas, acessos e modelos atribuídas",
-    };
+    return "representatives";
   }
 
   if (pathname?.startsWith("/admin/pageview")) {
-    return {
-      title: "PAGEVIEW",
-      subtitle: "A tela que a modelo está vendo",
-    };
+    return "pageview";
   }
 
-  return {
-    title: "KARAY MODELS CRM",
-    subtitle: "Proprietário / Administrador",
-  };
+  return "crm";
 }

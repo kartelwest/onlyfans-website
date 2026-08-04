@@ -1,0 +1,252 @@
+{
+  "common": {
+    "metadata": {
+      "title": "KARAY Models",
+      "description": "Agência profissional de gestão, marketing e desenvolvimento para criadoras de conteúdo."
+    },
+    "localeSwitcher": {
+      "ariaLabel": "Idioma: {language}. Alterar idioma",
+      "listLabel": "Escolha o idioma"
+    },
+    "actions": {
+      "save": "Salvar",
+      "saving": "Salvando...",
+      "cancel": "Cancelar",
+      "close": "Fechar",
+      "confirm": "Confirmar",
+      "delete": "Excluir",
+      "deleting": "Excluindo...",
+      "edit": "Editar",
+      "remove": "Remover",
+      "add": "Adicionar",
+      "back": "Voltar",
+      "next": "Avançar",
+      "previous": "Anterior",
+      "search": "Buscar",
+      "filter": "Filtrar",
+      "clear": "Limpar",
+      "copy": "Copiar",
+      "copied": "Copiado",
+      "send": "Enviar",
+      "sending": "Enviando...",
+      "retry": "Tentar novamente",
+      "refresh": "Atualizar",
+      "viewAll": "Ver tudo",
+      "seeMore": "Ver mais",
+      "seeLess": "Ver menos",
+      "download": "Baixar",
+      "upload": "Enviar arquivo",
+      "select": "Selecionar",
+      "apply": "Aplicar",
+      "create": "Criar",
+      "update": "Atualizar",
+      "open": "Abrir"
+    },
+    "states": {
+      "loading": "Carregando...",
+      "empty": "Nada por aqui ainda.",
+      "noResults": "Nenhum resultado encontrado.",
+      "saved": "Alterações salvas.",
+      "notInformed": "Não informado",
+      "optional": "opcional",
+      "required": "obrigatório",
+      "yes": "Sim",
+      "no": "Não",
+      "all": "Todos",
+      "none": "Nenhum",
+      "active": "Ativa",
+      "inactive": "Inativa"
+    }
+  },
+
+  "site": {
+    "hero": {
+      "imageAlt": "Modelo em um iate no Rio de Janeiro",
+      "eyebrow": "Gestão estratégica para criadoras",
+      "headline": "Transformamos seu conteúdo em um negócio lucrativo e de longo prazo.",
+      "highlight": "Sim, você pode bloquear o Brasil (ou qualquer outro país) no OnlyFans para proteger sua privacidade.",
+      "body": "Estratégia, gerenciamento, marketing e suporte profissional para criadoras que desejam construir uma marca forte, aumentar seus ganhos e alcançar liberdade financeira.",
+      "ctaPrimary": "Quero Fazer Parte",
+      "ctaSecondary": "Conheça Nossa Agência",
+      "stats": {
+        "activeModels": "Modelos ativas no máximo",
+        "attention": "Atenção estratégica personalizada",
+        "support": "Suporte e gestão profissional"
+      }
+    },
+    "whyUs": {
+      "eyebrow": "Mais que uma agência",
+      "headline": "Construímos marcas. Transformamos vidas.",
+      "cta": "Descubra Por Que Somos Diferentes",
+      "features": {
+        "strategy": {
+          "title": "Estratégia",
+          "description": "Planejamento completo para posicionamento, identidade e crescimento da sua marca."
+        },
+        "marketing": {
+          "title": "Marketing",
+          "description": "Divulgação em diversas plataformas para atrair fãs reais, qualificados e engajados."
+        },
+        "chats": {
+          "title": "Gestão de Chats",
+          "description": "Chatters profissionais focados em relacionamento, retenção e aumento de vendas."
+        },
+        "analytics": {
+          "title": "Análise e Otimização",
+          "description": "Acompanhamento de métricas e melhorias contínuas para maximizar os resultados."
+        },
+        "security": {
+          "title": "Segurança",
+          "description": "Infraestrutura profissional para proteger sua conta, sua marca e suas informações."
+        }
+      }
+    },
+    "difference": {
+      "eyebrow": "Por que escolher nossa agência",
+      "headline": "Seu negócio merece muito mais do que uma gestão genérica.",
+      "body": "Construímos uma estrutura completa ao redor da sua marca para que você possa se concentrar na criação de conteúdo enquanto nossa equipe trabalha no crescimento do seu negócio.",
+      "cta": "Conheça Todos os Benefícios",
+      "reasons": {
+        "invest": {
+          "title": "Investimos em Você",
+          "description": "Desde o primeiro dia, investimos tempo, experiência, tecnologia e recursos para ajudá-la a construir um negócio profissional e duradouro."
+        },
+        "onlyThirty": {
+          "title": "Apenas 30 Modelos",
+          "description": "Limitamos nossa agência para garantir atenção individual, comunicação constante e estratégias realmente personalizadas."
+        },
+        "partnership": {
+          "title": "Parceria de Verdade",
+          "description": "Não enxergamos você como apenas mais uma conta. Seu crescimento é tratado como parte essencial do crescimento da nossa agência."
+        },
+        "transparency": {
+          "title": "Transparência Total",
+          "description": "Você poderá acompanhar resultados, ganhos, métricas e o desempenho do seu negócio com clareza."
+        },
+        "management": {
+          "title": "Gestão Profissional",
+          "description": "Administramos estratégia, conteúdo, chats, vendas, marketing, precificação, análise e desenvolvimento da marca."
+        },
+        "growth": {
+          "title": "Crescimento Contínuo",
+          "description": "Sua conta nunca fica no piloto automático. Analisamos resultados e ajustamos as estratégias constantemente."
+        }
+      },
+      "split": {
+        "eyebrow": "Distribuição transparente",
+        "headline": "Cada parte tem uma função clara no crescimento da marca.",
+        "body": "Após as taxas da plataforma, a receita é distribuída de maneira clara entre a modelo, a gestão da agência e a empresa responsável pelo marketing.",
+        "parties": {
+          "model": {
+            "label": "Modelo",
+            "description": "A maior parte da receita pertence à criadora e à sua marca."
+          },
+          "agency": {
+            "label": "Agência",
+            "description": "Gestão diária, estratégia, vendas, suporte e otimização."
+          },
+          "marketing": {
+            "label": "Marketing",
+            "description": "Divulgação, tráfego, campanhas e crescimento da audiência."
+          }
+        }
+      }
+    },
+    "footer": {
+      "aboutTitle": "Sobre Nós",
+      "aboutBody": "KARAY Models é uma agência especializada na gestão completa de criadoras de conteúdo. Nosso objetivo é transformar talento em um negócio lucrativo através de estratégias profissionais de marketing, posicionamento de marca, gerenciamento de contas, atendimento aos assinantes e crescimento sustentável.",
+      "aboutLimit": "Limitamos nossa agência a apenas 30 modelos para garantir um atendimento personalizado e oferecer o mais alto nível de suporte a cada criadora.",
+      "navTitle": "Navegação",
+      "contactTitle": "Contato",
+      "serviceTitle": "Atendimento",
+      "serviceBody": "Atendemos modelos em todo o Brasil, América Latina e outros países. Todo o processo de recrutamento, gerenciamento e suporte é realizado de forma totalmente online.",
+      "whatsappNumber": "{number} (WhatsApp)",
+      "whatsappAria": "Falar com a KARAY Models pelo WhatsApp",
+      "whatsappFloatingAria": "Falar conosco pelo WhatsApp",
+      "whatsappPurpose": "Utilize este número para esclarecer dúvidas, obter informações sobre a agência ou acompanhar sua candidatura.",
+      "whatsappResponse": "Nossa equipe normalmente responde em até 24 horas.",
+      "copyright": "© KARAY Models. Todos os direitos reservados.",
+      "links": {
+        "home": "Início",
+        "whyUs": "Por Que Nós",
+        "faq": "Perguntas Frequentes",
+        "apply": "Candidate-se",
+        "modelArea": "Área da Modelo",
+        "privacy": "Política de Privacidade",
+        "terms": "Termos de Uso"
+      }
+    }
+  },
+
+  "nav": {
+    "primary": "Navegação principal",
+    "mobile": "Navegação móvel",
+    "home": "Início",
+    "whyUs": "Por Que Nós",
+    "faq": "FAQ",
+    "login": "Login",
+    "amplia": "AMPLIA",
+    "apply": "Candidate-se",
+    "openMenu": "Abrir menu",
+    "closeMenu": "Fechar menu"
+  },
+
+  "auth": {
+    "signOut": "Sair",
+    "signingOut": "Saindo...",
+    "signIn": "Entrar",
+    "signingIn": "Entrando...",
+    "email": "E-mail",
+    "password": "Senha",
+    "forgotPassword": "Esqueci minha senha",
+    "changePassword": "Alterar senha"
+  },
+
+  "dashboard": {},
+
+  "models": {},
+
+  "earnings": {},
+
+  "expenses": {},
+
+  "loans": {},
+
+  "settings": {},
+
+  "errors": {},
+
+  "validation": {},
+
+  "admin": {
+    "nav": {
+      "ariaLabel": "Navegação do portal",
+      "models": "Modelos",
+      "representatives": "Representantes",
+      "pageview": "Pageview",
+      "amplia": "Amplia"
+    },
+    "portals": {
+      "amplia": {
+        "title": "PORTAL DA AMPLIA",
+        "subtitle": "Painel de crescimento de marca (Amplia)"
+      },
+      "models": {
+        "title": "PORTAL DE MODELOS",
+        "subtitle": "Painel de gestão OnlyFans"
+      },
+      "representatives": {
+        "title": "REPRESENTANTES",
+        "subtitle": "Contas, acessos e modelos atribuídas"
+      },
+      "pageview": {
+        "title": "PAGEVIEW",
+        "subtitle": "A tela que a modelo está vendo"
+      },
+      "crm": {
+        "title": "KARAY MODELS CRM",
+        "subtitle": "Proprietário / Administrador"
+      }
+    }
+  }
+}

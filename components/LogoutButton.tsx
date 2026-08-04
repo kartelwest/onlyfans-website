@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 
 const DEFAULT_CLASS_NAME =
@@ -18,6 +19,7 @@ export default function LogoutButton({
 }: {
   className?: string;
 } = {}) {
+  const t = useTranslations("auth");
   const router = useRouter();
   const supabase = createClient();
   const [loading, setLoading] = useState(false);
@@ -38,7 +40,7 @@ export default function LogoutButton({
       disabled={loading}
       className={className ?? DEFAULT_CLASS_NAME}
     >
-      {loading ? "Saindo..." : "Sair"}
+      {loading ? t("signingOut") : t("signOut")}
     </button>
   );
 }
