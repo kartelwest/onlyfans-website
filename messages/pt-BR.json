@@ -1930,7 +1930,19 @@
       "temporaryPasswordPlaceholder": "Digite uma senha temporária",
       "savePasswordWarning": "Guarde esta senha antes de sair da página.",
       "creating": "Criando conta...",
-      "create": "Criar conta"
+      "create": "Criar conta",
+      "messages": {
+        "invalidRole": "Tipo de conta inválido.",
+        "nameRequired": "Digite o nome completo.",
+        "invalidEmail": "Digite um endereço de e-mail válido.",
+        "invalidWhatsapp": "Digite um número de WhatsApp válido.",
+        "passwordTooShort": "A senha deve ter pelo menos 8 caracteres.",
+        "sessionExpired": "Sua sessão expirou. Entre novamente.",
+        "notPermitted": "Você não tem permissão para criar novas contas.",
+        "representativeInactive": "O representante selecionado não está ativo.",
+        "createFailed": "Não foi possível criar a conta.",
+        "created": "Conta criada com sucesso."
+      }
     }
   }
 }

@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { getTranslations } from "next-intl/server";
 import { generateTemporaryPassword } from "@/lib/admin/modelOnboardingHelpers";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
@@ -49,6 +50,8 @@ export async function createUserAction(
   previousState: CreateUserState,
   formData: FormData,
 ): Promise<CreateUserState> {
+  const t = await getTranslations("owner.newUser.messages");
+
   const fullName = String(formData.get("fullName") ?? "").trim();
 
   const email = String(formData.get("email") ?? "")
@@ -78,21 +81,21 @@ export async function createUserAction(
   ) {
     return {
       success: false,
-      message: "Tipo de conta inválido.",
+      message: t("invalidRole"),
     };
   }
 
   if (fullName.length < 3) {
     return {
       success: false,
-      message: "Digite o nome completo.",
+      message: t("nameRequired"),
     };
   }
 
   if (!email.includes("@")) {
     return {
       success: false,
-      message: "Digite um endereço de e-mail válido.",
+      message: t("invalidEmail"),
     };
   }
 
@@ -102,7 +105,7 @@ export async function createUserAction(
   ) {
     return {
       success: false,
-      message: "Digite um número de WhatsApp válido.",
+      message: t("invalidWhatsapp"),
     };
   }
 
@@ -125,7 +128,7 @@ export async function createUserAction(
     return {
       success: false,
       message:
-        "A senha deve ter pelo menos 8 caracteres.",
+        t("passwordTooShort"),
     };
   }
 
@@ -139,7 +142,7 @@ export async function createUserAction(
     return {
       success: false,
       message:
-        "Sua sessão expirou. Entre novamente.",
+        t("sessionExpired"),
     };
   }
 
@@ -161,7 +164,7 @@ export async function createUserAction(
     return {
       success: false,
       message:
-        "Você não tem permissão para criar novas contas.",
+        t("notPermitted"),
     };
   }
 
@@ -180,7 +183,7 @@ export async function createUserAction(
     if (!representative || !representative.active) {
       return {
         success: false,
-        message: "O representante selecionado não está ativo.",
+        message: t("representativeInactive"),
       };
     }
 
@@ -190,7 +193,7 @@ export async function createUserAction(
     ) {
       return {
         success: false,
-        message: "O representante selecionado não está ativo.",
+        message: t("representativeInactive"),
       };
     }
   }
@@ -217,7 +220,7 @@ export async function createUserAction(
       success: false,
       message:
         createUserError?.message ??
-        "Não foi possível criar a conta.",
+        t("createFailed"),
     };
   }
 
@@ -297,7 +300,7 @@ export async function createUserAction(
 
   return {
     success: true,
-    message: "Conta criada com sucesso.",
+    message: t("created"),
     temporaryPassword: password,
   };
 }

@@ -1930,7 +1930,19 @@
       "temporaryPasswordPlaceholder": "Enter a temporary password",
       "savePasswordWarning": "Save this password before leaving the page.",
       "creating": "Creating account...",
-      "create": "Create account"
+      "create": "Create account",
+      "messages": {
+        "invalidRole": "Invalid account type.",
+        "nameRequired": "Enter the full name.",
+        "invalidEmail": "Enter a valid email address.",
+        "invalidWhatsapp": "Enter a valid WhatsApp number.",
+        "passwordTooShort": "The password must be at least 8 characters.",
+        "sessionExpired": "Your session expired. Please sign in again.",
+        "notPermitted": "You do not have permission to create new accounts.",
+        "representativeInactive": "The selected representative is not active.",
+        "createFailed": "We couldn't create the account.",
+        "created": "Account created successfully."
+      }
     }
   }
 }
