@@ -1,5 +1,22 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
+/**
+ * `value` is persisted by /api/aplicar and must never change; `key` names the
+ * label under `site.apply.countries`.
+ */
+const COUNTRY_OPTIONS = [
+    { value: "Brasil", key: "brazil" },
+    { value: "Colômbia", key: "colombia" },
+    { value: "República Dominicana", key: "dominicanRepublic" },
+    { value: "Estados Unidos", key: "unitedStates" },
+    { value: "Venezuela", key: "venezuela" },
+    { value: "Tailândia", key: "thailand" },
+    { value: "México", key: "mexico" },
+    { value: "Outro", key: "other" },
+] as const;
+
 import { useEffect, useState } from "react";
 
 import { WHATSAPP_URL } from "@/lib/constants/whatsapp";
@@ -60,6 +77,12 @@ const initialFormState: FormState = {
 };
 
 export default function ApplyPage() {
+    const t = useTranslations("site.apply");
+    const tCommon = useTranslations("common.actions");
+    const tState = useTranslations("common.states");
+    const tRole = useTranslations("enums.role");
+    const tErrors = useTranslations("errors");
+
     const [form, setForm] = useState<FormState>(initialFormState);
     const [representatives, setRepresentatives] = useState<PublicRepresentative[]>([]);
     const [isLoadingRepresentatives, setIsLoadingRepresentatives] = useState(true);
@@ -80,7 +103,7 @@ export default function ApplyPage() {
                     setRepresentatives(result.representatives);
                 }
             } catch (error) {
-                console.error("Erro ao carregar representantes:", error);
+                console.error("Failed to load representatives:", error);
             } finally {
                 setIsLoadingRepresentatives(false);
             }
@@ -117,21 +140,21 @@ export default function ApplyPage() {
 
         if (form.possuiOnlyfans === "sim" && !form.entendeNovaConta) {
             setErrorMessage(
-                "Confirme que entende sobre a nova conta principal do OnlyFans.",
+                t("validation.confirmNewAccount"),
             );
             return;
         }
 
         if (form.representativeId === "other" && !form.otherRepresentative.trim()) {
             setErrorMessage(
-                "Informe o nome do representante que indicou você.",
+                t("validation.referrerRequired"),
             );
             return;
         }
 
         if (!form.confirmacaoIdade) {
             setErrorMessage(
-                "Confirme que tem pelo menos 18 anos para continuar.",
+                t("validation.ageRequired"),
             );
             return;
         }
@@ -156,7 +179,7 @@ export default function ApplyPage() {
             if (!response.ok) {
                 throw new Error(
                     result.error ||
-                        "Não foi possível enviar sua candidatura.",
+                        t("submitFailed"),
                 );
             }
 
@@ -165,7 +188,7 @@ export default function ApplyPage() {
             setErrorMessage(
                 error instanceof Error
                     ? error.message
-                    : "Ocorreu um erro inesperado.",
+                    : tErrors("generic"),
             );
         } finally {
             setIsSubmitting(false);
@@ -177,17 +200,15 @@ export default function ApplyPage() {
             <section className="bg-[#412a34] px-6 pb-20 pt-56 text-white lg:px-12 lg:pt-64">
                 <div className="mx-auto max-w-[1100px]">
                     <p className="text-sm font-semibold uppercase tracking-[0.3em] text-[#e9a5b8]">
-                        Candidatura KARAY Models
+                        {t("eyebrow")}
                     </p>
 
                     <h1 className="mt-5 max-w-4xl font-serif text-5xl leading-tight md:text-7xl">
-                        Candidate-se para fazer parte da nossa agência.
+                        {t("title")}
                     </h1>
 
                     <p className="mt-7 max-w-3xl text-lg leading-8 text-white/75">
-                        Preencha as informações abaixo com atenção. Nossa equipe analisará
-                        sua candidatura e entrará em contato caso seu perfil seja
-                        selecionado.
+                        {t("intro")}
                     </p>
                 </div>
             </section>
@@ -197,12 +218,11 @@ export default function ApplyPage() {
                     {isSubmitted ? (
                         <div className="rounded-[2rem] border border-[#ead8df] bg-white p-10 text-center shadow-sm">
                             <p className="font-serif text-3xl text-[#8f425a]">
-                                Candidatura enviada com sucesso!
+                                {t("successTitle")}
                             </p>
 
                             <p className="mt-4 text-lg leading-7 text-[#5f5056]">
-                                Você será redirecionada para o nosso WhatsApp em
-                                instantes.
+                                {t("successBody")}
                             </p>
                         </div>
                     ) : (
@@ -213,7 +233,7 @@ export default function ApplyPage() {
                             <div className="grid gap-6 md:grid-cols-2">
                                 <label className="block">
                                     <span className="text-sm font-semibold uppercase tracking-[0.12em] text-[#8f425a]">
-                                        Nome completo
+                                        {t("fields.fullName")}
                                     </span>
                                     <input
                                         type="text"
@@ -231,16 +251,16 @@ export default function ApplyPage() {
 
                                 <label className="block">
                                     <span className="text-sm font-semibold uppercase tracking-[0.12em] text-[#8f425a]">
-                                        Nome artístico desejado
+                                        {t("fields.stageName")}
                                     </span>
 
                                     <p className="mt-2 text-sm leading-6 text-[#75656c]">
-                                        Caso já tenha uma ideia do nome que deseja usar profissionalmente.
+                                        {t("fields.stageNameHint")}
                                     </p>
 
                                     <input
                                         type="text"
-                                        placeholder="Opcional"
+                                        placeholder={tState("optional")}
                                         value={form.nomeArtisticoDesejado}
                                         onChange={(event) =>
                                             updateField(
@@ -254,7 +274,7 @@ export default function ApplyPage() {
 
                                 <label className="block">
                                     <span className="text-sm font-semibold uppercase tracking-[0.12em] text-[#8f425a]">
-                                        Data de nascimento
+                                        {t("fields.birthday")}
                                     </span>
                                     <div className="mt-3">
                                         <BirthdayDatePicker
@@ -272,7 +292,7 @@ export default function ApplyPage() {
 
                                 <label className="block">
                                     <span className="text-sm font-semibold uppercase tracking-[0.12em] text-[#8f425a]">
-                                        Cidade
+                                        {t("fields.city")}
                                     </span>
 
                                     <input
@@ -291,7 +311,7 @@ export default function ApplyPage() {
 
                                 <label className="block">
                                     <span className="text-sm font-semibold uppercase tracking-[0.12em] text-[#8f425a]">
-                                        Estado
+                                        {t("fields.state")}
                                     </span>
 
                                     <input
@@ -310,7 +330,7 @@ export default function ApplyPage() {
 
                                 <label className="block">
                                     <span className="text-sm font-semibold uppercase tracking-[0.12em] text-[#8f425a]">
-                                        País
+                                        {t("fields.country")}
                                     </span>
 
                                     <select
@@ -325,23 +345,27 @@ export default function ApplyPage() {
                                         className="mt-3 w-full rounded-xl border border-[#dfcbd2] bg-[#fffdfb] px-4 py-4 outline-none transition focus:border-[#c65f7c]"
                                     >
                                         <option value="" disabled>
-                                            Selecione o país
+                                            {t("fields.selectCountry")}
                                         </option>
 
-                                        <option value="Brasil">Brasil</option>
-                                        <option value="Colômbia">Colômbia</option>
-                                        <option value="República Dominicana">República Dominicana</option>
-                                        <option value="Estados Unidos">Estados Unidos</option>
-                                        <option value="Venezuela">Venezuela</option>
-                                        <option value="Tailândia">Tailândia</option>
-                                        <option value="México">México</option>
-                                        <option value="Outro">Outro</option>
+                                        {/*
+                                          The VALUE is what gets submitted and
+                                          stored, so it stays exactly as it was
+                                          — changing it would break every row
+                                          already in the database. Only the
+                                          label the applicant reads changes.
+                                        */}
+                                        {COUNTRY_OPTIONS.map((option) => (
+                                            <option key={option.value} value={option.value}>
+                                                {t(`countries.${option.key}`)}
+                                            </option>
+                                        ))}
                                     </select>
                                 </label>
 
                                 <label className="block">
                                     <span className="text-sm font-semibold uppercase tracking-[0.12em] text-[#8f425a]">
-                                        WhatsApp
+                                        {t("fields.whatsapp")}
                                     </span>
                                     <input
                                         type="tel"
@@ -359,7 +383,7 @@ export default function ApplyPage() {
 
                                 <label className="block">
                                     <span className="text-sm font-semibold uppercase tracking-[0.12em] text-[#8f425a]">
-                                        E-mail
+                                        {t("fields.email")}
                                     </span>
                                     <input
                                         type="email"
@@ -377,11 +401,11 @@ export default function ApplyPage() {
 
                                 <label className="block md:col-span-2">
                                     <span className="text-sm font-semibold uppercase tracking-[0.12em] text-[#8f425a]">
-                                        Instagram
+                                        {t("fields.instagram")}
                                     </span>
                                     <input
                                         type="text"
-                                        placeholder="@seuusuario"
+                                        placeholder={t("fields.handlePlaceholder")}
                                         value={form.instagram}
                                         onChange={(event) =>
                                             updateField(
@@ -395,12 +419,12 @@ export default function ApplyPage() {
 
                                 <label className="block md:col-span-2">
                                     <span className="text-sm font-semibold uppercase tracking-[0.12em] text-[#8f425a]">
-                                        X / Twitter
+                                        {t("fields.twitter")}
                                     </span>
 
                                     <input
                                         type="text"
-                                        placeholder="@seuusuario — opcional"
+                                        placeholder={t("fields.handleOptionalPlaceholder")}
                                         value={form.twitter}
                                         onChange={(event) =>
                                             updateField(
@@ -414,7 +438,7 @@ export default function ApplyPage() {
 
                                 <label className="block md:col-span-2">
                                     <span className="text-sm font-semibold uppercase tracking-[0.12em] text-[#8f425a]">
-                                        Quem indicou você para a KARAY Models?
+                                        {t("fields.referrer")}
                                     </span>
 
                                     <select
@@ -431,22 +455,22 @@ export default function ApplyPage() {
                                     >
                                         <option value="" disabled>
                                             {isLoadingRepresentatives
-                                                ? "Carregando..."
-                                                : "Selecione uma opção"}
+                                                ? tState("loading")
+                                                : t("selectOption")}
                                         </option>
 
                                         {representatives.map((rep) => (
                                             <option key={rep.id} value={rep.id}>
                                                 {rep.fullName}
-                                                {rep.role === "owner"
-                                                    ? " (Proprietário)"
-                                                    : rep.role === "administrator"
-                                                      ? " (Administrador)"
-                                                      : " (Representante)"}
+                                                {rep.role === "owner" ||
+                                                rep.role === "administrator" ||
+                                                rep.role === "representative"
+                                                    ? ` (${tRole(rep.role)})`
+                                                    : ""}
                                             </option>
                                         ))}
 
-                                        <option value="other">Outro</option>
+                                        <option value="other">{t("options.other")}</option>
                                     </select>
 
                                     {form.representativeId === "other" && (
@@ -460,7 +484,7 @@ export default function ApplyPage() {
                                                     event.target.value,
                                                 )
                                             }
-                                            placeholder="Informe o nome do representante"
+                                            placeholder={t("fields.referrerPlaceholder")}
                                             className="mt-3 w-full rounded-xl border border-[#dfcbd2] bg-[#fffdfb] px-4 py-4 outline-none transition focus:border-[#c65f7c]"
                                         />
                                     )}
@@ -468,7 +492,7 @@ export default function ApplyPage() {
 
                                 <label className="block md:col-span-2">
                                     <span className="text-sm font-semibold uppercase tracking-[0.12em] text-[#8f425a]">
-                                        Já possui uma conta no OnlyFans?
+                                        {t("fields.hasOnlyFans")}
                                     </span>
 
                                     <select
@@ -486,23 +510,20 @@ export default function ApplyPage() {
                                         }}
                                         className="mt-3 w-full rounded-xl border border-[#dfcbd2] bg-[#fffdfb] px-4 py-4 outline-none transition focus:border-[#c65f7c]"
                                     >
-                                        <option value="">Selecione</option>
-                                        <option value="sim">Sim</option>
-                                        <option value="nao">Não</option>
+                                        <option value="">{t("select")}</option>
+                                        <option value="sim">{tState("yes")}</option>
+                                        <option value="nao">{tState("no")}</option>
                                     </select>
                                 </label>
 
                                 {form.possuiOnlyfans === "sim" && (
                                     <div className="md:col-span-2 rounded-[1.5rem] border border-[#d8a6b4] bg-[#f8e9ed] p-6 md:p-8">
                                         <p className="font-serif text-2xl text-[#8f425a]">
-                                            Informações importantes para quem já possui OnlyFans
+                                            {t("existingAccount.title")}
                                         </p>
 
                                         <p className="mt-4 leading-7 text-[#66565d]">
-                                            Mesmo que você já possua uma conta, nossa agência precisará criar uma nova
-                                            conta principal, configurada e administrada dentro da nossa infraestrutura.
-                                            Essa será a conta que receberá nosso investimento principal em marketing,
-                                            posicionamento e crescimento.
+                                            {t("existingAccount.body")}
                                         </p>
 
                                         <label className="mt-6 flex items-start gap-3">
@@ -520,22 +541,18 @@ export default function ApplyPage() {
                                             />
 
                                             <span className="leading-7 text-[#5f5056]">
-                                                Entendo que a KARAY Models precisará criar e administrar uma nova conta
-                                                principal do OnlyFans, mesmo que eu já possua uma conta.
+                                                {t("existingAccount.consent")}
                                             </span>
                                         </label>
 
                                         {form.entendeNovaConta && (
                                             <label className="mt-7 block">
                                                 <span className="text-sm font-semibold uppercase tracking-[0.12em] text-[#8f425a]">
-                                                    Deseja que também administremos sua conta existente?
+                                                    {t("fields.manageExisting")}
                                                 </span>
 
                                                 <p className="mt-3 leading-7 text-[#66565d]">
-                                                    Podemos publicar nela o mesmo conteúdo utilizado na conta principal e
-                                                    administrar suas mensagens e operação diária. Esse serviço custa um
-                                                    adicional de 5% sobre o percentual padrão da agência. O marketing
-                                                    permanecerá concentrado na nova conta principal criada pela KARAY.
+                                                    {t("existingAccount.manageBody")}
                                                 </p>
 
                                                 <select
@@ -549,11 +566,11 @@ export default function ApplyPage() {
                                                     }
                                                     className="mt-4 w-full rounded-xl border border-[#d7bdc6] bg-white px-4 py-4 outline-none transition focus:border-[#c65f7c]"
                                                 >
-                                                    <option value="">Selecione</option>
+                                                    <option value="">{t("select")}</option>
                                                     <option value="sim_aceito_5_porcento">
-                                                        Sim, quero o gerenciamento adicional de 5%
+                                                        {t("options.yesExtraFee")}
                                                     </option>
-                                                    <option value="nao">Não</option>
+                                                    <option value="nao">{tState("no")}</option>
                                                 </select>
                                             </label>
                                         )}
@@ -562,7 +579,7 @@ export default function ApplyPage() {
 
                                 <label className="block">
                                     <span className="text-sm font-semibold uppercase tracking-[0.12em] text-[#8f425a]">
-                                        Deseja bloquear o Brasil?
+                                        {t("fields.blockBrazil")}
                                     </span>
                                     <select
                                         required
@@ -575,16 +592,16 @@ export default function ApplyPage() {
                                         }
                                         className="mt-3 w-full rounded-xl border border-[#dfcbd2] bg-[#fffdfb] px-4 py-4 outline-none transition focus:border-[#c65f7c]"
                                     >
-                                        <option value="">Selecione</option>
-                                        <option value="sim">Sim</option>
-                                        <option value="nao">Não</option>
-                                        <option value="nao_sei">Ainda não sei</option>
+                                        <option value="">{t("select")}</option>
+                                        <option value="sim">{tState("yes")}</option>
+                                        <option value="nao">{tState("no")}</option>
+                                        <option value="nao_sei">{t("options.notSure")}</option>
                                     </select>
                                 </label>
 
                                 <label className="block">
                                     <span className="text-sm font-semibold uppercase tracking-[0.12em] text-[#8f425a]">
-                                        Está confortável em mostrar o rosto?
+                                        {t("fields.showFace")}
                                     </span>
                                     <select
                                         required
@@ -597,16 +614,16 @@ export default function ApplyPage() {
                                         }
                                         className="mt-3 w-full rounded-xl border border-[#dfcbd2] bg-[#fffdfb] px-4 py-4 outline-none transition focus:border-[#c65f7c]"
                                     >
-                                        <option value="">Selecione</option>
-                                        <option value="sim">Sim</option>
-                                        <option value="nao">Não</option>
-                                        <option value="depende">Depende do conteúdo</option>
+                                        <option value="">{t("select")}</option>
+                                        <option value="sim">{tState("yes")}</option>
+                                        <option value="nao">{tState("no")}</option>
+                                        <option value="depende">{t("options.depends")}</option>
                                     </select>
                                 </label>
 
                                 <label className="block">
                                     <span className="text-sm font-semibold uppercase tracking-[0.12em] text-[#8f425a]">
-                                        Moeda preferida
+                                        {t("fields.currency")}
                                     </span>
                                     <select
                                         required
@@ -619,15 +636,15 @@ export default function ApplyPage() {
                                         }
                                         className="mt-3 w-full rounded-xl border border-[#dfcbd2] bg-[#fffdfb] px-4 py-4 outline-none transition focus:border-[#c65f7c]"
                                     >
-                                        <option value="">Selecione</option>
-                                        <option value="real">Real</option>
-                                        <option value="dolar">Dólar</option>
+                                        <option value="">{t("select")}</option>
+                                        <option value="real">{t("options.real")}</option>
+                                        <option value="dolar">{t("options.dollar")}</option>
                                     </select>
                                 </label>
 
                                 <label className="block md:col-span-2">
                                     <span className="text-sm font-semibold uppercase tracking-[0.12em] text-[#8f425a]">
-                                        Com que frequência pode produzir conteúdo?
+                                        {t("fields.frequency")}
                                     </span>
                                     <textarea
                                         required
@@ -645,7 +662,7 @@ export default function ApplyPage() {
 
                                 <label className="block md:col-span-2">
                                     <span className="text-sm font-semibold uppercase tracking-[0.12em] text-[#8f425a]">
-                                        Por que deseja entrar para nossa agência?
+                                        {t("fields.motivation")}
                                     </span>
                                     <textarea
                                         required
@@ -664,9 +681,7 @@ export default function ApplyPage() {
 
                             <div className="mt-9 rounded-[1.5rem] border border-[#ead8df] bg-[#fffaf7] p-6 md:p-8">
                                 <p className="leading-7 text-[#66565d]">
-                                    Após o envio deste formulário, você deverá enviar 4 fotos de
-                                    corpo inteiro (não nuas) pelo WhatsApp para concluir o
-                                    processo de aprovação.
+                                    {t("photosNotice")}
                                 </p>
                             </div>
 
@@ -685,8 +700,7 @@ export default function ApplyPage() {
                                 />
 
                                 <span className="text-sm leading-6 text-[#6f6066]">
-                                    Confirmo que tenho pelo menos 18 anos e autorizo a KARAY Models
-                                    a entrar em contato comigo sobre esta candidatura.
+                                    {t("ageConfirmation")}
                                 </span>
                             </label>
 
@@ -701,7 +715,7 @@ export default function ApplyPage() {
                                 disabled={isSubmitting}
                                 className="mt-9 w-full rounded-full bg-[#c65f7c] px-8 py-5 text-sm font-bold uppercase tracking-[0.14em] text-white transition hover:-translate-y-1 hover:bg-[#ae4f6b] disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0"
                             >
-                                {isSubmitting ? "Enviando..." : "Enviar Candidatura"}
+                                {isSubmitting ? tCommon("sending") : t("submit")}
                             </button>
                         </form>
                     )}

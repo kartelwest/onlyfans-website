@@ -848,6 +848,73 @@
           "text": "Paste the link into the Google Photos field and carry on with the rest of the application."
         }
       ]
+    },
+    "apply": {
+      "eyebrow": "KARAY Models application",
+      "title": "Apply to join our agency.",
+      "intro": "Fill in the details below carefully. Our team will review your application and get in touch if your profile is selected.",
+      "successTitle": "Application sent successfully!",
+      "successBody": "You'll be redirected to our WhatsApp in a moment.",
+      "select": "Select",
+      "selectOption": "Select an option",
+      "submit": "Send Application",
+      "submitFailed": "We couldn't send your application.",
+      "photosNotice": "After submitting this form, you'll need to send 4 full-body photos (not nude) over WhatsApp to complete the approval process.",
+      "ageConfirmation": "I confirm that I am at least 18 years old and authorize KARAY Models to contact me about this application.",
+      "fields": {
+        "fullName": "Full name",
+        "stageName": "Preferred stage name",
+        "stageNameHint": "If you already have an idea of the name you'd like to use professionally.",
+        "birthday": "Date of birth",
+        "city": "City",
+        "state": "State",
+        "country": "Country",
+        "selectCountry": "Select a country",
+        "whatsapp": "WhatsApp",
+        "email": "Email",
+        "instagram": "Instagram",
+        "twitter": "X / Twitter",
+        "handlePlaceholder": "@yourusername",
+        "handleOptionalPlaceholder": "@yourusername — optional",
+        "referrer": "Who referred you to KARAY Models?",
+        "referrerPlaceholder": "Enter the representative's name",
+        "hasOnlyFans": "Do you already have an OnlyFans account?",
+        "manageExisting": "Would you like us to manage your existing account too?",
+        "blockBrazil": "Would you like to block Brazil?",
+        "showFace": "Are you comfortable showing your face?",
+        "currency": "Preferred currency",
+        "frequency": "How often can you produce content?",
+        "motivation": "Why do you want to join our agency?"
+      },
+      "options": {
+        "other": "Other",
+        "notSure": "Not sure yet",
+        "depends": "Depends on the content",
+        "real": "Real",
+        "dollar": "Dollar",
+        "yesExtraFee": "Yes, I want the additional 5% management"
+      },
+      "countries": {
+        "brazil": "Brazil",
+        "colombia": "Colombia",
+        "dominicanRepublic": "Dominican Republic",
+        "unitedStates": "United States",
+        "venezuela": "Venezuela",
+        "thailand": "Thailand",
+        "mexico": "Mexico",
+        "other": "Other"
+      },
+      "existingAccount": {
+        "title": "Important information if you already have OnlyFans",
+        "body": "Even if you already have an account, our agency will need to create a new main account, set up and managed inside our infrastructure. That is the account that receives our main investment in marketing, positioning and growth.",
+        "consent": "I understand that KARAY Models will need to create and manage a new main OnlyFans account, even though I already have one.",
+        "manageBody": "We can post the same content there that goes on the main account, and handle its messages and daily operation. This service costs an extra 5% on top of the agency's standard percentage. Marketing stays focused on the new main account KARAY creates."
+      },
+      "validation": {
+        "confirmNewAccount": "Please confirm you understand about the new main OnlyFans account.",
+        "referrerRequired": "Please enter the name of the representative who referred you.",
+        "ageRequired": "Please confirm you are at least 18 to continue."
+      }
     }
   },
   "nav": {

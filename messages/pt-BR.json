@@ -848,6 +848,73 @@
           "text": "Cole o link no campo do Google Photos e prossiga com o restante da candidatura."
         }
       ]
+    },
+    "apply": {
+      "eyebrow": "Candidatura KARAY Models",
+      "title": "Candidate-se para fazer parte da nossa agência.",
+      "intro": "Preencha as informações abaixo com atenção. Nossa equipe analisará sua candidatura e entrará em contato caso seu perfil seja selecionado.",
+      "successTitle": "Candidatura enviada com sucesso!",
+      "successBody": "Você será redirecionada para o nosso WhatsApp em instantes.",
+      "select": "Selecione",
+      "selectOption": "Selecione uma opção",
+      "submit": "Enviar Candidatura",
+      "submitFailed": "Não foi possível enviar sua candidatura.",
+      "photosNotice": "Após o envio deste formulário, você deverá enviar 4 fotos de corpo inteiro (não nuas) pelo WhatsApp para concluir o processo de aprovação.",
+      "ageConfirmation": "Confirmo que tenho pelo menos 18 anos e autorizo a KARAY Models a entrar em contato comigo sobre esta candidatura.",
+      "fields": {
+        "fullName": "Nome completo",
+        "stageName": "Nome artístico desejado",
+        "stageNameHint": "Caso já tenha uma ideia do nome que deseja usar profissionalmente.",
+        "birthday": "Data de nascimento",
+        "city": "Cidade",
+        "state": "Estado",
+        "country": "País",
+        "selectCountry": "Selecione o país",
+        "whatsapp": "WhatsApp",
+        "email": "E-mail",
+        "instagram": "Instagram",
+        "twitter": "X / Twitter",
+        "handlePlaceholder": "@seuusuario",
+        "handleOptionalPlaceholder": "@seuusuario — opcional",
+        "referrer": "Quem indicou você para a KARAY Models?",
+        "referrerPlaceholder": "Informe o nome do representante",
+        "hasOnlyFans": "Já possui uma conta no OnlyFans?",
+        "manageExisting": "Deseja que também administremos sua conta existente?",
+        "blockBrazil": "Deseja bloquear o Brasil?",
+        "showFace": "Está confortável em mostrar o rosto?",
+        "currency": "Moeda preferida",
+        "frequency": "Com que frequência pode produzir conteúdo?",
+        "motivation": "Por que deseja entrar para nossa agência?"
+      },
+      "options": {
+        "other": "Outro",
+        "notSure": "Ainda não sei",
+        "depends": "Depende do conteúdo",
+        "real": "Real",
+        "dollar": "Dólar",
+        "yesExtraFee": "Sim, quero o gerenciamento adicional de 5%"
+      },
+      "countries": {
+        "brazil": "Brasil",
+        "colombia": "Colômbia",
+        "dominicanRepublic": "República Dominicana",
+        "unitedStates": "Estados Unidos",
+        "venezuela": "Venezuela",
+        "thailand": "Tailândia",
+        "mexico": "México",
+        "other": "Outro"
+      },
+      "existingAccount": {
+        "title": "Informações importantes para quem já possui OnlyFans",
+        "body": "Mesmo que você já possua uma conta, nossa agência precisará criar uma nova conta principal, configurada e administrada dentro da nossa infraestrutura. Essa será a conta que receberá nosso investimento principal em marketing, posicionamento e crescimento.",
+        "consent": "Entendo que a KARAY Models precisará criar e administrar uma nova conta principal do OnlyFans, mesmo que eu já possua uma conta.",
+        "manageBody": "Podemos publicar nela o mesmo conteúdo utilizado na conta principal e administrar suas mensagens e operação diária. Esse serviço custa um adicional de 5% sobre o percentual padrão da agência. O marketing permanecerá concentrado na nova conta principal criada pela KARAY."
+      },
+      "validation": {
+        "confirmNewAccount": "Confirme que entende sobre a nova conta principal do OnlyFans.",
+        "referrerRequired": "Informe o nome do representante que indicou você.",
+        "ageRequired": "Confirme que tem pelo menos 18 anos para continuar."
+      }
     }
   },
   "nav": {
