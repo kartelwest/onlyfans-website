@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
 import { useMemo, useState } from "react";
 
 import {
@@ -8,7 +10,6 @@ import {
   listCountries,
 } from "@/lib/countries";
 import {
-  PROXY_COMPANY_LABELS,
   isValidProxyIp,
 } from "@/lib/models/proxyDetails";
 
@@ -28,6 +29,12 @@ export default function ModelProxyPanel({
   proxyDetails,
   canEdit,
 }: ModelProxyPanelProps) {
+  const t = useTranslations("admin.proxy");
+  const tCommon = useTranslations("common.actions");
+  const tState = useTranslations("common.states");
+  const tErrors = useTranslations("errors");
+  const tCompany = useTranslations("enums.proxyCompany");
+
   const [details, setDetails] = useState(proxyDetails);
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -44,11 +51,13 @@ export default function ModelProxyPanel({
 
   const countries = useMemo(() => listCountries(), []);
 
+  // "other" shows the free-text name the admin typed — that is their words, not
+  // ours, so it is never translated. A known provider shows its catalog label.
   const companyValue =
     details.proxyCompany === "other"
       ? details.proxyCompanyOther
       : details.proxyCompany
-        ? PROXY_COMPANY_LABELS[details.proxyCompany]
+        ? tCompany(details.proxyCompany)
         : null;
 
   function startEditing() {
@@ -71,12 +80,12 @@ export default function ModelProxyPanel({
     };
 
     if (payload.proxyIp && !isValidProxyIp(payload.proxyIp)) {
-      setSaveError("Informe um IP válido, por exemplo 48.45.165.230.");
+      setSaveError(t("invalidIp"));
       return;
     }
 
     if (payload.proxyCompany === "other" && !payload.proxyCompanyOther) {
-      setSaveError("Informe o nome da empresa do proxy.");
+      setSaveError(t("companyRequired"));
       return;
     }
 
@@ -96,7 +105,7 @@ export default function ModelProxyPanel({
       };
 
       if (!response.ok || !data.success) {
-        throw new Error(data.error ?? "Não foi possível salvar.");
+        throw new Error(data.error ?? tErrors("saveFailed"));
       }
 
       setDetails({
@@ -109,7 +118,7 @@ export default function ModelProxyPanel({
       setIsEditing(false);
     } catch (error) {
       setSaveError(
-        error instanceof Error ? error.message : "Não foi possível salvar.",
+        error instanceof Error ? error.message : tErrors("saveFailed"),
       );
     } finally {
       setIsSaving(false);
@@ -120,7 +129,7 @@ export default function ModelProxyPanel({
     <div className="rounded-2xl border border-white/10 bg-black/25 p-4">
       <div className="flex items-center justify-between gap-3">
         <p className="text-xs font-bold uppercase tracking-[0.18em] text-pink-200">
-          Infraestrutura
+          {t("title")}
         </p>
 
         {canEdit && !isEditing && (
@@ -129,7 +138,7 @@ export default function ModelProxyPanel({
             onClick={startEditing}
             className="rounded-lg border border-white/15 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.12em] text-white/70 transition hover:bg-white/10"
           >
-            Editar
+            {tCommon("edit")}
           </button>
         )}
       </div>
@@ -138,7 +147,7 @@ export default function ModelProxyPanel({
         <div className="mt-4 space-y-3">
           <label className="block">
             <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-white/45">
-              Proxy
+              {t("proxy")}
             </span>
 
             <input
@@ -153,7 +162,7 @@ export default function ModelProxyPanel({
 
           <label className="block">
             <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-white/45">
-              Company name
+              {t("companyName")}
             </span>
 
             <select
@@ -164,26 +173,26 @@ export default function ModelProxyPanel({
               }
               className="mt-1.5 w-full rounded-lg border border-white/15 bg-black/40 px-3 py-2 text-sm text-white outline-none transition focus:border-pink-300 disabled:opacity-50"
             >
-              <option value="">Não informado</option>
+              <option value="">{tState("notInformed")}</option>
               <option value="proxy_empire">
-                {PROXY_COMPANY_LABELS.proxy_empire}
+                {tCompany("proxy_empire")}
               </option>
 
-              <option value="other">{PROXY_COMPANY_LABELS.other}</option>
+              <option value="other">{tCompany("other")}</option>
             </select>
           </label>
 
           {company === "other" && (
             <label className="block">
               <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-white/45">
-                Nome da empresa
+                {t("companyNameOther")}
               </span>
 
               <input
                 type="text"
                 value={companyOther}
                 disabled={isSaving}
-                placeholder="Nome da empresa do proxy"
+                placeholder={t("companyPlaceholder")}
                 onChange={(event) => setCompanyOther(event.target.value)}
                 className="mt-1.5 w-full rounded-lg border border-white/15 bg-black/40 px-3 py-2 text-sm text-white outline-none transition placeholder:text-white/25 focus:border-pink-300 disabled:opacity-50"
               />
@@ -192,7 +201,7 @@ export default function ModelProxyPanel({
 
           <label className="block">
             <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-white/45">
-              Country
+              {t("country")}
             </span>
 
             <select
@@ -201,7 +210,7 @@ export default function ModelProxyPanel({
               onChange={(event) => setCountry(event.target.value)}
               className="mt-1.5 w-full rounded-lg border border-white/15 bg-black/40 px-3 py-2 text-sm text-white outline-none transition focus:border-pink-300 disabled:opacity-50"
             >
-              <option value="">Não informado</option>
+              <option value="">{tState("notInformed")}</option>
 
               {countries.map((option) => (
                 <option key={option.code} value={option.code}>
@@ -218,7 +227,7 @@ export default function ModelProxyPanel({
               onClick={() => void handleSave()}
               className="rounded-lg bg-pink-300 px-4 py-2 text-[10px] font-black uppercase tracking-[0.12em] text-[#321725] transition hover:bg-pink-200 disabled:opacity-40"
             >
-              {isSaving ? "Salvando..." : "Salvar"}
+              {isSaving ? tCommon("saving") : tCommon("save")}
             </button>
 
             <button
@@ -230,7 +239,7 @@ export default function ModelProxyPanel({
               }}
               className="rounded-lg border border-white/15 px-4 py-2 text-[10px] font-bold uppercase tracking-[0.12em] text-white/65 transition hover:bg-white/5 disabled:opacity-40"
             >
-              Cancelar
+              {tCommon("cancel")}
             </button>
           </div>
 
@@ -240,12 +249,12 @@ export default function ModelProxyPanel({
         </div>
       ) : (
         <dl className="mt-3 space-y-2">
-          <ProxyValue label="Proxy" value={details.proxyIp} />
+          <ProxyValue label={t("proxy")} value={details.proxyIp} />
 
-          <ProxyValue label="Company name" value={companyValue} />
+          <ProxyValue label={t("companyName")} value={companyValue} />
 
           <ProxyValue
-            label="Country"
+            label={t("country")}
             value={
               details.proxyCountry
                 ? `${countryCodeToFlag(details.proxyCountry)} ${getCountryName(details.proxyCountry)}`
@@ -265,6 +274,8 @@ function ProxyValue({
   label: string;
   value: string | null;
 }) {
+  const tState = useTranslations("common.states");
+
   return (
     <div className="flex items-baseline justify-between gap-4">
       <dt className="text-[10px] font-bold uppercase tracking-[0.14em] text-white/45">
@@ -272,7 +283,7 @@ function ProxyValue({
       </dt>
 
       <dd className="text-sm font-semibold text-white">
-        {value || "Não informado"}
+        {value || tState("notInformed")}
       </dd>
     </div>
   );

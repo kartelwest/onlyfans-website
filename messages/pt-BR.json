@@ -56,6 +56,11 @@
       "none": "Nenhum",
       "active": "Ativa",
       "inactive": "Inativa"
+    },
+    "datePicker": {
+      "placeholder": "DD/MM/AAAA",
+      "previousMonth": "Mês anterior",
+      "nextMonth": "Mês seguinte"
     }
   },
   "site": {
@@ -862,6 +867,10 @@
       "blocked": "Bloqueado",
       "pending": "Pendente",
       "skipped": "Ignorado"
+    },
+    "proxyCompany": {
+      "proxy_empire": "Proxy Empire",
+      "other": "Outro"
     }
   },
   "dashboard": {
@@ -1013,6 +1022,87 @@
         "title": "KARAY MODELS CRM",
         "subtitle": "Proprietário / Administrador"
       }
+    },
+    "models": {
+      "delete": {
+        "title": "Excluir modelo",
+        "confirm": "Tem certeza de que deseja excluir permanentemente <strong>{name}</strong>? Esta ação não pode ser desfeita.",
+        "confirmButton": "Excluir permanentemente",
+        "failed": "Não foi possível excluir a modelo.",
+        "done": "{name} foi excluída."
+      }
+    },
+    "viewAs": {
+      "bannerRepresentative": "Modo de visualização (Admin) — {label}",
+      "exit": "Sair da visualização",
+      "exiting": "Saindo..."
+    },
+    "avatar": {
+      "updated": "Foto atualizada.",
+      "uploadFailed": "Não foi possível enviar a foto.",
+      "photoOf": "Foto de {name}",
+      "uploadingPercent": "Enviando... {percent}%",
+      "replace": "Trocar foto",
+      "upload": "Carregar foto"
+    },
+    "representatives": {
+      "delete": {
+        "button": "Excluir Rep",
+        "unnamed": "sem nome",
+        "title": "Excluir este representante em definitivo?",
+        "blockedTitle": "Reatribua as modelos antes de excluir",
+        "blockedBody": "{name} ainda tem <strong>{count, plural, one {# modelo atribuída} other {# modelos atribuídas}}</strong>. Excluir a conta agora deixaria {count, plural, one {essa modelo} other {essas modelos}} sem representante, sem nada na tela dizendo isso.",
+        "blockedAction": "Abra o perfil dele, reatribua as modelos a outro representante e volte aqui.",
+        "openProfile": "Abrir o perfil do representante →",
+        "bodyPermanent": "A conta e o login são apagados em definitivo e a ação não pode ser desfeita. Nenhuma modelo está atribuída a este representante, então nada fica sem responsável.",
+        "bodyArchive": "Prefere manter o histórico acessível? Use <strong>Arquivar</strong> na tela de representantes: a conta perde o acesso, sai das listas ativas e pode voltar depois.",
+        "bodyAudit": "A exclusão fica registrada no histórico do sistema com o nome do representante, quem excluiu e a data e hora.",
+        "understood": "Entendi",
+        "confirmButton": "Excluir permanentemente"
+      }
+    },
+    "reassign": {
+      "title": "Representante / responsável",
+      "current": "Responsável atual:",
+      "none": "Nenhum",
+      "noneOption": "Nenhum (remover responsável)",
+      "newRepresentative": "Novo representante",
+      "submit": "Reatribuir representante"
+    },
+    "onlyfans": {
+      "managedAccount": "Conta administrada",
+      "intro": "Informações da conta OnlyFans, situação de cadastro e acesso direto à plataforma.",
+      "model": "Modelo",
+      "stageName": "Nome artístico",
+      "status": "Status da modelo",
+      "onboarding": "Onboarding",
+      "accountTitle": "Conta OnlyFans",
+      "openOnlyFans": "Abrir OnlyFans",
+      "accountMissing": "Conta OnlyFans ainda não cadastrada.",
+      "folderTitle": "Pasta de conteúdo",
+      "folderReady": "A pasta do Google Drive está configurada para receber o conteúdo da modelo.",
+      "openFolder": "Abrir pasta OnlyFans",
+      "folderMissing": "Pasta OnlyFans ainda não configurada."
+    },
+    "assistant": {
+      "placeholder": "Digite um pedido para o assistente...",
+      "failed": "Não foi possível falar com o assistente.",
+      "tools": {
+        "listModels": "Consultou a lista de modelos",
+        "addModel": "Criou uma modelo",
+        "updateModel": "Atualizou uma modelo",
+        "setModelStatus": "Alterou o status de uma modelo"
+      }
+    },
+    "proxy": {
+      "title": "Infraestrutura",
+      "proxy": "Proxy",
+      "companyName": "Empresa",
+      "companyNameOther": "Nome da empresa",
+      "companyPlaceholder": "Nome da empresa do proxy",
+      "country": "País",
+      "invalidIp": "Informe um IP válido, por exemplo 48.45.165.230.",
+      "companyRequired": "Informe o nome da empresa do proxy."
     }
   }
 }

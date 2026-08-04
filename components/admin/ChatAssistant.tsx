@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
 import { FormEvent, useState } from "react";
 
 type ChatAction = {
@@ -14,14 +16,18 @@ type DisplayMessage = {
   actions?: ChatAction[];
 };
 
+/** Tool name -> key under `admin.assistant.tools`. */
 const TOOL_LABELS: Record<string, string> = {
-  list_models: "Consultou a lista de modelos",
-  add_model: "Criou uma modelo",
-  update_model: "Atualizou uma modelo",
-  set_model_status: "Alterou o status de uma modelo",
+  list_models: "listModels",
+  add_model: "addModel",
+  update_model: "updateModel",
+  set_model_status: "setModelStatus",
 };
 
 export default function ChatAssistant() {
+  const t = useTranslations("admin.assistant");
+  const tErrors = useTranslations("errors");
+
   const [displayMessages, setDisplayMessages] = useState<DisplayMessage[]>(
     [],
   );
@@ -67,7 +73,7 @@ export default function ChatAssistant() {
 
       if (!response.ok) {
         throw new Error(
-          result.error || "Não foi possível falar com o assistente.",
+          result.error || t("failed"),
         );
       }
 
@@ -83,7 +89,7 @@ export default function ChatAssistant() {
       ]);
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : "Ocorreu um erro inesperado.",
+        err instanceof Error ? err.message : tErrors("generic"),
       );
     } finally {
       setIsSending(false);
@@ -124,7 +130,9 @@ export default function ChatAssistant() {
                     }`}
                   >
                     {action.result.ok ? "✓" : "✗"}{" "}
-                    {TOOL_LABELS[action.tool] ?? action.tool}
+                    {TOOL_LABELS[action.tool]
+                      ? t(`tools.${TOOL_LABELS[action.tool]}`)
+                      : action.tool}
                     {!action.result.ok && action.result.error
                       ? `: ${action.result.error}`
                       : ""}
@@ -154,7 +162,7 @@ export default function ChatAssistant() {
           type="text"
           value={input}
           onChange={(event) => setInput(event.target.value)}
-          placeholder="Digite um pedido para o assistente..."
+          placeholder={t("placeholder")}
           disabled={isSending}
           className="flex-1 rounded-xl border border-white/10 bg-[#08080a] px-4 py-3 text-sm text-white outline-none transition focus:border-pink-400/60 disabled:opacity-60"
         />

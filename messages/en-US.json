@@ -56,6 +56,11 @@
       "none": "None",
       "active": "Active",
       "inactive": "Inactive"
+    },
+    "datePicker": {
+      "placeholder": "MM/DD/YYYY",
+      "previousMonth": "Previous month",
+      "nextMonth": "Next month"
     }
   },
   "site": {
@@ -862,6 +867,10 @@
       "blocked": "Blocked",
       "pending": "Pending",
       "skipped": "Skipped"
+    },
+    "proxyCompany": {
+      "proxy_empire": "Proxy Empire",
+      "other": "Other"
     }
   },
   "dashboard": {
@@ -1013,6 +1022,87 @@
         "title": "KARAY MODELS CRM",
         "subtitle": "Owner / Administrator"
       }
+    },
+    "models": {
+      "delete": {
+        "title": "Delete model",
+        "confirm": "Are you sure you want to permanently delete <strong>{name}</strong>? This cannot be undone.",
+        "confirmButton": "Delete permanently",
+        "failed": "We couldn't delete this model.",
+        "done": "{name} has been deleted."
+      }
+    },
+    "viewAs": {
+      "bannerRepresentative": "Preview mode (Admin) — {label}",
+      "exit": "Exit preview",
+      "exiting": "Exiting..."
+    },
+    "avatar": {
+      "updated": "Photo updated.",
+      "uploadFailed": "We couldn't upload the photo.",
+      "photoOf": "Photo of {name}",
+      "uploadingPercent": "Uploading... {percent}%",
+      "replace": "Replace photo",
+      "upload": "Upload photo"
+    },
+    "representatives": {
+      "delete": {
+        "button": "Delete Rep",
+        "unnamed": "unnamed",
+        "title": "Permanently delete this representative?",
+        "blockedTitle": "Reassign the models before deleting",
+        "blockedBody": "{name} still has <strong>{count, plural, one {# model assigned} other {# models assigned}}</strong>. Deleting the account now would leave {count, plural, one {that model} other {those models}} with no representative, and nothing on screen would say so.",
+        "blockedAction": "Open their profile, reassign the models to another representative, and come back here.",
+        "openProfile": "Open the representative's profile →",
+        "bodyPermanent": "The account and its login are erased permanently and this cannot be undone. No models are assigned to this representative, so nobody is left unmanaged.",
+        "bodyArchive": "Want to keep the history reachable? Use <strong>Archive</strong> on the representatives screen: the account loses access and drops off the active lists, but can be restored later.",
+        "bodyAudit": "The deletion is recorded in the system history with the representative's name, who deleted it, and the date and time.",
+        "understood": "Got it",
+        "confirmButton": "Delete permanently"
+      }
+    },
+    "reassign": {
+      "title": "Representative / owner",
+      "current": "Currently assigned:",
+      "none": "None",
+      "noneOption": "None (remove the assignment)",
+      "newRepresentative": "New representative",
+      "submit": "Reassign representative"
+    },
+    "onlyfans": {
+      "managedAccount": "Managed account",
+      "intro": "OnlyFans account details, registration status and direct access to the platform.",
+      "model": "Model",
+      "stageName": "Stage name",
+      "status": "Model status",
+      "onboarding": "Onboarding",
+      "accountTitle": "OnlyFans account",
+      "openOnlyFans": "Open OnlyFans",
+      "accountMissing": "No OnlyFans account registered yet.",
+      "folderTitle": "Content folder",
+      "folderReady": "The Google Drive folder is set up to receive this model's content.",
+      "openFolder": "Open OnlyFans folder",
+      "folderMissing": "OnlyFans folder not set up yet."
+    },
+    "assistant": {
+      "placeholder": "Type a request for the assistant...",
+      "failed": "We couldn't reach the assistant.",
+      "tools": {
+        "listModels": "Looked up the model list",
+        "addModel": "Created a model",
+        "updateModel": "Updated a model",
+        "setModelStatus": "Changed a model's status"
+      }
+    },
+    "proxy": {
+      "title": "Infrastructure",
+      "proxy": "Proxy",
+      "companyName": "Company",
+      "companyNameOther": "Company name",
+      "companyPlaceholder": "Proxy company name",
+      "country": "Country",
+      "invalidIp": "Enter a valid IP, for example 48.45.165.230.",
+      "companyRequired": "Enter the proxy company's name."
     }
   }
 }

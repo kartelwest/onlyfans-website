@@ -1,31 +1,50 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useLocale, useTranslations } from "next-intl";
+import { useEffect, useMemo, useRef, useState } from "react";
 
-const MONTH_NAMES = [
-  "janeiro",
-  "fevereiro",
-  "março",
-  "abril",
-  "maio",
-  "junho",
-  "julho",
-  "agosto",
-  "setembro",
-  "outubro",
-  "novembro",
-  "dezembro",
-];
+import { toLocale } from "@/lib/i18n/config";
 
-const WEEKDAY_LABELS = [
-  "Seg",
-  "Ter",
-  "Qua",
-  "Qui",
-  "Sex",
-  "Sáb",
-  "Dom",
-];
+/**
+ * Month and weekday names come from Intl, not from an array in this file.
+ *
+ * A hardcoded list has to be duplicated per language and then kept in step by
+ * hand; ICU already knows every locale's names, and knows that a Portuguese
+ * month is lowercase while an English one is capitalised.
+ *
+ * The dates fed to the formatter are UTC-noon so the label can never slide to
+ * the previous day in a negative-offset zone.
+ */
+function useMonthNames(locale: string): string[] {
+  return useMemo(() => {
+    const format = new Intl.DateTimeFormat(locale, {
+      month: "long",
+      timeZone: "UTC",
+    });
+
+    return Array.from({ length: 12 }, (_, month) =>
+      format.format(Date.UTC(2021, month, 15)),
+    );
+  }, [locale]);
+}
+
+/**
+ * Short weekday names, Monday first — the grid below is built Monday-first, so
+ * the labels have to match that order rather than the locale's own first day.
+ * 2021-02-01 was a Monday.
+ */
+function useWeekdayLabels(locale: string): string[] {
+  return useMemo(() => {
+    const format = new Intl.DateTimeFormat(locale, {
+      weekday: "short",
+      timeZone: "UTC",
+    });
+
+    return Array.from({ length: 7 }, (_, offset) =>
+      format.format(Date.UTC(2021, 1, 1 + offset)),
+    );
+  }, [locale]);
+}
 
 type BirthdayDatePickerProps = {
   value: string;
@@ -66,6 +85,12 @@ export default function BirthdayDatePicker({
   maxYear,
   theme = "light",
 }: BirthdayDatePickerProps) {
+  const t = useTranslations("common.datePicker");
+  const locale = toLocale(useLocale());
+
+  const monthNames = useMonthNames(locale);
+  const weekdayLabels = useWeekdayLabels(locale);
+
   const isDark = theme === "dark";
   const today = new Date();
   const parsed = parseIsoDate(value);
@@ -149,8 +174,13 @@ export default function BirthdayDatePicker({
     (_, index) => index + 1,
   );
 
+  // Same parts, locale order: 22/04/1998 for a Portuguese reader, 04/22/1998
+  // for an English one. Built from the parsed parts, never from a Date, so the
+  // day shown is always the day stored.
   const displayValue = parsed
-    ? `${pad(parsed.day)}/${pad(parsed.month + 1)}/${parsed.year}`
+    ? locale === "en-US"
+      ? `${pad(parsed.month + 1)}/${pad(parsed.day)}/${parsed.year}`
+      : `${pad(parsed.day)}/${pad(parsed.month + 1)}/${parsed.year}`
     : "";
 
   function goToPreviousMonth() {
@@ -186,7 +216,7 @@ export default function BirthdayDatePicker({
         onClick={() =>
           isOpen ? setIsOpen(false) : openPicker()
         }
-        placeholder="DD/MM/AAAA"
+        placeholder={t("placeholder")}
         className={
           className ??
           (isDark
@@ -212,7 +242,7 @@ export default function BirthdayDatePicker({
                   ? "border-white/15 text-white hover:bg-white/10"
                   : "border-[#dfcbd2] text-[#4b2438] hover:bg-[#f7f1ec]"
               }`}
-              aria-label="Mês anterior"
+              aria-label={t("previousMonth")}
             >
               ‹
             </button>
@@ -229,7 +259,7 @@ export default function BirthdayDatePicker({
                     : "border-[#dfcbd2] bg-white text-[#4b2438]"
                 }`}
               >
-                {MONTH_NAMES.map((month, index) => (
+                {monthNames.map((month, index) => (
                   <option key={month} value={index}>
                     {month}
                   </option>
@@ -263,7 +293,7 @@ export default function BirthdayDatePicker({
                   ? "border-white/15 text-white hover:bg-white/10"
                   : "border-[#dfcbd2] text-[#4b2438] hover:bg-[#f7f1ec]"
               }`}
-              aria-label="Mês seguinte"
+              aria-label={t("nextMonth")}
             >
               ›
             </button>
@@ -274,7 +304,7 @@ export default function BirthdayDatePicker({
               isDark ? "text-pink-300" : "text-[#8f425a]"
             }`}
           >
-            {WEEKDAY_LABELS.map((weekday) => (
+            {weekdayLabels.map((weekday) => (
               <span key={weekday}>{weekday}</span>
             ))}
           </div>

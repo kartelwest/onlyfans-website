@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import {
   useEffect,
   useState,
@@ -22,6 +23,10 @@ export default function EditableTextField({
   inputType = "text",
   onSave,
 }: EditableTextFieldProps) {
+  const t = useTranslations("common.actions");
+  const tState = useTranslations("common.states");
+  const tErrors = useTranslations("errors");
+
   const [currentValue, setCurrentValue] =
     useState(value ?? "");
 
@@ -78,7 +83,7 @@ export default function EditableTextField({
       setSaveError(
         error instanceof Error
           ? error.message
-          : "Não foi possível salvar.",
+          : tErrors("saveFailed"),
       );
     } finally {
       setIsSaving(false);
@@ -139,7 +144,7 @@ export default function EditableTextField({
           onClick={() => void handleSave()}
           className="rounded-xl bg-pink-300 px-4 py-2 text-xs font-black uppercase tracking-[0.1em] text-[#321725] transition hover:bg-pink-200 disabled:cursor-not-allowed disabled:opacity-40"
         >
-          {isSaving ? "Salvando..." : "Salvar"}
+          {isSaving ? t("saving") : t("save")}
         </button>
 
         {hasChanges && !isSaving && (
@@ -148,13 +153,13 @@ export default function EditableTextField({
             onClick={handleCancel}
             className="rounded-xl border border-white/15 px-4 py-2 text-xs font-bold uppercase tracking-[0.1em] text-white/65 transition hover:bg-white/5"
           >
-            Cancelar
+            {t("cancel")}
           </button>
         )}
 
         {saveSuccess && (
           <span className="text-xs font-semibold text-emerald-300">
-            Salvo com sucesso.
+            {tState("saved")}
           </span>
         )}
       </div>

@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -21,7 +22,9 @@ import { deleteRepresentative } from "@/app/admin/representatives/actions";
  *   2. Fire twice. The button and the dialog's confirm are both disabled while
  *      the action is in flight, and the dialog closes only on success.
  *   3. Delete without saying what is being deleted. The representative's name
- *      is in the dialog, and "EXCLUIR" has to be typed out.
+ *      is in the dialog, and the confirmation phrase has to be typed out. That
+ *      phrase is NOT translated: it is matched verbatim by the server action,
+ *      so it has to be the same string whatever language the admin reads in.
  *
  * Deletion is the owner's alone. That is enforced by the server action, by the
  * profiles_delete RLS policy, and by only rendering this button for an owner.
@@ -41,13 +44,22 @@ export default function DeleteRepresentativeButton({
   profileHref: string;
   className?: string;
 }) {
+  const t = useTranslations("admin.representatives.delete");
+  const tCommon = useTranslations("common.actions");
+
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [message, setMessage] = useState<string | null>(null);
+  // Kept as {text, ok} rather than sniffing the text for a Portuguese word.
+  // The old code coloured the line by testing message.includes("excluído"),
+  // which silently turns every success red the moment the server answers in
+  // another language.
+  const [result, setResult] = useState<{ text: string; ok: boolean } | null>(
+    null,
+  );
 
-  const displayName = representativeName.trim() || "sem nome";
+  const displayName = representativeName.trim() || t("unnamed");
   const blocked = assignedModelCount > 0;
 
   function handleConfirm() {
@@ -62,12 +74,12 @@ export default function DeleteRepresentativeButton({
     setBusy(true);
 
     startTransition(async () => {
-      const result = await deleteRepresentative(null, formData);
+      const outcome = await deleteRepresentative(null, formData);
 
       setBusy(false);
-      setMessage(result.message);
+      setResult({ text: outcome.message, ok: outcome.success });
 
-      if (result.success) {
+      if (outcome.success) {
         setOpen(false);
         router.refresh();
       }
@@ -80,7 +92,7 @@ export default function DeleteRepresentativeButton({
         type="button"
         disabled={isPending || busy}
         onClick={() => {
-          setMessage(null);
+          setResult(null);
           setOpen(true);
         }}
         className={
@@ -88,81 +100,61 @@ export default function DeleteRepresentativeButton({
           "rounded-lg border border-red-600/40 bg-red-500/10 px-4 py-2 text-center text-xs font-bold text-red-300 transition hover:bg-red-500/20 disabled:cursor-not-allowed disabled:opacity-40"
         }
       >
-        Excluir Rep
+        {t("button")}
       </button>
 
-      {message && (
+      {result && (
         <p
           className={`mt-2 text-xs leading-5 ${
-            message.includes("excluído")
-              ? "text-emerald-300"
-              : "text-red-300"
+            result.ok ? "text-emerald-300" : "text-red-300"
           }`}
         >
-          {message}
+          {result.text}
         </p>
       )}
 
       <ConfirmDialog
         open={open}
-        title={
-          blocked
-            ? "Reatribua as modelos antes de excluir"
-            : "Excluir este representante em definitivo?"
-        }
+        title={blocked ? t("blockedTitle") : t("title")}
         description={
           blocked ? (
             <>
               <p>
-                {displayName} ainda tem{" "}
-                <strong>
-                  {assignedModelCount} modelo
-                  {assignedModelCount === 1 ? "" : "s"} atribuída
-                  {assignedModelCount === 1 ? "" : "s"}
-                </strong>
-                . Excluir a conta agora deixaria{" "}
-                {assignedModelCount === 1 ? "essa modelo" : "essas modelos"} sem
-                representante, sem nada na tela dizendo isso.
+                {t.rich("blockedBody", {
+                  name: displayName,
+                  count: assignedModelCount,
+                  strong: (chunks) => <strong>{chunks}</strong>,
+                })}
               </p>
 
-              <p>
-                Abra o perfil dele, reatribua as modelos a outro representante e
-                volte aqui.
-              </p>
+              <p>{t("blockedAction")}</p>
 
               <Link
                 href={profileHref}
                 className="inline-block font-bold text-pink-300 underline transition hover:text-pink-200"
               >
-                Abrir o perfil do representante →
+                {t("openProfile")}
               </Link>
             </>
           ) : (
             <>
-              <p>
-                A conta e o login são apagados em definitivo e a ação não pode
-                ser desfeita. Nenhuma modelo está atribuída a este
-                representante, então nada fica sem responsável.
-              </p>
+              <p>{t("bodyPermanent")}</p>
 
               <p>
-                Prefere manter o histórico acessível? Use{" "}
-                <strong>Arquivar</strong> na tela de representantes: a conta
-                perde o acesso, sai das listas ativas e pode voltar depois.
+                {t.rich("bodyArchive", {
+                  strong: (chunks) => <strong>{chunks}</strong>,
+                })}
               </p>
 
-              <p>
-                A exclusão fica registrada no histórico do sistema com o nome do
-                representante, quem excluiu e a data e hora.
-              </p>
+              <p>{t("bodyAudit")}</p>
             </>
           )
         }
         detail={displayName}
         requirePhrase={blocked ? undefined : "EXCLUIR"}
-        confirmLabel={blocked ? "Entendi" : "Excluir permanentemente"}
-        cancelLabel={blocked ? "Fechar" : "Cancelar"}
-        busyLabel="Excluindo..."
+        confirmLabel={blocked ? t("understood") : t("confirmButton")}
+        cancelLabel={blocked ? tCommon("close") : tCommon("cancel")}
+        busyLabel={tCommon("deleting")}
         busy={busy}
         onCancel={() => {
           if (!busy) {

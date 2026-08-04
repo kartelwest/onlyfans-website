@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { ChangeEvent, useRef, useState } from "react";
 
 import {
@@ -27,6 +28,7 @@ export default function ModelAvatarEditor({
   profilePhotoUrl,
   onPhotoChange,
 }: ModelAvatarEditorProps) {
+  const t = useTranslations("admin.avatar");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [preview, setPreview] = useState<string | null>(null);
@@ -68,13 +70,13 @@ export default function ModelAvatarEditor({
       });
 
       onPhotoChange(url);
-      setSuccess("Foto atualizada.");
+      setSuccess(t("updated"));
     } catch (uploadError) {
       setPreview(null);
       setError(
         uploadError instanceof Error
           ? uploadError.message
-          : "Não foi possível enviar a foto.",
+          : t("uploadFailed"),
       );
     } finally {
       setIsUploading(false);
@@ -92,7 +94,7 @@ export default function ModelAvatarEditor({
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={shownPhoto}
-            alt={`Foto de ${modelName}`}
+            alt={t("photoOf", { name: modelName })}
             className="h-full w-full object-cover"
           />
         ) : (
@@ -115,10 +117,10 @@ export default function ModelAvatarEditor({
         className="rounded-lg border border-pink-400/50 bg-pink-400/10 px-3 py-2 text-xs font-semibold text-pink-200 transition hover:bg-pink-400 hover:text-black disabled:cursor-not-allowed disabled:opacity-50"
       >
         {isUploading
-          ? `Enviando... ${progress}%`
+          ? t("uploadingPercent", { percent: progress })
           : profilePhotoUrl
-            ? "Trocar foto"
-            : "Carregar foto"}
+            ? t("replace")
+            : t("upload")}
       </button>
 
       {isUploading && (
