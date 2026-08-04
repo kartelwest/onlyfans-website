@@ -47,6 +47,7 @@ type CredentialsRequest = {
 
 export async function POST(request: Request) {
   const t = await getTranslations("errors.api");
+  const tRoute = await getTranslations("errors.repCredentials");
   try {
     const supabase = await createClient();
 
@@ -81,7 +82,7 @@ export async function POST(request: Request) {
     // which representatives exist.
     if (currentUserRole !== "owner" && currentUserRole !== "administrator") {
       return NextResponse.json(
-        { error: "Você não tem permissão para alterar este acesso." },
+        { error: tRoute("notPermitted") },
         { status: 403 },
       );
     }
@@ -95,7 +96,7 @@ export async function POST(request: Request) {
 
     if (!representativeId) {
       return NextResponse.json(
-        { error: "O identificador do representante é obrigatório." },
+        { error: tRoute("idRequired") },
         { status: 400 },
       );
     }
@@ -168,14 +169,14 @@ export async function POST(request: Request) {
 
     if (!representative) {
       return NextResponse.json(
-        { error: "O representante solicitado não foi encontrado." },
+        { error: tRoute("notFound") },
         { status: 404 },
       );
     }
 
     if (representative.role !== "representative") {
       return NextResponse.json(
-        { error: "O perfil selecionado não é um representante." },
+        { error: tRoute("notARepresentative") },
         { status: 400 },
       );
     }
@@ -189,7 +190,7 @@ export async function POST(request: Request) {
       return NextResponse.json(
         {
           error:
-            "Esta conta não tem um acesso de autenticação vinculado. Recrie o representante.",
+            tRoute("noAuthAccount"),
         },
         { status: 409 },
       );
@@ -204,7 +205,7 @@ export async function POST(request: Request) {
 
     if (rawLogin && !loginChanged && !requestedPassword) {
       return NextResponse.json(
-        { error: "Este já é o login atual. Nada foi alterado." },
+        { error: tRoute("sameLogin") },
         { status: 400 },
       );
     }
@@ -221,7 +222,7 @@ export async function POST(request: Request) {
 
       if (!duplicateError && (count ?? 0) > 0) {
         return NextResponse.json(
-          { error: "Este e-mail já está em uso por outra conta." },
+          { error: tRoute("emailInUse") },
           { status: 409 },
         );
       }
@@ -267,7 +268,7 @@ export async function POST(request: Request) {
         message.includes("exists")
       ) {
         return NextResponse.json(
-          { error: "Este e-mail ou nome de usuário já está em uso." },
+          { error: tRoute("loginInUse") },
           { status: 409 },
         );
       }
@@ -303,7 +304,7 @@ export async function POST(request: Request) {
         console.error("Erro ao sincronizar o e-mail do perfil:", emailSyncError);
 
         warnings.push(
-          "O acesso foi alterado, mas o e-mail exibido no perfil não pôde ser atualizado.",
+          tRoute("profileEmailNotUpdated"),
         );
       }
     }
@@ -321,12 +322,12 @@ export async function POST(request: Request) {
 
       if (flagError) {
         console.error(
-          "Erro ao exigir a troca de senha no próximo acesso:",
+          "Failed to require a password change at next sign-in:",
           flagError,
         );
 
         warnings.push(
-          "O acesso foi alterado, mas não foi possível exigir a troca da senha no próximo login.",
+          tRoute("passwordChangeNotRequired"),
         );
       } else {
         mustChangePassword = true;
@@ -342,10 +343,10 @@ export async function POST(request: Request) {
       );
 
       if (signOutError) {
-        console.error("Erro ao encerrar as sessões do representante:", signOutError);
+        console.error("Failed to end the representative's sessions:", signOutError);
 
         warnings.push(
-          "O acesso foi alterado, mas as sessões abertas do representante não puderam ser encerradas.",
+          tRoute("sessionsNotEnded"),
         );
       } else {
         sessionsRevoked = true;

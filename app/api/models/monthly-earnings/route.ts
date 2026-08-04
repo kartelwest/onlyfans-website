@@ -45,6 +45,7 @@ function periodMonthFromInput(value: string): string {
 
 export async function GET(request: NextRequest) {
   const t = await getTranslations("errors.api");
+  const tRoute = await getTranslations("errors.monthlyEarnings");
   const auth = await requireStaff();
 
   if (!auth.ok) {
@@ -80,7 +81,7 @@ export async function GET(request: NextRequest) {
     console.error("Erro ao carregar os ganhos mensais:", error);
 
     return NextResponse.json(
-      { error: "Não foi possível carregar os ganhos mensais." },
+      { error: tRoute("loadFailed") },
       { status: 500 },
     );
   }
@@ -116,6 +117,7 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
   const t = await getTranslations("errors.api");
+  const tRoute = await getTranslations("errors.monthlyEarnings");
   const auth = await requireStaff();
 
   if (!auth.ok) {
@@ -140,7 +142,7 @@ export async function POST(request: NextRequest) {
 
   if (typeof period !== "string" || !PERIOD_PATTERN.test(period)) {
     return NextResponse.json(
-      { error: "Informe o mês no formato AAAA-MM." },
+      { error: tRoute("invalidMonth") },
       { status: 400 },
     );
   }
@@ -149,7 +151,7 @@ export async function POST(request: NextRequest) {
 
   if (!Number.isFinite(grossUsd) || grossUsd < 0) {
     return NextResponse.json(
-      { error: "Valor bruto inválido." },
+      { error: tRoute("invalidGross") },
       { status: 400 },
     );
   }
@@ -173,7 +175,7 @@ export async function POST(request: NextRequest) {
 
   if (!file && !existing) {
     return NextResponse.json(
-      { error: "Envie a captura de tela do relatório." },
+      { error: tRoute("screenshotRequired") },
       { status: 400 },
     );
   }
@@ -184,7 +186,7 @@ export async function POST(request: NextRequest) {
   if (file) {
     if (file.size > MAX_IMAGE_SIZE) {
       return NextResponse.json(
-        { error: "Arquivo muito grande. Máximo 10MB." },
+        { error: tRoute("fileTooLarge") },
         { status: 400 },
       );
     }
@@ -271,7 +273,7 @@ export async function POST(request: NextRequest) {
     console.error("Erro ao salvar os ganhos mensais:", write.error);
 
     return NextResponse.json(
-      { error: "Não foi possível salvar os ganhos do mês." },
+      { error: tRoute("saveFailed") },
       { status: 500 },
     );
   }
@@ -302,6 +304,7 @@ export async function POST(request: NextRequest) {
 /** Publish / unpublish, and amount-only edits. */
 export async function PATCH(request: NextRequest) {
   const t = await getTranslations("errors.api");
+  const tRoute = await getTranslations("errors.monthlyEarnings");
   const auth = await requireStaff();
 
   if (!auth.ok) {
@@ -318,7 +321,7 @@ export async function PATCH(request: NextRequest) {
 
   if (typeof body.id !== "string" || !body.id) {
     return NextResponse.json(
-      { error: "Identificação do relatório não informada." },
+      { error: tRoute("reportIdMissing") },
       { status: 400 },
     );
   }
@@ -331,7 +334,7 @@ export async function PATCH(request: NextRequest) {
 
   if (!existing) {
     return NextResponse.json(
-      { error: "Relatório não encontrado." },
+      { error: tRoute("reportNotFound") },
       { status: 404 },
     );
   }
@@ -357,7 +360,7 @@ export async function PATCH(request: NextRequest) {
 
     if (!Number.isFinite(grossUsd) || grossUsd < 0) {
       return NextResponse.json(
-        { error: "Valor bruto inválido." },
+        { error: tRoute("invalidGross") },
         { status: 400 },
       );
     }
@@ -374,7 +377,7 @@ export async function PATCH(request: NextRequest) {
     console.error("Erro ao atualizar os ganhos mensais:", error);
 
     return NextResponse.json(
-      { error: "Não foi possível atualizar os ganhos do mês." },
+      { error: tRoute("updateFailed") },
       { status: 500 },
     );
   }

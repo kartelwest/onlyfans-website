@@ -1178,6 +1178,44 @@
       "invalidOrInactiveProfile": "Perfil inválido ou inativo.",
       "unknownUser": "Usuário",
       "internalError": "Erro interno do servidor."
+    },
+    "monthlyEarnings": {
+      "loadFailed": "Não foi possível carregar os ganhos mensais.",
+      "invalidMonth": "Informe o mês no formato AAAA-MM.",
+      "invalidGross": "Valor bruto inválido.",
+      "screenshotRequired": "Envie a captura de tela do relatório.",
+      "fileTooLarge": "Arquivo muito grande. Máximo 10MB.",
+      "saveFailed": "Não foi possível salvar os ganhos do mês.",
+      "reportIdMissing": "Identificação do relatório não informada.",
+      "reportNotFound": "Relatório não encontrado.",
+      "updateFailed": "Não foi possível atualizar os ganhos do mês."
+    },
+    "repCredentials": {
+      "notPermitted": "Você não tem permissão para alterar este acesso.",
+      "idRequired": "O identificador do representante é obrigatório.",
+      "notFound": "O representante solicitado não foi encontrado.",
+      "notARepresentative": "O perfil selecionado não é um representante.",
+      "noAuthAccount": "Esta conta não tem um acesso de autenticação vinculado. Recrie o representante.",
+      "sameLogin": "Este já é o login atual. Nada foi alterado.",
+      "emailInUse": "Este e-mail já está em uso por outra conta.",
+      "loginInUse": "Este e-mail ou nome de usuário já está em uso.",
+      "profileEmailNotUpdated": "O acesso foi alterado, mas o e-mail exibido no perfil não pôde ser atualizado.",
+      "passwordChangeNotRequired": "O acesso foi alterado, mas não foi possível exigir a troca da senha no próximo login.",
+      "sessionsNotEnded": "O acesso foi alterado, mas as sessões abertas do representante não puderam ser encerradas."
+    },
+    "adminUsers": {
+      "notPermitted": "Você não tem permissão para criar usuários.",
+      "invalidRole": "Tipo de usuário inválido.",
+      "ownerOnlyAdmins": "Somente o proprietário pode criar administradores.",
+      "invalidWhatsapp": "Informe um número de WhatsApp válido com pelo menos 8 dígitos.",
+      "representativeInactive": "O representante selecionado não está ativo.",
+      "draftNotFound": "Rascunho não encontrado ou já foi convertido.",
+      "emailTaken": "Já existe uma modelo cadastrada com este e-mail.",
+      "whatsappTaken": "Já existe uma modelo cadastrada com este WhatsApp.",
+      "passwordTooShort": "A senha temporária deve ter pelo menos 8 caracteres.",
+      "createAccessFailed": "Não foi possível criar o acesso do usuário.",
+      "userEmailTaken": "Já existe um usuário cadastrado com este e-mail.",
+      "created": "Usuário criado com sucesso."
     }
   },
   "validation": {},

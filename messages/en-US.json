@@ -1178,6 +1178,44 @@
       "invalidOrInactiveProfile": "Invalid or inactive profile.",
       "unknownUser": "User",
       "internalError": "Internal server error."
+    },
+    "monthlyEarnings": {
+      "loadFailed": "We couldn't load the monthly earnings.",
+      "invalidMonth": "Enter the month as YYYY-MM.",
+      "invalidGross": "Invalid gross amount.",
+      "screenshotRequired": "Attach the report screenshot.",
+      "fileTooLarge": "File too large. 10MB maximum.",
+      "saveFailed": "We couldn't save the month's earnings.",
+      "reportIdMissing": "No report identifier provided.",
+      "reportNotFound": "Report not found.",
+      "updateFailed": "We couldn't update the month's earnings."
+    },
+    "repCredentials": {
+      "notPermitted": "You don't have permission to change this access.",
+      "idRequired": "A representative identifier is required.",
+      "notFound": "The requested representative was not found.",
+      "notARepresentative": "The selected profile is not a representative.",
+      "noAuthAccount": "This account has no linked authentication access. Recreate the representative.",
+      "sameLogin": "That is already the current login. Nothing changed.",
+      "emailInUse": "This email is already used by another account.",
+      "loginInUse": "This email or username is already in use.",
+      "profileEmailNotUpdated": "Access was changed, but the email shown on the profile could not be updated.",
+      "passwordChangeNotRequired": "Access was changed, but we couldn't require a password change at next sign-in.",
+      "sessionsNotEnded": "Access was changed, but the representative's open sessions could not be ended."
+    },
+    "adminUsers": {
+      "notPermitted": "You don't have permission to create users.",
+      "invalidRole": "Invalid user type.",
+      "ownerOnlyAdmins": "Only the owner can create administrators.",
+      "invalidWhatsapp": "Enter a valid WhatsApp number with at least 8 digits.",
+      "representativeInactive": "The selected representative is not active.",
+      "draftNotFound": "Draft not found, or already converted.",
+      "emailTaken": "A model is already registered with this email.",
+      "whatsappTaken": "A model is already registered with this WhatsApp number.",
+      "passwordTooShort": "The temporary password must be at least 8 characters.",
+      "createAccessFailed": "We couldn't create the user's access.",
+      "userEmailTaken": "A user is already registered with this email.",
+      "created": "User created successfully."
     }
   },
   "validation": {},

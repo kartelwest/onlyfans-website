@@ -50,6 +50,7 @@ const ALLOWED_CREATION_ROLES: ManagementRole[] = [
 
 export async function POST(request: Request) {
   const t = await getTranslations("errors.api");
+  const tRoute = await getTranslations("errors.adminUsers");
   let createdAuthUserId: string | null = null;
   let createdModelId: string | null = null;
   let isNewModel = false;
@@ -105,7 +106,7 @@ export async function POST(request: Request) {
       return NextResponse.json(
         {
           error:
-            "Você não tem permissão para criar usuários.",
+            tRoute("notPermitted"),
         },
         {
           status: 403,
@@ -139,7 +140,7 @@ export async function POST(request: Request) {
     ) {
       return NextResponse.json(
         {
-          error: "Tipo de usuário inválido.",
+          error: tRoute("invalidRole"),
         },
         {
           status: 400,
@@ -154,7 +155,7 @@ export async function POST(request: Request) {
       return NextResponse.json(
         {
           error:
-            "Somente o proprietário pode criar administradores.",
+            tRoute("ownerOnlyAdmins"),
         },
         {
           status: 403,
@@ -189,7 +190,7 @@ export async function POST(request: Request) {
         return NextResponse.json(
           {
             error:
-              "Informe um número de WhatsApp válido com pelo menos 8 dígitos.",
+              tRoute("invalidWhatsapp"),
           },
           { status: 400 },
         );
@@ -250,7 +251,7 @@ export async function POST(request: Request) {
 
       if (!representative || !representative.active) {
         return NextResponse.json(
-          { error: "O representante selecionado não está ativo." },
+          { error: tRoute("representativeInactive") },
           { status: 400 },
         );
       }
@@ -260,7 +261,7 @@ export async function POST(request: Request) {
         representative.status !== "ativa"
       ) {
         return NextResponse.json(
-          { error: "O representante selecionado não está ativo." },
+          { error: tRoute("representativeInactive") },
           { status: 400 },
         );
       }
@@ -280,7 +281,7 @@ export async function POST(request: Request) {
 
       if (error || !data) {
         return NextResponse.json(
-          { error: "Rascunho não encontrado ou já foi convertido." },
+          { error: tRoute("draftNotFound") },
           { status: 404 },
         );
       }
@@ -297,7 +298,7 @@ export async function POST(request: Request) {
 
       if (!duplicateEmail.error && (duplicateEmail.count ?? 0) > 0) {
         return NextResponse.json(
-          { error: "Já existe uma modelo cadastrada com este e-mail." },
+          { error: tRoute("emailTaken") },
           { status: 409 },
         );
       }
@@ -311,7 +312,7 @@ export async function POST(request: Request) {
 
         if (!duplicateWhatsApp.error && (duplicateWhatsApp.count ?? 0) > 0) {
           return NextResponse.json(
-            { error: "Já existe uma modelo cadastrada com este WhatsApp." },
+            { error: tRoute("whatsappTaken") },
             { status: 409 },
           );
         }
@@ -328,7 +329,7 @@ export async function POST(request: Request) {
       return NextResponse.json(
         {
           error:
-            "A senha temporária deve ter pelo menos 8 caracteres.",
+            tRoute("passwordTooShort"),
         },
         {
           status: 400,
@@ -358,7 +359,7 @@ export async function POST(request: Request) {
     ) {
       const message =
         createAuthError?.message ||
-        "Não foi possível criar o acesso do usuário.";
+        tRoute("createAccessFailed");
 
       if (
         message.toLowerCase().includes("already") ||
@@ -367,7 +368,7 @@ export async function POST(request: Request) {
         return NextResponse.json(
           {
             error:
-              "Já existe um usuário cadastrado com este e-mail.",
+              tRoute("userEmailTaken"),
           },
           {
             status: 409,
@@ -489,7 +490,7 @@ export async function POST(request: Request) {
 
         if (enrollmentResult.error) {
           console.error(
-            "Erro ao sincronizar matrícula OnlyFans:",
+            "Failed to sync the OnlyFans enrollment:",
             enrollmentResult.error,
           );
         }
@@ -550,7 +551,7 @@ export async function POST(request: Request) {
     return NextResponse.json(
       {
         success: true,
-        message: "Usuário criado com sucesso.",
+        message: tRoute("created"),
         user: {
           id: createdAuthUserId,
           email,
