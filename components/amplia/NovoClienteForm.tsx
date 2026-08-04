@@ -1,9 +1,14 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
 
 export default function NovoClienteForm() {
+  const t = useTranslations("admin.amplia.newClient");
+  const tErrors = useTranslations("errors");
+
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -40,12 +45,12 @@ export default function NovoClienteForm() {
       const result = (await res.json()) as { id?: string; error?: string };
 
       if (!res.ok || result.error) {
-        throw new Error(result.error ?? "Erro ao criar cliente.");
+        throw new Error(result.error ?? t("createFailed"));
       }
 
       router.push(`/admin/socialmediamodels/models/${result.id}`);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Erro inesperado.");
+      setError(err instanceof Error ? err.message : tErrors("generic"));
     } finally {
       setLoading(false);
     }
@@ -60,29 +65,29 @@ export default function NovoClienteForm() {
         )}
 
         <div className="grid gap-6 sm:grid-cols-2">
-          <Field label="Nome artístico *" name="stageName" required />
-          <Field label="Nome de exibição *" name="displayName" required />
-          <Field label="E-mail" name="email" type="email" />
-          <Field label="WhatsApp" name="whatsapp" />
-          <Field label="Cidade" name="location" />
-          <Field label="Nacionalidade" name="nationality" />
-          <Field label="Categoria da marca" name="brandCategory" />
-          <Field label="Nicho 1 *" name="niche1" required />
-          <Field label="Nicho 2" name="niche2" />
-          <Field label="Nicho 3" name="niche3" />
-          <Field label="Posicionamento primário" name="primaryPositioning" />
-          <Field label="Posicionamento secundário" name="secondaryPositioning" />
+          <Field label={t("fields.stageName")} name="stageName" required />
+          <Field label={t("fields.displayName")} name="displayName" required />
+          <Field label={t("fields.email")} name="email" type="email" />
+          <Field label={t("fields.whatsapp")} name="whatsapp" />
+          <Field label={t("fields.city")} name="location" />
+          <Field label={t("fields.nationality")} name="nationality" />
+          <Field label={t("fields.brandCategory")} name="brandCategory" />
+          <Field label={t("fields.niche1")} name="niche1" required />
+          <Field label={t("fields.niche2")} name="niche2" />
+          <Field label={t("fields.niche3")} name="niche3" />
+          <Field label={t("fields.primaryPositioning")} name="primaryPositioning" />
+          <Field label={t("fields.secondaryPositioning")} name="secondaryPositioning" />
         </div>
 
         <div>
           <label className="mb-2 block text-sm font-semibold text-white/70">
-            Diretriz de IA permanente
+            {t("fields.aiGuidance")}
           </label>
           <textarea
             name="aiGuidance"
             rows={4}
             className="w-full rounded-xl border border-white/10 bg-[#1a1a1f] px-4 py-3 text-sm text-white outline-none focus:border-pink-400/60"
-            placeholder="Tom, temas recorrentes, do's and don'ts..."
+            placeholder={t("aiGuidancePlaceholder")}
           />
         </div>
 
@@ -92,7 +97,7 @@ export default function NovoClienteForm() {
             disabled={loading}
             className="rounded-xl bg-pink-500 px-6 py-3 text-sm font-bold text-white transition hover:bg-pink-400 disabled:opacity-60"
           >
-            {loading ? "Criando..." : "Criar cliente"}
+            {loading ? t("creating") : t("create")}
           </button>
         </div>
       </form>

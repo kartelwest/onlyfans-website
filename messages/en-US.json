@@ -1059,6 +1059,12 @@
         "bodyAudit": "The deletion is recorded in the system history with the representative's name, who deleted it, and the date and time.",
         "understood": "Got it",
         "confirmButton": "Delete permanently"
+      },
+      "details": {
+        "name": "Name",
+        "email": "Email",
+        "phone": "Phone / WhatsApp",
+        "saveChanges": "Save changes"
       }
     },
     "reassign": {
@@ -1067,7 +1073,18 @@
       "none": "None",
       "noneOption": "None (remove the assignment)",
       "newRepresentative": "New representative",
-      "submit": "Reassign representative"
+      "submit": "Reassign representative",
+      "messages": {
+        "staffOnly": "Only staff can reassign a representative.",
+        "incompleteData": "Incomplete data.",
+        "modelNotFound": "Model not found.",
+        "representativeInactive": "The selected representative is not active.",
+        "none": "None",
+        "theNewOwner": "the new owner",
+        "updateFailed": "We couldn't update the representative.",
+        "assigned": "Model assigned to {name}.",
+        "removed": "Model removed from {name}."
+      }
     },
     "onlyfans": {
       "managedAccount": "Managed account",
@@ -1367,6 +1384,77 @@
         "contentReceived": {
           "title": "Initial content",
           "description": "First photos and videos received."
+        }
+      }
+    },
+    "amplia": {
+      "portal": "AMPLIA PORTAL",
+      "overview": "Overview",
+      "subtitle": "Brand growth dashboard (Amplia).",
+      "monthlySummary": "Monthly summary",
+      "clientsHeading": "Amplia models / clients",
+      "empty": "No active Amplia model or client right now.",
+      "karayModel": "Karay Model",
+      "ampliaClient": "Amplia Client",
+      "openProfile": "Open profile",
+      "fields": {
+        "email": "Email",
+        "whatsapp": "WhatsApp",
+        "city": "City",
+        "status": "Status"
+      },
+      "metrics": {
+        "activeModels": "Models in Amplia",
+        "brandGrowthOnly": "Brand-growth-only clients",
+        "instagramConnected": "Instagram connected",
+        "awaitingLaunch": "Awaiting launch",
+        "awaitingAuthorization": "Awaiting authorization",
+        "contentApproval": "Content for approval",
+        "postsToday": "Posts scheduled today",
+        "playbookDone": "Playbook done today",
+        "playbookPending": "Playbook pending today",
+        "publishFailures": "Publishing failures (24h)",
+        "belowBaseline": "Accounts below baseline",
+        "criticalAlerts": "Critical alerts",
+        "followerGrowth": "Follower growth",
+        "contentShortage": "Content shortage",
+        "aiCost": "Estimated AI cost"
+      },
+      "descriptions": {
+        "active": "Active",
+        "nonOnlyFans": "Non-OnlyFans",
+        "activeAccounts": "Active accounts",
+        "setupPending": "Setup pending",
+        "oauthVerification": "OAuth/verification",
+        "clientAgency": "Client/agency",
+        "instagram": "Instagram",
+        "xManual": "X manual",
+        "needsAttention": "Needs attention",
+        "restrictedSuspended": "Restricted/suspended",
+        "immediateAction": "Immediate action",
+        "last30Days": "Last 30 days",
+        "lowStock": "Low stock",
+        "thisMonthUsd": "This month (USD)"
+      },
+      "newClient": {
+        "createFailed": "We couldn't create the client.",
+        "creating": "Creating...",
+        "create": "Create client",
+        "aiGuidancePlaceholder": "Tone, recurring themes, do's and don'ts...",
+        "fields": {
+          "stageName": "Stage name *",
+          "displayName": "Display name *",
+          "email": "Email",
+          "whatsapp": "WhatsApp",
+          "city": "City",
+          "nationality": "Nationality",
+          "brandCategory": "Brand category",
+          "niche1": "Niche 1 *",
+          "niche2": "Niche 2",
+          "niche3": "Niche 3",
+          "primaryPositioning": "Primary positioning",
+          "secondaryPositioning": "Secondary positioning",
+          "aiGuidance": "Standing AI guidance"
         }
       }
     }

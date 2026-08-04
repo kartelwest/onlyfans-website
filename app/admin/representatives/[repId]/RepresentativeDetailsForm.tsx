@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
 import { useActionState } from "react";
 
 import { updateRepresentativeDetails } from "../actions";
@@ -17,6 +19,9 @@ export default function RepresentativeDetailsForm({
   email,
   phone,
 }: RepresentativeDetailsFormProps) {
+  const t = useTranslations("admin.representatives.details");
+  const tCommon = useTranslations("common.actions");
+
   const [state, formAction, isPending] = useActionState(
     updateRepresentativeDetails,
     null,
@@ -26,7 +31,7 @@ export default function RepresentativeDetailsForm({
     <form action={formAction} className="space-y-4">
       <input type="hidden" name="representativeId" value={representativeId} />
 
-      <Field label="Nome">
+      <Field label={t("name")}>
         <input
           name="fullName"
           defaultValue={fullName}
@@ -35,7 +40,7 @@ export default function RepresentativeDetailsForm({
         />
       </Field>
 
-      <Field label="E-mail">
+      <Field label={t("email")}>
         <input
           name="email"
           type="email"
@@ -45,7 +50,7 @@ export default function RepresentativeDetailsForm({
         />
       </Field>
 
-      <Field label="Telefone / WhatsApp">
+      <Field label={t("phone")}>
         <input
           name="phone"
           defaultValue={phone}
@@ -60,7 +65,7 @@ export default function RepresentativeDetailsForm({
           disabled={isPending}
           className="rounded-xl bg-pink-500 px-5 py-3 text-sm font-bold text-white transition hover:bg-pink-400 disabled:opacity-50"
         >
-          {isPending ? "Salvando..." : "Salvar alterações"}
+          {isPending ? tCommon("saving") : t("saveChanges")}
         </button>
 
         {state && (

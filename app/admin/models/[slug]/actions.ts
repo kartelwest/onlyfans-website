@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -16,6 +17,10 @@ export async function reassignRepresentative(
   previousState: ReassignState,
   formData: FormData,
 ): Promise<ReassignState> {
+  // Resolved from the caller's cookie/profile, exactly as a page would — a
+  // server action runs inside the request, so it knows who is reading it.
+  const t = await getTranslations("admin.reassign.messages");
+
   const supabase = await createClient();
 
   const {
@@ -35,7 +40,7 @@ export async function reassignRepresentative(
   if (!profile?.active || !isStaffRole(profile.role)) {
     return {
       success: false,
-      message: "Apenas a equipe pode reatribuir a representante.",
+      message: t("staffOnly"),
     };
   }
 
@@ -43,7 +48,7 @@ export async function reassignRepresentative(
   const representativeId = String(formData.get("representativeId") ?? "");
 
   if (!modelId) {
-    return { success: false, message: "Dados incompletos." };
+    return { success: false, message: t("incompleteData") };
   }
 
   const adminSupabase = createAdminClient();
@@ -55,11 +60,11 @@ export async function reassignRepresentative(
     .single();
 
   if (!currentModel) {
-    return { success: false, message: "Modelo não encontrado." };
+    return { success: false, message: t("modelNotFound") };
   }
 
   let newRepresentativeId: string | null = null;
-  let newRepresentativeName = "Nenhum";
+  let newRepresentativeName = t("none");
 
   if (representativeId) {
     const { data: representative } = await adminSupabase
@@ -70,18 +75,19 @@ export async function reassignRepresentative(
       .maybeSingle();
 
     if (!representative || !representative.active) {
-      return { success: false, message: "O representante selecionado não está ativo." };
+      return { success: false, message: t("representativeInactive") };
     }
 
     if (
       representative.role === "representative" &&
       representative.status !== "ativa"
     ) {
-      return { success: false, message: "O representante selecionado não está ativo." };
+      return { success: false, message: t("representativeInactive") };
     }
 
     newRepresentativeId = representative.id;
-    newRepresentativeName = representative.full_name ?? "o novo responsável";
+    // A person's name, never translated. The fallback is ours.
+    newRepresentativeName = representative.full_name ?? t("theNewOwner");
   }
 
   const { error } = await adminSupabase
@@ -94,21 +100,21 @@ export async function reassignRepresentative(
     .eq("id", modelId);
 
   if (error) {
-    console.error("Erro ao reatribuir representante:", error);
+    console.error("Failed to reassign representative:", error);
 
     return {
       success: false,
-      message: "Não foi possível atualizar o representante.",
+      message: t("updateFailed"),
     };
   }
 
   revalidatePath(`/admin/models/[slug]`, "page");
   revalidatePath("/admin/models");
 
-  const actionLabel = newRepresentativeId ? "atribuído a" : "removido de";
-
   return {
     success: true,
-    message: `Modelo ${actionLabel} ${newRepresentativeName}.`,
+    message: newRepresentativeId
+      ? t("assigned", { name: newRepresentativeName })
+      : t("removed", { name: newRepresentativeName }),
   };
 }

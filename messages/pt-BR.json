@@ -1059,6 +1059,12 @@
         "bodyAudit": "A exclusão fica registrada no histórico do sistema com o nome do representante, quem excluiu e a data e hora.",
         "understood": "Entendi",
         "confirmButton": "Excluir permanentemente"
+      },
+      "details": {
+        "name": "Nome",
+        "email": "E-mail",
+        "phone": "Telefone / WhatsApp",
+        "saveChanges": "Salvar alterações"
       }
     },
     "reassign": {
@@ -1067,7 +1073,18 @@
       "none": "Nenhum",
       "noneOption": "Nenhum (remover responsável)",
       "newRepresentative": "Novo representante",
-      "submit": "Reatribuir representante"
+      "submit": "Reatribuir representante",
+      "messages": {
+        "staffOnly": "Apenas a equipe pode reatribuir a representante.",
+        "incompleteData": "Dados incompletos.",
+        "modelNotFound": "Modelo não encontrado.",
+        "representativeInactive": "O representante selecionado não está ativo.",
+        "none": "Nenhum",
+        "theNewOwner": "o novo responsável",
+        "updateFailed": "Não foi possível atualizar o representante.",
+        "assigned": "Modelo atribuída a {name}.",
+        "removed": "Modelo removida de {name}."
+      }
     },
     "onlyfans": {
       "managedAccount": "Conta administrada",
@@ -1367,6 +1384,77 @@
         "contentReceived": {
           "title": "Conteúdo inicial",
           "description": "Fotos e vídeos iniciais recebidos."
+        }
+      }
+    },
+    "amplia": {
+      "portal": "PORTAL DA AMPLIA",
+      "overview": "Visão Geral",
+      "subtitle": "Painel de crescimento de marca (Amplia).",
+      "monthlySummary": "Resumo mensal",
+      "clientsHeading": "Modelos / Clientes Amplia",
+      "empty": "Nenhum modelo ou cliente Amplia ativo no momento.",
+      "karayModel": "Modelo Karay",
+      "ampliaClient": "Cliente Amplia",
+      "openProfile": "Abrir perfil",
+      "fields": {
+        "email": "Email",
+        "whatsapp": "WhatsApp",
+        "city": "Cidade",
+        "status": "Status"
+      },
+      "metrics": {
+        "activeModels": "Modelos em Amplia",
+        "brandGrowthOnly": "Clientes Brand-Growth-only",
+        "instagramConnected": "Instagram conectado",
+        "awaitingLaunch": "Aguardando lançamento",
+        "awaitingAuthorization": "Aguardando autorização",
+        "contentApproval": "Conteúdo para aprovação",
+        "postsToday": "Posts agendados hoje",
+        "playbookDone": "Playbook concluído hoje",
+        "playbookPending": "Playbook pendente hoje",
+        "publishFailures": "Falhas de publicação (24h)",
+        "belowBaseline": "Contas abaixo da baseline",
+        "criticalAlerts": "Alertas críticos",
+        "followerGrowth": "Crescimento de seguidores",
+        "contentShortage": "Escassez de conteúdo",
+        "aiCost": "Custo estimado de IA"
+      },
+      "descriptions": {
+        "active": "Ativos",
+        "nonOnlyFans": "Não-OnlyFans",
+        "activeAccounts": "Contas ativas",
+        "setupPending": "Setup pendente",
+        "oauthVerification": "OAuth/verificação",
+        "clientAgency": "Cliente/agência",
+        "instagram": "Instagram",
+        "xManual": "X manual",
+        "needsAttention": "Requer atenção",
+        "restrictedSuspended": "Restritas/suspensas",
+        "immediateAction": "Ação imediata",
+        "last30Days": "Últimos 30 dias",
+        "lowStock": "Baixo estoque",
+        "thisMonthUsd": "Este mês (USD)"
+      },
+      "newClient": {
+        "createFailed": "Erro ao criar cliente.",
+        "creating": "Criando...",
+        "create": "Criar cliente",
+        "aiGuidancePlaceholder": "Tom, temas recorrentes, do's and don'ts...",
+        "fields": {
+          "stageName": "Nome artístico *",
+          "displayName": "Nome de exibição *",
+          "email": "E-mail",
+          "whatsapp": "WhatsApp",
+          "city": "Cidade",
+          "nationality": "Nacionalidade",
+          "brandCategory": "Categoria da marca",
+          "niche1": "Nicho 1 *",
+          "niche2": "Nicho 2",
+          "niche3": "Nicho 3",
+          "primaryPositioning": "Posicionamento primário",
+          "secondaryPositioning": "Posicionamento secundário",
+          "aiGuidance": "Diretriz de IA permanente"
         }
       }
     }
