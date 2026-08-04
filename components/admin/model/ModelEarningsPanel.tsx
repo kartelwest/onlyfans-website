@@ -1,5 +1,11 @@
 "use client";
 
+import { useLocale, useTranslations } from "next-intl";
+
+import { formatCalendarDate } from "@/lib/earnings/period";
+import { toLocale, type Locale } from "@/lib/i18n/config";
+import { USD, formatMoney } from "@/lib/money/currency";
+
 import {
   ChangeEvent,
   FormEvent,
@@ -70,29 +76,18 @@ const acceptedImageTypes = [
   "image/webp",
 ];
 
-function formatCurrency(value: number) {
-  return new Intl.NumberFormat("pt-BR", {
-    style: "currency",
-    currency: "USD",
-  }).format(value);
+/** Earnings are stored in USD; only the presentation follows the reader. */
+function formatCurrency(value: number, locale: Locale) {
+  return formatMoney(value, USD, { locale });
 }
 
-function formatDate(value: string | null) {
+/** A plain calendar date, reordered by locale — never routed through a Date. */
+function formatDate(value: string | null, locale: Locale, fallback: string) {
   if (!value) {
-    return "Data não informada";
+    return fallback;
   }
 
-  const date = new Date(`${value}T12:00:00`);
-
-  if (Number.isNaN(date.getTime())) {
-    return value;
-  }
-
-  return new Intl.DateTimeFormat("pt-BR", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-  }).format(date);
+  return formatCalendarDate(value.slice(0, 10), locale);
 }
 
 function formatDateTime(value: string) {
@@ -137,6 +132,13 @@ export default function ModelEarningsPanel({
   modelName,
   currentUserRole,
 }: ModelEarningsPanelProps) {
+  const t = useTranslations("admin.earnings");
+  const tPhoto = useTranslations("admin.photoUpload");
+  const tCommon = useTranslations("common.actions");
+  const locale = toLocale(useLocale());
+
+  const noDate = t("noDate");
+
   const canManage =
     managementRoles.includes(currentUserRole);
 
@@ -213,7 +215,7 @@ export default function ModelEarningsPanel({
         throw new Error(
           getErrorMessage(
             data,
-            "Não foi possível carregar os ganhos.",
+            t("loadFailed"),
           ),
         );
       }
@@ -228,7 +230,7 @@ export default function ModelEarningsPanel({
       setErrorMessage(
         error instanceof Error
           ? error.message
-          : "Não foi possível carregar os ganhos.",
+          : t("loadFailed"),
       );
     } finally {
       setLoading(false);
@@ -337,7 +339,7 @@ export default function ModelEarningsPanel({
       event.target.value = "";
 
       setErrorMessage(
-        "A imagem deve ter no máximo 10 MB.",
+        tPhoto("tooLarge"),
       );
 
       return;
@@ -381,7 +383,7 @@ export default function ModelEarningsPanel({
 
     if (!period.trim()) {
       setErrorMessage(
-        "Informe o período do lançamento.",
+        t("periodRequired"),
       );
       return;
     }
@@ -391,7 +393,7 @@ export default function ModelEarningsPanel({
       parsedGrossRevenue < 0
     ) {
       setErrorMessage(
-        "Informe uma receita bruta válida.",
+        t("grossRequired"),
       );
       return;
     }
@@ -408,7 +410,7 @@ export default function ModelEarningsPanel({
       !canSeeFansly
     ) {
       setErrorMessage(
-        "Você não tem permissão para registrar ganhos da Fansly.",
+        t("fanslyNotPermitted"),
       );
       return;
     }
@@ -462,7 +464,7 @@ export default function ModelEarningsPanel({
         throw new Error(
           getErrorMessage(
             data,
-            "Não foi possível salvar o relatório.",
+            t("saveFailed"),
           ),
         );
       }
@@ -475,18 +477,18 @@ export default function ModelEarningsPanel({
       resetForm();
 
       setSuccessMessage(
-        "Relatório de ganhos salvo com sucesso.",
+        t("saveSuccess"),
       );
     } catch (error) {
       console.error(
-        "Erro ao salvar o relatório:",
+        "Failed to save the earnings report:",
         error,
       );
 
       setErrorMessage(
         error instanceof Error
           ? error.message
-          : "Não foi possível salvar o relatório.",
+          : t("saveFailed"),
       );
     } finally {
       setUploading(false);
@@ -532,7 +534,7 @@ export default function ModelEarningsPanel({
         throw new Error(
           getErrorMessage(
             data,
-            "Não foi possível excluir o relatório.",
+            t("deleteFailed"),
           ),
         );
       }
@@ -549,18 +551,18 @@ export default function ModelEarningsPanel({
       }
 
       setSuccessMessage(
-        "Relatório excluído com sucesso.",
+        t("deleteSuccess"),
       );
     } catch (error) {
       console.error(
-        "Erro ao excluir o relatório:",
+        "Failed to delete the earnings report:",
         error,
       );
 
       setErrorMessage(
         error instanceof Error
           ? error.message
-          : "Não foi possível excluir o relatório.",
+          : t("deleteFailed"),
       );
     } finally {
       setDeletingId(null);
@@ -573,37 +575,36 @@ export default function ModelEarningsPanel({
         <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.25em] text-emerald-300">
-              Financeiro
+              {t("financial")}
             </p>
 
             <h2 className="mt-2 text-2xl font-bold">
-              Ganhos — {modelName}
+              {t("heading", { name: modelName })}
             </h2>
 
             <p className="mt-2 max-w-3xl text-sm leading-6 text-zinc-400">
-              Registre os ganhos e anexe a
-              captura de tela correspondente.
+              {t("subtitle")}
             </p>
           </div>
 
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
             <SummaryCard
-              label="Receita bruta"
+              label={t("grossRevenue")}
               value={totals.gross}
             />
 
             <SummaryCard
-              label="Modelo"
+              label={t("model")}
               value={totals.model}
             />
 
             <SummaryCard
-              label="Agência"
+              label={t("agency")}
               value={totals.agency}
             />
 
             <SummaryCard
-              label="Marketing"
+              label={t("marketing")}
               value={totals.marketing}
             />
           </div>
@@ -629,7 +630,7 @@ export default function ModelEarningsPanel({
             <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
               <label>
                 <span className="text-xs font-semibold uppercase tracking-wider text-zinc-500">
-                  Plataforma
+                  {t("platform")}
                 </span>
 
                 <select
@@ -649,7 +650,7 @@ export default function ModelEarningsPanel({
 
                   {canSeeFansly && (
                     <option value="Fansly">
-                      Fansly — agência
+                      {t("fanslyAgency")}
                     </option>
                   )}
                 </select>
@@ -657,7 +658,7 @@ export default function ModelEarningsPanel({
 
               <label>
                 <span className="text-xs font-semibold uppercase tracking-wider text-zinc-500">
-                  Período
+                  {t("period")}
                 </span>
 
                 <input
@@ -667,14 +668,14 @@ export default function ModelEarningsPanel({
                     setPeriod(event.target.value)
                   }
                   disabled={uploading}
-                  placeholder="Ex.: Julho 2026"
+                  placeholder={t("periodPlaceholder")}
                   className="mt-2 w-full rounded-lg border border-white/10 bg-zinc-950 px-3 py-2.5 text-sm text-white outline-none placeholder:text-zinc-600 focus:border-emerald-400 disabled:cursor-not-allowed disabled:opacity-60"
                 />
               </label>
 
               <label>
                 <span className="text-xs font-semibold uppercase tracking-wider text-zinc-500">
-                  Receita bruta
+                  {t("grossRevenue")}
                 </span>
 
                 <input
@@ -715,7 +716,7 @@ export default function ModelEarningsPanel({
             <div className="mt-5 grid gap-5 lg:grid-cols-[1fr_1fr]">
               <label>
                 <span className="text-xs font-semibold uppercase tracking-wider text-zinc-500">
-                  Observação interna
+                  {t("internalNote")}
                 </span>
 
                 <textarea
@@ -727,7 +728,7 @@ export default function ModelEarningsPanel({
                   }
                   disabled={uploading}
                   rows={4}
-                  placeholder="Informação opcional para a administração"
+                  placeholder={t("internalNotePlaceholder")}
                   className="mt-2 w-full resize-none rounded-lg border border-white/10 bg-zinc-950 px-3 py-3 text-sm text-white outline-none placeholder:text-zinc-600 focus:border-emerald-400 disabled:cursor-not-allowed disabled:opacity-60"
                 />
               </label>
@@ -737,7 +738,7 @@ export default function ModelEarningsPanel({
                   htmlFor="earnings-screenshot"
                   className="block text-xs font-semibold uppercase tracking-wider text-zinc-500"
                 >
-                  Captura de tela
+                  {t("screenshot")}
                 </label>
 
                 <input
@@ -760,12 +761,12 @@ export default function ModelEarningsPanel({
             {previewUrl && (
               <div className="mt-5 overflow-hidden rounded-xl border border-white/10 bg-black/30 p-3">
                 <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-zinc-500">
-                  Pré-visualização
+                  {t("preview")}
                 </p>
 
                 <img
                   src={previewUrl}
-                  alt="Pré-visualização da captura de ganhos"
+                  alt={t("previewAlt")}
                   className="max-h-[420px] w-full rounded-lg object-contain"
                 />
               </div>
@@ -786,7 +787,7 @@ export default function ModelEarningsPanel({
                 />
 
                 <span className="text-sm text-zinc-300">
-                  Visível para a modelo
+                  {t("visibleToModel")}
                 </span>
               </label>
 
@@ -796,16 +797,13 @@ export default function ModelEarningsPanel({
                 className="rounded-lg bg-emerald-400 px-6 py-3 text-sm font-bold text-black transition hover:bg-emerald-300 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {uploading
-                  ? "Salvando..."
-                  : "Adicionar lançamento"}
+                  ? tCommon("saving")
+                  : t("addEntry")}
               </button>
             </div>
 
             <p className="mt-4 text-xs leading-5 text-zinc-500">
-              OnlyFans: 60% modelo, 20% agência
-              e 20% marketing. Fansly: 100% da
-              agência e visível apenas para
-              proprietário e administrador.
+              {t("splitNote")}
             </p>
           </form>
         )}
@@ -815,40 +813,40 @@ export default function ModelEarningsPanel({
             <thead>
               <tr className="border-b border-white/10 text-xs uppercase tracking-wider text-zinc-500">
                 <th className="px-3 py-3">
-                  Imagem
+                  {t("columns.image")}
                 </th>
 
                 <th className="px-3 py-3">
-                  Plataforma
+                  {t("platform")}
                 </th>
 
                 <th className="px-3 py-3">
-                  Período
+                  {t("period")}
                 </th>
 
                 <th className="px-3 py-3">
-                  Bruto
+                  {t("columns.gross")}
                 </th>
 
                 <th className="px-3 py-3">
-                  Modelo
+                  {t("model")}
                 </th>
 
                 <th className="px-3 py-3">
-                  Agência
+                  {t("agency")}
                 </th>
 
                 <th className="px-3 py-3">
-                  Marketing
+                  {t("marketing")}
                 </th>
 
                 <th className="px-3 py-3">
-                  Data
+                  {t("columns.date")}
                 </th>
 
                 {canManage && (
                   <th className="px-3 py-3 text-right">
-                    Ações
+                    {t("columns.actions")}
                   </th>
                 )}
               </tr>
@@ -861,7 +859,7 @@ export default function ModelEarningsPanel({
                     colSpan={canManage ? 9 : 8}
                     className="px-3 py-12 text-center text-zinc-500"
                   >
-                    Carregando lançamentos...
+                    {t("loading")}
                   </td>
                 </tr>
               ) : visibleReports.length === 0 ? (
@@ -870,7 +868,7 @@ export default function ModelEarningsPanel({
                     colSpan={canManage ? 9 : 8}
                     className="px-3 py-12 text-center text-zinc-500"
                   >
-                    Nenhum lançamento financeiro
+                    {t("empty")}
                     registrado.
                   </td>
                 </tr>
@@ -899,7 +897,7 @@ export default function ModelEarningsPanel({
                         </button>
                       ) : (
                         <div className="flex h-16 w-24 items-center justify-center rounded-lg border border-white/10 bg-black/30 text-xs text-zinc-600">
-                          Sem imagem
+                          {t("noImage")}
                         </div>
                       )}
                     </td>
@@ -930,8 +928,8 @@ export default function ModelEarningsPanel({
                       {canManage && (
                         <p className="mt-1 text-[11px] font-normal text-zinc-600">
                           {report.visibleToModel
-                            ? "Visível para a modelo"
-                            : "Oculto da modelo"}
+                            ? t("visibleToModel")
+                            : t("hiddenFromModel")}
                         </p>
                       )}
                     </td>
@@ -939,24 +937,28 @@ export default function ModelEarningsPanel({
                     <td className="px-3 py-4">
                       {formatCurrency(
                         report.grossRevenue,
+                          locale,
                       )}
                     </td>
 
                     <td className="px-3 py-4">
                       {formatCurrency(
                         report.modelShare,
+                          locale,
                       )}
                     </td>
 
                     <td className="px-3 py-4">
                       {formatCurrency(
                         report.agencyShare,
+                          locale,
                       )}
                     </td>
 
                     <td className="px-3 py-4">
                       {formatCurrency(
                         report.marketingShare,
+                          locale,
                       )}
                     </td>
 
@@ -964,6 +966,8 @@ export default function ModelEarningsPanel({
                       <p className="text-sm text-zinc-300">
                         {formatDate(
                           report.reportDate,
+                            locale,
+                            noDate,
                         )}
                       </p>
 
@@ -1031,6 +1035,8 @@ export default function ModelEarningsPanel({
                 <p className="mt-1 text-sm text-zinc-500">
                   {formatDate(
                     selectedImage.reportDate,
+                      locale,
+                      noDate,
                   )}
                 </p>
               </div>
@@ -1042,13 +1048,13 @@ export default function ModelEarningsPanel({
                 }
                 className="rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/10"
               >
-                Fechar
+                {tCommon("close")}
               </button>
             </div>
 
             <img
               src={selectedImage.imageUrl}
-              alt={`Captura de ganhos de ${selectedImage.period}`}
+              alt={t("screenshotOf", { period: selectedImage.period })}
               className="mx-auto max-h-[80vh] w-auto max-w-full rounded-xl object-contain"
             />
           </div>
@@ -1057,11 +1063,10 @@ export default function ModelEarningsPanel({
 
       <ConfirmDialog
         open={pendingDelete !== null}
-        title="Excluir este relatório de ganhos?"
+        title={t("deleteTitle")}
         description={
           <p>
-            O relatório sai da área da modelo e deixa de compor o mês. O
-            histórico da alteração é mantido.
+            {t("deleteBody")}
           </p>
         }
         detail={
@@ -1069,8 +1074,8 @@ export default function ModelEarningsPanel({
             ? `${pendingDelete.platform} · ${pendingDelete.period}`
             : null
         }
-        confirmLabel="Excluir relatório"
-        busyLabel="Excluindo..."
+        confirmLabel={t("deleteConfirm")}
+        busyLabel={tCommon("deleting")}
         busy={deletingId !== null}
         onCancel={() => setPendingDelete(null)}
         onConfirm={() => {
@@ -1092,6 +1097,8 @@ function SummaryCard({
   label: string;
   value: number;
 }) {
+  const locale = toLocale(useLocale());
+
   return (
     <div className="min-w-[130px] rounded-xl border border-white/10 bg-black/20 px-4 py-3">
       <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-500">
@@ -1099,7 +1106,7 @@ function SummaryCard({
       </p>
 
       <p className="mt-1 font-bold text-white">
-        {formatCurrency(value)}
+        {formatCurrency(value, locale)}
       </p>
     </div>
   );
