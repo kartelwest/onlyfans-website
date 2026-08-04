@@ -59,6 +59,9 @@ const databaseChecklistFields = Object.values(
 
 export async function PATCH(request: Request) {
   const t = await getTranslations("errors.api");
+  const tRoute = await getTranslations(
+    "errors.checklistApi",
+  );
   try {
     const supabase = await createClient();
 
@@ -70,7 +73,7 @@ export async function PATCH(request: Request) {
     if (userError || !user) {
       return NextResponse.json(
         {
-          error: "Usuário não autenticado.",
+          error: t("notAuthenticated"),
         },
         {
           status: 401,
@@ -112,7 +115,7 @@ export async function PATCH(request: Request) {
       return NextResponse.json(
         {
           error:
-            "Você não tem permissão para alterar este checklist.",
+            tRoute("noChecklistPermission"),
         },
         {
           status: 403,
@@ -128,7 +131,7 @@ export async function PATCH(request: Request) {
     if (!modelId || typeof modelId !== "string") {
       return NextResponse.json(
         {
-          error: "O ID da modelo é obrigatório.",
+          error: t("modelIdRequired"),
         },
         {
           status: 400,
@@ -145,7 +148,7 @@ export async function PATCH(request: Request) {
     ) {
       return NextResponse.json(
         {
-          error: "Campo de checklist inválido.",
+          error: tRoute("invalidField"),
         },
         {
           status: 400,
@@ -159,7 +162,7 @@ export async function PATCH(request: Request) {
     ) {
       return NextResponse.json(
         {
-          error: "Status inválido.",
+          error: tRoute("invalidStatus"),
         },
         {
           status: 400,
@@ -209,7 +212,7 @@ export async function PATCH(request: Request) {
       return NextResponse.json(
         {
           error:
-            "Não foi possível carregar o checklist.",
+            tRoute("loadFailed"),
         },
         {
           status: 500,
@@ -280,7 +283,7 @@ export async function PATCH(request: Request) {
       return NextResponse.json(
         {
           error:
-            "Não foi possível salvar o novo status.",
+            tRoute("saveFailed"),
         },
         {
           status: 500,
@@ -328,7 +331,7 @@ export async function PATCH(request: Request) {
     return NextResponse.json(
       {
         error:
-          "Ocorreu um erro inesperado ao salvar o checklist.",
+          tRoute("unexpected"),
       },
       {
         status: 500,

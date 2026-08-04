@@ -233,6 +233,7 @@ export async function POST(
   request: Request,
 ) {
   const t = await getTranslations("errors.api");
+  const tRoute = await getTranslations("errors.documentsApi");
   try {
     const supabase =
       await createClient();
@@ -325,7 +326,7 @@ export async function POST(
       return NextResponse.json(
         {
           error:
-            "Escreva uma descrição para o arquivo.",
+            tRoute("descriptionRequired"),
         },
         {
           status: 400,
@@ -351,7 +352,7 @@ export async function POST(
       return NextResponse.json(
         {
           error:
-            "O arquivo selecionado está vazio.",
+            tRoute("fileEmpty"),
         },
         {
           status: 400,
@@ -366,7 +367,7 @@ export async function POST(
       return NextResponse.json(
         {
           error:
-            "O arquivo deve ter no máximo 25 MB.",
+            tRoute("fileTooLarge"),
         },
         {
           status: 400,
@@ -434,7 +435,7 @@ export async function POST(
       return NextResponse.json(
         {
           error:
-            "Esta modelo já possui o limite de 10 arquivos.",
+            tRoute("fileLimitReached"),
         },
         {
           status: 400,

@@ -49,6 +49,7 @@ type CredentialsRequest = {
 
 export async function POST(request: Request) {
   const t = await getTranslations("errors.api");
+  const tRoute = await getTranslations("errors.modelCredentials");
   try {
     const supabase = await createClient();
 
@@ -58,10 +59,7 @@ export async function POST(request: Request) {
     } = await supabase.auth.getUser();
 
     if (userError || !user) {
-      return NextResponse.json(
-        { error: t("sessionExpired") },
-        { status: 401 },
-      );
+      return NextResponse.json({ error: t("sessionExpired") }, { status: 401 });
     }
 
     const { data: currentProfile, error: profileError } = await supabase
@@ -85,14 +83,10 @@ export async function POST(request: Request) {
     //
     // This runs BEFORE any model lookup, so an unauthorized caller learns
     // nothing about whether the model exists.
-    if (
-      currentUserRole !== "owner" &&
-      currentUserRole !== "administrator"
-    ) {
+    if (currentUserRole !== "owner" && currentUserRole !== "administrator") {
       return NextResponse.json(
         {
-          error:
-            "Você não tem permissão para alterar o acesso desta modelo.",
+          error: tRoute("noPermission"),
         },
         { status: 403 },
       );
@@ -100,8 +94,7 @@ export async function POST(request: Request) {
 
     const body = (await request.json()) as CredentialsRequest;
 
-    const modelId =
-      typeof body.modelId === "string" ? body.modelId.trim() : "";
+    const modelId = typeof body.modelId === "string" ? body.modelId.trim() : "";
 
     if (!modelId) {
       return NextResponse.json(
@@ -177,10 +170,7 @@ export async function POST(request: Request) {
     }
 
     if (!model) {
-      return NextResponse.json(
-        { error: "A modelo solicitada não foi encontrada." },
-        { status: 404 },
-      );
+      return NextResponse.json({ error: t("modelNotFound") }, { status: 404 });
     }
 
     // Most model records are created by the public /aplicar form or by the
@@ -216,8 +206,7 @@ export async function POST(request: Request) {
       if (!requestedLoginEmail && !contactEmail) {
         return NextResponse.json(
           {
-            error:
-              "Informe um e-mail ou um nome de usuário para criar o acesso desta modelo.",
+            error: tRoute("loginRequired"),
           },
           { status: 400 },
         );
@@ -232,7 +221,7 @@ export async function POST(request: Request) {
 
     const loginChanged = Boolean(
       requestedLoginEmail &&
-        requestedLoginEmail !== (currentLoginEmail ?? "").toLowerCase(),
+      requestedLoginEmail !== (currentLoginEmail ?? "").toLowerCase(),
     );
 
     // Contact-address collisions are checked here; login collisions are caught
@@ -246,7 +235,7 @@ export async function POST(request: Request) {
 
       if (!duplicateError && (count ?? 0) > 0) {
         return NextResponse.json(
-          { error: "Este e-mail já está em uso por outra conta." },
+          { error: tRoute("emailInUse") },
           { status: 409 },
         );
       }
@@ -310,7 +299,7 @@ export async function POST(request: Request) {
     }
 
     if (!authError && !authUserId) {
-      authError = { message: "Não foi possível criar o acesso da modelo." };
+      authError = { message: tRoute("createFailed") };
     }
 
     if (authError) {
@@ -322,7 +311,7 @@ export async function POST(request: Request) {
         message.includes("exists")
       ) {
         return NextResponse.json(
-          { error: "Este e-mail já está em uso por outra conta." },
+          { error: tRoute("emailInUse") },
           { status: 409 },
         );
       }
@@ -366,14 +355,9 @@ export async function POST(request: Request) {
         );
 
       if (profileUpsertError) {
-        console.error(
-          "Erro ao criar o perfil da modelo:",
-          profileUpsertError,
-        );
+        console.error("Erro ao criar o perfil da modelo:", profileUpsertError);
 
-        warnings.push(
-          "O acesso foi criado, mas o perfil da modelo não pôde ser concluído.",
-        );
+        warnings.push(tRoute("profileIncomplete"));
       }
 
       const { error: linkError } = await adminSupabase
@@ -393,9 +377,7 @@ export async function POST(request: Request) {
           linkError,
         );
 
-        warnings.push(
-          "O acesso foi criado, mas não pôde ser vinculado à ficha da modelo. Avise o suporte antes de entregar a senha.",
-        );
+        warnings.push(tRoute("linkFailed"));
       }
     }
 
@@ -415,9 +397,7 @@ export async function POST(request: Request) {
           modelEmailError,
         );
 
-        warnings.push(
-          "O acesso foi alterado, mas o e-mail exibido na ficha da modelo não pôde ser atualizado.",
-        );
+        warnings.push(tRoute("emailSyncFailed"));
       }
 
       const { error: profileEmailError } = await adminSupabase
@@ -446,9 +426,7 @@ export async function POST(request: Request) {
       if (signOutError) {
         console.error("Erro ao encerrar as sessões da modelo:", signOutError);
 
-        warnings.push(
-          "O acesso foi alterado, mas as sessões abertas da modelo não puderam ser encerradas.",
-        );
+        warnings.push(tRoute("sessionRevokeFailed"));
       } else {
         sessionsRevoked = true;
       }
@@ -476,9 +454,7 @@ export async function POST(request: Request) {
     });
 
     if (!noteWritten) {
-      warnings.push(
-        "O acesso foi alterado, mas não foi possível registrar a nota de auditoria.",
-      );
+      warnings.push(tRoute("auditNoteFailed"));
     }
 
     const changeSummary = isProvisioning
@@ -623,7 +599,10 @@ async function writeAccessChangeNote(
     .single();
 
   if (noteError || !createdNote) {
-    console.error("Erro ao registrar a nota de alteração de acesso:", noteError);
+    console.error(
+      "Erro ao registrar a nota de alteração de acesso:",
+      noteError,
+    );
 
     return false;
   }
@@ -656,10 +635,7 @@ async function writeAccessChangeNote(
     .eq("id", modelId);
 
   if (summaryError) {
-    console.error(
-      "Erro ao atualizar o resumo da última nota:",
-      summaryError,
-    );
+    console.error("Erro ao atualizar o resumo da última nota:", summaryError);
   }
 
   return true;

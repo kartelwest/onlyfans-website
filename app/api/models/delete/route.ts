@@ -58,7 +58,7 @@ export async function POST(request: Request) {
 
     if (!body.modelId) {
       return NextResponse.json(
-        { error: "ID da modelo não informado." },
+        { error: t("modelIdMissing") },
         { status: 400 },
       );
     }

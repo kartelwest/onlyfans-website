@@ -83,6 +83,7 @@ export async function PATCH(
   request: Request,
 ) {
   const t = await getTranslations("errors.api");
+  const tRoute = await getTranslations("errors.modelUpdate");
   try {
     const supabase =
       await createClient();
@@ -195,7 +196,7 @@ export async function PATCH(
         return NextResponse.json(
           {
             error:
-              "Perfil da modelo não encontrado.",
+              tRoute("profileNotFound"),
           },
           {
             status: 404,
@@ -321,7 +322,7 @@ export async function PATCH(
     if (!dbField) {
       return NextResponse.json(
         {
-          error: "Campo inválido.",
+          error: tRoute("invalidField"),
         },
         {
           status: 400,
@@ -335,7 +336,7 @@ export async function PATCH(
     if (dbField === "country_code" && normalizedValue !== "") {
       if (!isCountryCode(normalizedValue.toUpperCase())) {
         return NextResponse.json(
-          { error: "País inválido." },
+          { error: tRoute("invalidCountry") },
           { status: 400 },
         );
       }
@@ -344,7 +345,7 @@ export async function PATCH(
     if (dbField === "preferred_currency" && normalizedValue !== "") {
       if (!normalizeCurrencyCode(normalizedValue)) {
         return NextResponse.json(
-          { error: "Moeda inválida. Use um código ISO 4217, como BRL ou USD." },
+          { error: tRoute("invalidCurrency") },
           { status: 400 },
         );
       }

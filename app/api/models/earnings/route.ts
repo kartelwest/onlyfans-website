@@ -158,6 +158,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   const t = await getTranslations("errors.api");
+  const tRoute = await getTranslations("errors.earningsApi");
   const supabase = await createClient();
 
   const {
@@ -215,7 +216,7 @@ export async function POST(request: NextRequest) {
 
   if (!image) {
     return NextResponse.json(
-      { error: "Imagem obrigatória." },
+      { error: tRoute("imageRequired") },
       { status: 400 },
     );
   }
@@ -224,7 +225,7 @@ export async function POST(request: NextRequest) {
   const grossRevenue = Number(grossRevenueStr);
   if (!isFinite(grossRevenue) || grossRevenue < 0) {
     return NextResponse.json(
-      { error: "Valor da receita inválido." },
+      { error: tRoute("invalidRevenue") },
       { status: 400 },
     );
   }
@@ -264,7 +265,7 @@ export async function POST(request: NextRequest) {
 
   if (image.size > MAX_FILE_SIZE) {
     return NextResponse.json(
-      { error: "Arquivo muito grande. Máximo 10MB." },
+      { error: tRoute("fileTooLarge") },
       { status: 400 },
     );
   }
@@ -328,7 +329,7 @@ export async function POST(request: NextRequest) {
     await admin.storage.from("model-earnings").remove([path]);
     console.error("Erro ao inserir relatório:", insert.error);
     return NextResponse.json(
-      { error: "Erro ao salvar relatório." },
+      { error: tRoute("saveReportFailed") },
       { status: 500 },
     );
   }

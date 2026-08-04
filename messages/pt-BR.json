@@ -1223,7 +1223,8 @@
       "invalidDeductDate": "Data de desconto inválida.",
       "deductDateFailed": "Não foi possível alterar a data de desconto.",
       "saveFailed": "Não foi possível salvar o lançamento.",
-      "deleteFailed": "Não foi possível excluir o lançamento."
+      "deleteFailed": "Não foi possível excluir o lançamento.",
+      "loadFailed": "Não foi possível carregar os lançamentos."
     },
     "driveUpload": {
       "notConfigured": "Envio para o Google Drive não está configurado no servidor.",
@@ -1243,6 +1244,95 @@
     "historyApi": {
       "modelsNoAccess": "Modelos não têm acesso ao histórico de auditoria.",
       "loadFailed": "Erro interno ao carregar histórico."
+    },
+    "modelUpdate": {
+      "profileNotFound": "Perfil da modelo não encontrado.",
+      "invalidField": "Campo inválido.",
+      "invalidCountry": "País inválido.",
+      "invalidCurrency": "Moeda inválida. Use um código ISO 4217, como BRL ou USD."
+    },
+    "earningsApi": {
+      "imageRequired": "Imagem obrigatória.",
+      "invalidRevenue": "Valor da receita inválido.",
+      "fileTooLarge": "Arquivo muito grande. Máximo 10MB.",
+      "saveReportFailed": "Erro ao salvar relatório.",
+      "reportNotFound": "Relatório não encontrado."
+    },
+    "documentsApi": {
+      "descriptionRequired": "Escreva uma descrição para o arquivo.",
+      "fileEmpty": "O arquivo selecionado está vazio.",
+      "fileTooLarge": "O arquivo deve ter no máximo 25 MB.",
+      "fileLimitReached": "Esta modelo já possui o limite de 10 arquivos."
+    },
+    "statusApi": {
+      "maxActiveModels": "Você atingiu o máximo de 30 modelos ativas. Inative outra modelo primeiro.",
+      "portalAccessMismatch": "O status foi alterado, mas o acesso ao portal não acompanhou a mudança. Avise o suporte antes de entregar o login."
+    },
+    "expensesEnabled": {
+      "invalidValue": "Valor inválido.",
+      "updateFailed": "Não foi possível alterar a configuração."
+    },
+    "avatarApi": {
+      "fileRequired": "Arquivo obrigatório.",
+      "fileTooLarge": "Arquivo muito grande. Máximo 5MB."
+    },
+    "checklistApi": {
+      "noChecklistPermission": "Você não tem permissão para alterar este checklist.",
+      "invalidField": "Campo de checklist inválido.",
+      "invalidStatus": "Status inválido.",
+      "loadFailed": "Não foi possível carregar o checklist.",
+      "saveFailed": "Não foi possível salvar o novo status.",
+      "unexpected": "Ocorreu um erro inesperado ao salvar o checklist."
+    },
+    "onboardingApi": {
+      "noViewPermission": "Sem permissão para ver este onboarding.",
+      "completedOwnerOnly": "Onboarding concluído: apenas o proprietário pode alterá-lo.",
+      "noEditPermission": "Você não tem permissão para editar este onboarding.",
+      "stepNotFound": "Etapa de onboarding não encontrada.",
+      "stepLockedForRepresentative": "Etapa concluída: o representante não pode alterá-la.",
+      "fieldSaveFailed": "Não foi possível salvar este campo.",
+      "autoCompletingStep": "\"{title}\" conclui-se sozinha: preencha o campo ou marque a caixa de \"não se aplica\".",
+      "stepUpdateFailed": "Não foi possível atualizar esta etapa.",
+      "unexpected": "Erro interno ao atualizar o onboarding."
+    },
+    "modelCredentials": {
+      "noPermission": "Você não tem permissão para alterar o acesso desta modelo.",
+      "loginRequired": "Informe um e-mail ou um nome de usuário para criar o acesso desta modelo.",
+      "emailInUse": "Este e-mail já está em uso por outra conta.",
+      "createFailed": "Não foi possível criar o acesso da modelo.",
+      "profileIncomplete": "O acesso foi criado, mas o perfil da modelo não pôde ser concluído.",
+      "linkFailed": "O acesso foi criado, mas não pôde ser vinculado à ficha da modelo. Avise o suporte antes de entregar a senha.",
+      "emailSyncFailed": "O acesso foi alterado, mas o e-mail exibido na ficha da modelo não pôde ser atualizado.",
+      "sessionRevokeFailed": "O acesso foi alterado, mas as sessões abertas da modelo não puderam ser encerradas.",
+      "auditNoteFailed": "O acesso foi alterado, mas não foi possível registrar a nota de auditoria."
+    },
+    "notesApi": {
+      "loadFailed": "Não foi possível carregar as notas.",
+      "historyLoadFailed": "Não foi possível carregar o histórico das notas.",
+      "noteEmpty": "A nota não pode ficar vazia.",
+      "noteTooLong": "A nota não pode ultrapassar 5000 caracteres.",
+      "addFailed": "Não foi possível adicionar a nota.",
+      "addHistoryFailed": "A nota não foi salva porque não foi possível registrar o histórico.",
+      "modelNoteActionRequired": "Modelo, nota e ação são obrigatórios.",
+      "noteNotFound": "A nota solicitada não foi encontrada.",
+      "invalidAction": "A ação solicitada não é válida.",
+      "ownerOnlyDelete": "Somente o proprietário pode excluir notas.",
+      "modelAndNoteRequired": "Modelo e nota são obrigatórios.",
+      "deleteFailed": "Não foi possível excluir a nota.",
+      "editOwnNotesOnly": "Você só pode editar as notas que você mesmo escreveu.",
+      "ownerOnlyEdit": "Somente o proprietário pode editar notas existentes.",
+      "editFailed": "Não foi possível editar a nota.",
+      "editHistoryFailed": "A edição não foi salva porque não foi possível registrar o histórico.",
+      "noPinPermission": "Você não tem permissão para fixar notas.",
+      "pinFailed": "Não foi possível alterar a fixação da nota.",
+      "updateHistoryFailed": "A nota foi atualizada, mas não foi possível registrar o histórico.",
+      "noArchivePermission": "Você não tem permissão para arquivar notas.",
+      "archiveFailed": "Não foi possível alterar o arquivamento da nota.",
+      "alreadyDeleted": "Esta nota já foi excluída.",
+      "noAdminNotesAccess": "Você não tem acesso às notas administrativas.",
+      "modelNotFound": "A modelo solicitada não foi encontrada.",
+      "noModelAccess": "Você não tem acesso a esta modelo.",
+      "unknownUser": "Usuário"
     }
   },
   "validation": {},

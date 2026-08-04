@@ -124,7 +124,6 @@ export default function OnboardingChecklistPanel({
   title?: string;
 }) {
   const t = useTranslations("admin.onboardingPanel");
-  const tCommon = useTranslations("common.actions");
   const tState = useTranslations("common.states");
   const tErrors = useTranslations("errors");
 

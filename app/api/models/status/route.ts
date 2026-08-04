@@ -24,6 +24,7 @@ type StatusBody = {
 
 export async function PATCH(request: Request) {
   const t = await getTranslations("errors.api");
+  const tRoute = await getTranslations("errors.statusApi");
   try {
     const supabase = await createClient();
 
@@ -115,7 +116,7 @@ export async function PATCH(request: Request) {
           return NextResponse.json(
             {
               error:
-                "Você atingiu o máximo de 30 modelos ativas. Inative outra modelo primeiro.",
+                tRoute("maxActiveModels"),
             },
             { status: 409 },
           );
@@ -184,7 +185,7 @@ export async function PATCH(request: Request) {
         return NextResponse.json(
           {
             error:
-              "O status foi alterado, mas o acesso ao portal não acompanhou a mudança. Avise o suporte antes de entregar o login.",
+              tRoute("portalAccessMismatch"),
           },
           { status: 500 },
         );

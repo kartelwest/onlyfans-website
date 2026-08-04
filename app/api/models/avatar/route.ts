@@ -21,6 +21,7 @@ const ALLOWED_MIME_TYPES = [
 // the Google Drive content upload (see /api/models/drive-upload).
 export async function POST(request: Request) {
   const t = await getTranslations("errors.api");
+  const tRoute = await getTranslations("errors.avatarApi");
   try {
     const supabase = await createClient();
 
@@ -71,14 +72,14 @@ export async function POST(request: Request) {
 
     if (!file) {
       return NextResponse.json(
-        { error: "Arquivo obrigatório." },
+        { error: tRoute("fileRequired") },
         { status: 400 },
       );
     }
 
     if (file.size > MAX_FILE_SIZE) {
       return NextResponse.json(
-        { error: "Arquivo muito grande. Máximo 5MB." },
+        { error: tRoute("fileTooLarge") },
         { status: 400 },
       );
     }

@@ -96,7 +96,7 @@ async function getAuthenticatedProfile() {
     profile.role === "representative" &&
     profile.status !== "ativa"
   ) {
-    return { error: fail("Representante inativo.", 403) };
+    return { error: fail(t("inactiveRepresentative"), 403) };
   }
 
   return { supabase, user, profile };
@@ -104,6 +104,7 @@ async function getAuthenticatedProfile() {
 
 export async function GET(request: Request) {
   const t = await getTranslations("errors.api");
+  const tRoute = await getTranslations("errors.onboardingApi");
   try {
     const auth = await getAuthenticatedProfile();
 
@@ -125,7 +126,7 @@ export async function GET(request: Request) {
     });
 
     if (!access.model || !access.canRead) {
-      return fail("Sem permissão para ver este onboarding.", 403);
+      return fail(tRoute("noViewPermission"), 403);
     }
 
     await syncOnboardingItems({
@@ -156,6 +157,7 @@ export async function GET(request: Request) {
 
 export async function PATCH(request: Request) {
   const t = await getTranslations("errors.api");
+  const tRoute = await getTranslations("errors.onboardingApi");
   try {
     const auth = await getAuthenticatedProfile();
 
@@ -185,14 +187,14 @@ export async function PATCH(request: Request) {
     });
 
     if (!access.model || !access.canRead) {
-      return fail("Sem permissão para ver este onboarding.", 403);
+      return fail(tRoute("noViewPermission"), 403);
     }
 
     if (!access.canEdit) {
       return fail(
         access.locked
-          ? "Onboarding concluído: apenas o proprietário pode alterá-lo."
-          : "Você não tem permissão para editar este onboarding.",
+          ? tRoute("completedOwnerOnly")
+          : tRoute("noEditPermission"),
         403,
       );
     }
@@ -216,14 +218,14 @@ export async function PATCH(request: Request) {
     }
 
     if (!existing) {
-      return fail("Etapa de onboarding não encontrada.", 404);
+      return fail(tRoute("stepNotFound"), 404);
     }
 
     // A representative cannot change a step that is already complete. The same
     // rule is enforced by the per-item lock trigger; this pre-check gives a
     // clearer message and avoids a Postgres round-trip.
     if (existing.completed && auth.profile.role === "representative") {
-      return fail("Etapa concluída: o representante não pode alterá-la.", 403);
+      return fail(tRoute("stepLockedForRepresentative"), 403);
     }
 
     // The checklist as it stands right now. Read before anything is written so
@@ -320,10 +322,7 @@ export async function PATCH(request: Request) {
         if (rpcError) {
           console.error("Erro ao salvar campo vinculado:", rpcError);
 
-          return fail(
-            rpcError.message || "Não foi possível salvar este campo.",
-            400,
-          );
+          return fail(rpcError.message || tRoute("fieldSaveFailed"), 400);
         }
       } else if (changed) {
         const merged: Record<string, unknown> = {
@@ -386,10 +385,7 @@ export async function PATCH(request: Request) {
         if (updateError) {
           console.error("Erro ao salvar campo:", updateError);
 
-          return fail(
-            updateError.message || "Não foi possível salvar este campo.",
-            400,
-          );
+          return fail(updateError.message || tRoute("fieldSaveFailed"), 400);
         }
       }
 
@@ -451,7 +447,7 @@ export async function PATCH(request: Request) {
     if (typeof body.completed === "boolean") {
       if (definition.completion) {
         return fail(
-          `"${definition.title}" conclui-se sozinha: preencha o campo ou marque a caixa de "não se aplica".`,
+          tRoute("autoCompletingStep", { title: definition.title }),
           400,
         );
       }
@@ -492,10 +488,7 @@ export async function PATCH(request: Request) {
       if (toggleError) {
         console.error("Erro ao atualizar etapa:", toggleError);
 
-        return fail(
-          toggleError.message || "Não foi possível atualizar esta etapa.",
-          400,
-        );
+        return fail(toggleError.message || tRoute("stepUpdateFailed"), 400);
       }
 
       await logAuditEntry(auth.supabase, {
@@ -516,7 +509,7 @@ export async function PATCH(request: Request) {
   } catch (error) {
     console.error("Erro ao atualizar onboarding:", error);
 
-    return fail("Erro interno ao atualizar o onboarding.", 500);
+    return fail(tRoute("unexpected"), 500);
   }
 }
 

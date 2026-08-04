@@ -43,7 +43,6 @@ async function requireStaffProfile(
 }
 
 export async function GET() {
-  const t = await getTranslations("errors.api");
   const supabase = await createClient();
   const check = await requireStaffProfile(supabase);
 
@@ -57,7 +56,6 @@ export async function GET() {
 }
 
 export async function PATCH(request: Request) {
-  const t = await getTranslations("errors.api");
   const supabase = await createClient();
   const check = await requireStaffProfile(supabase);
 

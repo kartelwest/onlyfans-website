@@ -81,9 +81,7 @@ export default function NotesTab({
     historyOnly = false,
 }: NotesTabProps) {
     const t = useTranslations("admin.notes");
-    const tCommon = useTranslations("common.actions");
     const tPriority = useTranslations("enums.notePriority");
-    const tRole = useTranslations("enums.role");
     const locale = toLocale(useLocale());
 
     const unknownUser = t("unknownUser");
@@ -964,8 +962,6 @@ function RemoveNoteModal({
 }) {
     const t = useTranslations("admin.notes");
     const tCommon = useTranslations("common.actions");
-    const tPriority = useTranslations("enums.notePriority");
-    const tRole = useTranslations("enums.role");
     const locale = toLocale(useLocale());
 
     const isPurge = kind === "purge";
@@ -1222,9 +1218,6 @@ function HistoryPanel({
     fullWidth?: boolean;
 }) {
     const t = useTranslations("admin.notes");
-    const tCommon = useTranslations("common.actions");
-    const tPriority = useTranslations("enums.notePriority");
-    const tRole = useTranslations("enums.role");
     const locale = toLocale(useLocale());
 
     return (
@@ -1289,8 +1282,6 @@ function HistoryCard({
     item: NoteHistory;
 }) {
     const t = useTranslations("admin.notes");
-    const tCommon = useTranslations("common.actions");
-    const tPriority = useTranslations("enums.notePriority");
     const tRole = useTranslations("enums.role");
     const locale = toLocale(useLocale());
 
@@ -1421,7 +1412,6 @@ function EditConfirmationModal({
     const t = useTranslations("admin.notes");
     const tCommon = useTranslations("common.actions");
     const tPriority = useTranslations("enums.notePriority");
-    const tRole = useTranslations("enums.role");
     const locale = toLocale(useLocale());
 
     return (
@@ -1549,9 +1539,6 @@ function EmptyNotes({
     showArchived: boolean;
 }) {
     const t = useTranslations("admin.notes");
-    const tCommon = useTranslations("common.actions");
-    const tPriority = useTranslations("enums.notePriority");
-    const tRole = useTranslations("enums.role");
     const locale = toLocale(useLocale());
 
     return (

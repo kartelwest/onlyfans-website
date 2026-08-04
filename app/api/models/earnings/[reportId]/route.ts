@@ -15,6 +15,7 @@ export async function DELETE(
   context: RouteContext,
 ) {
   const t = await getTranslations("errors.api");
+  const tRoute = await getTranslations("errors.earningsApi");
   const { reportId } = await context.params;
 
   const supabase = await createClient();
@@ -68,7 +69,7 @@ export async function DELETE(
 
   if (!report) {
     return NextResponse.json(
-      { error: "Relatório não encontrado." },
+      { error: tRoute("reportNotFound") },
       { status: 404 },
     );
   }

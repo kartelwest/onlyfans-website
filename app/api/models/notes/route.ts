@@ -77,6 +77,10 @@ export async function GET(
     request: NextRequest,
 ) {
   const t = await getTranslations("errors.api");
+    const tRoute = await getTranslations(
+        "errors.notesApi",
+    );
+
     try {
         const authentication =
             await getAuthenticatedProfile();
@@ -143,7 +147,7 @@ export async function GET(
             return NextResponse.json(
                 {
                     error:
-                        "Não foi possível carregar as notas.",
+                        tRoute("loadFailed"),
                 },
                 {
                     status: 500,
@@ -191,7 +195,7 @@ export async function GET(
                 return NextResponse.json(
                     {
                         error:
-                            "Não foi possível carregar o histórico das notas.",
+                            tRoute("historyLoadFailed"),
                     },
                     {
                         status: 500,
@@ -243,11 +247,24 @@ export async function GET(
 
         const recentHistory = [
             ...(history ?? []).map(
-                mapHistory,
+                (entry) =>
+                    mapHistory(
+                        entry,
+                        tRoute(
+                            "unknownUser",
+                        ),
+                    ),
             ),
             ...(
                 auditHistory ?? []
-            ).map(mapAuditHistory),
+            ).map((entry) =>
+                mapAuditHistory(
+                    entry,
+                    tRoute(
+                        "unknownUser",
+                    ),
+                ),
+            ),
         ]
             .sort(
                 (first, second) =>
@@ -262,7 +279,13 @@ export async function GET(
 
         return NextResponse.json({
             notes: (notes ?? []).map(
-                mapNote,
+                (note) =>
+                    mapNote(
+                        note,
+                        tRoute(
+                            "unknownUser",
+                        ),
+                    ),
             ),
             recentHistory,
             permissions:
@@ -290,6 +313,10 @@ export async function POST(
     request: NextRequest,
 ) {
   const t = await getTranslations("errors.api");
+    const tRoute = await getTranslations(
+        "errors.notesApi",
+    );
+
     try {
         const authentication =
             await getAuthenticatedProfile();
@@ -334,7 +361,7 @@ export async function POST(
             return NextResponse.json(
                 {
                     error:
-                        "A nota não pode ficar vazia.",
+                        tRoute("noteEmpty"),
                 },
                 {
                     status: 400,
@@ -346,7 +373,7 @@ export async function POST(
             return NextResponse.json(
                 {
                     error:
-                        "A nota não pode ultrapassar 5000 caracteres.",
+                        tRoute("noteTooLong"),
                 },
                 {
                     status: 400,
@@ -404,7 +431,7 @@ export async function POST(
             return NextResponse.json(
                 {
                     error:
-                        "Não foi possível adicionar a nota.",
+                        tRoute("addFailed"),
                 },
                 {
                     status: 500,
@@ -440,7 +467,7 @@ export async function POST(
             return NextResponse.json(
                 {
                     error:
-                        "A nota não foi salva porque não foi possível registrar o histórico.",
+                        tRoute("addHistoryFailed"),
                 },
                 {
                     status: 500,
@@ -457,6 +484,7 @@ export async function POST(
             {
                 note: mapNote(
                     createdNote,
+                    tRoute("unknownUser"),
                 ),
             },
             {
@@ -484,7 +512,10 @@ export async function POST(
 export async function PATCH(
     request: NextRequest,
 ) {
-  const t = await getTranslations("errors.api");
+    const tRoute = await getTranslations(
+        "errors.notesApi",
+    );
+
     try {
         const authentication =
             await getAuthenticatedProfile();
@@ -518,7 +549,7 @@ export async function PATCH(
             return NextResponse.json(
                 {
                     error:
-                        "Modelo, nota e ação são obrigatórios.",
+                        tRoute("modelNoteActionRequired"),
                 },
                 {
                     status: 400,
@@ -557,7 +588,7 @@ export async function PATCH(
             return NextResponse.json(
                 {
                     error:
-                        "A nota solicitada não foi encontrada.",
+                        tRoute("noteNotFound"),
                 },
                 {
                     status: 404,
@@ -607,7 +638,7 @@ export async function PATCH(
         return NextResponse.json(
             {
                 error:
-                    "A ação solicitada não é válida.",
+                    tRoute("invalidAction"),
             },
             {
                 status: 400,
@@ -640,7 +671,10 @@ export async function PATCH(
 export async function DELETE(
     request: NextRequest,
 ) {
-  const t = await getTranslations("errors.api");
+    const tRoute = await getTranslations(
+        "errors.notesApi",
+    );
+
     try {
         const authentication =
             await getAuthenticatedProfile();
@@ -655,7 +689,7 @@ export async function DELETE(
             return NextResponse.json(
                 {
                     error:
-                        "Somente o proprietário pode excluir notas.",
+                        tRoute("ownerOnlyDelete"),
                 },
                 {
                     status: 403,
@@ -678,7 +712,7 @@ export async function DELETE(
             return NextResponse.json(
                 {
                     error:
-                        "Modelo e nota são obrigatórios.",
+                        tRoute("modelAndNoteRequired"),
                 },
                 {
                     status: 400,
@@ -717,7 +751,7 @@ export async function DELETE(
             return NextResponse.json(
                 {
                     error:
-                        "A nota solicitada não foi encontrada.",
+                        tRoute("noteNotFound"),
                 },
                 {
                     status: 404,
@@ -743,8 +777,8 @@ export async function DELETE(
                 {
                     error:
                         error.code === "42501"
-                            ? "Somente o proprietário pode excluir notas."
-                            : "Não foi possível excluir a nota.",
+                            ? tRoute("ownerOnlyDelete")
+                            : tRoute("deleteFailed"),
                 },
                 {
                     status:
@@ -799,6 +833,10 @@ async function editNote({
     modelId: string;
     requestBody: NotesRequestBody;
 }) {
+    const tRoute = await getTranslations(
+        "errors.notesApi",
+    );
+
     // The owner edits any note. A representative edits the ones she wrote, on
     // a model still assigned to her, and only while they are not deleted —
     // checked here, then again by notes_update and by the
@@ -815,8 +853,8 @@ async function editNote({
             {
                 error:
                     profile.role === "representative"
-                        ? "Você só pode editar as notas que você mesmo escreveu."
-                        : "Somente o proprietário pode editar notas existentes.",
+                        ? tRoute("editOwnNotesOnly")
+                        : tRoute("ownerOnlyEdit"),
             },
             {
                 status: 403,
@@ -836,7 +874,7 @@ async function editNote({
         return NextResponse.json(
             {
                 error:
-                    "A nota não pode ficar vazia.",
+                    tRoute("noteEmpty"),
             },
             {
                 status: 400,
@@ -848,7 +886,7 @@ async function editNote({
         return NextResponse.json(
             {
                 error:
-                    "A nota não pode ultrapassar 5000 caracteres.",
+                    tRoute("noteTooLong"),
             },
             {
                 status: 400,
@@ -871,7 +909,10 @@ async function editNote({
         priority === existingPriority
     ) {
         return NextResponse.json({
-            note: mapNote(existingNote),
+            note: mapNote(
+            existingNote,
+            tRoute("unknownUser"),
+        ),
         });
     }
 
@@ -905,7 +946,7 @@ async function editNote({
         return NextResponse.json(
             {
                 error:
-                    "Não foi possível editar a nota.",
+                    tRoute("editFailed"),
             },
             {
                 status: 500,
@@ -944,7 +985,7 @@ async function editNote({
         return NextResponse.json(
             {
                 error:
-                    "A edição não foi salva porque não foi possível registrar o histórico.",
+                    tRoute("editHistoryFailed"),
             },
             {
                 status: 500,
@@ -958,7 +999,10 @@ async function editNote({
     );
 
     return NextResponse.json({
-        note: mapNote(updatedNote),
+        note: mapNote(
+            updatedNote,
+            tRoute("unknownUser"),
+        ),
     });
 }
 
@@ -978,6 +1022,10 @@ async function togglePin({
     modelId: string;
     requestBody: NotesRequestBody;
 }) {
+    const tRoute = await getTranslations(
+        "errors.notesApi",
+    );
+
     if (
         profile.role !== "owner" &&
         profile.role !==
@@ -986,7 +1034,7 @@ async function togglePin({
         return NextResponse.json(
             {
                 error:
-                    "Você não tem permissão para fixar notas.",
+                    tRoute("noPinPermission"),
             },
             {
                 status: 403,
@@ -1031,7 +1079,7 @@ async function togglePin({
         return NextResponse.json(
             {
                 error:
-                    "Não foi possível alterar a fixação da nota.",
+                    tRoute("pinFailed"),
             },
             {
                 status: 500,
@@ -1066,7 +1114,7 @@ async function togglePin({
         return NextResponse.json(
             {
                 error:
-                    "A nota foi atualizada, mas não foi possível registrar o histórico.",
+                    tRoute("updateHistoryFailed"),
             },
             {
                 status: 500,
@@ -1075,7 +1123,10 @@ async function togglePin({
     }
 
     return NextResponse.json({
-        note: mapNote(updatedNote),
+        note: mapNote(
+            updatedNote,
+            tRoute("unknownUser"),
+        ),
     });
 }
 
@@ -1095,6 +1146,10 @@ async function toggleArchive({
     modelId: string;
     requestBody: NotesRequestBody;
 }) {
+    const tRoute = await getTranslations(
+        "errors.notesApi",
+    );
+
     if (
         profile.role !== "owner" &&
         profile.role !==
@@ -1103,7 +1158,7 @@ async function toggleArchive({
         return NextResponse.json(
             {
                 error:
-                    "Você não tem permissão para arquivar notas.",
+                    tRoute("noArchivePermission"),
             },
             {
                 status: 403,
@@ -1148,7 +1203,7 @@ async function toggleArchive({
         return NextResponse.json(
             {
                 error:
-                    "Não foi possível alterar o arquivamento da nota.",
+                    tRoute("archiveFailed"),
             },
             {
                 status: 500,
@@ -1183,7 +1238,7 @@ async function toggleArchive({
         return NextResponse.json(
             {
                 error:
-                    "A nota foi atualizada, mas não foi possível registrar o histórico.",
+                    tRoute("updateHistoryFailed"),
             },
             {
                 status: 500,
@@ -1197,7 +1252,10 @@ async function toggleArchive({
     );
 
     return NextResponse.json({
-        note: mapNote(updatedNote),
+        note: mapNote(
+            updatedNote,
+            tRoute("unknownUser"),
+        ),
     });
 }
 
@@ -1212,11 +1270,15 @@ async function softDeleteNote({
     existingNote: Record<string, unknown>;
     modelId: string;
 }) {
+    const tRoute = await getTranslations(
+        "errors.notesApi",
+    );
+
     if (profile.role !== "owner") {
         return NextResponse.json(
             {
                 error:
-                    "Somente o proprietário pode excluir notas.",
+                    tRoute("ownerOnlyDelete"),
             },
             {
                 status: 403,
@@ -1228,7 +1290,7 @@ async function softDeleteNote({
         return NextResponse.json(
             {
                 error:
-                    "Esta nota já foi excluída.",
+                    tRoute("alreadyDeleted"),
             },
             {
                 status: 400,
@@ -1270,7 +1332,7 @@ async function softDeleteNote({
         return NextResponse.json(
             {
                 error:
-                    "Não foi possível excluir a nota.",
+                    tRoute("deleteFailed"),
             },
             {
                 status: 500,
@@ -1310,7 +1372,10 @@ async function softDeleteNote({
     );
 
     return NextResponse.json({
-        note: mapNote(updatedNote),
+        note: mapNote(
+            updatedNote,
+            tRoute("unknownUser"),
+        ),
     });
 }
 
@@ -1325,6 +1390,10 @@ async function getAuthenticatedProfile(): Promise<
       }
 > {
     const t = await getTranslations("errors.api");
+    const tRoute = await getTranslations(
+        "errors.notesApi",
+    );
+
 
     const supabase = await createClient();
 
@@ -1409,7 +1478,7 @@ async function getAuthenticatedProfile(): Promise<
                 NextResponse.json(
                     {
                         error:
-                            "Você não tem acesso às notas administrativas.",
+                            tRoute("noAdminNotesAccess"),
                     },
                     {
                         status: 403,
@@ -1443,6 +1512,10 @@ async function verifyModelAccess(
           response: NextResponse;
       }
 > {
+    const tRoute = await getTranslations(
+        "errors.notesApi",
+    );
+
     const {
         data: model,
         error: modelError,
@@ -1459,7 +1532,7 @@ async function verifyModelAccess(
                 NextResponse.json(
                     {
                         error:
-                            "A modelo solicitada não foi encontrada.",
+                            tRoute("modelNotFound"),
                     },
                     {
                         status: 404,
@@ -1495,7 +1568,7 @@ async function verifyModelAccess(
                     NextResponse.json(
                         {
                             error:
-                                "Você não tem acesso a esta modelo.",
+                                tRoute("noModelAccess"),
                         },
                         {
                             status: 403,
@@ -1561,7 +1634,7 @@ async function updateLatestNoteSummary(
     supabase: SupabaseClient,
     modelId: string,
 ) {
-  const t = await getTranslations("errors.api");
+
     const {
         data: latestNote,
         error: noteError,
@@ -1639,6 +1712,7 @@ function createPermissions(
 
 function mapNote(
     note: Record<string, unknown>,
+    unknownUser: string,
 ) {
     return {
         id: readRequiredString(
@@ -1675,7 +1749,7 @@ function mapNote(
         createdByName:
             readRequiredString(
                 note.created_by_name,
-            ) ?? "Usuário",
+            ) ?? unknownUser,
         createdByRole:
             readRequiredString(
                 note.created_by_role,
@@ -1736,6 +1810,7 @@ function mapHistory(
         string,
         unknown
     >,
+    unknownUser: string,
 ) {
     return {
         id: readRequiredString(
@@ -1764,7 +1839,7 @@ function mapHistory(
         editorName:
             readRequiredString(
                 history.editor_name,
-            ) ?? "Usuário",
+            ) ?? unknownUser,
         editorRole:
             readRequiredString(
                 history.editor_role,
@@ -1783,6 +1858,7 @@ function mapHistory(
 // `summary` carries the human-readable description the audit table stores.
 function mapAuditHistory(
     entry: Record<string, unknown>,
+    unknownUser: string,
 ) {
     return {
         id: `audit:${
@@ -1818,7 +1894,7 @@ function mapAuditHistory(
         editorName:
             readRequiredString(
                 entry.actor_name,
-            ) ?? "Usuário",
+            ) ?? unknownUser,
         editorRole:
             readRequiredString(
                 entry.actor_role,

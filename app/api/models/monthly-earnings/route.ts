@@ -303,7 +303,6 @@ export async function POST(request: NextRequest) {
 
 /** Publish / unpublish, and amount-only edits. */
 export async function PATCH(request: NextRequest) {
-  const t = await getTranslations("errors.api");
   const tRoute = await getTranslations("errors.monthlyEarnings");
   const auth = await requireStaff();
 

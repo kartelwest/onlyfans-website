@@ -35,7 +35,6 @@ type PatchBody = LedgerWriteBody & {
 };
 
 export async function PATCH(request: NextRequest, context: RouteContext) {
-  const t = await getTranslations("errors.api");
   const tRoute = await getTranslations("errors.ledger");
   const { entryId } = await context.params;
 

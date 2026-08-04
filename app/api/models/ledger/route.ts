@@ -23,6 +23,7 @@ export const dynamic = "force-dynamic";
 
 export async function GET(request: NextRequest) {
   const t = await getTranslations("errors.api");
+  const tRoute = await getTranslations("errors.ledger");
   const auth = await authenticate();
 
   if (!auth.ok) {
@@ -68,7 +69,7 @@ export async function GET(request: NextRequest) {
     console.error("Erro ao carregar lançamentos:", error);
 
     return NextResponse.json(
-      { error: "Não foi possível carregar os lançamentos." },
+      { error: tRoute("loadFailed") },
       { status: 500 },
     );
   }
@@ -82,6 +83,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   const t = await getTranslations("errors.api");
+  const tRoute = await getTranslations("errors.ledger");
   const auth = await authenticate();
 
   if (!auth.ok) {
@@ -114,7 +116,7 @@ export async function POST(request: NextRequest) {
   // 403 even for an owner: the eligibility flag gates the data, not the role.
   if (!access.expensesEnabled) {
     return NextResponse.json(
-      { error: "Lançamentos estão desativados para esta modelo." },
+      { error: tRoute("ledgerDisabled") },
       { status: 403 },
     );
   }
@@ -145,7 +147,7 @@ export async function POST(request: NextRequest) {
   if (error) {
     console.error("Erro ao criar lançamento:", error);
 
-    return rpcErrorResponse(error, "Não foi possível salvar o lançamento.");
+    return rpcErrorResponse(error, tRoute("saveFailed"));
   }
 
   // A deduction dated today or earlier is snapshotted immediately instead of

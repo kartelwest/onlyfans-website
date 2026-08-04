@@ -50,6 +50,7 @@ export async function GET(request: NextRequest) {
 
 export async function PATCH(request: NextRequest) {
   const t = await getTranslations("errors.api");
+  const tRoute = await getTranslations("errors.expensesEnabled");
   const auth = await requireStaff();
 
   if (!auth.ok) {
@@ -72,7 +73,7 @@ export async function PATCH(request: NextRequest) {
 
   if (typeof body.enabled !== "boolean") {
     return NextResponse.json(
-      { error: "Valor inválido." },
+      { error: tRoute("invalidValue") },
       { status: 400 },
     );
   }
@@ -99,7 +100,7 @@ export async function PATCH(request: NextRequest) {
     // only, and a swallowed "permission denied for column expenses_enabled"
     // is exactly what made this look like a silent no-op the first time.
     return NextResponse.json(
-      { error: error.message || "Não foi possível alterar a configuração." },
+      { error: error.message || tRoute("updateFailed") },
       { status: 500 },
     );
   }
