@@ -696,6 +696,56 @@
         "apply": "Quero Fazer Parte",
         "home": "Voltar ao Início"
       }
+    },
+    "terms": {
+      "metaTitle": "Termos de Uso — KARAY Models",
+      "metaDescription": "Termos de uso da KARAY Models.",
+      "title": "Termos de Uso",
+      "body": "Nossos termos de uso estão sendo revisados e atualizados. Em breve disponibilizaremos aqui o documento completo com as regras, direitos e responsabilidades para uso do site e dos serviços da KARAY Models.",
+      "contact": "Se tiver dúvidas sobre os termos ou sobre nossos serviços, entre em contato conosco pelo WhatsApp ou pelo e-mail indicado no rodapé do site."
+    },
+    "privacy": {
+      "metaTitle": "Política de Privacidade — KARAY Models",
+      "metaDescription": "Política de privacidade da KARAY Models.",
+      "title": "Política de Privacidade",
+      "body": "Nossa política de privacidade está sendo revisada e atualizada. Em breve disponibilizaremos aqui o texto completo com todas as informações sobre como coletamos, usamos, armazenamos e protegemos seus dados.",
+      "contact": "Se tiver dúvidas sobre o tratamento dos seus dados pessoais, entre em contato conosco pelo WhatsApp ou pelo e-mail indicado no rodapé do site."
+    },
+    "recordingGuidelines": {
+      "title": "Diretrizes de Gravação",
+      "intro": "Siga estas orientações para manter a qualidade do conteúdo enviado para o Google Drive.",
+      "sections": [
+        {
+          "title": "Iluminação",
+          "items": [
+            "Grave sempre de frente para a luz, nunca contra a janela ou fonte de luz.",
+            "Prefira luz natural ou um ring light; evite ambientes muito escuros."
+          ]
+        },
+        {
+          "title": "Resolução e enquadramento",
+          "items": [
+            "Grave na maior resolução disponível no seu celular (mínimo 1080p).",
+            "Mantenha o celular estável — use tripé sempre que possível.",
+            "Enquadre o conteúdo na vertical para Stories/Reels e na horizontal quando indicado pela equipe."
+          ]
+        },
+        {
+          "title": "Áudio",
+          "items": [
+            "Grave em ambientes silenciosos, sem ventiladores, TV ou música de fundo.",
+            "Evite vento direto no microfone em gravações externas."
+          ]
+        },
+        {
+          "title": "Organização do envio",
+          "items": [
+            "Envie o conteúdo o quanto antes após a gravação, sem editar previamente.",
+            "Separe fotos e vídeos por data sempre que possível.",
+            "Em caso de dúvida sobre o que gravar, fale com a equipe pelo WhatsApp antes."
+          ]
+        }
+      ]
     }
   },
   "nav": {
@@ -732,6 +782,23 @@
       "submit": "Entrar",
       "submitting": "Entrando...",
       "backToSite": "← Voltar para o site"
+    },
+    "changePasswordPage": {
+      "title": "Alterar Senha",
+      "subtitle": "Por segurança, você precisa alterar sua senha antes de continuar.",
+      "newPasswordLabel": "Nova Senha",
+      "newPasswordPlaceholder": "Digite sua nova senha",
+      "confirmPasswordLabel": "Confirmar Senha",
+      "confirmPasswordPlaceholder": "Confirme sua nova senha",
+      "submit": "Alterar Senha",
+      "submitting": "Alterando...",
+      "errors": {
+        "tooShort": "A senha deve ter pelo menos 8 caracteres.",
+        "mismatch": "As senhas não coincidem.",
+        "sessionExpired": "Sessão expirada. Entre novamente.",
+        "updateFailed": "Erro ao atualizar senha.",
+        "unknown": "Ocorreu um erro ao alterar a senha."
+      }
     }
   },
   "enums": {
@@ -797,11 +864,96 @@
       "skipped": "Ignorado"
     }
   },
-  "dashboard": {},
+  "dashboard": {
+    "model": {
+      "greeting": "Olá, {name}",
+      "statusActive": "Modelo ativa",
+      "statusInactive": "Modelo inativa",
+      "changePhoto": "Alterar foto de perfil",
+      "edit": "Editar",
+      "avatarUploadFailed": "Não foi possível enviar a foto.",
+      "notesTitle": "Notas",
+      "notesEmpty": "Nenhuma nota registrada.",
+      "notSet": "Não definido",
+      "footer": "KARAY Models · Área da Modelo",
+      "profileNotFound": "Perfil não encontrado",
+      "contactAgency": "Entre em contato com a agência."
+    },
+    "earnings": {
+      "title": "Seus ganhos de {period}",
+      "awaitingUpdate": "Aguardando atualização da agência.",
+      "yourShare": "Sua parte ({pct}%):",
+      "deductionsFor": "Descontos de {month}:",
+      "payable": "A receber:",
+      "remaining": "Saldo a descontar:",
+      "fxOn": "Câmbio de {date}:",
+      "legendYou": "Você",
+      "legendAgency": "Agência",
+      "legendMarketing": "Marketing"
+    },
+    "onboarding": {
+      "progress": "Seu onboarding {done} de {total}",
+      "remaining": "{count, plural, one {Falta # etapa} other {Faltam # etapas}} para concluir seu onboarding.",
+      "steps": {
+        "applicationApproved": "Candidatura aprovada",
+        "onlyfansAccountCreated": "Conta OnlyFans criada",
+        "socialAccountsConfigured": "Redes sociais configuradas",
+        "proxyBrowserReady": "Proxy e navegador dedicados",
+        "firstContentReceived": "Primeiro conteúdo recebido",
+        "contractSigned": "Contrato assinado"
+      }
+    },
+    "profile": {
+      "title": "Seus dados",
+      "notSet": "Não definido",
+      "fullName": "Nome completo",
+      "stageName": "Nome artístico",
+      "birthday": "Data de nascimento",
+      "location": "Localização",
+      "email": "E-mail",
+      "whatsapp": "WhatsApp",
+      "currency": "Moeda",
+      "contentFrequency": "Frequência de conteúdo",
+      "blockBrazil": "Bloquear Brasil",
+      "showFace": "Mostrar rosto",
+      "referral": "Indicação"
+    },
+    "content": {
+      "title": "Enviar conteúdo",
+      "contentFolderLabel": "Google Drive / Conteúdo",
+      "contentFolderDescription": "Onde o seu conteúdo é enviado.",
+      "instagramFolderLabel": "Google Drive / Instagram",
+      "instagramFolderDescription": "Material do seu Instagram.",
+      "openDriveFolder": "Abrir pasta no Google Drive",
+      "folderNotConfigured": "Pasta ainda não configurada. Fale com a agência.",
+      "uploadButton": "Enviar conteúdo para o Drive",
+      "uploading": "Enviando...",
+      "uploadingProgress": "Enviando {done}/{total}...",
+      "uploadDone": "{count, plural, one {# arquivo enviado com sucesso.} other {# arquivos enviados com sucesso.}}",
+      "uploadPartial": "{sent} enviado(s), {failed} com falha.",
+      "uploadFailed": "Falha no envio.",
+      "uploadFailedOne": "Falha ao enviar um dos arquivos.",
+      "viewGuidelines": "Ver diretrizes de gravação",
+      "previewDisabled": "O envio de conteúdo fica desativado no modo de visualização.",
+      "representativeOnlyUpload": "Este é o único envio permitido para o representante."
+    },
+    "support": {
+      "title": "Suporte",
+      "whatsapp": "Falar com a equipe no WhatsApp"
+    }
+  },
   "models": {},
   "earnings": {},
-  "expenses": {},
-  "loans": {},
+  "expenses": {
+    "title": "Despesas",
+    "empty": "Nenhuma despesa registrada.",
+    "total": "Total"
+  },
+  "loans": {
+    "title": "Empréstimos",
+    "empty": "Nenhum empréstimo registrado.",
+    "outstanding": "Em aberto"
+  },
   "settings": {},
   "errors": {
     "login": {

@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
@@ -40,14 +41,16 @@ export default async function AreaDaModeloPage() {
     .maybeSingle();
 
   if (modelError || !modelRow) {
+    const t = await getTranslations("dashboard.model");
+
     return (
       <main className="flex min-h-screen items-center justify-center bg-[#0b0a0d] px-4 text-white">
         <section className="w-full max-w-md rounded-2xl border border-red-400/30 bg-red-500/10 p-8 text-center">
           <p className="text-xs font-bold uppercase tracking-[0.22em] text-red-300">
-            Perfil não encontrado
+            {t("profileNotFound")}
           </p>
           <p className="mt-3 text-sm leading-6 text-red-100/75">
-            Entre em contato com a agência.
+            {t("contactAgency")}
           </p>
         </section>
       </main>

@@ -696,6 +696,56 @@
         "apply": "I Want to Join",
         "home": "Back to Home"
       }
+    },
+    "terms": {
+      "metaTitle": "Terms of Use — KARAY Models",
+      "metaDescription": "KARAY Models terms of use.",
+      "title": "Terms of Use",
+      "body": "Our terms of use are being reviewed and updated. We'll publish the full document here shortly, covering the rules, rights and responsibilities that apply to the KARAY Models site and services.",
+      "contact": "If you have questions about the terms or about our services, reach us on WhatsApp or at the email address in the site footer."
+    },
+    "privacy": {
+      "metaTitle": "Privacy Policy — KARAY Models",
+      "metaDescription": "KARAY Models privacy policy.",
+      "title": "Privacy Policy",
+      "body": "Our privacy policy is being reviewed and updated. We'll publish the full text here shortly, covering how we collect, use, store and protect your data.",
+      "contact": "If you have questions about how your personal data is handled, reach us on WhatsApp or at the email address in the site footer."
+    },
+    "recordingGuidelines": {
+      "title": "Recording Guidelines",
+      "intro": "Follow these guidelines to keep the quality of the content you send to Google Drive.",
+      "sections": [
+        {
+          "title": "Lighting",
+          "items": [
+            "Always face the light — never shoot with the window or light source behind you.",
+            "Natural light or a ring light works best; avoid very dark rooms."
+          ]
+        },
+        {
+          "title": "Resolution and framing",
+          "items": [
+            "Record at the highest resolution your phone offers (1080p minimum).",
+            "Keep the phone steady — use a tripod whenever you can.",
+            "Frame vertically for Stories/Reels, and horizontally when the team asks for it."
+          ]
+        },
+        {
+          "title": "Audio",
+          "items": [
+            "Record somewhere quiet, with no fans, TV or background music.",
+            "Keep wind off the microphone when recording outdoors."
+          ]
+        },
+        {
+          "title": "Sending it in",
+          "items": [
+            "Send content as soon as you can after recording, without editing it first.",
+            "Separate photos and videos by date where possible.",
+            "If you're unsure what to record, message the team on WhatsApp first."
+          ]
+        }
+      ]
     }
   },
   "nav": {
@@ -732,6 +782,23 @@
       "submit": "Sign in",
       "submitting": "Signing in...",
       "backToSite": "← Back to the site"
+    },
+    "changePasswordPage": {
+      "title": "Change Password",
+      "subtitle": "For your security, you need to change your password before continuing.",
+      "newPasswordLabel": "New Password",
+      "newPasswordPlaceholder": "Enter your new password",
+      "confirmPasswordLabel": "Confirm Password",
+      "confirmPasswordPlaceholder": "Confirm your new password",
+      "submit": "Change Password",
+      "submitting": "Changing...",
+      "errors": {
+        "tooShort": "Your password must be at least 8 characters.",
+        "mismatch": "The passwords don't match.",
+        "sessionExpired": "Your session expired. Please sign in again.",
+        "updateFailed": "We couldn't update your password.",
+        "unknown": "Something went wrong while changing your password."
+      }
     }
   },
   "enums": {
@@ -797,11 +864,96 @@
       "skipped": "Skipped"
     }
   },
-  "dashboard": {},
+  "dashboard": {
+    "model": {
+      "greeting": "Hi, {name}",
+      "statusActive": "Active model",
+      "statusInactive": "Inactive model",
+      "changePhoto": "Change profile photo",
+      "edit": "Edit",
+      "avatarUploadFailed": "We couldn't upload the photo.",
+      "notesTitle": "Notes",
+      "notesEmpty": "No notes recorded.",
+      "notSet": "Not set",
+      "footer": "KARAY Models · Model Area",
+      "profileNotFound": "Profile not found",
+      "contactAgency": "Please contact the agency."
+    },
+    "earnings": {
+      "title": "Your {period} earnings",
+      "awaitingUpdate": "Waiting on an update from the agency.",
+      "yourShare": "Your share ({pct}%):",
+      "deductionsFor": "{month} deductions:",
+      "payable": "Payable:",
+      "remaining": "Balance still to deduct:",
+      "fxOn": "Rate on {date}:",
+      "legendYou": "You",
+      "legendAgency": "Agency",
+      "legendMarketing": "Marketing"
+    },
+    "onboarding": {
+      "progress": "Your onboarding {done} of {total}",
+      "remaining": "{count, plural, one {# step left} other {# steps left}} to finish your onboarding.",
+      "steps": {
+        "applicationApproved": "Application approved",
+        "onlyfansAccountCreated": "OnlyFans account created",
+        "socialAccountsConfigured": "Social accounts configured",
+        "proxyBrowserReady": "Dedicated proxy and browser",
+        "firstContentReceived": "First content received",
+        "contractSigned": "Contract signed"
+      }
+    },
+    "profile": {
+      "title": "Your details",
+      "notSet": "Not set",
+      "fullName": "Full name",
+      "stageName": "Stage name",
+      "birthday": "Date of birth",
+      "location": "Location",
+      "email": "Email",
+      "whatsapp": "WhatsApp",
+      "currency": "Currency",
+      "contentFrequency": "Content frequency",
+      "blockBrazil": "Block Brazil",
+      "showFace": "Show face",
+      "referral": "Referral"
+    },
+    "content": {
+      "title": "Send content",
+      "contentFolderLabel": "Google Drive / Content",
+      "contentFolderDescription": "Where your content is uploaded.",
+      "instagramFolderLabel": "Google Drive / Instagram",
+      "instagramFolderDescription": "Material for your Instagram.",
+      "openDriveFolder": "Open the Google Drive folder",
+      "folderNotConfigured": "This folder isn't set up yet. Please contact the agency.",
+      "uploadButton": "Upload content to Drive",
+      "uploading": "Uploading...",
+      "uploadingProgress": "Uploading {done}/{total}...",
+      "uploadDone": "{count, plural, one {# file uploaded successfully.} other {# files uploaded successfully.}}",
+      "uploadPartial": "{sent} uploaded, {failed} failed.",
+      "uploadFailed": "Upload failed.",
+      "uploadFailedOne": "One of the files failed to upload.",
+      "viewGuidelines": "View recording guidelines",
+      "previewDisabled": "Uploading is disabled in preview mode.",
+      "representativeOnlyUpload": "This is the only upload a representative is allowed to make."
+    },
+    "support": {
+      "title": "Support",
+      "whatsapp": "Message the team on WhatsApp"
+    }
+  },
   "models": {},
   "earnings": {},
-  "expenses": {},
-  "loans": {},
+  "expenses": {
+    "title": "Expenses",
+    "empty": "No expenses recorded.",
+    "total": "Total"
+  },
+  "loans": {
+    "title": "Loans",
+    "empty": "No loans recorded.",
+    "outstanding": "Outstanding"
+  },
   "settings": {},
   "errors": {
     "login": {

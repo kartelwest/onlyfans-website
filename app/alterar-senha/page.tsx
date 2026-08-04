@@ -3,35 +3,48 @@
 export const dynamic = "force-dynamic";
 
 import { FormEvent, useState } from "react";
+import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 
+/** Which sentence to show. Held as a key so a language switch re-renders it. */
+type ChangePasswordError =
+  | "tooShort"
+  | "mismatch"
+  | "sessionExpired"
+  | "updateFailed"
+  | "unknown";
+
 export default function ChangePasswordPage() {
+  const t = useTranslations("auth.changePasswordPage");
   const supabase = createClient();
 
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [errorMessage, setErrorMessage] = useState("");
+  const [failure, setFailure] = useState<ChangePasswordError | null>(null);
   const [loading, setLoading] = useState(false);
 
   async function handleChangePassword(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
     setLoading(true);
-    setErrorMessage("");
+    setFailure(null);
 
     try {
       if (newPassword.length < 8) {
-        throw new Error("A senha deve ter pelo menos 8 caracteres.");
+        setFailure("tooShort");
+        return;
       }
 
       if (newPassword !== confirmPassword) {
-        throw new Error("As senhas não coincidem.");
+        setFailure("mismatch");
+        return;
       }
 
       const { data: { user }, error: userError } = await supabase.auth.getUser();
 
       if (userError || !user) {
-        throw new Error("Sessão expirada. Entre novamente.");
+        setFailure("sessionExpired");
+        return;
       }
 
       const { error: updateError } = await supabase.auth.updateUser({
@@ -39,7 +52,8 @@ export default function ChangePasswordPage() {
       });
 
       if (updateError) {
-        throw new Error("Erro ao atualizar senha.");
+        setFailure("updateFailed");
+        return;
       }
 
       // Clear must_change_password flag
@@ -49,7 +63,7 @@ export default function ChangePasswordPage() {
         .eq("id", user.id);
 
       if (profileError) {
-        console.error("Erro ao atualizar perfil:", profileError);
+        console.error("Failed to clear must_change_password:", profileError);
       }
 
       // Get role to redirect appropriately
@@ -72,13 +86,8 @@ export default function ChangePasswordPage() {
       } else {
         window.location.replace("/login");
       }
-    } catch (error) {
-      const message =
-        error instanceof Error
-          ? error.message
-          : "Ocorreu um erro ao alterar senha.";
-
-      setErrorMessage(message);
+    } catch {
+      setFailure("unknown");
     } finally {
       setLoading(false);
     }
@@ -93,11 +102,11 @@ export default function ChangePasswordPage() {
           </p>
 
           <h1 className="mt-3 text-3xl font-bold text-[#4b2438]">
-            Alterar Senha
+            {t("title")}
           </h1>
 
           <p className="mt-3 text-sm leading-6 text-[#765c68]">
-            Por segurança, você precisa alterar sua senha antes de continuar.
+            {t("subtitle")}
           </p>
         </div>
 
@@ -107,7 +116,7 @@ export default function ChangePasswordPage() {
               htmlFor="newPassword"
               className="mb-2 block text-sm font-semibold text-[#4b2438]"
             >
-              Nova Senha
+              {t("newPasswordLabel")}
             </label>
 
             <input
@@ -116,7 +125,7 @@ export default function ChangePasswordPage() {
               autoComplete="new-password"
               value={newPassword}
               onChange={(event) => setNewPassword(event.target.value)}
-              placeholder="Digite sua nova senha"
+              placeholder={t("newPasswordPlaceholder")}
               required
               minLength={8}
               className="w-full rounded-2xl border border-[#d8c7cf] bg-[#fffaf6] px-4 py-3 text-[#321725] outline-none transition focus:border-[#b06a87] focus:ring-4 focus:ring-[#b06a87]/15"
@@ -128,7 +137,7 @@ export default function ChangePasswordPage() {
               htmlFor="confirmPassword"
               className="mb-2 block text-sm font-semibold text-[#4b2438]"
             >
-              Confirmar Senha
+              {t("confirmPasswordLabel")}
             </label>
 
             <input
@@ -137,16 +146,19 @@ export default function ChangePasswordPage() {
               autoComplete="new-password"
               value={confirmPassword}
               onChange={(event) => setConfirmPassword(event.target.value)}
-              placeholder="Confirme sua nova senha"
+              placeholder={t("confirmPasswordPlaceholder")}
               required
               minLength={8}
               className="w-full rounded-2xl border border-[#d8c7cf] bg-[#fffaf6] px-4 py-3 text-[#321725] outline-none transition focus:border-[#b06a87] focus:ring-4 focus:ring-[#b06a87]/15"
             />
           </div>
 
-          {errorMessage && (
-            <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
-              {errorMessage}
+          {failure && (
+            <div
+              role="alert"
+              className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700"
+            >
+              {t(`errors.${failure}`)}
             </div>
           )}
 
@@ -155,7 +167,7 @@ export default function ChangePasswordPage() {
             disabled={loading}
             className="w-full rounded-2xl bg-[#4b2438] px-5 py-3.5 text-sm font-bold uppercase tracking-[0.16em] text-white transition hover:bg-[#321725] disabled:cursor-not-allowed disabled:opacity-60"
           >
-            {loading ? "Alterando..." : "Alterar Senha"}
+            {loading ? t("submitting") : t("submit")}
           </button>
         </form>
       </section>

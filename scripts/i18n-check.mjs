@@ -53,8 +53,15 @@ function flatten(value, prefix = "", out = new Map()) {
 }
 
 /**
- * ICU placeholders in a message. Only the argument name is captured, so
- * `{count, plural, ...}` and `{count}` are recognised as the same argument.
+ * ICU placeholders in a message. Only the argument NAME is captured, so
+ * `{count, plural, ...}` and `{count}` count as the same argument.
+ *
+ * The lookahead is what keeps plural branches out of the results. In
+ * `{count, plural, one {# item} other {# items}}` the inner `{# item}` and the
+ * `one {…}` / `other {…}` keywords are message syntax, not arguments — an
+ * argument name is always followed immediately by `}` or `,`, and nothing else
+ * is. Without this, a language whose plural branches happen to start with a
+ * word would be reported as having "extra placeholders".
  */
 function placeholders(message) {
   if (typeof message !== "string") {
@@ -63,7 +70,7 @@ function placeholders(message) {
 
   const found = new Set();
 
-  for (const match of message.matchAll(/\{\s*([a-zA-Z0-9_]+)/g)) {
+  for (const match of message.matchAll(/\{\s*([a-zA-Z0-9_]+)\s*(?=[,}])/g)) {
     found.add(match[1]);
   }
 

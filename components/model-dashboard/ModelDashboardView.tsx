@@ -1,18 +1,20 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useRef, useState, type ReactNode } from "react";
 
 import LogoutButton from "@/components/LogoutButton";
 import { WHATSAPP_URL } from "@/lib/constants/whatsapp";
 import { countryCodeToFlag } from "@/lib/countries";
-import { formatDatePtBr } from "@/lib/earnings/period";
-import { describeLedgerEntry } from "@/lib/ledger/entries";
+import { formatCalendarDate, formatMonthYear } from "@/lib/earnings/period";
+import { useMoney } from "@/lib/i18n/money";
+import { toLocale } from "@/lib/i18n/config";
 import {
   AVATAR_ACCEPT_ATTRIBUTE,
   uploadModelAvatar,
   validateAvatarFile,
 } from "@/lib/models/avatarUpload";
-import { BRL, USD, formatFxRate, formatMoney } from "@/lib/money/currency";
+import { BRL, USD } from "@/lib/money/currency";
 
 import type { LedgerEntry } from "@/types/ledger";
 import type {
@@ -53,18 +55,20 @@ export default function ModelDashboardView({
   previewMode = false,
   children,
 }: ModelDashboardViewProps) {
+  const tSteps = useTranslations("dashboard.onboarding.steps");
+
   const [model, setModel] = useState(initialModel);
 
   const checklistSteps: {
     key: keyof ModelDashboardChecklist;
     label: string;
   }[] = [
-    { key: "applicationApproved", label: "Candidatura aprovada" },
-    { key: "onlyfansAccountCreated", label: "Conta OnlyFans criada" },
-    { key: "socialAccountsConfigured", label: "Redes sociais configuradas" },
-    { key: "proxyBrowserReady", label: "Proxy e navegador dedicados" },
-    { key: "firstContentReceived", label: "Primeiro conteúdo recebido" },
-    { key: "contractSigned", label: "Contrato assinado" },
+    { key: "applicationApproved", label: tSteps("applicationApproved") },
+    { key: "onlyfansAccountCreated", label: tSteps("onlyfansAccountCreated") },
+    { key: "socialAccountsConfigured", label: tSteps("socialAccountsConfigured") },
+    { key: "proxyBrowserReady", label: tSteps("proxyBrowserReady") },
+    { key: "firstContentReceived", label: tSteps("firstContentReceived") },
+    { key: "contractSigned", label: tSteps("contractSigned") },
   ];
 
   const completedCount = checklistSteps.filter(
@@ -137,6 +141,8 @@ function Header({
   viewerRole: ModelDashboardRole;
   previewMode: boolean;
 }) {
+  const t = useTranslations("dashboard.model");
+
   return (
     <header className="flex items-start justify-between gap-4 pt-2">
       <div>
@@ -145,7 +151,7 @@ function Header({
         </p>
 
         <h1 className="mt-2 text-2xl font-bold leading-tight">
-          Olá, {model.stageName || model.fullName}
+          {t("greeting", { name: model.stageName || model.fullName })}
         </h1>
 
         <StatusBadge active={model.active} />
@@ -175,6 +181,8 @@ function Header({
 }
 
 function StatusBadge({ active }: { active: boolean }) {
+  const t = useTranslations("dashboard.model");
+
   return (
     <div
       className={`mt-3 inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-semibold ${
@@ -186,7 +194,7 @@ function StatusBadge({ active }: { active: boolean }) {
       <span
         className={`h-2 w-2 rounded-full ${active ? "bg-emerald-400" : "bg-red-400"}`}
       />
-      {active ? "Modelo ativa" : "Modelo inativa"}
+      {active ? t("statusActive") : t("statusInactive")}
     </div>
   );
 }
@@ -200,6 +208,7 @@ function Avatar({
   canEdit: boolean;
   onAvatarUpdated: (url: string) => void;
 }) {
+  const t = useTranslations("dashboard.model");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -245,7 +254,7 @@ function Avatar({
       setError(
         uploadError instanceof Error
           ? uploadError.message
-          : "Não foi possível enviar a foto.",
+          : t("avatarUploadFailed"),
       );
     } finally {
       setIsUploading(false);
@@ -287,7 +296,7 @@ function Avatar({
         onClick={() => fileInputRef.current?.click()}
         disabled={isUploading}
         className="disabled:opacity-60"
-        aria-label="Alterar foto de perfil"
+        aria-label={t("changePhoto")}
       >
         {circle}
       </button>
@@ -301,7 +310,7 @@ function Avatar({
       />
 
       <span className="text-[10px] font-semibold text-[#e8b84b]">
-        Editar
+        {t("edit")}
       </span>
 
       {error && (
@@ -324,6 +333,10 @@ function EarningsCard({
   model: ModelDashboardModel;
   earnings: ModelDashboardEarnings;
 }) {
+  const t = useTranslations("dashboard.earnings");
+  const money = useMoney();
+  const locale = money.locale;
+
   const [showDeductions, setShowDeductions] = useState(false);
 
   const modelPct = earnings.modelPct;
@@ -345,22 +358,22 @@ function EarningsCard({
   return (
     <section className="rounded-2xl border border-[#e8b84b]/20 bg-gradient-to-b from-[#1a1620] to-[#141019] p-5">
       <p className="text-xs font-bold uppercase tracking-[0.16em] text-white/50">
-        Seus ganhos de {earnings.periodTitle}
+        {t("title", { period: earnings.periodTitle })}
       </p>
 
       {earnings.published ? (
         <p className="mt-2 flex flex-wrap items-baseline gap-x-2 gap-y-1 text-3xl font-black text-[#e8b84b]">
           <span>
             {converts
-              ? formatMoney(earnings.grossUsd, USD, { withCode: true })
-              : withFlag(formatMoney(earnings.grossUsd, USD, { withCode: true }))}
+              ? money.format(earnings.grossUsd, USD, { withCode: true })
+              : withFlag(money.format(earnings.grossUsd, USD, { withCode: true }))}
           </span>
 
           {converts && (
             <span className="text-xl text-white/70">
               ·{" "}
               {withFlag(
-                formatMoney(inCurrency(earnings.grossUsd) ?? 0, model.currency),
+                money.format(inCurrency(earnings.grossUsd) ?? 0, model.currency),
               )}
             </span>
           )}
@@ -370,7 +383,7 @@ function EarningsCard({
           <p className="mt-2 text-3xl font-black text-[#e8b84b]">—</p>
 
           <p className="mt-1 text-sm text-white/55">
-            Aguardando atualização da agência.
+            {t("awaitingUpdate")}
           </p>
         </>
       )}
@@ -378,9 +391,9 @@ function EarningsCard({
       {earnings.published && (
         <div className="mt-3 space-y-1.5 text-sm text-white/70">
           <p>
-            Sua parte ({modelPct}%):{" "}
+            {t("yourShare", { pct: modelPct })}{" "}
             <span className="font-semibold text-white">
-              {formatMoney(earnings.modelShareUsd, USD, { withCode: true })}
+              {money.format(earnings.modelShareUsd, USD, { withCode: true })}
             </span>
           </p>
 
@@ -393,15 +406,15 @@ function EarningsCard({
                 aria-expanded={showDeductions}
               >
                 <span>
-                  Descontos de {earnings.periodMonthName}:{" "}
+                  {t("deductionsFor", { month: earnings.periodMonthName })}{" "}
                   <span className="font-semibold text-red-300">
-                    {formatMoney(earnings.deductionsUsd, USD, {
+                    {money.format(earnings.deductionsUsd, USD, {
                       withCode: true,
                       negative: true,
                     })}
                   </span>{" "}
                   <span className="text-white/45">
-                    ({formatMoney(earnings.deductionsBrl, BRL)})
+                    ({money.format(earnings.deductionsBrl, BRL)})
                   </span>
                 </span>
 
@@ -420,16 +433,16 @@ function EarningsCard({
                       <span>
                         {deduction.label}
                         <span className="block text-[10px] text-white/35">
-                          {formatDatePtBr(deduction.deductOn)}
+                          {formatCalendarDate(deduction.deductOn, locale)}
                         </span>
                       </span>
 
                       <span className="whitespace-nowrap text-right">
-                        {formatMoney(deduction.amountUsd, USD, {
+                        {money.format(deduction.amountUsd, USD, {
                           negative: true,
                         })}
                         <span className="block text-[10px] text-white/35">
-                          {formatMoney(deduction.amountBrl, BRL)}
+                          {money.format(deduction.amountBrl, BRL)}
                         </span>
                       </span>
                     </li>
@@ -441,9 +454,9 @@ function EarningsCard({
 
           <p className="flex flex-wrap items-baseline gap-x-2">
             <span>
-              A receber:{" "}
+              {t("payable")}{" "}
               <span className="font-semibold text-white">
-                {formatMoney(earnings.payableUsd, USD, { withCode: true })}
+                {money.format(earnings.payableUsd, USD, { withCode: true })}
               </span>
             </span>
 
@@ -451,7 +464,7 @@ function EarningsCard({
               <span className="text-white/55">
                 ·{" "}
                 {withFlag(
-                  formatMoney(
+                  money.format(
                     inCurrency(earnings.payableUsd) ?? 0,
                     model.currency,
                   ),
@@ -462,9 +475,9 @@ function EarningsCard({
 
           {earnings.remainingUsd > 0 && (
             <p className="text-red-300">
-              Saldo a descontar:{" "}
+              {t("remaining")}{" "}
               <span className="font-semibold">
-                {formatMoney(earnings.remainingUsd, USD, { withCode: true })}
+                {money.format(earnings.remainingUsd, USD, { withCode: true })}
               </span>
             </p>
           )}
@@ -473,8 +486,8 @@ function EarningsCard({
 
       {converts && rate && (
         <p className="mt-3 text-[11px] text-white/40">
-          Câmbio de {formatDatePtBr(rate.rateDate)}:{" "}
-          {formatFxRate(rate.rate, USD, model.currency)}
+          {t("fxOn", { date: formatCalendarDate(rate.rateDate, locale) })}{" "}
+          {money.fxRate(rate.rate, USD, model.currency)}
         </p>
       )}
 
@@ -495,11 +508,17 @@ function EarningsCard({
         </div>
 
         <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-[11px] font-semibold text-white/60">
-          <LegendDot color="bg-[#e8b84b]" label={`Você ${modelPct}%`} />
-          <LegendDot color="bg-[#8a3ffc]/70" label={`Agência ${agencyPct}%`} />
+          <LegendDot
+            color="bg-[#e8b84b]"
+            label={`${t("legendYou")} ${modelPct}%`}
+          />
+          <LegendDot
+            color="bg-[#8a3ffc]/70"
+            label={`${t("legendAgency")} ${agencyPct}%`}
+          />
           <LegendDot
             color="bg-red-500/70"
-            label={`Marketing ${marketingPct}%`}
+            label={`${t("legendMarketing")} ${marketingPct}%`}
           />
         </div>
       </div>
@@ -525,24 +544,28 @@ function LegendDot({ color, label }: { color: string; label: string }) {
 // ---------------------------------------------------------------------------
 
 function ExpensesSection({ ledger }: { ledger: ModelDashboardLedger }) {
+  const t = useTranslations("expenses");
+
   return (
     <LedgerSection
-      title="Despesas"
-      emptyLabel="Nenhuma despesa registrada."
+      title={t("title")}
+      emptyLabel={t("empty")}
       entries={ledger.expenses}
-      totalLabel="Total"
+      totalLabel={t("total")}
       total={ledger.expensesTotalBrl}
     />
   );
 }
 
 function LoansSection({ ledger }: { ledger: ModelDashboardLedger }) {
+  const t = useTranslations("loans");
+
   return (
     <LedgerSection
-      title="Empréstimos"
-      emptyLabel="Nenhum empréstimo registrado."
+      title={t("title")}
+      emptyLabel={t("empty")}
       entries={ledger.loans}
-      totalLabel="Em aberto"
+      totalLabel={t("outstanding")}
       total={ledger.loansOutstandingBrl}
     />
   );
@@ -561,6 +584,8 @@ function LedgerSection({
   totalLabel: string;
   total: number;
 }) {
+  const money = useMoney();
+
   return (
     <section className="rounded-2xl border border-white/10 bg-[#161219] p-5">
       <p className="text-xs font-bold uppercase tracking-[0.16em] text-white/50">
@@ -579,18 +604,18 @@ function LedgerSection({
               >
                 <div>
                   <p className="text-sm font-semibold text-white">
-                    {describeLedgerEntry(entry)}
+                    <LedgerEntryLabel entry={entry} />
                   </p>
 
                   <p className="mt-0.5 text-[11px] text-white/40">
-                    {formatDatePtBr(entry.incurredOn)}
+                    {formatCalendarDate(entry.incurredOn, money.locale)}
                   </p>
 
                   <LedgerStatusBadge entry={entry} />
                 </div>
 
                 <p className="whitespace-nowrap text-sm font-semibold text-white">
-                  {formatMoney(entry.amountBrl, BRL)}
+                  {money.format(entry.amountBrl, BRL)}
                 </p>
               </li>
             ))}
@@ -600,7 +625,7 @@ function LedgerSection({
             <span className="text-white/55">{totalLabel}</span>
 
             <span className="font-bold text-white">
-              {formatMoney(total, BRL)}
+              {money.format(total, BRL)}
             </span>
           </div>
         </>
@@ -609,12 +634,50 @@ function LedgerSection({
   );
 }
 
+/**
+ * `Transporte · Uber`, `Hotel · Ibis Centro`, `Empréstimo`.
+ *
+ * Composed here rather than read from the server-built `describeLedgerEntry`
+ * string, because that string is baked in one language at query time. The hotel
+ * name stays exactly as the admin typed it — it is a place, not copy — and the
+ * ride providers are brand names, identical in both languages.
+ */
+function LedgerEntryLabel({ entry }: { entry: LedgerEntry }) {
+  const t = useTranslations("enums");
+
+  const type = t(`ledgerEntryType.${entry.entryType}`);
+
+  if (entry.entryType === "transporte" && entry.provider) {
+    return <>{`${type} · ${t(`ledgerProvider.${entry.provider}`)}`}</>;
+  }
+
+  if (entry.entryType === "hotel" && entry.hotelName) {
+    return <>{`${type} · ${entry.hotelName}`}</>;
+  }
+
+  return <>{type}</>;
+}
+
+/**
+ * Built from `status.kind` and the entry's dates rather than from the
+ * server-composed `status.label`, for the same reason as above.
+ */
 function LedgerStatusBadge({ entry }: { entry: LedgerEntry }) {
+  const t = useTranslations("enums.deductionStatus");
+  const locale = toLocale(useMoney().locale);
+
   const styles: Record<string, string> = {
     pendente: "border-white/15 bg-white/5 text-white/55",
     agendado: "border-yellow-400/30 bg-yellow-500/10 text-yellow-200",
     descontado: "border-emerald-400/30 bg-emerald-500/10 text-emerald-200",
   };
+
+  const label =
+    entry.status.kind === "descontado" && entry.deductOn
+      ? t("deductedIn", { month: formatMonthYear(entry.deductOn, locale) })
+      : entry.status.kind === "agendado" && entry.deductOn
+        ? t("scheduledFor", { date: formatCalendarDate(entry.deductOn, locale) })
+        : t(entry.status.kind);
 
   return (
     <span
@@ -622,20 +685,23 @@ function LedgerStatusBadge({ entry }: { entry: LedgerEntry }) {
         styles[entry.status.kind]
       }`}
     >
-      {entry.status.label}
+      {label}
     </span>
   );
 }
 
 function LedgerNotesSection({ ledger }: { ledger: ModelDashboardLedger }) {
+  const t = useTranslations("dashboard.model");
+  const locale = useMoney().locale;
+
   return (
     <section className="rounded-2xl border border-white/10 bg-[#161219] p-5">
       <p className="text-xs font-bold uppercase tracking-[0.16em] text-white/50">
-        Notas
+        {t("notesTitle")}
       </p>
 
       {ledger.notes.length === 0 ? (
-        <p className="mt-4 text-sm text-white/45">Nenhuma nota registrada.</p>
+        <p className="mt-4 text-sm text-white/45">{t("notesEmpty")}</p>
       ) : (
         <ul className="mt-4 space-y-3">
           {ledger.notes.map((note) => (
@@ -646,7 +712,7 @@ function LedgerNotesSection({ ledger }: { ledger: ModelDashboardLedger }) {
               <p className="text-sm text-white/80">{note.body}</p>
 
               <p className="mt-1 text-[11px] text-white/35">
-                {formatDate(note.createdAt)}
+                {formatDate(note.createdAt, locale, t("notSet"))}
               </p>
             </li>
           ))}
@@ -671,10 +737,12 @@ function OnboardingChecklist({
   completedCount: number;
   remainingCount: number;
 }) {
+  const t = useTranslations("dashboard.onboarding");
+
   return (
     <section className="rounded-2xl border border-white/10 bg-[#161219] p-5">
       <p className="text-sm font-bold text-white">
-        Seu onboarding {completedCount} de {steps.length}
+        {t("progress", { done: completedCount, total: steps.length })}
       </p>
 
       <ul className="mt-4 space-y-3">
@@ -705,9 +773,7 @@ function OnboardingChecklist({
 
       {remainingCount > 0 && (
         <p className="mt-4 text-xs text-white/45">
-          Faltam {remainingCount}{" "}
-          {remainingCount === 1 ? "etapa" : "etapas"} para concluir seu
-          onboarding.
+          {t("remaining", { count: remainingCount })}
         </p>
       )}
     </section>
@@ -719,27 +785,35 @@ function OnboardingChecklist({
 // ---------------------------------------------------------------------------
 
 function ProfileInfoSection({ model }: { model: ModelDashboardModel }) {
+  const t = useTranslations("dashboard.profile");
+  const tCommon = useTranslations("common.states");
+  const locale = useMoney().locale;
+
+  const notSet = t("notSet");
+  const show = (value: string | null | undefined) => showValue(value, notSet);
+  const yesNo = (value: boolean) => (value ? tCommon("yes") : tCommon("no"));
+
   const fields: { label: string; value: string }[] = [
-    { label: "Nome completo", value: showValue(model.fullName) },
-    { label: "Nome artístico", value: showValue(model.stageName) },
-    { label: "Data de nascimento", value: formatDate(model.birthday) },
-    { label: "Localização", value: showValue(model.location) },
-    { label: "E-mail", value: showValue(model.email) },
-    { label: "WhatsApp", value: showValue(model.whatsapp) },
-    { label: "Moeda", value: model.currency },
+    { label: t("fullName"), value: show(model.fullName) },
+    { label: t("stageName"), value: show(model.stageName) },
     {
-      label: "Frequência de conteúdo",
-      value: showValue(model.contentFrequency),
+      label: t("birthday"),
+      value: formatDate(model.birthday, locale, tCommon("notInformed")),
     },
-    { label: "Bloquear Brasil", value: model.blockBrazil ? "Sim" : "Não" },
-    { label: "Mostrar rosto", value: model.showFace ? "Sim" : "Não" },
-    { label: "Indicação", value: showValue(model.referralSource) },
+    { label: t("location"), value: show(model.location) },
+    { label: t("email"), value: show(model.email) },
+    { label: t("whatsapp"), value: show(model.whatsapp) },
+    { label: t("currency"), value: model.currency },
+    { label: t("contentFrequency"), value: show(model.contentFrequency) },
+    { label: t("blockBrazil"), value: yesNo(model.blockBrazil) },
+    { label: t("showFace"), value: yesNo(model.showFace) },
+    { label: t("referral"), value: show(model.referralSource) },
   ];
 
   return (
     <section className="rounded-2xl border border-white/10 bg-[#161219] p-5">
       <p className="text-xs font-bold uppercase tracking-[0.16em] text-white/50">
-        Seus dados
+        {t("title")}
       </p>
 
       <dl className="mt-4 space-y-3">
@@ -779,6 +853,8 @@ function DriveFolderLink({
   description: string;
   url: string | null;
 }) {
+  const t = useTranslations("dashboard.content");
+
   return (
     <div className="rounded-xl border border-white/10 bg-black/20 p-3">
       <p className="text-xs font-bold uppercase tracking-[0.12em] text-white/50">
@@ -794,11 +870,11 @@ function DriveFolderLink({
           rel="noopener noreferrer"
           className="mt-3 flex items-center justify-center rounded-xl border border-white/15 bg-white/5 px-4 py-3 text-sm font-bold text-white transition hover:bg-white/10"
         >
-          Abrir pasta no Google Drive
+          {t("openDriveFolder")}
         </a>
       ) : (
         <p className="mt-3 rounded-xl border border-dashed border-white/10 px-4 py-3 text-center text-xs text-white/45">
-          Pasta ainda não configurada. Fale com a agência.
+          {t("folderNotConfigured")}
         </p>
       )}
     </div>
@@ -814,6 +890,7 @@ function ContentSection({
   viewerRole: ModelDashboardRole;
   previewMode: boolean;
 }) {
+  const t = useTranslations("dashboard.content");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
@@ -831,7 +908,7 @@ function ContentSection({
 
     setIsUploading(true);
     setErrorMessage(null);
-    setStatus(`Enviando 0/${files.length}...`);
+    setStatus(t("uploadingProgress", { done: 0, total: files.length }));
 
     let sent = 0;
     let failed = 0;
@@ -853,7 +930,7 @@ function ContentSection({
         };
 
         if (!response.ok || !data.success) {
-          throw new Error(data.error ?? "Falha no envio.");
+          throw new Error(data.error ?? t("uploadFailed"));
         }
 
         sent += 1;
@@ -862,25 +939,27 @@ function ContentSection({
         setErrorMessage(
           uploadError instanceof Error
             ? uploadError.message
-            : "Falha ao enviar um dos arquivos.",
+            : t("uploadFailedOne"),
         );
       }
 
-      setStatus(`Enviando ${sent + failed}/${files.length}...`);
+      setStatus(
+        t("uploadingProgress", { done: sent + failed, total: files.length }),
+      );
     }
 
     setIsUploading(false);
     setStatus(
       failed === 0
-        ? `${sent} arquivo(s) enviado(s) com sucesso.`
-        : `${sent} enviado(s), ${failed} com falha.`,
+        ? t("uploadDone", { count: sent })
+        : t("uploadPartial", { sent, failed }),
     );
   }
 
   return (
     <section className="rounded-2xl border border-white/10 bg-[#161219] p-5">
       <p className="text-xs font-bold uppercase tracking-[0.16em] text-white/50">
-        Enviar conteúdo
+        {t("title")}
       </p>
 
       <div className="mt-4 flex flex-col gap-3">
@@ -892,14 +971,14 @@ function ContentSection({
           an owner or an administrator.
         */}
         <DriveFolderLink
-          label="Google Drive / Conteúdo"
-          description="Onde o seu conteúdo é enviado."
+          label={t("contentFolderLabel")}
+          description={t("contentFolderDescription")}
           url={model.contentDriveUrl}
         />
 
         <DriveFolderLink
-          label="Google Drive / Instagram"
-          description="Material do seu Instagram."
+          label={t("instagramFolderLabel")}
+          description={t("instagramFolderDescription")}
           url={model.driveInstagramUrl}
         />
 
@@ -909,7 +988,7 @@ function ContentSection({
           disabled={previewMode || isUploading || !model.contentDriveUrl}
           className="flex items-center justify-center rounded-xl bg-[#e8b84b] px-4 py-3 text-sm font-black uppercase tracking-[0.06em] text-[#1a1620] transition hover:bg-[#f2c869] disabled:cursor-not-allowed disabled:opacity-40"
         >
-          {isUploading ? "Enviando..." : "Enviar conteúdo para o Drive"}
+          {isUploading ? t("uploading") : t("uploadButton")}
         </button>
 
         <input
@@ -934,18 +1013,18 @@ function ContentSection({
           rel="noopener noreferrer"
           className="flex items-center justify-center rounded-xl border border-white/15 px-4 py-3 text-sm font-bold text-white/80 transition hover:bg-white/5"
         >
-          Ver diretrizes de gravação
+          {t("viewGuidelines")}
         </a>
       </div>
 
       {previewMode ? (
         <p className="mt-3 text-[11px] text-white/35">
-          O envio de conteúdo fica desativado no modo de visualização.
+          {t("previewDisabled")}
         </p>
       ) : (
         viewerRole === "representative" && (
           <p className="mt-3 text-[11px] text-white/35">
-            Este é o único envio permitido para o representante.
+            {t("representativeOnlyUpload")}
           </p>
         )
       )}
@@ -958,10 +1037,12 @@ function ContentSection({
 // ---------------------------------------------------------------------------
 
 function SupportSection() {
+  const t = useTranslations("dashboard.support");
+
   return (
     <section className="rounded-2xl border border-white/10 bg-[#161219] p-5">
       <p className="text-xs font-bold uppercase tracking-[0.16em] text-white/50">
-        Suporte
+        {t("title")}
       </p>
 
       <a
@@ -970,7 +1051,7 @@ function SupportSection() {
         rel="noopener noreferrer"
         className="mt-4 flex items-center justify-center rounded-xl bg-emerald-500/90 px-4 py-3 text-sm font-black uppercase tracking-[0.06em] text-[#0b0a0d] transition hover:bg-emerald-400"
       >
-        Falar com a equipe no WhatsApp
+        {t("whatsapp")}
       </a>
     </section>
   );
@@ -981,9 +1062,11 @@ function SupportSection() {
 // ---------------------------------------------------------------------------
 
 function Footer() {
+  const t = useTranslations("dashboard.model");
+
   return (
     <footer className="pb-4 pt-2 text-center text-[11px] text-white/30">
-      KARAY Models · Área da Modelo
+      {t("footer")}
     </footer>
   );
 }
@@ -992,28 +1075,23 @@ function Footer() {
 // Helpers
 // ---------------------------------------------------------------------------
 
-function showValue(value: string | null | undefined) {
+function showValue(value: string | null | undefined, fallback: string) {
   if (!value || !value.trim()) {
-    return "Não definido";
+    return fallback;
   }
 
   return value;
 }
 
-function formatDate(value: string | null) {
+/**
+ * These values arrive as plain calendar dates (`1998-04-22`) or as timestamps.
+ * Both are reduced to the date part and reordered by locale, so a birthday
+ * never slides a day for a reader west of São Paulo.
+ */
+function formatDate(value: string | null, locale: string, fallback: string) {
   if (!value) {
-    return "Não informado";
+    return fallback;
   }
 
-  const date = new Date(value);
-
-  if (Number.isNaN(date.getTime())) {
-    return value;
-  }
-
-  return new Intl.DateTimeFormat("pt-BR", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-  }).format(date);
+  return formatCalendarDate(value.slice(0, 10), toLocale(locale));
 }
