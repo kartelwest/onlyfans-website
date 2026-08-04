@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
 import { useEffect, useState } from "react";
 
 import EditableTextField from "@/components/admin/model/EditableTextField";
@@ -28,6 +30,11 @@ export default function SocialAccountsSection({
   model,
   onModelUpdate,
 }: SocialAccountsSectionProps) {
+  const t = useTranslations("admin.social");
+  const tCommon = useTranslations("common.actions");
+  const tState = useTranslations("common.states");
+  const tErrors = useTranslations("errors");
+
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -49,7 +56,7 @@ export default function SocialAccountsSection({
         const data = (await response.json()) as MarketingResponse;
 
         if (!response.ok) {
-          throw new Error(data.error ?? "Não foi possível carregar.");
+          throw new Error(data.error ?? tErrors("loadFailed"));
         }
 
         if (!cancelled) {
@@ -61,7 +68,7 @@ export default function SocialAccountsSection({
           setLoadError(
             error instanceof Error
               ? error.message
-              : "Não foi possível carregar as contas de marketing.",
+              : t("loadFailed"),
           );
         }
       } finally {
@@ -94,7 +101,7 @@ export default function SocialAccountsSection({
     };
 
     if (!response.ok || !data.success) {
-      throw new Error(data.error ?? "Não foi possível salvar.");
+      throw new Error(data.error ?? tErrors("saveFailed"));
     }
 
     onModelUpdate({ ...model, [field]: value });
@@ -125,7 +132,7 @@ export default function SocialAccountsSection({
     };
 
     if (!response.ok || !data.success) {
-      throw new Error(data.error ?? "Não foi possível salvar.");
+      throw new Error(data.error ?? tErrors("saveFailed"));
     }
 
     setInstagramMarketing(nextInstagram);
@@ -137,11 +144,11 @@ export default function SocialAccountsSection({
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <p className="text-xs font-bold uppercase tracking-[0.22em] text-pink-300">
-            Restrito à gestão
+            {t("restricted")}
           </p>
-          <h3 className="mt-2 text-xl font-bold">Contas sociais</h3>
+          <h3 className="mt-2 text-xl font-bold">{t("title")}</h3>
           <p className="mt-1 text-sm text-white/45">
-            Nunca visível para representante ou modelo.
+            {t("neverVisible")}
           </p>
         </div>
 
@@ -154,7 +161,7 @@ export default function SocialAccountsSection({
               : "rounded-xl bg-pink-300 px-5 py-3 text-xs font-black uppercase tracking-[0.12em] text-[#321725] transition hover:bg-pink-200"
           }
         >
-          {isEditing ? "Concluir edição" : "Editar"}
+          {isEditing ? t("finishEditing") : tCommon("edit")}
         </button>
       </div>
 
@@ -168,26 +175,26 @@ export default function SocialAccountsSection({
             <EditableTextField
               label="Instagram"
               value={model.instagram}
-              placeholder="@usuario"
+              placeholder={t("handlePlaceholder")}
               onSave={(value) => updateOwnField("instagram", value)}
             />
             <EditableTextField
               label="X / Twitter"
               value={model.twitter}
-              placeholder="@usuario"
+              placeholder={t("handlePlaceholder")}
               onSave={(value) => updateOwnField("twitter", value)}
             />
             <EditableTextField
-              label="Instagram (Marketing)"
+              label={t("instagramMarketing")}
               value={instagramMarketing}
-              placeholder="@usuario"
+              placeholder={t("handlePlaceholder")}
               disabled={isLoading}
               onSave={(value) => saveMarketing("instagramMarketing", value)}
             />
             <EditableTextField
-              label="Twitter (Marketing)"
+              label={t("twitterMarketing")}
               value={twitterMarketing}
-              placeholder="@usuario"
+              placeholder={t("handlePlaceholder")}
               disabled={isLoading}
               onSave={(value) => saveMarketing("twitterMarketing", value)}
             />
@@ -197,12 +204,12 @@ export default function SocialAccountsSection({
             <SocialInfo label="Instagram" value={model.instagram} />
             <SocialInfo label="X / Twitter" value={model.twitter} />
             <SocialInfo
-              label="Instagram (Marketing)"
-              value={isLoading ? "Carregando..." : instagramMarketing}
+              label={t("instagramMarketing")}
+              value={isLoading ? tState("loading") : instagramMarketing}
             />
             <SocialInfo
-              label="Twitter (Marketing)"
-              value={isLoading ? "Carregando..." : twitterMarketing}
+              label={t("twitterMarketing")}
+              value={isLoading ? tState("loading") : twitterMarketing}
             />
           </>
         )}
@@ -218,12 +225,16 @@ function SocialInfo({
   label: string;
   value: string | null;
 }) {
+  const tState = useTranslations("common.states");
+
   return (
     <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
       <p className="text-xs font-bold uppercase tracking-[0.14em] text-white/45">
         {label}
       </p>
-      <p className="mt-3 text-sm text-white">{value || "Não informado"}</p>
+      <p className="mt-3 text-sm text-white">
+        {value || tState("notInformed")}
+      </p>
     </div>
   );
 }

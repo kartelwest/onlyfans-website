@@ -1148,6 +1148,30 @@
       "invalidType": "Selecione um arquivo de imagem válido.",
       "tooLarge": "A imagem deve ter no máximo 10 MB.",
       "processFailed": "Não foi possível processar esta imagem."
+    },
+    "social": {
+      "restricted": "Restrito à gestão",
+      "title": "Contas sociais",
+      "neverVisible": "Nunca visível para representante ou modelo.",
+      "finishEditing": "Concluir edição",
+      "instagramMarketing": "Instagram (Marketing)",
+      "twitterMarketing": "Twitter (Marketing)",
+      "handlePlaceholder": "@usuario",
+      "loadFailed": "Não foi possível carregar as contas de marketing."
+    },
+    "financial": {
+      "title": "Configurações financeiras",
+      "subtitle": "País e moeda definem como os ganhos aparecem para a modelo. Os ganhos são registrados em dólares e convertidos na exibição.",
+      "country": "País",
+      "currency": "Moeda (ISO 4217)",
+      "currencyDefault": "Padrão do país",
+      "expensesToggle": "Lançamentos de despesas e empréstimos (modelos no Brasil)",
+      "expensesToggleHint": "Ative apenas para modelos que geram despesas em reais.",
+      "entriesReadFailed": "Não foi possível ler os lançamentos.",
+      "disableTitle": "Desativar despesas e empréstimos?",
+      "disableBody": "Esta modelo tem {count, plural, one {# lançamento registrado} other {# lançamentos registrados}}. Os registros e o histórico são mantidos.",
+      "disableEffect": "As seções somem da área da modelo e os descontos ainda não aplicados ficam suspensos. Meses já descontados não mudam.",
+      "disable": "Desativar"
     }
   }
 }

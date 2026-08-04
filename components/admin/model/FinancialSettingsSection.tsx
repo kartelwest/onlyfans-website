@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
 import { useState } from "react";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 
@@ -30,6 +32,11 @@ export default function FinancialSettingsSection({
   model,
   onModelUpdate,
 }: FinancialSettingsSectionProps) {
+  const t = useTranslations("admin.financial");
+  const tCommon = useTranslations("common.actions");
+  const tState = useTranslations("common.states");
+  const tErrors = useTranslations("errors");
+
   const [saving, setSaving] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [pendingDisable, setPendingDisable] = useState<{
@@ -57,13 +64,13 @@ export default function FinancialSettingsSection({
       };
 
       if (!response.ok || !data.success) {
-        throw new Error(data.error ?? "Não foi possível salvar.");
+        throw new Error(data.error ?? tErrors("saveFailed"));
       }
 
       return true;
     } catch (error) {
       setErrorMessage(
-        error instanceof Error ? error.message : "Não foi possível salvar.",
+        error instanceof Error ? error.message : tErrors("saveFailed"),
       );
 
       return false;
@@ -130,7 +137,7 @@ export default function FinancialSettingsSection({
 
       if (!countResponse.ok) {
         throw new Error(
-          countData.error ?? "Não foi possível ler os lançamentos.",
+          countData.error ?? t("entriesReadFailed"),
         );
       }
 
@@ -144,7 +151,7 @@ export default function FinancialSettingsSection({
       await toggleExpenses(false, base);
     } catch (error) {
       setErrorMessage(
-        error instanceof Error ? error.message : "Não foi possível salvar.",
+        error instanceof Error ? error.message : tErrors("saveFailed"),
       );
     } finally {
       setSaving(false);
@@ -168,13 +175,13 @@ export default function FinancialSettingsSection({
       };
 
       if (!response.ok || !data.success) {
-        throw new Error(data.error ?? "Não foi possível salvar.");
+        throw new Error(data.error ?? tErrors("saveFailed"));
       }
 
       onModelUpdate({ ...base, expensesEnabled: enabled });
     } catch (error) {
       setErrorMessage(
-        error instanceof Error ? error.message : "Não foi possível salvar.",
+        error instanceof Error ? error.message : tErrors("saveFailed"),
       );
     } finally {
       setSaving(false);
@@ -193,18 +200,17 @@ export default function FinancialSettingsSection({
   return (
     <section className="rounded-2xl border border-white/10 bg-[#111115] p-6">
       <div>
-        <h3 className="text-xl font-bold">Configurações financeiras</h3>
+        <h3 className="text-xl font-bold">{t("title")}</h3>
 
         <p className="mt-1 text-sm text-white/45">
-          País e moeda definem como os ganhos aparecem para a modelo. Os ganhos
-          são registrados em dólares e convertidos na exibição.
+          {t("subtitle")}
         </p>
       </div>
 
       <div className="mt-6 grid gap-5 md:grid-cols-2">
         <label className="block">
           <span className="text-xs font-bold uppercase tracking-[0.14em] text-white/45">
-            País
+            {t("country")}
           </span>
 
           <select
@@ -213,7 +219,7 @@ export default function FinancialSettingsSection({
             onChange={(event) => void handleCountryChange(event.target.value)}
             className="mt-2 w-full rounded-xl border border-white/15 bg-black/30 px-4 py-2.5 text-sm text-white outline-none focus:border-pink-300 disabled:opacity-50"
           >
-            <option value="">Não informado</option>
+            <option value="">{tState("notInformed")}</option>
 
             {countries.map((country) => (
               <option key={country.code} value={country.code}>
@@ -225,7 +231,7 @@ export default function FinancialSettingsSection({
 
         <label className="block">
           <span className="text-xs font-bold uppercase tracking-[0.14em] text-white/45">
-            Moeda (ISO 4217)
+            {t("currency")}
           </span>
 
           <select
@@ -244,7 +250,7 @@ export default function FinancialSettingsSection({
             }}
             className="mt-2 w-full rounded-xl border border-white/15 bg-black/30 px-4 py-2.5 text-sm text-white outline-none focus:border-pink-300 disabled:opacity-50"
           >
-            <option value="">Padrão do país</option>
+            <option value="">{t("currencyDefault")}</option>
 
             {currencyOptions.map((currency) => (
               <option key={currency} value={currency}>
@@ -268,11 +274,11 @@ export default function FinancialSettingsSection({
 
         <span>
           <span className="block text-sm font-bold">
-            Lançamentos de despesas e empréstimos (modelos no Brasil)
+            {t("expensesToggle")}
           </span>
 
           <span className="mt-1 block text-xs text-white/45">
-            Ative apenas para modelos que geram despesas em reais.
+            {t("expensesToggleHint")}
           </span>
         </span>
       </label>
@@ -285,21 +291,19 @@ export default function FinancialSettingsSection({
 
       <ConfirmDialog
         open={pendingDisable !== null}
-        title="Desativar despesas e empréstimos?"
+        title={t("disableTitle")}
         description={
           <>
             <p>
-              Esta modelo tem {pendingDisable?.entryCount ?? 0} lançamento(s)
-              registrado(s). Os registros e o histórico são mantidos.
+              {t("disableBody", {
+                count: pendingDisable?.entryCount ?? 0,
+              })}
             </p>
-            <p>
-              As seções somem da área da modelo e os descontos ainda não
-              aplicados ficam suspensos. Meses já descontados não mudam.
-            </p>
+            <p>{t("disableEffect")}</p>
           </>
         }
-        confirmLabel="Desativar"
-        busyLabel="Salvando..."
+        confirmLabel={t("disable")}
+        busyLabel={tCommon("saving")}
         busy={saving}
         onCancel={() => setPendingDisable(null)}
         onConfirm={() => {

@@ -1148,6 +1148,30 @@
       "invalidType": "Please choose a valid image file.",
       "tooLarge": "The image must be 10 MB or smaller.",
       "processFailed": "We couldn't process this image."
+    },
+    "social": {
+      "restricted": "Management only",
+      "title": "Social accounts",
+      "neverVisible": "Never visible to a representative or a model.",
+      "finishEditing": "Done editing",
+      "instagramMarketing": "Instagram (Marketing)",
+      "twitterMarketing": "Twitter (Marketing)",
+      "handlePlaceholder": "@username",
+      "loadFailed": "We couldn't load the marketing accounts."
+    },
+    "financial": {
+      "title": "Financial settings",
+      "subtitle": "Country and currency decide how earnings appear to the model. Earnings are recorded in dollars and converted for display.",
+      "country": "Country",
+      "currency": "Currency (ISO 4217)",
+      "currencyDefault": "Country default",
+      "expensesToggle": "Expense and loan entries (models in Brazil)",
+      "expensesToggleHint": "Turn this on only for models who incur expenses in reais.",
+      "entriesReadFailed": "We couldn't read the entries.",
+      "disableTitle": "Turn off expenses and loans?",
+      "disableBody": "This model has {count, plural, one {# recorded entry} other {# recorded entries}}. The records and their history are kept.",
+      "disableEffect": "The sections disappear from the model's area and any deductions not yet applied are suspended. Months already deducted do not change.",
+      "disable": "Turn off"
     }
   }
 }
