@@ -1246,6 +1246,26 @@
         "archive": "Archive",
         "viewAsThem": "See what they see",
         "openProfile": "Open profile"
+      },
+      "actions": {
+        "sessionExpired": "Your session expired.",
+        "notPermitted": "You don't have permission.",
+        "invalidData": "Invalid data.",
+        "notARepresentative": "The selected profile is not a representative.",
+        "statusUpdateFailed": "We couldn't update the status.",
+        "activated": "Representative activated successfully.",
+        "deactivated": "Representative deactivated successfully.",
+        "archived": "Representative archived successfully.",
+        "nameRequired": "A name is required.",
+        "invalidEmail": "Enter a valid email address.",
+        "saveFailed": "We couldn't save the changes.",
+        "detailsUpdated": "Details updated.",
+        "ownerOnlyDelete": "Only the owner can delete permanently.",
+        "invalidConfirmation": "Invalid confirmation.",
+        "stillHasModels": "This representative still has {count, plural, one {# assigned model} other {# assigned models}}. Reassign them before deleting.",
+        "authDeleteFailed": "We couldn't delete the authentication account.",
+        "profileDeleteFailed": "We couldn't remove the representative's profile.",
+        "deleted": "Representative {name} permanently deleted."
       }
     },
     "reassign": {

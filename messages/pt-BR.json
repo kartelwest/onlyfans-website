@@ -1246,6 +1246,26 @@
         "archive": "Arquivar",
         "viewAsThem": "Ver como ele vê",
         "openProfile": "Abrir perfil"
+      },
+      "actions": {
+        "sessionExpired": "Sua sessão expirou.",
+        "notPermitted": "Você não tem permissão.",
+        "invalidData": "Dados inválidos.",
+        "notARepresentative": "O perfil selecionado não é um representante.",
+        "statusUpdateFailed": "Não foi possível atualizar o status.",
+        "activated": "Representante ativado com sucesso.",
+        "deactivated": "Representante inativado com sucesso.",
+        "archived": "Representante arquivado com sucesso.",
+        "nameRequired": "O nome é obrigatório.",
+        "invalidEmail": "Informe um e-mail válido.",
+        "saveFailed": "Não foi possível salvar as alterações.",
+        "detailsUpdated": "Dados atualizados.",
+        "ownerOnlyDelete": "Apenas o proprietário pode excluir permanentemente.",
+        "invalidConfirmation": "Confirmação inválida.",
+        "stillHasModels": "Este representante ainda tem {count, plural, one {# modelo atribuída} other {# modelos atribuídas}}. Reatribua as modelos antes de excluí-lo.",
+        "authDeleteFailed": "Não foi possível excluir a conta de autenticação.",
+        "profileDeleteFailed": "Não foi possível remover o perfil do representante.",
+        "deleted": "Representante {name} excluído permanentemente."
       }
     },
     "reassign": {

@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { getTranslations } from "next-intl/server";
 import { redirect } from "next/navigation";
 
 import { createClient } from "@/lib/supabase/server";
@@ -16,7 +17,25 @@ type AllowedStatus = "ativa" | "inativa" | "arquivada";
 
 const ALLOWED_STATUSES: AllowedStatus[] = ["ativa", "inativa", "arquivada"];
 
+/**
+ * A NOTE ON THE PORTUGUESE LEFT IN THIS FILE.
+ *
+ * Every `message` returned to the caller is translated — those are UI, and the
+ * admin reads them. The `summary` strings and the `"Usuário"` actor fallback
+ * are NOT, and must not be: they are written INTO `system_audit_log` and read
+ * back later as a historical record. Translating at write time would leave the
+ * log in whichever language the actor happened to be using, so the same action
+ * would read two ways depending on who performed it — and the entry would no
+ * longer match what that person actually saw on screen.
+ *
+ * If the audit log should ever follow the reader, the fix is to store a code
+ * plus parameters and render the sentence at read time. That is a schema
+ * change, not an i18n change.
+ */
+
 async function requireStaff(): Promise<ActionResult | null> {
+  const t = await getTranslations("admin.representatives.actions");
+
   const supabase = await createClient();
 
   const {
@@ -24,7 +43,7 @@ async function requireStaff(): Promise<ActionResult | null> {
   } = await supabase.auth.getUser();
 
   if (!user) {
-    return { success: false, message: "Sua sessão expirou." };
+    return { success: false, message: t("sessionExpired") };
   }
 
   const { data: profile } = await supabase
@@ -34,7 +53,7 @@ async function requireStaff(): Promise<ActionResult | null> {
     .single();
 
   if (!profile?.active || (profile.role !== "owner" && profile.role !== "administrator")) {
-    return { success: false, message: "Você não tem permissão." };
+    return { success: false, message: t("notPermitted") };
   }
 
   return null;
@@ -44,6 +63,8 @@ export async function updateRepresentativeStatus(
   previousState: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
+  const t = await getTranslations("admin.representatives.actions");
+
   const staffCheck = await requireStaff();
 
   if (staffCheck) {
@@ -54,7 +75,7 @@ export async function updateRepresentativeStatus(
   const status = String(formData.get("status") ?? "") as AllowedStatus;
 
   if (!representativeId || !ALLOWED_STATUSES.includes(status)) {
-    return { success: false, message: "Dados inválidos." };
+    return { success: false, message: t("invalidData") };
   }
 
   const supabase = await createClient();
@@ -66,7 +87,7 @@ export async function updateRepresentativeStatus(
     .single();
 
   if (target?.role !== "representative") {
-    return { success: false, message: "O perfil selecionado não é um representante." };
+    return { success: false, message: t("notARepresentative") };
   }
 
   const { error } = await supabase
@@ -80,7 +101,7 @@ export async function updateRepresentativeStatus(
 
     return {
       success: false,
-      message: "Não foi possível atualizar o status.",
+      message: t("statusUpdateFailed"),
     };
   }
 
@@ -88,7 +109,12 @@ export async function updateRepresentativeStatus(
 
   return {
     success: true,
-    message: `Representante ${status === "ativa" ? "ativado" : status === "inativa" ? "inativado" : "arquivado"} com sucesso.`,
+    message:
+      status === "ativa"
+        ? t("activated")
+        : status === "inativa"
+          ? t("deactivated")
+          : t("archived"),
   };
 }
 
@@ -103,6 +129,8 @@ export async function updateRepresentativeDetails(
   previousState: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
+  const t = await getTranslations("admin.representatives.actions");
+
   const staffCheck = await requireStaff();
 
   if (staffCheck) {
@@ -115,15 +143,15 @@ export async function updateRepresentativeDetails(
   const phone = String(formData.get("phone") ?? "").trim();
 
   if (!representativeId) {
-    return { success: false, message: "Dados inválidos." };
+    return { success: false, message: t("invalidData") };
   }
 
   if (!fullName) {
-    return { success: false, message: "O nome é obrigatório." };
+    return { success: false, message: t("nameRequired") };
   }
 
   if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    return { success: false, message: "Informe um e-mail válido." };
+    return { success: false, message: t("invalidEmail") };
   }
 
   const supabase = await createClient();
@@ -137,7 +165,7 @@ export async function updateRepresentativeDetails(
   if (target?.role !== "representative") {
     return {
       success: false,
-      message: "O perfil selecionado não é um representante.",
+      message: t("notARepresentative"),
     };
   }
 
@@ -154,7 +182,7 @@ export async function updateRepresentativeDetails(
   if (error) {
     console.error("Erro ao atualizar o representante:", error);
 
-    return { success: false, message: "Não foi possível salvar as alterações." };
+    return { success: false, message: t("saveFailed") };
   }
 
   const {
@@ -194,13 +222,15 @@ export async function updateRepresentativeDetails(
   revalidatePath("/admin/representatives");
   revalidatePath(`/admin/representatives/${representativeId}`);
 
-  return { success: true, message: "Dados atualizados." };
+  return { success: true, message: t("detailsUpdated") };
 }
 
 export async function deleteRepresentative(
   previousState: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
+  const t = await getTranslations("admin.representatives.actions");
+
   const staffCheck = await requireStaff();
 
   if (staffCheck) {
@@ -214,7 +244,7 @@ export async function deleteRepresentative(
   } = await supabase.auth.getUser();
 
   if (!user) {
-    return { success: false, message: "Sua sessão expirou." };
+    return { success: false, message: t("sessionExpired") };
   }
 
   const { data: actor } = await supabase
@@ -224,14 +254,14 @@ export async function deleteRepresentative(
     .single();
 
   if (actor?.role !== "owner") {
-    return { success: false, message: "Apenas o proprietário pode excluir permanentemente." };
+    return { success: false, message: t("ownerOnlyDelete") };
   }
 
   const representativeId = String(formData.get("representativeId") ?? "");
   const confirmation = String(formData.get("confirmation") ?? "");
 
   if (!representativeId || confirmation !== "EXCLUIR") {
-    return { success: false, message: "Confirmação inválida." };
+    return { success: false, message: t("invalidConfirmation") };
   }
 
   const adminSupabase = createAdminClient();
@@ -243,7 +273,7 @@ export async function deleteRepresentative(
     .single();
 
   if (target?.role !== "representative") {
-    return { success: false, message: "O perfil selecionado não é um representante." };
+    return { success: false, message: t("notARepresentative") };
   }
 
   // A representative who still holds models is never deleted: dropping the
@@ -260,7 +290,7 @@ export async function deleteRepresentative(
   if (assignedCount > 0) {
     return {
       success: false,
-      message: `Este representante ainda tem ${assignedCount} modelo(s) atribuído(s). Reatribua as modelos antes de excluí-lo.`,
+      message: t("stillHasModels", { count: assignedCount }),
     };
   }
 
@@ -270,11 +300,11 @@ export async function deleteRepresentative(
   );
 
   if (authDeleteError) {
-    console.error("Erro ao excluir usuário de autenticação:", authDeleteError);
+    console.error("Failed to delete the auth user:", authDeleteError);
 
     return {
       success: false,
-      message: "Não foi possível excluir a conta de autenticação.",
+      message: t("authDeleteFailed"),
     };
   }
 
@@ -288,7 +318,7 @@ export async function deleteRepresentative(
 
     return {
       success: false,
-      message: "Não foi possível remover o perfil do representante.",
+      message: t("profileDeleteFailed"),
     };
   }
 
@@ -322,7 +352,7 @@ export async function deleteRepresentative(
 
   return {
     success: true,
-    message: `Representante ${target.full_name ?? ""} excluído permanentemente.`,
+    message: t("deleted", { name: target.full_name ?? "" }),
   };
 }
 
