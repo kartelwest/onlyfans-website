@@ -48,6 +48,7 @@ function excerpt(value: unknown): string | null {
 
 export async function GET(request: NextRequest) {
   const t = await getTranslations("errors.api");
+  const tRoute = await getTranslations("errors.historyApi");
   try {
     const supabase = await createClient();
 
@@ -83,7 +84,7 @@ export async function GET(request: NextRequest) {
 
     if (role === "model") {
       return NextResponse.json(
-        { error: "Modelos não têm acesso ao histórico de auditoria." },
+        { error: tRoute("modelsNoAccess") },
         { status: 403 },
       );
     }
@@ -241,29 +242,29 @@ export async function GET(request: NextRequest) {
 
     if (auditResult?.error) {
       console.error(
-        "Erro ao carregar histórico de auditoria:",
+        "Failed to load the audit history:",
         auditResult.error,
       );
       return NextResponse.json(
-        { error: "Erro interno ao carregar histórico." },
+        { error: tRoute("loadFailed") },
         { status: 500 },
       );
     }
 
     if (notesResult?.error) {
       console.error(
-        "Erro ao carregar histórico de notas:",
+        "Failed to load the note history:",
         notesResult.error,
       );
       return NextResponse.json(
-        { error: "Erro interno ao carregar histórico." },
+        { error: tRoute("loadFailed") },
         { status: 500 },
       );
     }
 
     const merged = [
-      ...(auditResult?.data ?? []).map(mapAuditEntry),
-      ...(notesResult?.data ?? []).map(mapNoteEntry),
+      ...(auditResult?.data ?? []).map((entry) => mapAuditEntry(entry, t("unknownUser"))),
+      ...(notesResult?.data ?? []).map((entry) => mapNoteEntry(entry, t("unknownUser"))),
     ].sort(
       (first, second) =>
         new Date(second.createdAt).getTime() -
@@ -287,16 +288,20 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error("Erro inesperado ao carregar histórico:", error);
+    console.error("Unexpected error loading the history:", error);
 
     return NextResponse.json(
-      { error: "Ocorreu um erro inesperado ao carregar o histórico." },
+      { error: tRoute("loadFailed") },
       { status: 500 },
     );
   }
 }
 
-function mapAuditEntry(entry: Record<string, unknown>) {
+function mapAuditEntry(
+  entry: Record<string, unknown>,
+  /** Shown when the row has no actor name. UI copy, so it is passed in. */
+  unknownUser: string,
+) {
   return {
     id: String(entry.id ?? ""),
     modelId: String(entry.model_id ?? ""),
@@ -305,7 +310,7 @@ function mapAuditEntry(entry: Record<string, unknown>) {
     previousValue: entry.previous_value ?? null,
     newValue: entry.new_value ?? null,
     actorId: entry.actor_id ?? null,
-    actorName: String(entry.actor_name ?? "Usuário"),
+    actorName: String(entry.actor_name ?? unknownUser),
     actorRole: String(entry.actor_role ?? "administrator"),
     source: entry.source ?? null,
     summary: String(entry.summary ?? ""),
@@ -313,7 +318,11 @@ function mapAuditEntry(entry: Record<string, unknown>) {
   };
 }
 
-function mapNoteEntry(entry: Record<string, unknown>) {
+function mapNoteEntry(
+  entry: Record<string, unknown>,
+  /** See mapAuditEntry. */
+  unknownUser: string,
+) {
   const rawAction = String(entry.action ?? "");
   const label = NOTE_ACTION_SUMMARIES[rawAction] ?? "Nota atualizada";
 
@@ -331,7 +340,7 @@ function mapNoteEntry(entry: Record<string, unknown>) {
     previousValue: entry.original_body ?? null,
     newValue: entry.updated_body ?? null,
     actorId: entry.editor_id ?? null,
-    actorName: String(entry.editor_name ?? "Usuário"),
+    actorName: String(entry.editor_name ?? unknownUser),
     actorRole: String(entry.editor_role ?? "administrator"),
     source: "notes" as string | null,
     summary: body ? `${label}: ${body}` : label,

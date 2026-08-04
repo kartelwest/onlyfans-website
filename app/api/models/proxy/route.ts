@@ -23,6 +23,7 @@ type Body = {
 // self-checks public.is_owner() at the database level.
 export async function PATCH(request: Request) {
   const t = await getTranslations("errors.api");
+  const tRoute = await getTranslations("errors.proxy");
   try {
     const supabase = await createClient();
 
@@ -47,7 +48,7 @@ export async function PATCH(request: Request) {
 
     if ((profile.role as ManagementRole) !== "owner") {
       return NextResponse.json(
-        { error: "Apenas o proprietário pode editar estes campos." },
+        { error: tRoute("ownerOnly") },
         { status: 403 },
       );
     }
@@ -65,7 +66,7 @@ export async function PATCH(request: Request) {
 
     if (proxyIp && !isValidProxyIp(proxyIp)) {
       return NextResponse.json(
-        { error: "Informe um IP válido, por exemplo 48.45.165.230." },
+        { error: tRoute("invalidIp") },
         { status: 400 },
       );
     }
@@ -74,7 +75,7 @@ export async function PATCH(request: Request) {
 
     if (rawCompany !== null && !isProxyCompany(rawCompany)) {
       return NextResponse.json(
-        { error: "Empresa inválida." },
+        { error: tRoute("invalidCompany") },
         { status: 400 },
       );
     }
@@ -93,7 +94,7 @@ export async function PATCH(request: Request) {
     const proxyCountry = body.proxyCountry?.trim() || null;
 
     if (proxyCountry && !isCountryCode(proxyCountry)) {
-      return NextResponse.json({ error: "País inválido." }, { status: 400 });
+      return NextResponse.json({ error: tRoute("invalidCountry") }, { status: 400 });
     }
 
     const { error } = await supabase.rpc("set_model_proxy_details", {

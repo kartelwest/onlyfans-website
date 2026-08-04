@@ -1216,6 +1216,33 @@
       "createAccessFailed": "We couldn't create the user's access.",
       "userEmailTaken": "A user is already registered with this email.",
       "created": "User created successfully."
+    },
+    "ledger": {
+      "entryNotFound": "Entry not found.",
+      "ledgerDisabled": "Entries are disabled for this model.",
+      "invalidDeductDate": "Invalid deduction date.",
+      "deductDateFailed": "We couldn't change the deduction date.",
+      "saveFailed": "We couldn't save the entry.",
+      "deleteFailed": "We couldn't delete the entry."
+    },
+    "driveUpload": {
+      "notConfigured": "Google Drive upload is not configured on the server.",
+      "fileRequired": "A file is required.",
+      "fileTooLarge": "File too large. 200MB maximum.",
+      "modelNotFoundOrDenied": "Model not found, or no permission.",
+      "folderNotConfigured": "No Google Drive folder is set up for this model yet.",
+      "invalidFolderLink": "Invalid Google Drive folder link.",
+      "uploadFailed": "Failed to upload content to Google Drive."
+    },
+    "proxy": {
+      "ownerOnly": "Only the owner can edit these fields.",
+      "invalidIp": "Enter a valid IP, for example 48.45.165.230.",
+      "invalidCompany": "Invalid company.",
+      "invalidCountry": "Invalid country."
+    },
+    "historyApi": {
+      "modelsNoAccess": "Models do not have access to the audit history.",
+      "loadFailed": "Internal error loading the history."
     }
   },
   "validation": {},

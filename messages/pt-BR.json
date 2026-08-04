@@ -1216,6 +1216,33 @@
       "createAccessFailed": "Não foi possível criar o acesso do usuário.",
       "userEmailTaken": "Já existe um usuário cadastrado com este e-mail.",
       "created": "Usuário criado com sucesso."
+    },
+    "ledger": {
+      "entryNotFound": "Lançamento não encontrado.",
+      "ledgerDisabled": "Lançamentos estão desativados para esta modelo.",
+      "invalidDeductDate": "Data de desconto inválida.",
+      "deductDateFailed": "Não foi possível alterar a data de desconto.",
+      "saveFailed": "Não foi possível salvar o lançamento.",
+      "deleteFailed": "Não foi possível excluir o lançamento."
+    },
+    "driveUpload": {
+      "notConfigured": "Envio para o Google Drive não está configurado no servidor.",
+      "fileRequired": "Arquivo obrigatório.",
+      "fileTooLarge": "Arquivo muito grande. Máximo 200MB.",
+      "modelNotFoundOrDenied": "Modelo não encontrada ou sem permissão.",
+      "folderNotConfigured": "Pasta do Google Drive ainda não configurada para esta modelo.",
+      "invalidFolderLink": "Link da pasta do Google Drive inválido.",
+      "uploadFailed": "Erro ao enviar conteúdo para o Google Drive."
+    },
+    "proxy": {
+      "ownerOnly": "Apenas o proprietário pode editar estes campos.",
+      "invalidIp": "Informe um IP válido, por exemplo 48.45.165.230.",
+      "invalidCompany": "Empresa inválida.",
+      "invalidCountry": "País inválido."
+    },
+    "historyApi": {
+      "modelsNoAccess": "Modelos não têm acesso ao histórico de auditoria.",
+      "loadFailed": "Erro interno ao carregar histórico."
     }
   },
   "validation": {},

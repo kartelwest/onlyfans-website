@@ -18,12 +18,13 @@ const MAX_FILE_SIZE = 200 * 1024 * 1024; // 200MB
 // dashboard is staff-only.
 export async function POST(request: Request) {
   const t = await getTranslations("errors.api");
+  const tRoute = await getTranslations("errors.driveUpload");
   try {
     if (!isDriveUploadConfigured()) {
       return NextResponse.json(
         {
           error:
-            "Envio para o Google Drive não está configurado no servidor.",
+            tRoute("notConfigured"),
         },
         { status: 503 },
       );
@@ -71,14 +72,14 @@ export async function POST(request: Request) {
 
     if (!file) {
       return NextResponse.json(
-        { error: "Arquivo obrigatório." },
+        { error: tRoute("fileRequired") },
         { status: 400 },
       );
     }
 
     if (file.size > MAX_FILE_SIZE) {
       return NextResponse.json(
-        { error: "Arquivo muito grande. Máximo 200MB." },
+        { error: tRoute("fileTooLarge") },
         { status: 400 },
       );
     }
@@ -94,7 +95,7 @@ export async function POST(request: Request) {
 
     if (modelError || !model) {
       return NextResponse.json(
-        { error: "Modelo não encontrada ou sem permissão." },
+        { error: tRoute("modelNotFoundOrDenied") },
         { status: 404 },
       );
     }
@@ -115,7 +116,7 @@ export async function POST(request: Request) {
       return NextResponse.json(
         {
           error:
-            "Pasta do Google Drive ainda não configurada para esta modelo.",
+            tRoute("folderNotConfigured"),
         },
         { status: 409 },
       );
@@ -125,7 +126,7 @@ export async function POST(request: Request) {
 
     if (!folderId) {
       return NextResponse.json(
-        { error: "Link da pasta do Google Drive inválido." },
+        { error: tRoute("invalidFolderLink") },
         { status: 422 },
       );
     }
@@ -144,10 +145,10 @@ export async function POST(request: Request) {
       webViewLink: uploaded.webViewLink,
     });
   } catch (error) {
-    console.error("Erro ao enviar conteúdo para o Google Drive:", error);
+    console.error("Failed to upload content to Google Drive:", error);
 
     return NextResponse.json(
-      { error: "Erro ao enviar conteúdo para o Google Drive." },
+      { error: tRoute("uploadFailed") },
       { status: 500 },
     );
   }

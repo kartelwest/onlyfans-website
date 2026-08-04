@@ -36,6 +36,7 @@ type PatchBody = LedgerWriteBody & {
 
 export async function PATCH(request: NextRequest, context: RouteContext) {
   const t = await getTranslations("errors.api");
+  const tRoute = await getTranslations("errors.ledger");
   const { entryId } = await context.params;
 
   const auth = await requireStaff();
@@ -55,7 +56,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
 
   if (loadError || !existing) {
     return NextResponse.json(
-      { error: "Lançamento não encontrado." },
+      { error: tRoute("entryNotFound") },
       { status: 404 },
     );
   }
@@ -69,7 +70,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
 
   if (!access.expensesEnabled) {
     return NextResponse.json(
-      { error: "Lançamentos estão desativados para esta modelo." },
+      { error: tRoute("ledgerDisabled") },
       { status: 403 },
     );
   }
@@ -84,7 +85,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
 
     if (deductOn !== null && !isIsoDate(deductOn)) {
       return NextResponse.json(
-        { error: "Data de desconto inválida." },
+        { error: tRoute("invalidDeductDate") },
         { status: 400 },
       );
     }
@@ -99,7 +100,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
 
       return rpcErrorResponse(
         error,
-        "Não foi possível alterar a data de desconto.",
+        tRoute("deductDateFailed"),
       );
     }
   } else {
@@ -126,9 +127,9 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
     });
 
     if (error) {
-      console.error("Erro ao editar lançamento:", error);
+      console.error("Failed to edit the ledger entry:", error);
 
-      return rpcErrorResponse(error, "Não foi possível salvar o lançamento.");
+      return rpcErrorResponse(error, tRoute("saveFailed"));
     }
   }
 
@@ -151,6 +152,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
 
 export async function DELETE(_request: NextRequest, context: RouteContext) {
   const t = await getTranslations("errors.api");
+  const tRoute = await getTranslations("errors.ledger");
   const { entryId } = await context.params;
 
   const auth = await requireStaff();
@@ -174,7 +176,7 @@ export async function DELETE(_request: NextRequest, context: RouteContext) {
 
   if (!existing) {
     return NextResponse.json(
-      { error: "Lançamento não encontrado." },
+      { error: tRoute("entryNotFound") },
       { status: 404 },
     );
   }
@@ -191,7 +193,7 @@ export async function DELETE(_request: NextRequest, context: RouteContext) {
 
   if (!access.expensesEnabled) {
     return NextResponse.json(
-      { error: "Lançamentos estão desativados para esta modelo." },
+      { error: tRoute("ledgerDisabled") },
       { status: 403 },
     );
   }
@@ -203,9 +205,9 @@ export async function DELETE(_request: NextRequest, context: RouteContext) {
   });
 
   if (error) {
-    console.error("Erro ao excluir lançamento:", error);
+    console.error("Failed to delete the ledger entry:", error);
 
-    return rpcErrorResponse(error, "Não foi possível excluir o lançamento.");
+    return rpcErrorResponse(error, tRoute("deleteFailed"));
   }
 
   return NextResponse.json({ success: true });
