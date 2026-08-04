@@ -1686,5 +1686,44 @@
       "repScreen": "Rep's screen",
       "adminPanel": "Admin panel"
     }
+  },
+  "owner": {
+    "userDetail": {
+      "portal": "Owner Portal",
+      "manageAccount": "Manage Account",
+      "notFound": "Account not found.",
+      "accountInfo": "Account Information",
+      "name": "Name",
+      "role": "Role",
+      "status": "Status",
+      "actions": "Actions",
+      "noName": "Unnamed",
+      "thisAccount": "this account",
+      "resetPassword": "Reset Password",
+      "makeAdministrator": "Make Administrator",
+      "activateAccount": "Activate Account",
+      "deactivateAccount": "Deactivate Account",
+      "passwordStatus": "Password Status",
+      "mustChangePassword": "This user must change their password at next login.",
+      "noPasswordChangeNeeded": "This user does not need to change their password."
+    },
+    "newUser": {
+      "fullName": "Full name",
+      "fullNamePlaceholder": "Enter the full name",
+      "email": "Email",
+      "emailPlaceholder": "name@example.com",
+      "whatsapp": "WhatsApp",
+      "whatsappPlaceholder": "+55 21 99999-9999",
+      "passwordFromWhatsApp": "The temporary password is the last four digits of the WhatsApp number followed by 1234567.",
+      "representative": "Representative / owner",
+      "selectRepresentative": "Select an owner",
+      "representativeNotFound": "Can't find the representative?",
+      "registerNew": "Register a new one.",
+      "temporaryPassword": "Temporary password",
+      "temporaryPasswordPlaceholder": "Enter a temporary password",
+      "savePasswordWarning": "Save this password before leaving the page.",
+      "creating": "Creating account...",
+      "create": "Create account"
+    }
   }
 }

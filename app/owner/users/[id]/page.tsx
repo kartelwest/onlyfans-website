@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 
 import LogoutButton from "@/components/LogoutButton";
 import { createClient } from "@/lib/supabase/server";
@@ -20,21 +21,6 @@ type Profile = {
   active: boolean;
   must_change_password: boolean;
 };
-
-function getRoleLabel(role: UserRole) {
-  switch (role) {
-    case "owner":
-      return "Proprietário";
-    case "administrator":
-      return "Administrador";
-    case "representative":
-      return "Representante";
-    case "model":
-      return "Modelo";
-    default:
-      return role;
-  }
-}
 
 export default async function OwnerUserManagePage({
   params,
@@ -72,23 +58,28 @@ export default async function OwnerUserManagePage({
     .eq("id", params.id)
     .single();
 
+  const t = await getTranslations("owner.userDetail");
+  const tCommon = await getTranslations("common.actions");
+  const tState = await getTranslations("common.states");
+  const tRole = await getTranslations("enums.role");
+
   if (error || !profile) {
     return (
       <main className="min-h-screen bg-[#08080a] px-6 py-10 text-white">
         <div className="mx-auto max-w-7xl">
           <h1 className="text-3xl font-bold text-pink-300">
-            Gerenciar Conta
+            {t("manageAccount")}
           </h1>
 
           <p className="mt-4 text-red-400">
-            Conta não encontrada.
+            {t("notFound")}
           </p>
 
           <Link
             href="/owner/users"
             className="mt-4 inline-block rounded-lg border border-pink-400/50 bg-pink-400/10 px-4 py-2 text-sm font-bold uppercase tracking-wider text-pink-200 transition hover:bg-pink-400 hover:text-black"
           >
-            Voltar
+            {tCommon("back")}
           </Link>
         </div>
       </main>
@@ -103,15 +94,15 @@ export default async function OwnerUserManagePage({
         <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.3em] text-pink-300">
-              Portal do Proprietário
+              {t("portal")}
             </p>
 
             <h1 className="mt-2 text-3xl font-bold">
-              Gerenciar Conta
+              {t("manageAccount")}
             </h1>
 
             <p className="mt-2 text-zinc-400">
-              {userProfile.full_name || "Sem nome"}
+              {userProfile.full_name || t("noName")}
             </p>
           </div>
 
@@ -120,7 +111,7 @@ export default async function OwnerUserManagePage({
               href="/owner/users"
               className="rounded-lg border border-zinc-700 px-4 py-2 text-sm font-semibold text-zinc-200 transition hover:border-pink-400 hover:text-pink-300"
             >
-              Voltar
+              {tCommon("back")}
             </Link>
 
             <LogoutButton />
@@ -130,28 +121,28 @@ export default async function OwnerUserManagePage({
         <div className="space-y-6">
           <div className="overflow-hidden rounded-2xl border border-pink-400/30 bg-[#111114] p-6">
             <h2 className="mb-4 text-xl font-bold text-pink-200">
-              Informações da Conta
+              {t("accountInfo")}
             </h2>
 
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
-                <p className="text-sm text-zinc-400">Nome</p>
+                <p className="text-sm text-zinc-400">{t("name")}</p>
                 <p className="mt-1 font-semibold text-white">
-                  {userProfile.full_name || "Sem nome"}
+                  {userProfile.full_name || t("noName")}
                 </p>
               </div>
 
               <div>
-                <p className="text-sm text-zinc-400">Função</p>
+                <p className="text-sm text-zinc-400">{t("role")}</p>
                 <p className="mt-1 font-semibold text-white mt-1">
-                  {getRoleLabel(userProfile.role)}
+                  {tRole(userProfile.role)}
                 </p>
               </div>
 
               <div>
-                <p className="text-sm text-zinc-400">Status</p>
+                <p className="text-sm text-zinc-400">{t("status")}</p>
                 <p className="mt-1 font-semibold text-white">
-                  {userProfile.active ? "Ativo" : "Inativo"}
+                  {userProfile.active ? tState("active") : tState("inactive")}
                 </p>
               </div>
 
@@ -166,7 +157,7 @@ export default async function OwnerUserManagePage({
 
           <div className="overflow-hidden rounded-2xl border border-pink-400/30 bg-[#111114] p-6">
             <h2 className="mb-4 text-xl font-bold text-pink-200">
-              Ações
+              {t("actions")}
             </h2>
 
             <div className="flex flex-wrap gap-3">
@@ -242,7 +233,7 @@ export default async function OwnerUserManagePage({
                       : "border border-green-400/50 bg-green-400/10 text-green-200 hover:bg-green-400 hover:text-black"
                   }`}
                 >
-                  {userProfile.active ? "Desativar Conta" : "Ativar Conta"}
+                  {userProfile.active ? t("deactivateAccount") : t("activateAccount")}
                 </button>
               </form>
 
@@ -300,7 +291,7 @@ export default async function OwnerUserManagePage({
                   type="submit"
                   className="rounded-lg border border-blue-400/50 bg-blue-400/10 px-4 py-2 text-sm font-semibold text-blue-200 transition hover:bg-blue-400 hover:text-black"
                 >
-                  Redefinir Senha
+                  {t("resetPassword")}
                 </button>
               </form>
 
@@ -346,7 +337,7 @@ export default async function OwnerUserManagePage({
                     type="submit"
                     className="rounded-lg border border-purple-400/50 bg-purple-400/10 px-4 py-2 text-sm font-semibold text-purple-200 transition hover:bg-purple-400 hover:text-black"
                   >
-                    Tornar Administrador
+                    {t("makeAdministrator")}
                   </button>
                 </form>
               )}
@@ -356,7 +347,7 @@ export default async function OwnerUserManagePage({
                 <DeleteAccountButton
                   targetId={params.id}
                   displayName={
-                    userProfile.full_name || "esta conta"
+                    userProfile.full_name || t("thisAccount")
                   }
                   action={deleteAccountAction}
                 />
@@ -366,13 +357,13 @@ export default async function OwnerUserManagePage({
 
           <div className="overflow-hidden rounded-2xl border border-pink-400/30 bg-[#111114] p-6">
             <h2 className="mb-4 text-xl font-bold text-pink-200">
-              Status de Senha
+              {t("passwordStatus")}
             </h2>
 
             <p className="text-zinc-400">
               {userProfile.must_change_password
-                ? "Usuário precisa alterar a senha no próximo login."
-                : "Usuário não precisa alterar a senha."}
+                ? t("mustChangePassword")
+                : t("noPasswordChangeNeeded")}
             </p>
           </div>
         </div>

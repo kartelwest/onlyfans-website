@@ -1686,5 +1686,44 @@
       "repScreen": "Tela do rep.",
       "adminPanel": "Painel admin"
     }
+  },
+  "owner": {
+    "userDetail": {
+      "portal": "Portal do Proprietário",
+      "manageAccount": "Gerenciar Conta",
+      "notFound": "Conta não encontrada.",
+      "accountInfo": "Informações da Conta",
+      "name": "Nome",
+      "role": "Função",
+      "status": "Status",
+      "actions": "Ações",
+      "noName": "Sem nome",
+      "thisAccount": "esta conta",
+      "resetPassword": "Redefinir Senha",
+      "makeAdministrator": "Tornar Administrador",
+      "activateAccount": "Ativar Conta",
+      "deactivateAccount": "Desativar Conta",
+      "passwordStatus": "Status de Senha",
+      "mustChangePassword": "Usuário precisa alterar a senha no próximo login.",
+      "noPasswordChangeNeeded": "Usuário não precisa alterar a senha."
+    },
+    "newUser": {
+      "fullName": "Nome completo",
+      "fullNamePlaceholder": "Digite o nome completo",
+      "email": "E-mail",
+      "emailPlaceholder": "nome@exemplo.com",
+      "whatsapp": "WhatsApp",
+      "whatsappPlaceholder": "+55 21 99999-9999",
+      "passwordFromWhatsApp": "A senha temporária será formada pelos quatro últimos números do WhatsApp seguidos de 1234567.",
+      "representative": "Representante / responsável",
+      "selectRepresentative": "Selecione um responsável",
+      "representativeNotFound": "Não encontrou o representante?",
+      "registerNew": "Cadastre um novo.",
+      "temporaryPassword": "Senha temporária",
+      "temporaryPasswordPlaceholder": "Digite uma senha temporária",
+      "savePasswordWarning": "Guarde esta senha antes de sair da página.",
+      "creating": "Criando conta...",
+      "create": "Criar conta"
+    }
   }
 }

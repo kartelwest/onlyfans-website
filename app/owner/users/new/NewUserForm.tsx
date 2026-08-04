@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
 import { useActionState } from "react";
 import Link from "next/link";
 
@@ -30,6 +32,8 @@ export default function NewUserForm({
   role,
   representatives,
 }: NewUserFormProps) {
+  const t = useTranslations("owner.newUser");
+
   const [state, formAction, pending] = useActionState(
     createUserAction,
     initialState,
@@ -46,7 +50,7 @@ export default function NewUserForm({
           htmlFor="fullName"
           className="mb-2 block text-sm font-semibold text-zinc-200"
         >
-          Nome completo
+          {t("fullName")}
         </label>
 
         <input
@@ -55,7 +59,7 @@ export default function NewUserForm({
           type="text"
           required
           className="w-full rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none transition placeholder:text-zinc-600 focus:border-pink-400"
-          placeholder="Digite o nome completo"
+          placeholder={t("fullNamePlaceholder")}
         />
       </div>
 
@@ -64,7 +68,7 @@ export default function NewUserForm({
           htmlFor="email"
           className="mb-2 block text-sm font-semibold text-zinc-200"
         >
-          E-mail
+          {t("email")}
         </label>
 
         <input
@@ -73,7 +77,7 @@ export default function NewUserForm({
           type="email"
           required
           className="w-full rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none transition placeholder:text-zinc-600 focus:border-pink-400"
-          placeholder="nome@exemplo.com"
+          placeholder={t("emailPlaceholder")}
         />
       </div>
 
@@ -83,7 +87,7 @@ export default function NewUserForm({
             htmlFor="whatsapp"
             className="mb-2 block text-sm font-semibold text-zinc-200"
           >
-            WhatsApp
+            {t("whatsapp")}
           </label>
 
           <input
@@ -92,12 +96,11 @@ export default function NewUserForm({
             type="tel"
             required
             className="w-full rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none transition placeholder:text-zinc-600 focus:border-pink-400"
-            placeholder="+55 21 99999-9999"
+            placeholder={t("whatsappPlaceholder")}
           />
 
           <p className="mt-2 text-xs text-zinc-500">
-            A senha temporária será formada pelos quatro últimos
-            números do WhatsApp seguidos de 1234567.
+            {t("passwordFromWhatsApp")}
           </p>
         </div>
       )}
@@ -108,7 +111,7 @@ export default function NewUserForm({
             htmlFor="representativeId"
             className="mb-2 block text-sm font-semibold text-zinc-200"
           >
-            Representante / responsável
+            {t("representative")}
           </label>
 
           <select
@@ -117,7 +120,7 @@ export default function NewUserForm({
             required
             className="w-full rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none transition focus:border-pink-400"
           >
-            <option value="">Selecione um responsável</option>
+            <option value="">{t("selectRepresentative")}</option>
 
             {representatives.map((rep) => (
               <option key={rep.id} value={rep.id}>
@@ -132,12 +135,12 @@ export default function NewUserForm({
           </select>
 
           <p className="mt-2 text-xs text-zinc-500">
-            Não encontrou o representante?{" "}
+            {t("representativeNotFound")}{" "}
             <Link
               href="/owner/users/new?role=representative"
               className="text-pink-400 underline transition hover:text-pink-300"
             >
-              Cadastre um novo.
+              {t("registerNew")}
             </Link>
           </p>
         </div>
@@ -149,7 +152,7 @@ export default function NewUserForm({
             htmlFor="password"
             className="mb-2 block text-sm font-semibold text-zinc-200"
           >
-            Senha temporária
+            {t("temporaryPassword")}
           </label>
 
           <input
@@ -159,7 +162,7 @@ export default function NewUserForm({
             required
             minLength={6}
             className="w-full rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none transition placeholder:text-zinc-600 focus:border-pink-400"
-            placeholder="Digite uma senha temporária"
+            placeholder={t("temporaryPasswordPlaceholder")}
           />
         </div>
       )}
@@ -177,7 +180,7 @@ export default function NewUserForm({
           {state.success && state.temporaryPassword && (
             <div className="mt-3">
               <p className="text-xs uppercase tracking-wider text-green-200/70">
-                Senha temporária
+                {t("temporaryPassword")}
               </p>
 
               <p className="mt-1 text-lg font-bold">
@@ -185,7 +188,7 @@ export default function NewUserForm({
               </p>
 
               <p className="mt-2 text-xs text-green-200/70">
-                Guarde esta senha antes de sair da página.
+                {t("savePasswordWarning")}
               </p>
             </div>
           )}
@@ -197,7 +200,7 @@ export default function NewUserForm({
         disabled={pending}
         className="inline-flex w-full items-center justify-center rounded-xl bg-pink-400 px-5 py-3 font-bold text-black transition hover:bg-pink-300 disabled:cursor-not-allowed disabled:opacity-50"
       >
-        {pending ? "Criando conta..." : "Criar conta"}
+        {pending ? t("creating") : t("create")}
       </button>
     </form>
   );
