@@ -1912,6 +1912,48 @@
         "viewAsExit": "Exited preview"
       },
       "deleted": "deleted"
+    },
+    "ampliaDetail": {
+      "brandGrowthClient": "Brand Growth Client",
+      "tabs": {
+        "estrategia": "Strategy",
+        "conteudo": "Content",
+        "calendario": "Calendar",
+        "aprovacoes": "Approvals",
+        "playbook": "Playbook (X)",
+        "resultados": "Results",
+        "limites": "Boundaries/Consent",
+        "alertas": "Alerts"
+      },
+      "empty": {
+        "conteudo": "No content generated yet.",
+        "calendario": "Nothing scheduled.",
+        "aprovacoes": "No content awaiting approval.",
+        "playbook": "No playbook tasks today.",
+        "resultados": "Metrics and analytics will appear here.",
+        "alertas": "No critical alerts."
+      },
+      "positioning": "Positioning",
+      "aiGuidelines": "AI guidelines",
+      "consents": "Consents",
+      "boundaries": "Boundaries",
+      "noConsents": "No consents recorded.",
+      "noBoundaries": "No boundaries recorded.",
+      "fields": {
+        "category": "Category",
+        "niche1": "Niche 1",
+        "niche2": "Niche 2",
+        "niche3": "Niche 3",
+        "primaryPositioning": "Primary positioning",
+        "secondaryPositioning": "Secondary positioning",
+        "standingGuidance": "Standing guidance",
+        "dailyDirective": "Directive of the day",
+        "defaultLanguage": "Default language",
+        "prohibitedSubjects": "Prohibited subjects",
+        "prohibitedWords": "Prohibited words",
+        "neverReveal": "Never reveal",
+        "neverGenerateNudity": "Never generate nudity"
+      }
     }
   },
   "owner": {

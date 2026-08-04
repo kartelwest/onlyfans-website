@@ -1,18 +1,20 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
 import { useState } from "react";
 import Link from "next/link";
 import type { AmpliaClientDetail } from "@/lib/amplia/clients";
 
 const TABS = [
-  { id: "estrategia", label: "Estratégia" },
-  { id: "conteudo", label: "Conteúdo" },
-  { id: "calendario", label: "Calendário" },
-  { id: "aprovacoes", label: "Aprovações" },
-  { id: "playbook", label: "Playbook (X)" },
-  { id: "resultados", label: "Resultados" },
-  { id: "limites", label: "Limites/Consentimento" },
-  { id: "alertas", label: "Alertas" },
+  { id: "estrategia" },
+  { id: "conteudo" },
+  { id: "calendario" },
+  { id: "aprovacoes" },
+  { id: "playbook" },
+  { id: "resultados" },
+  { id: "limites" },
+  { id: "alertas" },
 ];
 
 interface AmpliaDetailClientProps {
@@ -22,6 +24,9 @@ interface AmpliaDetailClientProps {
 export default function AmpliaDetailClient({
   client,
 }: AmpliaDetailClientProps) {
+  const t = useTranslations("admin.ampliaDetail");
+  const tAmplia = useTranslations("admin.amplia");
+
   const [activeTab, setActiveTab] = useState("estrategia");
 
   return (
@@ -41,7 +46,7 @@ export default function AmpliaDetailClient({
             </h1>
 
             <p className="mt-2 text-sm text-white/55">
-              {client.type === "model" ? "Modelo Karay" : "Cliente Brand Growth"} — {client.stageName || client.fullName || "—"}
+              {client.type === "model" ? tAmplia("karayModel") : t("brandGrowthClient")} — {client.stageName || client.fullName || "—"}
             </p>
           </div>
 
@@ -66,7 +71,7 @@ export default function AmpliaDetailClient({
                       : "border-white/10 bg-white/5 text-white/60 hover:bg-white/10"
                     }`}
                 >
-                  {tab.label}
+                  {t(`tabs.${tab.id}`)}
                 </button>
               );
             })}
@@ -75,13 +80,25 @@ export default function AmpliaDetailClient({
 
         <div className="mt-8">
           {activeTab === "estrategia" && <StrategyTab client={client} />}
-          {activeTab === "conteudo" && <EmptyTab title="Conteúdo" text="Nenhum conteúdo gerado ainda." />}
-          {activeTab === "calendario" && <EmptyTab title="Calendário" text="Nenhum item agendado." />}
-          {activeTab === "aprovacoes" && <EmptyTab title="Aprovações" text="Nenhum conteúdo aguardando aprovação." />}
-          {activeTab === "playbook" && <EmptyTab title="Playbook (X)" text="Nenhuma tarefa do playbook hoje." />}
-          {activeTab === "resultados" && <EmptyTab title="Resultados" text="Métricas e analytics aparecerão aqui." />}
+          {activeTab === "conteudo" && (
+            <EmptyTab title={t("tabs.conteudo")} text={t("empty.conteudo")} />
+          )}
+          {activeTab === "calendario" && (
+            <EmptyTab title={t("tabs.calendario")} text={t("empty.calendario")} />
+          )}
+          {activeTab === "aprovacoes" && (
+            <EmptyTab title={t("tabs.aprovacoes")} text={t("empty.aprovacoes")} />
+          )}
+          {activeTab === "playbook" && (
+            <EmptyTab title={t("tabs.playbook")} text={t("empty.playbook")} />
+          )}
+          {activeTab === "resultados" && (
+            <EmptyTab title={t("tabs.resultados")} text={t("empty.resultados")} />
+          )}
           {activeTab === "limites" && <BoundariesTab client={client} />}
-          {activeTab === "alertas" && <EmptyTab title="Alertas" text="Nenhum alerta crítico." />}
+          {activeTab === "alertas" && (
+            <EmptyTab title={t("tabs.alertas")} text={t("empty.alertas")} />
+          )}
         </div>
       </div>
     </main>
@@ -89,61 +106,66 @@ export default function AmpliaDetailClient({
 }
 
 function StrategyTab({ client }: { client: AmpliaClientDetail }) {
+  const t = useTranslations("admin.ampliaDetail");
+
   const bp = client.brandProfile;
 
   return (
     <section className="grid gap-6 lg:grid-cols-2">
-      <Card title="Posicionamento">
-        <ReadOnly label="Categoria" value={bp?.brandCategory} />
-        <ReadOnly label="Nicho 1" value={bp?.niche1} />
-        <ReadOnly label="Nicho 2" value={bp?.niche2} />
-        <ReadOnly label="Nicho 3" value={bp?.niche3} />
-        <ReadOnly label="Posicionamento primário" value={bp?.primaryPositioning} />
-        <ReadOnly label="Posicionamento secundário" value={bp?.secondaryPositioning} />
+      <Card title={t("positioning")}>
+        <ReadOnly label={t("fields.category")} value={bp?.brandCategory} />
+        <ReadOnly label={t("fields.niche1")} value={bp?.niche1} />
+        <ReadOnly label={t("fields.niche2")} value={bp?.niche2} />
+        <ReadOnly label={t("fields.niche3")} value={bp?.niche3} />
+        <ReadOnly label={t("fields.primaryPositioning")} value={bp?.primaryPositioning} />
+        <ReadOnly label={t("fields.secondaryPositioning")} value={bp?.secondaryPositioning} />
       </Card>
 
-      <Card title="Diretrizes de IA">
-        <ReadOnly label="Diretriz permanente" value={bp?.aiGuidance} multiline />
-        <ReadOnly label="Diretriz do dia" value={bp?.dailyDirective || null} />
-        <ReadOnly label="Idioma padrão" value={bp?.defaultLanguages?.join(", ")} />
+      <Card title={t("aiGuidelines")}>
+        <ReadOnly label={t("fields.standingGuidance")} value={bp?.aiGuidance} multiline />
+        <ReadOnly label={t("fields.dailyDirective")} value={bp?.dailyDirective || null} />
+        <ReadOnly label={t("fields.defaultLanguage")} value={bp?.defaultLanguages?.join(", ")} />
       </Card>
     </section>
   );
 }
 
 function BoundariesTab({ client }: { client: AmpliaClientDetail }) {
+  const t = useTranslations("admin.ampliaDetail");
+  const tState = useTranslations("common.states");
+
   return (
     <section className="grid gap-6 lg:grid-cols-2">
-      <Card title="Consentimentos">
+      <Card title={t("consents")}>
         {Object.entries(client.consents).length > 0 ? (
           <ul className="space-y-2 text-sm text-white/70">
             {Object.entries(client.consents).map(([key, granted]) => (
               <li key={key} className="flex items-center justify-between">
                 <span className="capitalize">{key.replace(/_/g, " ")}</span>
                 <span className={granted ? "text-green-400" : "text-red-400"}>
-                  {granted ? "Sim" : "Não"}
+                  {granted ? tState("yes") : tState("no")}
                 </span>
               </li>
             ))}
           </ul>
         ) : (
-          <p className="text-sm text-white/45">Nenhum consentimento registrado.</p>
+          <p className="text-sm text-white/45">{t("noConsents")}</p>
         )}
       </Card>
 
-      <Card title="Limites">
+      <Card title={t("boundaries")}>
         {client.boundaries ? (
           <div className="space-y-4 text-sm text-white/70">
-            <TagList label="Assuntos proibidos" items={client.boundaries.prohibitedSubjects} />
-            <TagList label="Palavras proibidas" items={client.boundaries.prohibitedWords} />
-            <TagList label="Nunca revelar" items={client.boundaries.privateDetailsNeverReveal} />
+            <TagList label={t("fields.prohibitedSubjects")} items={client.boundaries.prohibitedSubjects} />
+            <TagList label={t("fields.prohibitedWords")} items={client.boundaries.prohibitedWords} />
+            <TagList label={t("fields.neverReveal")} items={client.boundaries.privateDetailsNeverReveal} />
             <ReadOnly
-              label="Nunca gerar nudez"
-              value={client.boundaries.neverGenerateNudity ? "Sim" : "Não"}
+              label={t("fields.neverGenerateNudity")}
+              value={client.boundaries.neverGenerateNudity ? tState("yes") : tState("no")}
             />
           </div>
         ) : (
-          <p className="text-sm text-white/45">Nenhum limite registrado.</p>
+          <p className="text-sm text-white/45">{t("noBoundaries")}</p>
         )}
       </Card>
     </section>

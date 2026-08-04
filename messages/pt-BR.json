@@ -1912,6 +1912,48 @@
         "viewAsExit": "Saiu da visualização"
       },
       "deleted": "excluída"
+    },
+    "ampliaDetail": {
+      "brandGrowthClient": "Cliente Brand Growth",
+      "tabs": {
+        "estrategia": "Estratégia",
+        "conteudo": "Conteúdo",
+        "calendario": "Calendário",
+        "aprovacoes": "Aprovações",
+        "playbook": "Playbook (X)",
+        "resultados": "Resultados",
+        "limites": "Limites/Consentimento",
+        "alertas": "Alertas"
+      },
+      "empty": {
+        "conteudo": "Nenhum conteúdo gerado ainda.",
+        "calendario": "Nenhum item agendado.",
+        "aprovacoes": "Nenhum conteúdo aguardando aprovação.",
+        "playbook": "Nenhuma tarefa do playbook hoje.",
+        "resultados": "Métricas e analytics aparecerão aqui.",
+        "alertas": "Nenhum alerta crítico."
+      },
+      "positioning": "Posicionamento",
+      "aiGuidelines": "Diretrizes de IA",
+      "consents": "Consentimentos",
+      "boundaries": "Limites",
+      "noConsents": "Nenhum consentimento registrado.",
+      "noBoundaries": "Nenhum limite registrado.",
+      "fields": {
+        "category": "Categoria",
+        "niche1": "Nicho 1",
+        "niche2": "Nicho 2",
+        "niche3": "Nicho 3",
+        "primaryPositioning": "Posicionamento primário",
+        "secondaryPositioning": "Posicionamento secundário",
+        "standingGuidance": "Diretriz permanente",
+        "dailyDirective": "Diretriz do dia",
+        "defaultLanguage": "Idioma padrão",
+        "prohibitedSubjects": "Assuntos proibidos",
+        "prohibitedWords": "Palavras proibidas",
+        "neverReveal": "Nunca revelar",
+        "neverGenerateNudity": "Nunca gerar nudez"
+      }
     }
   },
   "owner": {
