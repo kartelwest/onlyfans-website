@@ -11,7 +11,6 @@ import {
   accountStatus,
   loadStaffProfiles,
   STAFF_STATUS_BADGE,
-  STAFF_STATUS_LABELS,
   type StaffProfileRow,
 } from "@/lib/staff/representatives";
 import {
@@ -21,16 +20,23 @@ import {
 import { createClient } from "@/lib/supabase/server";
 import type { ManagementRole, ModelStatus } from "@/types/model";
 
+import { useTranslations } from "next-intl";
+import { getTranslations } from "next-intl/server";
+
 export const dynamic = "force-dynamic";
 
 const MAX_ACTIVE_MODELS = 30;
 
-const STATUS_FILTERS: { value: "all" | ModelStatus; label: string }[] = [
-  { value: "all", label: "Todos" },
-  { value: "candidate", label: "Candidatas" },
-  { value: "active", label: "Ativas" },
-  { value: "inactive", label: "Inativas" },
-  { value: "denied", label: "Negadas" },
+/**
+ * The filter chips. `value` is the database status (or "all"); the words come
+ * from `enums.modelStatusPlural`, which the rest of the admin reads too.
+ */
+const STATUS_FILTERS: { value: "all" | ModelStatus }[] = [
+  { value: "all" },
+  { value: "candidate" },
+  { value: "active" },
+  { value: "inactive" },
+  { value: "denied" },
 ];
 
 type ChecklistRow = {
@@ -152,7 +158,7 @@ export default async function AdminModelsPage({
     });
 
   if (modelsError) {
-    console.error("Erro ao carregar modelos:", modelsError);
+    console.error("Failed to load models:", modelsError);
   }
 
   // latest_note_summary is an excerpt of the model's most recent internal
@@ -170,7 +176,7 @@ export default async function AdminModelsPage({
 
   if (noteSummaryError) {
     console.error(
-      "Erro ao carregar os resumos das notas:",
+      "Failed to load note summaries:",
       noteSummaryError,
     );
   }
@@ -197,7 +203,7 @@ export default async function AdminModelsPage({
 
   if (checklistError) {
     console.error(
-      "Erro ao carregar checklist:",
+      "Failed to load checklist:",
       checklistError,
     );
   }
@@ -276,6 +282,10 @@ export default async function AdminModelsPage({
     100,
   );
 
+  const t = await getTranslations("admin.modelsPage");
+  const tStatus = await getTranslations("enums.modelStatusPlural");
+  const tCommon = await getTranslations("common.states");
+
   return (
     <main className="min-h-screen bg-[#08080a] px-4 py-8 text-white sm:px-6 lg:px-10">
       <div className="mx-auto max-w-[1600px]">
@@ -286,11 +296,11 @@ export default async function AdminModelsPage({
             </p>
 
             <h1 className="mt-2 text-3xl font-bold sm:text-4xl">
-              Lista de modelos
+              {t("title")}
             </h1>
 
             <p className="mt-2 text-sm text-white/55">
-              Bem-vindo, {profile.full_name}.
+              {t("welcome", { name: profile.full_name })}
             </p>
           </div>
 
@@ -306,28 +316,28 @@ export default async function AdminModelsPage({
               href="/admin/assistant"
               className="rounded-xl border border-purple-400/40 bg-purple-500/10 px-5 py-3 text-sm font-semibold text-purple-200 transition hover:bg-purple-500/20"
             >
-              Assistente Claude
+              {t("claudeAssistant")}
             </Link>
 
             <Link
               href="/admin/import"
               className="rounded-xl border border-purple-400/40 bg-purple-500/10 px-5 py-3 text-sm font-semibold text-purple-200 transition hover:bg-purple-500/20"
             >
-              Importar PDF/Imagem
+              {t("importPdf")}
             </Link>
 
             <Link
               href="/admin/users/new?role=model"
               className="rounded-xl bg-pink-500 px-5 py-3 text-sm font-bold text-white transition hover:bg-pink-400"
             >
-              Adicionar modelo
+              {t("addModel")}
             </Link>
 
             <Link
               href="/admin/users/new?role=representative"
               className="rounded-xl border border-pink-400/40 bg-pink-500/10 px-5 py-3 text-sm font-semibold text-pink-200 transition hover:bg-pink-500/20"
             >
-              Adicionar representante
+              {t("addRepresentative")}
             </Link>
 
             {role === "owner" && (
@@ -335,7 +345,7 @@ export default async function AdminModelsPage({
                 href="/admin/users/new?role=administrator"
                 className="rounded-xl border border-purple-400/40 bg-purple-500/10 px-5 py-3 text-sm font-semibold text-purple-200 transition hover:bg-purple-500/20"
               >
-                Adicionar administrador
+                {t("addAdministrator")}
               </Link>
             )}
           </div>
@@ -343,33 +353,33 @@ export default async function AdminModelsPage({
 
         <section className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
           <MetricCard
-            label="Modelos ativas"
+            label={t("metrics.activeModels")}
             value={`${activeModels} / ${MAX_ACTIVE_MODELS}`}
-            description="Capacidade total"
+            description={t("metrics.totalCapacity")}
           />
 
           <MetricCard
-            label="Vagas disponíveis"
+            label={t("metrics.openSlots")}
             value={availableSpaces}
-            description="Até atingir o limite"
+            description={t("metrics.untilLimit")}
           />
 
           <MetricCard
-            label="Em onboarding"
+            label={t("metrics.onboarding")}
             value={onboardingModels}
-            description="Processo em andamento"
+            description={t("metrics.inProgress")}
           />
 
           <MetricCard
-            label="Onboarding concluído"
+            label={t("metrics.onboardingDone")}
             value={completedModels}
             description="100% completo"
           />
 
           <MetricCard
-            label="Total cadastrado"
+            label={t("metrics.totalRegistered")}
             value={models.length}
-            description="Todos os registros"
+            description={t("metrics.allRecords")}
           />
         </section>
 
@@ -412,10 +422,16 @@ export default async function AdminModelsPage({
         >
           <summary className="flex cursor-pointer list-none items-center justify-between gap-4 border-b border-pink-400/20 bg-[#2a1521] px-6 py-4 [&::-webkit-details-marker]:hidden">
             <span className="text-sm font-bold uppercase tracking-[0.14em] text-pink-100">
-              Modelos{" "}
+              {t("modelsHeading")}{" "}
               <span className="font-semibold text-pink-300/70">
-                ({filteredModels.length}
-                {statusFilter !== "all" ? ` de ${models.length}` : ""})
+                (
+                {statusFilter === "all"
+                  ? filteredModels.length
+                  : t("filteredOf", {
+                      shown: filteredModels.length,
+                      total: models.length,
+                    })}
+                )
               </span>
             </span>
 
@@ -451,7 +467,10 @@ export default async function AdminModelsPage({
                       : "border-white/10 bg-white/5 text-white/60 hover:bg-white/10"
                   }`}
                 >
-                  {filter.label} ({count})
+                  {filter.value === "all"
+                    ? tCommon("all")
+                    : tStatus(filter.value)}{" "}
+                  ({count})
                 </Link>
               );
             })}
@@ -462,15 +481,15 @@ export default async function AdminModelsPage({
               <thead className="bg-[#2a1521] text-left">
                 <tr className="border-b border-pink-400/20">
                   <TableHeading>#</TableHeading>
-                  <TableHeading>Modelo</TableHeading>
-                  <TableHeading>Status</TableHeading>
-                  <TableHeading>Onboarding</TableHeading>
-                  <TableHeading>Website</TableHeading>
-                  <TableHeading>Google Drive</TableHeading>
-                  <TableHeading>OnlyFans</TableHeading>
-                  <TableHeading>Fansly</TableHeading>
-                  <TableHeading>Notas</TableHeading>
-                  <TableHeading>Ações</TableHeading>
+                  <TableHeading>{t("columns.model")}</TableHeading>
+                  <TableHeading>{t("columns.status")}</TableHeading>
+                  <TableHeading>{t("columns.onboarding")}</TableHeading>
+                  <TableHeading>{t("columns.website")}</TableHeading>
+                  <TableHeading>{t("columns.drive")}</TableHeading>
+                  <TableHeading>{t("columns.onlyfans")}</TableHeading>
+                  <TableHeading>{t("columns.fansly")}</TableHeading>
+                  <TableHeading>{t("columns.notes")}</TableHeading>
+                  <TableHeading>{t("columns.actions")}</TableHeading>
                 </tr>
               </thead>
 
@@ -483,14 +502,14 @@ export default async function AdminModelsPage({
                     >
                       <p className="text-lg font-bold">
                         {statusFilter === "all"
-                          ? "Nenhuma modelo cadastrada"
-                          : "Nenhuma modelo neste status"}
+                          ? t("emptyTitle")
+                          : t("emptyFilteredTitle")}
                       </p>
 
                       <p className="mt-2 text-sm text-white/50">
                         {statusFilter === "all"
-                          ? "Adicione a primeira modelo para começar."
-                          : "Tente selecionar outro filtro de status."}
+                          ? t("emptyBody")
+                          : t("emptyFilteredBody")}
                       </p>
                     </td>
                   </tr>
@@ -598,8 +617,7 @@ export default async function AdminModelsPage({
 
                         <TableCell>
                           <p className="max-w-[280px] truncate text-sm text-white/60">
-                            {model.latest_note_summary ||
-                              "Nenhuma nota"}
+                            {model.latest_note_summary || t("noNote")}
                           </p>
                         </TableCell>
 
@@ -609,7 +627,7 @@ export default async function AdminModelsPage({
                               href={`/admin/models/${model.slug}`}
                               className="rounded-lg border border-pink-400/30 bg-pink-500/10 px-4 py-2 text-xs font-bold text-pink-200 transition hover:bg-pink-500/20"
                             >
-                              Abrir perfil
+                              {t("openProfile")}
                             </Link>
 
                             {/*
@@ -656,18 +674,18 @@ export default async function AdminModelsPage({
                   model.display_name,
               }))}
               basePath="/admin/view-as/model"
-              fieldLabel="Visualizar como a modelo veria"
+              fieldLabel={t("viewAsModel")}
             />
           )}
         </details>
 
         <ProfileListSection
-          title="Representantes"
+          title={t("representatives")}
           profiles={representatives}
-          emptyMessage="Nenhum representante cadastrado."
+          emptyMessage={t("noRepresentatives")}
           isOwner={role === "owner"}
           manageAllHref="/admin/representatives"
-          manageAllLabel="Ver todos os representantes"
+          manageAllLabel={t("viewAllRepresentatives")}
           showDeleteRepresentative
           profileHref={(profileId) => `/admin/representatives/${profileId}`}
           viewAsHref={(profileId) =>
@@ -677,16 +695,16 @@ export default async function AdminModelsPage({
         />
 
         <ProfileListSection
-          title="Administradores"
+          title={t("administrators")}
           profiles={administrators}
-          emptyMessage="Nenhum administrador cadastrado."
+          emptyMessage={t("noAdministrators")}
           isOwner={role === "owner"}
         />
 
         <section className="mt-6 grid gap-4 rounded-2xl border border-pink-400/20 bg-[#21121a] p-6 lg:grid-cols-2">
           <div>
             <p className="text-sm font-bold uppercase tracking-[0.18em] text-pink-300">
-              Máximo de modelos ativas
+              {t("maxActive")}
             </p>
 
             <p className="mt-3 text-3xl font-bold">
@@ -694,22 +712,21 @@ export default async function AdminModelsPage({
             </p>
 
             <p className="mt-2 text-sm text-white/60">
-              Ativas atualmente: {activeModels}
+              {t("currentlyActive", { count: activeModels })}
             </p>
           </div>
 
           <div>
             <p className="text-sm font-bold uppercase tracking-[0.18em] text-pink-300">
-              Cada modelo terá
+              {t("eachModelGets")}
             </p>
 
             <div className="mt-3 grid gap-2 text-sm text-white/75 sm:grid-cols-2">
-              <p>✓ Login individual</p>
-              <p>✓ Dashboard privado</p>
-              <p>✓ Integração com Google Drive</p>
-              <p>✓ Upload direto pelo site</p>
-              <p>✓ Pastas separadas por plataforma</p>
-              <p>✓ Checklist de onboarding</p>
+              {(
+                t.raw("perks") as string[]
+              ).map((perk) => (
+                <p key={perk}>✓ {perk}</p>
+              ))}
             </div>
           </div>
         </section>
@@ -765,6 +782,9 @@ function ProfileListSection({
   viewAsHref?: (profileId: string) => string;
   modelsByProfile?: Map<string, RepresentativeModel[]>;
 }) {
+  const t = useTranslations("admin.modelsPage");
+  const tStaff = useTranslations("enums.representativeStatus");
+
   const showModels = Boolean(modelsByProfile);
 
   const showActions = Boolean(viewAsHref || profileHref || isOwner);
@@ -790,7 +810,7 @@ function ProfileListSection({
             href={manageAllHref}
             className="text-xs font-bold uppercase tracking-[0.12em] text-pink-300 transition hover:text-pink-200"
           >
-            {manageAllLabel ?? "Gerenciar"} →
+            {manageAllLabel ?? t("manage")} →
           </Link>
         </div>
       )}
@@ -799,11 +819,13 @@ function ProfileListSection({
         <table className="w-full min-w-[820px] border-collapse">
           <thead className="bg-[#2a1521] text-left">
             <tr className="border-b border-pink-400/20">
-              <TableHeading>Nome</TableHeading>
-              <TableHeading>Email</TableHeading>
-              <TableHeading>Status</TableHeading>
-              {showModels && <TableHeading>Modelos</TableHeading>}
-              {showActions && <TableHeading>Ações</TableHeading>}
+              <TableHeading>{t("columns.name")}</TableHeading>
+              <TableHeading>{t("columns.email")}</TableHeading>
+              <TableHeading>{t("columns.status")}</TableHeading>
+              {showModels && (
+                <TableHeading>{t("columns.models")}</TableHeading>
+              )}
+              {showActions && <TableHeading>{t("columns.actions")}</TableHeading>}
             </tr>
           </thead>
 
@@ -834,11 +856,11 @@ function ProfileListSection({
                           href={profileHref(profile.id)}
                           className="font-bold text-white transition hover:text-pink-300"
                         >
-                          {profile.full_name || "Sem nome"}
+                          {profile.full_name || t("noName")}
                         </Link>
                       ) : (
                         <span className="font-bold text-white">
-                          {profile.full_name || "Sem nome"}
+                          {profile.full_name || t("noName")}
                         </span>
                       )}
                     </TableCell>
@@ -853,7 +875,7 @@ function ProfileListSection({
                       <span
                         className={`inline-flex rounded-full px-3 py-1 text-xs font-bold ring-1 ${STAFF_STATUS_BADGE[status]}`}
                       >
-                        {STAFF_STATUS_LABELS[status]}
+                        {tStaff(status)}
                       </span>
                     </TableCell>
 
@@ -874,7 +896,7 @@ function ProfileListSection({
                               href={viewAsHref(profile.id)}
                               className="rounded-lg border border-purple-400/30 bg-purple-500/10 px-4 py-2 text-center text-xs font-bold text-purple-200 transition hover:bg-purple-500/20"
                             >
-                              Ver como ele vê
+                              {t("viewAsThem")}
                             </Link>
                           )}
 
@@ -883,7 +905,7 @@ function ProfileListSection({
                               href={profileHref(profile.id)}
                               className="rounded-lg border border-pink-400/30 bg-pink-500/10 px-4 py-2 text-center text-xs font-bold text-pink-200 transition hover:bg-pink-500/20"
                             >
-                              Abrir perfil
+                              {t("openProfile")}
                             </Link>
                           )}
 
@@ -902,7 +924,7 @@ function ProfileListSection({
                                 href={`/owner/users/${profile.id}`}
                                 className="rounded-lg border border-white/15 px-4 py-2 text-center text-xs font-bold text-white/70 transition hover:bg-white/10"
                               >
-                                Gerenciar conta
+                                {t("manageAccount")}
                               </Link>
                             ))}
                         </div>
@@ -928,6 +950,8 @@ function ViewAsPicker({
   basePath: string;
   fieldLabel: string;
 }) {
+  const t = useTranslations("admin.modelsPage");
+
   return (
     <form
       action={async (formData: FormData) => {
@@ -954,7 +978,7 @@ function ViewAsPicker({
         className="min-w-[220px] rounded-lg border border-white/15 bg-[#1a1a1f] px-4 py-2 text-sm text-white outline-none focus:border-pink-400/60"
       >
         <option value="" disabled>
-          Selecione...
+          {t("selectPlaceholder")}
         </option>
 
         {options.map((option) => (
@@ -968,7 +992,7 @@ function ViewAsPicker({
         type="submit"
         className="rounded-lg bg-pink-500 px-4 py-2 text-xs font-bold uppercase tracking-wider text-white transition hover:bg-pink-400"
       >
-        Visualizar
+        {t("view")}
       </button>
     </form>
   );
@@ -1070,73 +1094,77 @@ function StatusBadge({
 }: {
   status: string;
 }) {
+  const tStatus = useTranslations("enums.checklistStatus");
+
   const normalizedStatus =
     status?.toLowerCase() || "not_started";
 
+  // Colour only — the words live in `enums.checklistStatus`, shared with every
+  // other checklist surface so one status cannot read two ways.
   const statusConfig: Record<
     string,
     {
-      label: string;
+      key: string;
       className: string;
       dot: string;
     }
   > = {
     active: {
-      label: "Ativa",
+      key: "active",
       className:
         "border-emerald-400/30 bg-emerald-500/15 text-emerald-300",
       dot: "bg-emerald-400",
     },
     completed: {
-      label: "Concluído",
+      key: "completed",
       className:
         "border-emerald-400/30 bg-emerald-500/15 text-emerald-300",
       dot: "bg-emerald-400",
     },
     in_progress: {
-      label: "Em andamento",
+      key: "in_progress",
       className:
         "border-yellow-400/30 bg-yellow-500/15 text-yellow-300",
       dot: "bg-yellow-400",
     },
     planned: {
-      label: "Planejado",
+      key: "planned",
       className:
         "border-yellow-400/30 bg-yellow-500/15 text-yellow-300",
       dot: "bg-yellow-400",
     },
     not_started: {
-      label: "Não iniciado",
+      key: "not_started",
       className:
         "border-red-400/30 bg-red-500/15 text-red-300",
       dot: "bg-red-400",
     },
     missing: {
-      label: "Pendente",
+      key: "pending",
       className:
         "border-red-400/30 bg-red-500/15 text-red-300",
       dot: "bg-red-400",
     },
     blocked: {
-      label: "Bloqueado",
+      key: "blocked",
       className:
         "border-red-400/30 bg-red-500/15 text-red-300",
       dot: "bg-red-400",
     },
     duplicate: {
-      label: "Duplicado",
+      key: "duplicate",
       className:
         "border-blue-400/30 bg-blue-500/15 text-blue-300",
       dot: "bg-blue-400",
     },
     inactive: {
-      label: "Inativa",
+      key: "inactive",
       className:
         "border-white/15 bg-white/5 text-white/45",
       dot: "bg-white/40",
     },
     onboarded: {
-      label: "Onboarded",
+      key: "completed",
       className:
         "border-emerald-400/30 bg-emerald-500/15 text-emerald-300",
       dot: "bg-emerald-400",
@@ -1155,7 +1183,7 @@ function StatusBadge({
         className={`h-2 w-2 rounded-full ${config.dot}`}
       />
 
-      {config.label}
+      {tStatus(config.key)}
     </span>
   );
 }
