@@ -751,6 +751,103 @@
           ]
         }
       ]
+    },
+    "googlePhotos": {
+      "eyebrow": "Instruções para sua candidatura",
+      "title": "Como compartilhar suas fotos pelo Google Photos",
+      "intro": "Crie um álbum contendo duas fotos verticais e duas fotos horizontais. Depois, copie o link compartilhável e cole-o no formulário da KARAY Models.",
+      "beforeYouStart": "Antes de começar",
+      "checklist": [
+        "Escolha duas fotos verticais recentes.",
+        "Escolha duas fotos horizontais recentes.",
+        "Use fotos nítidas e sem filtros exagerados.",
+        "Não é necessário enviar conteúdo sensual.",
+        "Confirme que qualquer pessoa com o link pode visualizar o álbum."
+      ],
+      "appleIphone": "Apple iPhone",
+      "iphoneTitle": "Instruções para iPhone",
+      "exampleIphone": "Exemplo no iPhone",
+      "androidPhones": "Celulares Android",
+      "androidTitle": "Instruções para Android",
+      "exampleAndroid": "Exemplo no Android",
+      "finalCheck": "Verificação final",
+      "testLink": "Teste o link antes de enviar",
+      "testLinkBody": "Abra o link em uma janela anônima ou envie-o para uma pessoa de confiança. Se as fotos aparecerem sem pedir permissão, o link está configurado corretamente.",
+      "backToApplication": "Voltar à candidatura",
+      "iphoneSteps": [
+        {
+          "number": "01",
+          "title": "Abra o Google Photos",
+          "text": "Abra o aplicativo Google Photos no seu iPhone. Caso ainda não tenha o aplicativo, instale-o pela App Store e entre com sua conta Google."
+        },
+        {
+          "number": "02",
+          "title": "Selecione as quatro fotos",
+          "text": "Escolha duas fotos verticais e duas fotos horizontais recentes. Não é necessário enviar conteúdo sensual."
+        },
+        {
+          "number": "03",
+          "title": "Crie um álbum",
+          "text": "Toque em “Adicionar a” ou no símbolo de “+” e escolha “Álbum”. Dê ao álbum o nome “Candidatura KARAY Models”."
+        },
+        {
+          "number": "04",
+          "title": "Confira o álbum",
+          "text": "Abra o álbum e confirme que as quatro fotos aparecem corretamente."
+        },
+        {
+          "number": "05",
+          "title": "Compartilhe o álbum",
+          "text": "Toque no ícone de compartilhar. Em seguida, escolha “Criar link”, “Obter link” ou “Compartilhar link”."
+        },
+        {
+          "number": "06",
+          "title": "Copie o link",
+          "text": "Copie o link criado pelo Google Photos e volte ao formulário da KARAY Models."
+        },
+        {
+          "number": "07",
+          "title": "Cole o link no formulário",
+          "text": "Cole o link no campo indicado na candidatura e confirme que ele começa com photos.app.goo.gl ou photos.google.com."
+        }
+      ],
+      "androidSteps": [
+        {
+          "number": "01",
+          "title": "Abra o Google Photos",
+          "text": "Abra o aplicativo Google Photos no seu celular Android e confirme que está conectada à sua conta Google."
+        },
+        {
+          "number": "02",
+          "title": "Selecione as quatro fotos",
+          "text": "Escolha duas fotos verticais e duas fotos horizontais recentes, nítidas e sem filtros que alterem significativamente sua aparência."
+        },
+        {
+          "number": "03",
+          "title": "Crie um álbum",
+          "text": "Toque em “Adicionar a”, “+” ou “Novo” e selecione “Álbum”. Nomeie o álbum como “Candidatura KARAY Models”."
+        },
+        {
+          "number": "04",
+          "title": "Confira o álbum",
+          "text": "Abra o álbum e confirme que todas as quatro fotos estão presentes."
+        },
+        {
+          "number": "05",
+          "title": "Crie o link",
+          "text": "Toque em “Compartilhar” e depois em “Criar link”. Em alguns aparelhos, a opção poderá aparecer como “Obter link”."
+        },
+        {
+          "number": "06",
+          "title": "Copie o link",
+          "text": "Toque em “Copiar link” e retorne ao formulário de candidatura."
+        },
+        {
+          "number": "07",
+          "title": "Cole o link no formulário",
+          "text": "Cole o link no campo do Google Photos e prossiga com o restante da candidatura."
+        }
+      ]
     }
   },
   "nav": {
@@ -1456,6 +1553,35 @@
           "secondaryPositioning": "Posicionamento secundário",
           "aiGuidance": "Diretriz de IA permanente"
         }
+      }
+    },
+    "payments": {
+      "paymentDetails": "Dados de Pagamento",
+      "noPaymentDetails": "Dados de pagamento não configurados.",
+      "earningsReports": "Relatórios de Ganhos",
+      "noEarnings": "Nenhum relatório de ganhos encontrado.",
+      "noPlatform": "Sem plataforma",
+      "noPeriod": "Sem período",
+      "total": "Total",
+      "model": "Modelo",
+      "agency": "Agência",
+      "viewReceipt": "Ver comprovante",
+      "note": "Nota: {note}",
+      "loadPaymentFailed": "Erro ao carregar dados de pagamento.",
+      "loadEarningsFailed": "Erro ao carregar relatórios de ganhos.",
+      "fields": {
+        "pixKey": "Chave PIX",
+        "pixType": "Tipo de PIX",
+        "bank": "Banco",
+        "branch": "Agência",
+        "account": "Conta",
+        "holder": "Titular",
+        "holderCpf": "CPF do titular",
+        "frequency": "Frequência",
+        "pctModel": "% Modelo",
+        "pctAgency": "% Agência",
+        "pctMarketing": "% Marketing",
+        "status": "Status"
       }
     }
   }

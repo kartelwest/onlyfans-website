@@ -751,6 +751,103 @@
           ]
         }
       ]
+    },
+    "googlePhotos": {
+      "eyebrow": "Instructions for your application",
+      "title": "How to share your photos with Google Photos",
+      "intro": "Create an album with two vertical photos and two horizontal ones. Then copy the shareable link and paste it into the KARAY Models form.",
+      "beforeYouStart": "Before you start",
+      "checklist": [
+        "Pick two recent vertical photos.",
+        "Pick two recent horizontal photos.",
+        "Use sharp photos without heavy filters.",
+        "There's no need to send explicit content.",
+        "Check that anyone with the link can view the album."
+      ],
+      "appleIphone": "Apple iPhone",
+      "iphoneTitle": "iPhone instructions",
+      "exampleIphone": "iPhone example",
+      "androidPhones": "Android phones",
+      "androidTitle": "Android instructions",
+      "exampleAndroid": "Android example",
+      "finalCheck": "Final check",
+      "testLink": "Test the link before sending it",
+      "testLinkBody": "Open the link in a private window, or send it to someone you trust. If the photos appear without asking for permission, the link is set up correctly.",
+      "backToApplication": "Back to the application",
+      "iphoneSteps": [
+        {
+          "number": "01",
+          "title": "Open Google Photos",
+          "text": "Open the Google Photos app on your iPhone. If you don't have it yet, install it from the App Store and sign in with your Google account."
+        },
+        {
+          "number": "02",
+          "title": "Select the four photos",
+          "text": "Choose two recent vertical photos and two horizontal ones. There's no need to send explicit content."
+        },
+        {
+          "number": "03",
+          "title": "Create an album",
+          "text": "Tap “Add to” or the “+” symbol and choose “Album”. Name the album “KARAY Models Application”."
+        },
+        {
+          "number": "04",
+          "title": "Check the album",
+          "text": "Open the album and confirm all four photos appear correctly."
+        },
+        {
+          "number": "05",
+          "title": "Share the album",
+          "text": "Tap the share icon, then choose “Create link”, “Get link” or “Share link”."
+        },
+        {
+          "number": "06",
+          "title": "Copy the link",
+          "text": "Copy the link Google Photos created and go back to the KARAY Models form."
+        },
+        {
+          "number": "07",
+          "title": "Paste the link into the form",
+          "text": "Paste the link into the field on the application and check that it starts with photos.app.goo.gl or photos.google.com."
+        }
+      ],
+      "androidSteps": [
+        {
+          "number": "01",
+          "title": "Open Google Photos",
+          "text": "Open the Google Photos app on your Android phone and confirm you're signed in to your Google account."
+        },
+        {
+          "number": "02",
+          "title": "Select the four photos",
+          "text": "Choose two recent vertical photos and two horizontal ones — sharp, and without filters that significantly change how you look."
+        },
+        {
+          "number": "03",
+          "title": "Create an album",
+          "text": "Tap “Add to”, “+” or “New” and select “Album”. Name the album “KARAY Models Application”."
+        },
+        {
+          "number": "04",
+          "title": "Check the album",
+          "text": "Open the album and confirm all four photos are there."
+        },
+        {
+          "number": "05",
+          "title": "Create the link",
+          "text": "Tap “Share” and then “Create link”. On some phones this appears as “Get link”."
+        },
+        {
+          "number": "06",
+          "title": "Copy the link",
+          "text": "Tap “Copy link” and return to the application form."
+        },
+        {
+          "number": "07",
+          "title": "Paste the link into the form",
+          "text": "Paste the link into the Google Photos field and carry on with the rest of the application."
+        }
+      ]
     }
   },
   "nav": {
@@ -1456,6 +1553,35 @@
           "secondaryPositioning": "Secondary positioning",
           "aiGuidance": "Standing AI guidance"
         }
+      }
+    },
+    "payments": {
+      "paymentDetails": "Payment details",
+      "noPaymentDetails": "Payment details not set up.",
+      "earningsReports": "Earnings reports",
+      "noEarnings": "No earnings reports found.",
+      "noPlatform": "No platform",
+      "noPeriod": "No period",
+      "total": "Total",
+      "model": "Model",
+      "agency": "Agency",
+      "viewReceipt": "View receipt",
+      "note": "Note: {note}",
+      "loadPaymentFailed": "We couldn't load the payment details.",
+      "loadEarningsFailed": "We couldn't load the earnings reports.",
+      "fields": {
+        "pixKey": "PIX key",
+        "pixType": "PIX type",
+        "bank": "Bank",
+        "branch": "Branch",
+        "account": "Account",
+        "holder": "Account holder",
+        "holderCpf": "Holder's CPF",
+        "frequency": "Frequency",
+        "pctModel": "% Model",
+        "pctAgency": "% Agency",
+        "pctMarketing": "% Marketing",
+        "status": "Status"
       }
     }
   }
