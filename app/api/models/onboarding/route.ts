@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { getTranslations } from "next-intl/server";
 
 import { logAuditEntry } from "@/lib/audit/auditLogger";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -69,6 +70,7 @@ function fail(message: string, status: number) {
 }
 
 async function getAuthenticatedProfile() {
+  const t = await getTranslations("errors.api");
   const supabase = await createClient();
 
   const {
@@ -77,7 +79,7 @@ async function getAuthenticatedProfile() {
   } = await supabase.auth.getUser();
 
   if (userError || !user) {
-    return { error: fail("Não autenticado.", 401) };
+    return { error: fail(t("notAuthenticated"), 401) };
   }
 
   const { data: profile, error: profileError } = await supabase
@@ -87,7 +89,7 @@ async function getAuthenticatedProfile() {
     .maybeSingle<ProfileRecord>();
 
   if (profileError || !profile || !profile.active) {
-    return { error: fail("Perfil inválido ou inativo.", 403) };
+    return { error: fail(t("invalidOrInactiveProfile"), 403) };
   }
 
   if (
@@ -101,6 +103,7 @@ async function getAuthenticatedProfile() {
 }
 
 export async function GET(request: Request) {
+  const t = await getTranslations("errors.api");
   try {
     const auth = await getAuthenticatedProfile();
 
@@ -111,7 +114,7 @@ export async function GET(request: Request) {
     const modelId = new URL(request.url).searchParams.get("modelId");
 
     if (!modelId) {
-      return fail("Identificação da modelo não informada.", 400);
+      return fail(t("modelIdMissing"), 400);
     }
 
     const access = await resolveOnboardingAccess({
@@ -152,6 +155,7 @@ export async function GET(request: Request) {
 }
 
 export async function PATCH(request: Request) {
+  const t = await getTranslations("errors.api");
   try {
     const auth = await getAuthenticatedProfile();
 
@@ -164,7 +168,7 @@ export async function PATCH(request: Request) {
     const { modelId, itemKey } = body;
 
     if (!modelId || !itemKey) {
-      return fail("Dados inválidos.", 400);
+      return fail(t("invalidData"), 400);
     }
 
     const definition = findOnboardingItem(itemKey);
@@ -283,7 +287,7 @@ export async function PATCH(request: Request) {
         value !== "" &&
         !EMAIL_PATTERN.test(value)
       ) {
-        return fail("Informe um endereço de e-mail válido.", 400);
+        return fail(t("invalidEmail"), 400);
       }
 
       if (

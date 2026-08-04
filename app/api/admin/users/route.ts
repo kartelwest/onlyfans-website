@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { getTranslations } from "next-intl/server";
 
 import {
   generateTemporaryPassword,
@@ -48,6 +49,7 @@ const ALLOWED_CREATION_ROLES: ManagementRole[] = [
 ];
 
 export async function POST(request: Request) {
+  const t = await getTranslations("errors.api");
   let createdAuthUserId: string | null = null;
   let createdModelId: string | null = null;
   let isNewModel = false;
@@ -63,7 +65,7 @@ export async function POST(request: Request) {
     if (currentUserError || !currentUser) {
       return NextResponse.json(
         {
-          error: "Você precisa estar conectado.",
+          error: t("mustBeSignedIn"),
         },
         {
           status: 401,
@@ -85,7 +87,7 @@ export async function POST(request: Request) {
     ) {
       return NextResponse.json(
         {
-          error: "Seu perfil não está ativo.",
+          error: t("profileInactive"),
         },
         {
           status: 403,
@@ -195,7 +197,7 @@ export async function POST(request: Request) {
 
       if (!emailResult.valid) {
         return NextResponse.json(
-          { error: "Informe um endereço de e-mail válido." },
+          { error: t("invalidEmail") },
           { status: 400 },
         );
       }
@@ -220,7 +222,7 @@ export async function POST(request: Request) {
           {
             error:
               resolved.reason === "invalid_email"
-                ? "Informe um endereço de e-mail válido."
+                ? t("invalidEmail")
                 : `O nome de usuário deve ter de ${USERNAME_MIN_LENGTH} a ${USERNAME_MAX_LENGTH} caracteres e usar apenas letras, números, ponto, hífen ou sublinhado.`,
           },
           { status: 400 },

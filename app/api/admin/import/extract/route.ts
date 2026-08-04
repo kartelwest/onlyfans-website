@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { getTranslations } from "next-intl/server";
 
 import { createClient } from "@/lib/supabase/server";
 import { extractApplicantsFromFiles } from "@/lib/anthropic/importTool";
@@ -17,6 +18,7 @@ const MAX_FILE_BYTES = 15 * 1024 * 1024;
 const MAX_FILES = 6;
 
 export async function POST(request: Request) {
+  const t = await getTranslations("errors.api");
   try {
     const supabase = await createClient();
 
@@ -26,7 +28,7 @@ export async function POST(request: Request) {
     } = await supabase.auth.getUser();
 
     if (userError || !user) {
-      return NextResponse.json({ error: "Não autenticado." }, { status: 401 });
+      return NextResponse.json({ error: t("notAuthenticated") }, { status: 401 });
     }
 
     const { data: profile, error: profileError } = await supabase
@@ -36,13 +38,13 @@ export async function POST(request: Request) {
       .maybeSingle();
 
     if (profileError || !profile || !profile.active) {
-      return NextResponse.json({ error: "Perfil inválido." }, { status: 403 });
+      return NextResponse.json({ error: t("invalidProfile") }, { status: 403 });
     }
 
     const role = profile.role as ManagementRole;
 
     if (role !== "owner" && role !== "administrator") {
-      return NextResponse.json({ error: "Sem permissão." }, { status: 403 });
+      return NextResponse.json({ error: t("noPermission") }, { status: 403 });
     }
 
     const formData = await request.formData();

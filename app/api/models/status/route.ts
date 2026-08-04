@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { getTranslations } from "next-intl/server";
 
 import { createClient } from "@/lib/supabase/server";
 import { ensureOnlyFansEnrollmentForModel } from "@/lib/brand/talent";
@@ -22,6 +23,7 @@ type StatusBody = {
 };
 
 export async function PATCH(request: Request) {
+  const t = await getTranslations("errors.api");
   try {
     const supabase = await createClient();
 
@@ -32,7 +34,7 @@ export async function PATCH(request: Request) {
 
     if (userError || !user) {
       return NextResponse.json(
-        { error: "Não autenticado." },
+        { error: t("notAuthenticated") },
         { status: 401 },
       );
     }
@@ -45,7 +47,7 @@ export async function PATCH(request: Request) {
 
     if (profileError || !profile || !profile.active) {
       return NextResponse.json(
-        { error: "Perfil inválido." },
+        { error: t("invalidProfile") },
         { status: 403 },
       );
     }
@@ -54,7 +56,7 @@ export async function PATCH(request: Request) {
 
     if (role !== "owner" && role !== "administrator") {
       return NextResponse.json(
-        { error: "Sem permissão." },
+        { error: t("noPermission") },
         { status: 403 },
       );
     }
@@ -67,7 +69,7 @@ export async function PATCH(request: Request) {
       !VALID_STATUSES.includes(body.status as ModelStatus)
     ) {
       return NextResponse.json(
-        { error: "Dados inválidos." },
+        { error: t("invalidData") },
         { status: 400 },
       );
     }
@@ -91,7 +93,7 @@ export async function PATCH(request: Request) {
 
       if (!model) {
         return NextResponse.json(
-          { error: "Modelo não encontrada." },
+          { error: t("modelNotFound") },
           { status: 404 },
         );
       }

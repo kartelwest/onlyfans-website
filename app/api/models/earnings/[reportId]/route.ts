@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getTranslations } from "next-intl/server";
 
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
@@ -13,6 +14,7 @@ export async function DELETE(
   _request: NextRequest,
   context: RouteContext,
 ) {
+  const t = await getTranslations("errors.api");
   const { reportId } = await context.params;
 
   const supabase = await createClient();
@@ -24,7 +26,7 @@ export async function DELETE(
 
   if (userError || !user) {
     return NextResponse.json(
-      { error: "Não autenticado." },
+      { error: t("notAuthenticated") },
       { status: 401 },
     );
   }
@@ -45,7 +47,7 @@ export async function DELETE(
     )
   ) {
     return NextResponse.json(
-      { error: "Sem permissão." },
+      { error: t("noPermission") },
       { status: 403 },
     );
   }

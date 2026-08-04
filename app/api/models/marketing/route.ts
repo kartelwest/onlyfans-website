@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getTranslations } from "next-intl/server";
 
 import { createClient } from "@/lib/supabase/server";
 import { logAuditEntry } from "@/lib/audit/auditLogger";
@@ -12,6 +13,7 @@ type Body = {
 };
 
 async function requireStaff(supabase: Awaited<ReturnType<typeof createClient>>) {
+  const t = await getTranslations("errors.api");
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -19,7 +21,7 @@ async function requireStaff(supabase: Awaited<ReturnType<typeof createClient>>) 
   if (!user) {
     return {
       error: NextResponse.json(
-        { error: "Não autenticado." },
+        { error: t("notAuthenticated") },
         { status: 401 },
       ),
     };
@@ -34,7 +36,7 @@ async function requireStaff(supabase: Awaited<ReturnType<typeof createClient>>) 
   if (profileError || !profile || !profile.active) {
     return {
       error: NextResponse.json(
-        { error: "Perfil inválido." },
+        { error: t("invalidProfile") },
         { status: 403 },
       ),
     };
@@ -45,7 +47,7 @@ async function requireStaff(supabase: Awaited<ReturnType<typeof createClient>>) 
   if (role !== "owner" && role !== "administrator") {
     return {
       error: NextResponse.json(
-        { error: "Sem permissão." },
+        { error: t("noPermission") },
         { status: 403 },
       ),
     };
@@ -61,6 +63,7 @@ async function requireStaff(supabase: Awaited<ReturnType<typeof createClient>>) 
 // get_model_marketing / set_model_marketing RPCs, which self-check
 // public.is_management() at the database level.
 export async function GET(request: NextRequest) {
+  const t = await getTranslations("errors.api");
   const supabase = await createClient();
 
   const { error: authError } = await requireStaff(supabase);
@@ -72,7 +75,7 @@ export async function GET(request: NextRequest) {
 
   if (!modelId) {
     return NextResponse.json(
-      { error: "Identificação da modelo não informada." },
+      { error: t("modelIdMissing") },
       { status: 400 },
     );
   }
@@ -99,6 +102,7 @@ export async function GET(request: NextRequest) {
 }
 
 export async function PATCH(request: NextRequest) {
+  const t = await getTranslations("errors.api");
   const supabase = await createClient();
 
   const { error: authError, profile } = await requireStaff(supabase);
@@ -110,7 +114,7 @@ export async function PATCH(request: NextRequest) {
 
   if (!body.modelId) {
     return NextResponse.json(
-      { error: "Identificação da modelo não informada." },
+      { error: t("modelIdMissing") },
       { status: 400 },
     );
   }

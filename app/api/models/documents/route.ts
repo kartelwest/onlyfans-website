@@ -1,4 +1,5 @@
 import { randomUUID } from "crypto";
+import { getTranslations } from "next-intl/server";
 
 import { NextResponse } from "next/server";
 
@@ -34,6 +35,7 @@ type ProfileRecord = {
 export async function GET(
   request: Request,
 ) {
+  const t = await getTranslations("errors.api");
   try {
     const supabase =
       await createClient();
@@ -46,7 +48,7 @@ export async function GET(
     if (userError || !user) {
       return NextResponse.json(
         {
-          error: "Não autenticado.",
+          error: t("notAuthenticated"),
         },
         {
           status: 401,
@@ -70,7 +72,7 @@ export async function GET(
     ) {
       return NextResponse.json(
         {
-          error: "Perfil inválido.",
+          error: t("invalidProfile"),
         },
         {
           status: 403,
@@ -88,7 +90,7 @@ export async function GET(
       return NextResponse.json(
         {
           error:
-            "Identificação da modelo não informada.",
+            t("modelIdMissing"),
         },
         {
           status: 400,
@@ -124,7 +126,7 @@ export async function GET(
     if (!canAccess) {
       return NextResponse.json(
         {
-          error: "Sem permissão.",
+          error: t("noPermission"),
         },
         {
           status: 403,
@@ -230,6 +232,7 @@ export async function GET(
 export async function POST(
   request: Request,
 ) {
+  const t = await getTranslations("errors.api");
   try {
     const supabase =
       await createClient();
@@ -242,7 +245,7 @@ export async function POST(
     if (userError || !user) {
       return NextResponse.json(
         {
-          error: "Não autenticado.",
+          error: t("notAuthenticated"),
         },
         {
           status: 401,
@@ -266,7 +269,7 @@ export async function POST(
     ) {
       return NextResponse.json(
         {
-          error: "Perfil inválido.",
+          error: t("invalidProfile"),
         },
         {
           status: 403,
@@ -280,7 +283,7 @@ export async function POST(
     ) {
       return NextResponse.json(
         {
-          error: "Sem permissão.",
+          error: t("noPermission"),
         },
         {
           status: 403,
@@ -307,7 +310,7 @@ export async function POST(
       return NextResponse.json(
         {
           error:
-            "Identificação da modelo não informada.",
+            t("modelIdMissing"),
         },
         {
           status: 400,
@@ -389,7 +392,7 @@ export async function POST(
       return NextResponse.json(
         {
           error:
-            "Modelo não encontrada.",
+            t("modelNotFound"),
         },
         {
           status: 404,

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { getTranslations } from "next-intl/server";
 import { cookies } from "next/headers";
 
 import { createClient } from "@/lib/supabase/server";
@@ -10,6 +11,7 @@ import {
 export const dynamic = "force-dynamic";
 
 export async function POST() {
+  const t = await getTranslations("errors.api");
   try {
     const supabase = await createClient();
 
@@ -20,7 +22,7 @@ export async function POST() {
 
     if (error || !user) {
       return NextResponse.json(
-        { error: "Não autenticado." },
+        { error: t("notAuthenticated") },
         { status: 401 },
       );
     }

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { getTranslations } from "next-intl/server";
 
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
@@ -19,6 +20,7 @@ const ALLOWED_MIME_TYPES = [
 // may never edit it — her only write capability anywhere in the dashboard is
 // the Google Drive content upload (see /api/models/drive-upload).
 export async function POST(request: Request) {
+  const t = await getTranslations("errors.api");
   try {
     const supabase = await createClient();
 
@@ -29,7 +31,7 @@ export async function POST(request: Request) {
 
     if (userError || !user) {
       return NextResponse.json(
-        { error: "Não autenticado." },
+        { error: t("notAuthenticated") },
         { status: 401 },
       );
     }
@@ -42,7 +44,7 @@ export async function POST(request: Request) {
 
     if (profileError || !profile || !profile.active) {
       return NextResponse.json(
-        { error: "Perfil inválido." },
+        { error: t("invalidProfile") },
         { status: 403 },
       );
     }
@@ -51,7 +53,7 @@ export async function POST(request: Request) {
 
     if (role !== "owner" && role !== "administrator" && role !== "model") {
       return NextResponse.json(
-        { error: "Sem permissão." },
+        { error: t("noPermission") },
         { status: 403 },
       );
     }
@@ -62,7 +64,7 @@ export async function POST(request: Request) {
 
     if (!modelId || typeof modelId !== "string") {
       return NextResponse.json(
-        { error: "Identificação da modelo não informada." },
+        { error: t("modelIdMissing") },
         { status: 400 },
       );
     }
@@ -83,7 +85,7 @@ export async function POST(request: Request) {
 
     if (!ALLOWED_MIME_TYPES.includes(file.type)) {
       return NextResponse.json(
-        { error: "Tipo de arquivo não permitido." },
+        { error: t("fileTypeNotAllowed") },
         { status: 400 },
       );
     }
@@ -102,7 +104,7 @@ export async function POST(request: Request) {
 
     if (modelError || !model) {
       return NextResponse.json(
-        { error: "Modelo não encontrada." },
+        { error: t("modelNotFound") },
         { status: 404 },
       );
     }
@@ -112,7 +114,7 @@ export async function POST(request: Request) {
 
     if (!isStaff && !isOwnModel) {
       return NextResponse.json(
-        { error: "Sem permissão." },
+        { error: t("noPermission") },
         { status: 403 },
       );
     }

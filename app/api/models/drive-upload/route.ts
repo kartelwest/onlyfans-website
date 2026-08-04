@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { getTranslations } from "next-intl/server";
 
 import { createClient } from "@/lib/supabase/server";
 import {
@@ -16,6 +17,7 @@ const MAX_FILE_SIZE = 200 * 1024 * 1024; // 200MB
 // available to the model herself and to staff. Every other write path in the
 // dashboard is staff-only.
 export async function POST(request: Request) {
+  const t = await getTranslations("errors.api");
   try {
     if (!isDriveUploadConfigured()) {
       return NextResponse.json(
@@ -36,7 +38,7 @@ export async function POST(request: Request) {
 
     if (userError || !user) {
       return NextResponse.json(
-        { error: "Não autenticado." },
+        { error: t("notAuthenticated") },
         { status: 401 },
       );
     }
@@ -49,7 +51,7 @@ export async function POST(request: Request) {
 
     if (profileError || !profile || !profile.active) {
       return NextResponse.json(
-        { error: "Perfil inválido." },
+        { error: t("invalidProfile") },
         { status: 403 },
       );
     }
@@ -62,7 +64,7 @@ export async function POST(request: Request) {
 
     if (!modelId || typeof modelId !== "string") {
       return NextResponse.json(
-        { error: "Identificação da modelo não informada." },
+        { error: t("modelIdMissing") },
         { status: 400 },
       );
     }
@@ -104,7 +106,7 @@ export async function POST(request: Request) {
 
     if (!isStaff && !isAssignedRep && !isOwnModel) {
       return NextResponse.json(
-        { error: "Sem permissão." },
+        { error: t("noPermission") },
         { status: 403 },
       );
     }

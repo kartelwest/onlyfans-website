@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getTranslations } from "next-intl/server";
 
 import {
   authenticate,
@@ -21,6 +22,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 export const dynamic = "force-dynamic";
 
 export async function GET(request: NextRequest) {
+  const t = await getTranslations("errors.api");
   const auth = await authenticate();
 
   if (!auth.ok) {
@@ -32,7 +34,7 @@ export async function GET(request: NextRequest) {
 
   if (!modelId) {
     return NextResponse.json(
-      { error: "Identificação da modelo não informada." },
+      { error: t("modelIdMissing") },
       { status: 400 },
     );
   }
@@ -46,7 +48,7 @@ export async function GET(request: NextRequest) {
   // With the feature off, the ledger does not exist as far as a rep or a model
   // is concerned — not an empty list, no endpoint.
   if (!access.expensesEnabled && !isStaffRole(profile.role)) {
-    return NextResponse.json({ error: "Sem permissão." }, { status: 403 });
+    return NextResponse.json({ error: t("noPermission") }, { status: 403 });
   }
 
   // Lazily catch up on any deduction whose date has arrived, so the statuses
@@ -79,6 +81,7 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  const t = await getTranslations("errors.api");
   const auth = await authenticate();
 
   if (!auth.ok) {
@@ -89,7 +92,7 @@ export async function POST(request: NextRequest) {
 
   // Reps and models never write, whatever the model's eligibility is.
   if (!isStaffRole(profile.role)) {
-    return NextResponse.json({ error: "Sem permissão." }, { status: 403 });
+    return NextResponse.json({ error: t("noPermission") }, { status: 403 });
   }
 
   const body = (await request.json()) as LedgerWriteBody;
@@ -97,7 +100,7 @@ export async function POST(request: NextRequest) {
 
   if (!modelId) {
     return NextResponse.json(
-      { error: "Identificação da modelo não informada." },
+      { error: t("modelIdMissing") },
       { status: 400 },
     );
   }

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { getTranslations } from "next-intl/server";
 
 import { logSystemAuditEntry } from "@/lib/audit/auditLogger";
 import {
@@ -45,6 +46,7 @@ type CredentialsRequest = {
 };
 
 export async function POST(request: Request) {
+  const t = await getTranslations("errors.api");
   try {
     const supabase = await createClient();
 
@@ -55,7 +57,7 @@ export async function POST(request: Request) {
 
     if (userError || !user) {
       return NextResponse.json(
-        { error: "Sua sessão expirou. Entre novamente." },
+        { error: t("sessionExpired") },
         { status: 401 },
       );
     }
@@ -68,7 +70,7 @@ export async function POST(request: Request) {
 
     if (profileError || !currentProfile || !currentProfile.active) {
       return NextResponse.json(
-        { error: "Seu perfil não está ativo." },
+        { error: t("profileInactive") },
         { status: 403 },
       );
     }
@@ -130,7 +132,7 @@ export async function POST(request: Request) {
           {
             error:
               resolved.reason === "invalid_email"
-                ? "Informe um endereço de e-mail válido."
+                ? t("invalidEmail")
                 : `O nome de usuário deve ter de ${USERNAME_MIN_LENGTH} a ${USERNAME_MAX_LENGTH} caracteres e usar apenas letras, números, ponto, hífen ou sublinhado.`,
           },
           { status: 400 },

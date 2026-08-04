@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getTranslations } from "next-intl/server";
 
 import { logAuditEntry, getFieldLabel } from "@/lib/audit/auditLogger";
 import { requireModelAccess, requireStaff } from "@/lib/api/requireRole";
@@ -10,6 +11,7 @@ export const dynamic = "force-dynamic";
 // written to the admin history.
 
 export async function GET(request: NextRequest) {
+  const t = await getTranslations("errors.api");
   const auth = await requireStaff();
 
   if (!auth.ok) {
@@ -21,7 +23,7 @@ export async function GET(request: NextRequest) {
 
   if (!modelId) {
     return NextResponse.json(
-      { error: "Identificação da modelo não informada." },
+      { error: t("modelIdMissing") },
       { status: 400 },
     );
   }
@@ -47,6 +49,7 @@ export async function GET(request: NextRequest) {
 }
 
 export async function PATCH(request: NextRequest) {
+  const t = await getTranslations("errors.api");
   const auth = await requireStaff();
 
   if (!auth.ok) {
@@ -62,7 +65,7 @@ export async function PATCH(request: NextRequest) {
 
   if (typeof body.modelId !== "string" || !body.modelId) {
     return NextResponse.json(
-      { error: "Identificação da modelo não informada." },
+      { error: t("modelIdMissing") },
       { status: 400 },
     );
   }

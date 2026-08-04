@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { getTranslations } from "next-intl/server";
 
 import {
   normalizeDateOfBirth,
@@ -30,6 +31,7 @@ type DraftRequest = {
 };
 
 export async function POST(request: Request) {
+  const t = await getTranslations("errors.api");
   let createdModelId: string | null = null;
   let isNewDraft = false;
 
@@ -43,7 +45,7 @@ export async function POST(request: Request) {
 
     if (userError || !user) {
       return NextResponse.json(
-        { error: "Você precisa estar conectado." },
+        { error: t("mustBeSignedIn") },
         { status: 401 },
       );
     }

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { getTranslations } from "next-intl/server";
 
 import { createClient } from "@/lib/supabase/server";
 import { isCountryCode } from "@/lib/countries";
@@ -21,6 +22,7 @@ type Body = {
 // migration): the only path is the set_model_proxy_details RPC, which
 // self-checks public.is_owner() at the database level.
 export async function PATCH(request: Request) {
+  const t = await getTranslations("errors.api");
   try {
     const supabase = await createClient();
 
@@ -30,7 +32,7 @@ export async function PATCH(request: Request) {
     } = await supabase.auth.getUser();
 
     if (userError || !user) {
-      return NextResponse.json({ error: "Não autenticado." }, { status: 401 });
+      return NextResponse.json({ error: t("notAuthenticated") }, { status: 401 });
     }
 
     const { data: profile, error: profileError } = await supabase
@@ -40,7 +42,7 @@ export async function PATCH(request: Request) {
       .maybeSingle();
 
     if (profileError || !profile || !profile.active) {
-      return NextResponse.json({ error: "Perfil inválido." }, { status: 403 });
+      return NextResponse.json({ error: t("invalidProfile") }, { status: 403 });
     }
 
     if ((profile.role as ManagementRole) !== "owner") {
@@ -54,7 +56,7 @@ export async function PATCH(request: Request) {
 
     if (!body.modelId) {
       return NextResponse.json(
-        { error: "Identificação da modelo não informada." },
+        { error: t("modelIdMissing") },
         { status: 400 },
       );
     }

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getTranslations } from "next-intl/server";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 import { createClient } from "@/lib/supabase/server";
@@ -75,6 +76,7 @@ export const dynamic = "force-dynamic";
 export async function GET(
     request: NextRequest,
 ) {
+  const t = await getTranslations("errors.api");
     try {
         const authentication =
             await getAuthenticatedProfile();
@@ -94,7 +96,7 @@ export async function GET(
             return NextResponse.json(
                 {
                     error:
-                        "O identificador da modelo é obrigatório.",
+                        t("modelIdRequired"),
                 },
                 {
                     status: 400,
@@ -287,6 +289,7 @@ export async function GET(
 export async function POST(
     request: NextRequest,
 ) {
+  const t = await getTranslations("errors.api");
     try {
         const authentication =
             await getAuthenticatedProfile();
@@ -319,7 +322,7 @@ export async function POST(
             return NextResponse.json(
                 {
                     error:
-                        "O identificador da modelo é obrigatório.",
+                        t("modelIdRequired"),
                 },
                 {
                     status: 400,
@@ -481,6 +484,7 @@ export async function POST(
 export async function PATCH(
     request: NextRequest,
 ) {
+  const t = await getTranslations("errors.api");
     try {
         const authentication =
             await getAuthenticatedProfile();
@@ -636,6 +640,7 @@ export async function PATCH(
 export async function DELETE(
     request: NextRequest,
 ) {
+  const t = await getTranslations("errors.api");
     try {
         const authentication =
             await getAuthenticatedProfile();
@@ -1319,6 +1324,8 @@ async function getAuthenticatedProfile(): Promise<
           response: NextResponse;
       }
 > {
+    const t = await getTranslations("errors.api");
+
     const supabase = await createClient();
 
     const {
@@ -1333,7 +1340,7 @@ async function getAuthenticatedProfile(): Promise<
                 NextResponse.json(
                     {
                         error:
-                            "Sua sessão expirou. Entre novamente.",
+                            t("sessionExpired"),
                     },
                     {
                         status: 401,
@@ -1364,7 +1371,7 @@ async function getAuthenticatedProfile(): Promise<
                 NextResponse.json(
                     {
                         error:
-                            "Seu perfil não está ativo.",
+                            t("profileInactive"),
                     },
                     {
                         status: 403,
@@ -1554,6 +1561,7 @@ async function updateLatestNoteSummary(
     supabase: SupabaseClient,
     modelId: string,
 ) {
+  const t = await getTranslations("errors.api");
     const {
         data: latestNote,
         error: noteError,

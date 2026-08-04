@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { getTranslations } from "next-intl/server";
 import { generateContent } from "@/lib/brand/ai/contentStudio";
 import { getTalentWithBrandProfile } from "@/lib/brand/talent";
 import { getClientBoundaries, evaluateContentAgainstBoundaries } from "@/lib/brand/boundaries";
@@ -7,11 +8,12 @@ import type { ContentType, Platform } from "@/types/brand";
 export const dynamic = "force-dynamic";
 
 export async function POST(request: Request) {
+  const t = await getTranslations("errors.api");
   const supabase = await createClient();
   const { data: userData } = await supabase.auth.getUser();
 
   if (!userData.user) {
-    return Response.json({ error: "Não autenticado." }, { status: 401 });
+    return Response.json({ error: t("notAuthenticated") }, { status: 401 });
   }
 
   const { data: profile } = await supabase
@@ -21,7 +23,7 @@ export async function POST(request: Request) {
     .single();
 
   if (!profile || !["owner", "administrator"].includes(profile.role)) {
-    return Response.json({ error: "Permissão negada." }, { status: 403 });
+    return Response.json({ error: t("permissionDenied") }, { status: 403 });
   }
 
   try {

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getTranslations } from "next-intl/server";
 
 import { logAuditEntry } from "@/lib/audit/auditLogger";
 import { requireModelAccess, requireStaff } from "@/lib/api/requireRole";
@@ -43,6 +44,7 @@ function periodMonthFromInput(value: string): string {
 }
 
 export async function GET(request: NextRequest) {
+  const t = await getTranslations("errors.api");
   const auth = await requireStaff();
 
   if (!auth.ok) {
@@ -54,7 +56,7 @@ export async function GET(request: NextRequest) {
 
   if (!modelId) {
     return NextResponse.json(
-      { error: "Identificação da modelo não informada." },
+      { error: t("modelIdMissing") },
       { status: 400 },
     );
   }
@@ -113,6 +115,7 @@ export async function GET(request: NextRequest) {
  * re-uploading the same image.
  */
 export async function POST(request: NextRequest) {
+  const t = await getTranslations("errors.api");
   const auth = await requireStaff();
 
   if (!auth.ok) {
@@ -130,7 +133,7 @@ export async function POST(request: NextRequest) {
 
   if (typeof modelId !== "string" || !modelId) {
     return NextResponse.json(
-      { error: "Identificação da modelo não informada." },
+      { error: t("modelIdMissing") },
       { status: 400 },
     );
   }
@@ -188,7 +191,7 @@ export async function POST(request: NextRequest) {
 
     if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
       return NextResponse.json(
-        { error: "Tipo de arquivo não permitido." },
+        { error: t("fileTypeNotAllowed") },
         { status: 400 },
       );
     }
@@ -298,6 +301,7 @@ export async function POST(request: NextRequest) {
 
 /** Publish / unpublish, and amount-only edits. */
 export async function PATCH(request: NextRequest) {
+  const t = await getTranslations("errors.api");
   const auth = await requireStaff();
 
   if (!auth.ok) {

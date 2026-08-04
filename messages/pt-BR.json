@@ -1160,7 +1160,25 @@
     "unauthorized": "Você não tem permissão para fazer isso.",
     "notFoundResource": "O item solicitado não foi encontrado.",
     "saveFailed": "Não foi possível salvar. Tente novamente.",
-    "loadFailed": "Não foi possível carregar os dados."
+    "loadFailed": "Não foi possível carregar os dados.",
+    "api": {
+      "notAuthenticated": "Não autenticado.",
+      "noPermission": "Sem permissão.",
+      "permissionDenied": "Permissão negada.",
+      "modelIdMissing": "Identificação da modelo não informada.",
+      "invalidProfile": "Perfil inválido.",
+      "modelNotFound": "Modelo não encontrada.",
+      "profileInactive": "Seu perfil não está ativo.",
+      "mustBeSignedIn": "Você precisa estar conectado.",
+      "sessionExpired": "Sua sessão expirou. Entre novamente.",
+      "invalidEmail": "Informe um endereço de e-mail válido.",
+      "fileTypeNotAllowed": "Tipo de arquivo não permitido.",
+      "modelIdRequired": "O identificador da modelo é obrigatório.",
+      "invalidData": "Dados inválidos.",
+      "invalidOrInactiveProfile": "Perfil inválido ou inativo.",
+      "unknownUser": "Usuário",
+      "internalError": "Erro interno do servidor."
+    }
   },
   "validation": {},
   "admin": {

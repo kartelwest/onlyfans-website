@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getTranslations } from "next-intl/server";
 
 import {
   isStaffRole,
@@ -34,6 +35,7 @@ type PatchBody = LedgerWriteBody & {
 };
 
 export async function PATCH(request: NextRequest, context: RouteContext) {
+  const t = await getTranslations("errors.api");
   const { entryId } = await context.params;
 
   const auth = await requireStaff();
@@ -148,6 +150,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
 }
 
 export async function DELETE(_request: NextRequest, context: RouteContext) {
+  const t = await getTranslations("errors.api");
   const { entryId } = await context.params;
 
   const auth = await requireStaff();
@@ -159,7 +162,7 @@ export async function DELETE(_request: NextRequest, context: RouteContext) {
   const { supabase, profile } = auth;
 
   if (!isStaffRole(profile.role)) {
-    return NextResponse.json({ error: "Sem permissão." }, { status: 403 });
+    return NextResponse.json({ error: t("noPermission") }, { status: 403 });
   }
 
   const { data: existing } = await supabase

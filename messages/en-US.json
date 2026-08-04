@@ -1160,7 +1160,25 @@
     "unauthorized": "You don't have permission to do that.",
     "notFoundResource": "The requested item was not found.",
     "saveFailed": "We couldn't save your changes. Please try again.",
-    "loadFailed": "We couldn't load the data."
+    "loadFailed": "We couldn't load the data.",
+    "api": {
+      "notAuthenticated": "Not authenticated.",
+      "noPermission": "No permission.",
+      "permissionDenied": "Permission denied.",
+      "modelIdMissing": "No model identifier provided.",
+      "invalidProfile": "Invalid profile.",
+      "modelNotFound": "Model not found.",
+      "profileInactive": "Your profile is not active.",
+      "mustBeSignedIn": "You need to be signed in.",
+      "sessionExpired": "Your session expired. Please sign in again.",
+      "invalidEmail": "Enter a valid email address.",
+      "fileTypeNotAllowed": "File type not allowed.",
+      "modelIdRequired": "A model identifier is required.",
+      "invalidData": "Invalid data.",
+      "invalidOrInactiveProfile": "Invalid or inactive profile.",
+      "unknownUser": "User",
+      "internalError": "Internal server error."
+    }
   },
   "validation": {},
   "admin": {

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { getTranslations } from "next-intl/server";
 
 import { createClient } from "@/lib/supabase/server";
 import { logAuditEntry } from "@/lib/audit/auditLogger";
@@ -57,6 +58,7 @@ const databaseChecklistFields = Object.values(
 );
 
 export async function PATCH(request: Request) {
+  const t = await getTranslations("errors.api");
   try {
     const supabase = await createClient();
 
@@ -92,7 +94,7 @@ export async function PATCH(request: Request) {
     ) {
       return NextResponse.json(
         {
-          error: "Perfil inválido ou inativo.",
+          error: t("invalidOrInactiveProfile"),
         },
         {
           status: 403,

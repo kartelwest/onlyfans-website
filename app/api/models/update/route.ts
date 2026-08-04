@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { getTranslations } from "next-intl/server";
 
 import { createClient } from "@/lib/supabase/server";
 import { logAuditEntry, getFieldLabel } from "@/lib/audit/auditLogger";
@@ -81,6 +82,7 @@ type Body = {
 export async function PATCH(
   request: Request,
 ) {
+  const t = await getTranslations("errors.api");
   try {
     const supabase =
       await createClient();
@@ -93,7 +95,7 @@ export async function PATCH(
     if (userError || !user) {
       return NextResponse.json(
         {
-          error: "Não autenticado.",
+          error: t("notAuthenticated"),
         },
         {
           status: 401,
@@ -117,7 +119,7 @@ export async function PATCH(
     ) {
       return NextResponse.json(
         {
-          error: "Perfil inválido.",
+          error: t("invalidProfile"),
         },
         {
           status: 403,
@@ -134,7 +136,7 @@ export async function PATCH(
     ) {
       return NextResponse.json(
         {
-          error: "Sem permissão.",
+          error: t("noPermission"),
         },
         {
           status: 403,
@@ -151,7 +153,7 @@ export async function PATCH(
     ) {
       return NextResponse.json(
         {
-          error: "Dados inválidos.",
+          error: t("invalidData"),
         },
         {
           status: 400,

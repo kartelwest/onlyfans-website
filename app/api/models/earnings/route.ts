@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getTranslations } from "next-intl/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { logAuditEntry } from "@/lib/audit/auditLogger";
 
 export async function GET(request: NextRequest) {
+  const t = await getTranslations("errors.api");
   const supabase = await createClient();
 
   const {
@@ -12,7 +14,7 @@ export async function GET(request: NextRequest) {
 
   if (!user) {
     return NextResponse.json(
-      { error: "Não autenticado." },
+      { error: t("notAuthenticated") },
       { status: 401 },
     );
   }
@@ -28,7 +30,7 @@ export async function GET(request: NextRequest) {
 
   if (profileError || !profile || !profile.active) {
     return NextResponse.json(
-      { error: "Perfil inválido." },
+      { error: t("invalidProfile") },
       { status: 403 },
     );
   }
@@ -38,7 +40,7 @@ export async function GET(request: NextRequest) {
 
   if (!modelId) {
     return NextResponse.json(
-      { error: "Identificação da modelo não informada." },
+      { error: t("modelIdMissing") },
       { status: 400 },
     );
   }
@@ -77,7 +79,7 @@ export async function GET(request: NextRequest) {
 
   if (!canAccess) {
     return NextResponse.json(
-      { error: "Sem permissão." },
+      { error: t("noPermission") },
       { status: 403 },
     );
   }
@@ -155,6 +157,7 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  const t = await getTranslations("errors.api");
   const supabase = await createClient();
 
   const {
@@ -163,7 +166,7 @@ export async function POST(request: NextRequest) {
 
   if (!user) {
     return NextResponse.json(
-      { error: "Não autenticado." },
+      { error: t("notAuthenticated") },
       { status: 401 },
     );
   }
@@ -179,7 +182,7 @@ export async function POST(request: NextRequest) {
 
   if (profileError || !profile || !profile.active) {
     return NextResponse.json(
-      { error: "Perfil inválido." },
+      { error: t("invalidProfile") },
       { status: 403 },
     );
   }
@@ -187,7 +190,7 @@ export async function POST(request: NextRequest) {
   // Only owner and administrator can create earnings reports
   if (profile.role !== "owner" && profile.role !== "administrator") {
     return NextResponse.json(
-      { error: "Sem permissão." },
+      { error: t("noPermission") },
       { status: 403 },
     );
   }
@@ -205,7 +208,7 @@ export async function POST(request: NextRequest) {
 
   if (!modelId || typeof modelId !== "string") {
     return NextResponse.json(
-      { error: "Identificação da modelo não informada." },
+      { error: t("modelIdMissing") },
       { status: 400 },
     );
   }
@@ -235,7 +238,7 @@ export async function POST(request: NextRequest) {
 
   if (!model) {
     return NextResponse.json(
-      { error: "Modelo não encontrada." },
+      { error: t("modelNotFound") },
       { status: 404 },
     );
   }
@@ -268,7 +271,7 @@ export async function POST(request: NextRequest) {
 
   if (!ALLOWED_MIME_TYPES.includes(image.type)) {
     return NextResponse.json(
-      { error: "Tipo de arquivo não permitido." },
+      { error: t("fileTypeNotAllowed") },
       { status: 400 },
     );
   }

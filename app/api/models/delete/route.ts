@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { getTranslations } from "next-intl/server";
 
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
@@ -12,6 +13,7 @@ type DeleteBody = {
 };
 
 export async function POST(request: Request) {
+  const t = await getTranslations("errors.api");
   try {
     const supabase = await createClient();
 
@@ -22,7 +24,7 @@ export async function POST(request: Request) {
 
     if (userError || !user) {
       return NextResponse.json(
-        { error: "Não autenticado." },
+        { error: t("notAuthenticated") },
         { status: 401 },
       );
     }
@@ -38,7 +40,7 @@ export async function POST(request: Request) {
 
     if (profileError || !profile || !profile.active) {
       return NextResponse.json(
-        { error: "Perfil inválido." },
+        { error: t("invalidProfile") },
         { status: 403 },
       );
     }
@@ -47,7 +49,7 @@ export async function POST(request: Request) {
 
     if (role !== "owner" && role !== "administrator") {
       return NextResponse.json(
-        { error: "Sem permissão." },
+        { error: t("noPermission") },
         { status: 403 },
       );
     }
@@ -81,7 +83,7 @@ export async function POST(request: Request) {
 
     if (!model) {
       return NextResponse.json(
-        { error: "Modelo não encontrada." },
+        { error: t("modelNotFound") },
         { status: 404 },
       );
     }

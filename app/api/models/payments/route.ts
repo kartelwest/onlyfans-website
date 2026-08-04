@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 
 export async function GET(request: NextRequest) {
+  const t = await getTranslations("errors.api");
   const supabase = await createClient();
 
   const {
@@ -10,7 +12,7 @@ export async function GET(request: NextRequest) {
 
   if (!user) {
     return NextResponse.json(
-      { error: "Não autenticado." },
+      { error: t("notAuthenticated") },
       { status: 401 },
     );
   }
@@ -26,7 +28,7 @@ export async function GET(request: NextRequest) {
 
   if (profileError || !profile || !profile.active) {
     return NextResponse.json(
-      { error: "Perfil inválido." },
+      { error: t("invalidProfile") },
       { status: 403 },
     );
   }
@@ -36,7 +38,7 @@ export async function GET(request: NextRequest) {
 
   if (!modelId) {
     return NextResponse.json(
-      { error: "Identificação da modelo não informada." },
+      { error: t("modelIdMissing") },
       { status: 400 },
     );
   }
@@ -65,7 +67,7 @@ export async function GET(request: NextRequest) {
 
   if (!canAccess) {
     return NextResponse.json(
-      { error: "Sem permissão." },
+      { error: t("noPermission") },
       { status: 403 },
     );
   }

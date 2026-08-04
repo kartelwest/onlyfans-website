@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { getTranslations } from "next-intl/server";
 
 import { createClient } from "@/lib/supabase/server";
 import {
@@ -12,13 +13,14 @@ export const dynamic = "force-dynamic";
 async function requireStaffProfile(
   supabase: Awaited<ReturnType<typeof createClient>>,
 ) {
+  const t = await getTranslations("errors.api");
   const {
     data: { user },
     error: userError,
   } = await supabase.auth.getUser();
 
   if (userError || !user) {
-    return { error: NextResponse.json({ error: "Não autenticado." }, { status: 401 }) };
+    return { error: NextResponse.json({ error: t("notAuthenticated") }, { status: 401 }) };
   }
 
   const { data: profile, error: profileError } = await supabase
@@ -28,19 +30,20 @@ async function requireStaffProfile(
     .maybeSingle();
 
   if (profileError || !profile || !profile.active) {
-    return { error: NextResponse.json({ error: "Perfil inválido." }, { status: 403 }) };
+    return { error: NextResponse.json({ error: t("invalidProfile") }, { status: 403 }) };
   }
 
   const role = profile.role as ManagementRole;
 
   if (role !== "owner" && role !== "administrator") {
-    return { error: NextResponse.json({ error: "Sem permissão." }, { status: 403 }) };
+    return { error: NextResponse.json({ error: t("noPermission") }, { status: 403 }) };
   }
 
   return { role };
 }
 
 export async function GET() {
+  const t = await getTranslations("errors.api");
   const supabase = await createClient();
   const check = await requireStaffProfile(supabase);
 
@@ -54,6 +57,7 @@ export async function GET() {
 }
 
 export async function PATCH(request: Request) {
+  const t = await getTranslations("errors.api");
   const supabase = await createClient();
   const check = await requireStaffProfile(supabase);
 
