@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
@@ -51,6 +53,10 @@ export default function ModelCredentialsReset({
   whatsapp,
   hasLogin,
 }: ModelCredentialsResetProps) {
+  const t = useTranslations("admin.credentials");
+  const tCommon = useTranslations("common.actions");
+  const tErrors = useTranslations("errors");
+
   const router = useRouter();
 
   const [isOpen, setIsOpen] = useState(false);
@@ -135,18 +141,18 @@ export default function ModelCredentialsReset({
 
     if (!hasSomethingToApply) {
       if (!hasLogin && effectivePassword.length === 0) {
-        setErrorMessage("Informe uma senha para criar o acesso desta modelo.");
+        setErrorMessage(t("errors.passwordRequired"));
         return;
       }
 
       if (!hasLogin) {
         setErrorMessage(
-          "Informe um e-mail ou um nome de usuário para criar o acesso desta modelo.",
+          t("errors.loginRequired"),
         );
         return;
       }
 
-      setErrorMessage("Informe uma nova senha ou um novo login.");
+      setErrorMessage(t("errors.nothingToChange"));
       return;
     }
 
@@ -192,7 +198,7 @@ export default function ModelCredentialsReset({
 
       if (!response.ok) {
         throw new Error(
-          payload.error || "Ocorreu um erro inesperado. Tente novamente.",
+          payload.error || tErrors("generic"),
         );
       }
 
@@ -211,7 +217,7 @@ export default function ModelCredentialsReset({
       setErrorMessage(
         error instanceof Error
           ? error.message
-          : "Ocorreu um erro inesperado. Tente novamente.",
+          : tErrors("generic"),
       );
 
       setStep("form");
@@ -227,7 +233,7 @@ export default function ModelCredentialsReset({
         onClick={openModal}
         className="shrink-0 rounded-xl border border-pink-400/40 bg-pink-500/15 px-4 py-2.5 text-sm font-bold text-pink-100 transition hover:bg-pink-500/25"
       >
-        {hasLogin ? "Redefinir acesso" : "Criar acesso"}
+        {hasLogin ? t("resetAccess") : t("createAccess")}
       </button>
 
       {isOpen && (
@@ -237,33 +243,39 @@ export default function ModelCredentialsReset({
               <>
                 <h3 className="text-lg font-bold text-white">
                   {hasLogin
-                    ? "Redefinir acesso da modelo"
-                    : "Criar acesso da modelo"}
+                    ? t("resetTitle")
+                    : t("createTitle")}
                 </h3>
 
                 <p className="mt-2 text-sm text-white/60">
                   {hasLogin ? (
                     <>
-                      Altere a senha e/ou o e-mail de login de{" "}
-                      <span className="font-semibold text-white">
-                        {modelName}
-                      </span>
-                      . Preencha apenas o que deseja alterar.
+                      {t.rich("resetBody", {
+                        name: modelName,
+                        strong: (chunks) => (
+                          <span className="font-semibold text-white">
+                            {chunks}
+                          </span>
+                        ),
+                      })}
                     </>
                   ) : (
                     <>
-                      <span className="font-semibold text-white">
-                        {modelName}
-                      </span>{" "}
-                      ainda não tem login no site. Defina uma senha e o e-mail
-                      de acesso para criar o login dela agora.
+                      {t.rich("createBody", {
+                        name: modelName,
+                        strong: (chunks) => (
+                          <span className="font-semibold text-white">
+                            {chunks}
+                          </span>
+                        ),
+                      })}
                     </>
                   )}
                 </p>
 
                 <section className="mt-6">
                   <h4 className="text-xs font-bold uppercase tracking-[0.2em] text-pink-200">
-                    Senha
+                    {t("password")}
                   </h4>
 
                   <div className="mt-3 space-y-2">
@@ -272,7 +284,7 @@ export default function ModelCredentialsReset({
                         name="password-mode"
                         checked={passwordMode === "none"}
                         onChange={() => setPasswordMode("none")}
-                        label="Não alterar a senha"
+                        label={t("passwordUnchanged")}
                       />
                     )}
 
@@ -281,11 +293,11 @@ export default function ModelCredentialsReset({
                       checked={passwordMode === "preset"}
                       onChange={() => setPasswordMode("preset")}
                       disabled={!presetPassword}
-                      label="Padrão da agência (4 últimos dígitos do WhatsApp + 1234567)"
+                      label={t("passwordPreset")}
                       hint={
                         presetPassword
                           ? undefined
-                          : "Preencha o WhatsApp da modelo para usar a senha padrão."
+                          : t("passwordPresetHint")
                       }
                     />
 
@@ -293,7 +305,7 @@ export default function ModelCredentialsReset({
                       name="password-mode"
                       checked={passwordMode === "custom"}
                       onChange={() => setPasswordMode("custom")}
-                      label="Senha personalizada"
+                      label={t("passwordCustom")}
                     />
                   </div>
 
@@ -305,7 +317,7 @@ export default function ModelCredentialsReset({
                         onChange={(event) =>
                           setCustomPassword(event.target.value)
                         }
-                        placeholder="Digite a nova senha"
+                        placeholder={t("passwordPlaceholder")}
                         autoComplete="new-password"
                         className="w-full rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none transition placeholder:text-white/30 focus:border-pink-400"
                       />
@@ -324,17 +336,17 @@ export default function ModelCredentialsReset({
 
                   <p className="mt-2 text-xs text-white/45">
                     {hasLogin
-                      ? `Login atual: ${currentLogin || "não informado"}`
+                      ? t("currentLogin", { login: currentLogin || t("notProvided") })
                       : currentEmail
                         ? `Deixe em branco para usar o e-mail da ficha: ${currentEmail}`
-                        : "Obrigatório: informe um e-mail ou crie um nome de usuário."}
+                        : t("loginRequiredHint")}
                   </p>
 
                   <input
                     type="text"
                     value={newLogin}
                     onChange={(event) => setNewLogin(event.target.value)}
-                    placeholder="maria@exemplo.com ou maria.silva"
+                    placeholder={t("loginPlaceholder")}
                     autoComplete="off"
                     autoCapitalize="none"
                     spellCheck={false}
@@ -343,8 +355,8 @@ export default function ModelCredentialsReset({
 
                   <p className="mt-2 text-xs text-white/45">
                     {loginIsUsername
-                      ? "Nome de usuário: a modelo entra digitando apenas isso, sem e-mail. Use letras, números, ponto, hífen ou sublinhado."
-                      : "Com \"@\" será tratado como e-mail; sem \"@\", como nome de usuário. A modelo poderá entrar imediatamente, sem precisar confirmar nada."}
+                      ? t("usernameHint")
+                      : t("loginHint")}
                   </p>
                 </section>
 
@@ -360,7 +372,7 @@ export default function ModelCredentialsReset({
                     onClick={closeModal}
                     className="rounded-lg border border-white/15 bg-white/5 px-4 py-2 text-sm font-bold text-white/70 transition hover:bg-white/10"
                   >
-                    Cancelar
+                    {tCommon("cancel")}
                   </button>
 
                   <button
@@ -369,7 +381,7 @@ export default function ModelCredentialsReset({
                     disabled={!hasSomethingToApply}
                     className="rounded-lg bg-pink-400 px-4 py-2 text-sm font-bold text-black transition hover:bg-pink-300 disabled:cursor-not-allowed disabled:opacity-50"
                   >
-                    Revisar alterações
+                    {t("reviewChanges")}
                   </button>
                 </div>
               </>
@@ -378,47 +390,52 @@ export default function ModelCredentialsReset({
             {step === "confirm" && (
               <>
                 <h3 className="text-lg font-bold text-white">
-                  {hasLogin ? "Confirmar alterações" : "Confirmar criação de acesso"}
+                  {hasLogin ? t("confirmChanges") : t("confirmCreate")}
                 </h3>
 
                 <p className="mt-2 text-sm text-white/60">
                   {hasLogin ? (
                     <>
-                      Esta ação altera o acesso de{" "}
-                      <span className="font-semibold text-white">
-                        {modelName}
-                      </span>{" "}
-                      imediatamente. Deseja continuar?
+                      {t.rich("confirmResetBody", {
+                        name: modelName,
+                        strong: (chunks) => (
+                          <span className="font-semibold text-white">
+                            {chunks}
+                          </span>
+                        ),
+                      })}
                     </>
                   ) : (
                     <>
-                      Esta ação cria o login de{" "}
-                      <span className="font-semibold text-white">
-                        {modelName}
-                      </span>{" "}
-                      imediatamente. Deseja continuar?
+                      {t.rich("confirmCreateBody", {
+                        name: modelName,
+                        strong: (chunks) => (
+                          <span className="font-semibold text-white">
+                            {chunks}
+                          </span>
+                        ),
+                      })}
                     </>
                   )}
                 </p>
 
                 <ul className="mt-5 space-y-2 rounded-xl border border-white/10 bg-black/30 p-4 text-sm text-white/75">
-                  {!hasLogin && <li>• O login da modelo será criado.</li>}
+                  {!hasLogin && <li>• {t("summaryLoginCreated")}</li>}
 
                   {effectivePassword && (
                     <li>
+                      •{" "}
                       {hasLogin
-                        ? "• A senha será alterada."
-                        : "• A senha será definida."}
+                        ? t("summaryPasswordChanged")
+                        : t("summaryPasswordSet")}
                     </li>
                   )}
 
                   {(loginWillChange || (!hasLogin && currentEmail)) && (
                     <li>
                       •{" "}
-                      {loginIsUsername
-                        ? "O nome de usuário"
-                        : "O e-mail de login"}{" "}
-                      {hasLogin ? "passará a ser" : "será"}{" "}
+                      {loginIsUsername ? t("username") : t("loginEmail")}{" "}
+                      {hasLogin ? t("willBecome") : t("willBe")}{" "}
                       <span className="font-semibold text-white">
                         {trimmedLogin || currentEmail}
                       </span>
@@ -440,7 +457,7 @@ export default function ModelCredentialsReset({
                     disabled={isSubmitting}
                     className="rounded-lg border border-white/15 bg-white/5 px-4 py-2 text-sm font-bold text-white/70 transition hover:bg-white/10 disabled:opacity-50"
                   >
-                    Voltar
+                    {tCommon("back")}
                   </button>
 
                   <button
@@ -449,7 +466,7 @@ export default function ModelCredentialsReset({
                     disabled={isSubmitting}
                     className="rounded-lg bg-pink-400 px-4 py-2 text-sm font-bold text-black transition hover:bg-pink-300 disabled:cursor-not-allowed disabled:opacity-50"
                   >
-                    {isSubmitting ? "Aplicando..." : "Confirmar e aplicar"}
+                    {isSubmitting ? t("applying") : t("confirmAndApply")}
                   </button>
                 </div>
               </>
@@ -459,12 +476,12 @@ export default function ModelCredentialsReset({
               <>
                 <h3 className="text-lg font-bold text-emerald-300">
                   {result.accessCreated
-                    ? "Acesso criado com sucesso"
-                    : "Acesso atualizado com sucesso"}
+                    ? t("createdSuccess")
+                    : t("updatedSuccess")}
                 </h3>
 
                 <p className="mt-2 text-sm text-amber-200">
-                  Anote estes dados agora. Eles não serão exibidos novamente.
+                  {t("writeThisDown")}
                 </p>
 
                 <div className="mt-5 space-y-3">
@@ -472,22 +489,21 @@ export default function ModelCredentialsReset({
                     <CredentialRow
                       label={
                         looksLikeEmail(result.login)
-                          ? "E-mail de login"
-                          : "Nome de usuário"
+                          ? t("loginEmail")
+                          : t("username")
                       }
                       value={result.login}
                     />
                   )}
 
                   {result.password && (
-                    <CredentialRow label="Nova senha" value={result.password} />
+                    <CredentialRow label={t("newPassword")} value={result.password} />
                   )}
                 </div>
 
                 {result.sessionsRevoked && (
                   <p className="mt-5 rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white/60">
-                    As sessões ativas da modelo foram encerradas. Ela precisará
-                    entrar novamente.
+                    {t("sessionsRevoked")}
                   </p>
                 )}
 
@@ -510,7 +526,7 @@ export default function ModelCredentialsReset({
                     onClick={closeModal}
                     className="rounded-lg bg-pink-400 px-4 py-2 text-sm font-bold text-black transition hover:bg-pink-300"
                   >
-                    Fechar
+                    {tCommon("close")}
                   </button>
                 </div>
               </>
