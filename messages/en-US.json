@@ -2011,6 +2011,33 @@
         "agency": "Agency",
         "both": "Both"
       }
+    },
+    "importer": {
+      "autoSave": "Save automatically",
+      "on": "On",
+      "off": "Off",
+      "autoSaveOnHint": "On: extracted data is saved straight as applicants, with no review.",
+      "autoSaveOffHint": "Off (default): you review and correct the data before saving.",
+      "files": "Files",
+      "filesHint": "Upload 1 to {max} files (PDF, JPG, PNG or WEBP) using the fields below. Fill in at least one — the rest are optional. If they are several screenshots of one conversation, send them together: they'll be treated as a single applicant.",
+      "fileN": "File {index}",
+      "chooseFile": "Choose file",
+      "noFileSelected": "No file selected",
+      "analyzing": "Analyzing files...",
+      "extract": "Extract data",
+      "applicantN": "Applicant {index}",
+      "referredBy": "Referred by",
+      "hasOnlyFans": "Already has OnlyFans",
+      "blockBrazil": "Wants to block Brazil",
+      "contentFrequency": "How often she can produce content",
+      "motivation": "Reason for applying",
+      "notIdentified": "Not identified",
+      "saveApplicants": "{count, plural, one {Save applicant} other {Save # applicants}}",
+      "settingsSaveFailed": "We couldn't save the setting.",
+      "readFailed": "We couldn't read the files.",
+      "saveApplicantsFailed": "We couldn't save the applicants.",
+      "ownerOnlySetting": "Only the owner can change this.",
+      "showFace": "Comfortable showing her face"
     }
   },
   "owner": {

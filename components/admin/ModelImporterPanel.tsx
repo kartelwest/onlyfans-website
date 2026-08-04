@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
 import { ChangeEvent, useState } from "react";
 
 type EditableApplicant = {
@@ -77,6 +79,14 @@ export default function ModelImporterPanel({
   initialAutoSave: boolean;
   isOwner: boolean;
 }) {
+  const t = useTranslations("admin.importer");
+  const tApply = useTranslations("site.apply.fields");
+  const tApplyOpts = useTranslations("site.apply");
+  const tOverview = useTranslations("admin.overview");
+  const tCommon = useTranslations("common.actions");
+  const tState = useTranslations("common.states");
+  const tErrors = useTranslations("errors");
+
   const [autoSave, setAutoSave] = useState(initialAutoSave);
   const [isSavingSetting, setIsSavingSetting] = useState(false);
 
@@ -146,13 +156,13 @@ export default function ModelImporterPanel({
       const result = await response.json();
 
       if (!response.ok) {
-        throw new Error(result.error || "Não foi possível salvar a configuração.");
+        throw new Error(result.error || t("settingsSaveFailed"));
       }
 
       setAutoSave(nextValue);
     } catch (error) {
       setExtractError(
-        error instanceof Error ? error.message : "Ocorreu um erro inesperado.",
+        error instanceof Error ? error.message : tErrors("generic"),
       );
     } finally {
       setIsSavingSetting(false);
@@ -179,7 +189,7 @@ export default function ModelImporterPanel({
       const result = (await response.json()) as ExtractResponse;
 
       if (!response.ok) {
-        throw new Error(result.error || "Não foi possível ler os arquivos.");
+        throw new Error(result.error || t("readFailed"));
       }
 
       const extractedApplicants = (result.applicants ?? []).map(
@@ -194,7 +204,7 @@ export default function ModelImporterPanel({
       }
     } catch (error) {
       setExtractError(
-        error instanceof Error ? error.message : "Ocorreu um erro inesperado.",
+        error instanceof Error ? error.message : tErrors("generic"),
       );
     } finally {
       setIsExtracting(false);
@@ -242,7 +252,7 @@ export default function ModelImporterPanel({
       const result = (await response.json()) as ConfirmResponse;
 
       if (!response.ok) {
-        throw new Error(result.error || "Não foi possível salvar as candidatas.");
+        throw new Error(result.error || t("saveApplicantsFailed"));
       }
 
       setSaveResult(result);
@@ -256,7 +266,7 @@ export default function ModelImporterPanel({
       );
     } catch (error) {
       setSaveError(
-        error instanceof Error ? error.message : "Ocorreu um erro inesperado.",
+        error instanceof Error ? error.message : tErrors("generic"),
       );
     } finally {
       setIsSaving(false);
@@ -268,13 +278,13 @@ export default function ModelImporterPanel({
       <div className="flex flex-col gap-4 rounded-2xl border border-white/10 bg-[#111115] p-6 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <p className="text-sm font-bold text-white">
-            Salvar automaticamente
+            {t("autoSave")}
           </p>
           <p className="mt-1 text-xs text-white/50">
             {autoSave
-              ? "Ligado: os dados extraídos são salvos direto como candidatas, sem revisão."
-              : "Desligado (padrão): você revisa e corrige os dados antes de salvar."}
-            {!isOwner && " Apenas o proprietário pode alterar isso."}
+              ? t("autoSaveOnHint")
+              : t("autoSaveOffHint")}
+            {!isOwner && ` ${t("ownerOnlySetting")}`}
           </p>
         </div>
 
@@ -288,17 +298,14 @@ export default function ModelImporterPanel({
               : "border-white/15 bg-white/5 text-white/60"
           }`}
         >
-          {autoSave ? "Ligado" : "Desligado"}
+          {autoSave ? t("on") : t("off")}
         </button>
       </div>
 
       <div className="rounded-2xl border border-white/10 bg-[#111115] p-6">
-        <p className="text-sm font-bold text-white">Arquivos</p>
+        <p className="text-sm font-bold text-white">{t("files")}</p>
         <p className="mt-1 text-xs text-white/50">
-          Envie de 1 a {MAX_FILES} arquivos (PDF, JPG, PNG ou WEBP) usando os
-          campos abaixo. Preencha pelo menos um — os demais são opcionais. Se
-          forem vários prints de uma mesma conversa, envie todos juntos —
-          serão tratados como uma única candidata.
+          {t("filesHint", { max: MAX_FILES })}
         </p>
 
         <div className="mt-4 space-y-3">
@@ -308,14 +315,14 @@ export default function ModelImporterPanel({
               className="flex flex-wrap items-center gap-3 rounded-lg border border-white/10 bg-[#08080a] px-4 py-3"
             >
               <span className="w-20 shrink-0 text-xs font-bold uppercase tracking-[0.1em] text-white/45">
-                Arquivo {index + 1}
+                {t("fileN", { index: index + 1 })}
               </span>
 
               <label
                 htmlFor={`import-file-slot-${index}`}
                 className="shrink-0 cursor-pointer rounded-lg bg-pink-500 px-4 py-2 text-xs font-bold text-white transition hover:bg-pink-400"
               >
-                Escolher arquivo
+                {t("chooseFile")}
               </label>
 
               <input
@@ -328,7 +335,7 @@ export default function ModelImporterPanel({
               />
 
               <span className="min-w-0 flex-1 truncate text-sm text-white/60">
-                {slotFile?.name ?? "Nenhum arquivo selecionado"}
+                {slotFile?.name ?? t("noFileSelected")}
               </span>
 
               {slotFile && (
@@ -337,7 +344,7 @@ export default function ModelImporterPanel({
                   onClick={() => removeSlotFile(index)}
                   className="shrink-0 text-xs font-bold text-red-300 hover:text-red-200"
                 >
-                  Remover
+                  {tCommon("remove")}
                 </button>
               )}
             </div>
@@ -350,7 +357,7 @@ export default function ModelImporterPanel({
           disabled={files.length === 0 || isExtracting}
           className="mt-4 rounded-xl bg-pink-500 px-5 py-3 text-sm font-bold text-white transition hover:bg-pink-400 disabled:cursor-not-allowed disabled:opacity-50"
         >
-          {isExtracting ? "Analisando arquivos..." : "Extrair dados"}
+          {isExtracting ? t("analyzing") : t("extract")}
         </button>
 
         {extractError && (
@@ -380,7 +387,7 @@ export default function ModelImporterPanel({
             >
               <div className="flex items-center justify-between">
                 <p className="text-sm font-bold text-white">
-                  Candidata {index + 1}
+                  {t("applicantN", { index: index + 1 })}
                 </p>
 
                 <button
@@ -388,13 +395,13 @@ export default function ModelImporterPanel({
                   onClick={() => removeApplicant(index)}
                   className="text-xs font-bold text-red-300 hover:text-red-200"
                 >
-                  Remover
+                  {tCommon("remove")}
                 </button>
               </div>
 
               <div className="mt-4 grid gap-4 sm:grid-cols-2">
                 <Field
-                  label="Nome completo"
+                  label={tApply("fullName")}
                   value={applicant.nomeCompleto}
                   onChange={(value) =>
                     updateApplicantField(index, "nomeCompleto", value)
@@ -402,64 +409,64 @@ export default function ModelImporterPanel({
                   required
                 />
                 <Field
-                  label="Nome artístico desejado"
+                  label={tApply("stageName")}
                   value={applicant.nomeArtisticoDesejado}
                   onChange={(value) =>
                     updateApplicantField(index, "nomeArtisticoDesejado", value)
                   }
                 />
                 <Field
-                  label="Data de nascimento"
+                  label={tApply("birthday")}
                   value={applicant.dataNascimento}
                   onChange={(value) =>
                     updateApplicantField(index, "dataNascimento", value)
                   }
-                  placeholder="AAAA-MM-DD"
+                  placeholder={tOverview("placeholders.date")}
                 />
                 <Field
-                  label="Cidade"
+                  label={tApply("city")}
                   value={applicant.cidade}
                   onChange={(value) =>
                     updateApplicantField(index, "cidade", value)
                   }
                 />
                 <Field
-                  label="Estado"
+                  label={tApply("state")}
                   value={applicant.estado}
                   onChange={(value) =>
                     updateApplicantField(index, "estado", value)
                   }
                 />
                 <Field
-                  label="País"
+                  label={tApply("country")}
                   value={applicant.pais}
                   onChange={(value) =>
                     updateApplicantField(index, "pais", value)
                   }
                 />
                 <Field
-                  label="WhatsApp"
+                  label={tApply("whatsapp")}
                   value={applicant.whatsapp}
                   onChange={(value) =>
                     updateApplicantField(index, "whatsapp", value)
                   }
                 />
                 <Field
-                  label="E-mail"
+                  label={tApply("email")}
                   value={applicant.email}
                   onChange={(value) =>
                     updateApplicantField(index, "email", value)
                   }
                 />
                 <Field
-                  label="Instagram"
+                  label={tApply("instagram")}
                   value={applicant.instagram}
                   onChange={(value) =>
                     updateApplicantField(index, "instagram", value)
                   }
                 />
                 <Field
-                  label="X / Twitter"
+                  label={tApply("twitter")}
                   value={applicant.twitter}
                   onChange={(value) =>
                     updateApplicantField(index, "twitter", value)
@@ -467,13 +474,13 @@ export default function ModelImporterPanel({
                 />
 
                 <SelectField
-                  label="Quem indicou"
+                  label={t("referredBy")}
                   value={applicant.representanteIndicacao}
                   onChange={(value) =>
                     updateApplicantField(index, "representanteIndicacao", value)
                   }
                   options={[
-                    { value: "", label: "Não identificado" },
+                    { value: "", label: t("notIdentified") },
                     { value: "Kartel", label: "Kartel" },
                     { value: "Rayssa", label: "Rayssa" },
                     { value: "Antonio (Tony)", label: "Antonio (Tony)" },
@@ -482,63 +489,63 @@ export default function ModelImporterPanel({
                 />
 
                 <SelectField
-                  label="Já possui OnlyFans"
+                  label={t("hasOnlyFans")}
                   value={applicant.possuiOnlyfans}
                   onChange={(value) =>
                     updateApplicantField(index, "possuiOnlyfans", value)
                   }
                   options={[
-                    { value: "", label: "Não identificado" },
-                    { value: "sim", label: "Sim" },
-                    { value: "nao", label: "Não" },
+                    { value: "", label: t("notIdentified") },
+                    { value: "sim", label: tState("yes") },
+                    { value: "nao", label: tState("no") },
                   ]}
                 />
 
                 <SelectField
-                  label="Deseja bloquear o Brasil"
+                  label={t("blockBrazil")}
                   value={applicant.bloquearBrasil}
                   onChange={(value) =>
                     updateApplicantField(index, "bloquearBrasil", value)
                   }
                   options={[
-                    { value: "", label: "Não identificado" },
-                    { value: "sim", label: "Sim" },
-                    { value: "nao", label: "Não" },
-                    { value: "nao_sei", label: "Ainda não sei" },
+                    { value: "", label: t("notIdentified") },
+                    { value: "sim", label: tState("yes") },
+                    { value: "nao", label: tState("no") },
+                    { value: "nao_sei", label: tApplyOpts("options.notSure") },
                   ]}
                 />
 
                 <SelectField
-                  label="Confortável em mostrar o rosto"
+                  label={t("showFace")}
                   value={applicant.mostrarRosto}
                   onChange={(value) =>
                     updateApplicantField(index, "mostrarRosto", value)
                   }
                   options={[
-                    { value: "", label: "Não identificado" },
-                    { value: "sim", label: "Sim" },
-                    { value: "nao", label: "Não" },
-                    { value: "depende", label: "Depende do conteúdo" },
+                    { value: "", label: t("notIdentified") },
+                    { value: "sim", label: tState("yes") },
+                    { value: "nao", label: tState("no") },
+                    { value: "depende", label: tApplyOpts("options.depends") },
                   ]}
                 />
 
                 <SelectField
-                  label="Moeda preferida"
+                  label={tApply("currency")}
                   value={applicant.moedaPreferida}
                   onChange={(value) =>
                     updateApplicantField(index, "moedaPreferida", value)
                   }
                   options={[
-                    { value: "", label: "Não identificado" },
-                    { value: "real", label: "Real" },
-                    { value: "dolar", label: "Dólar" },
+                    { value: "", label: t("notIdentified") },
+                    { value: "real", label: tApplyOpts("options.real") },
+                    { value: "dolar", label: tApplyOpts("options.dollar") },
                   ]}
                 />
               </div>
 
               <label className="mt-4 block">
                 <span className="text-xs font-bold uppercase tracking-[0.1em] text-white/50">
-                  Com que frequência pode produzir conteúdo
+                  {t("contentFrequency")}
                 </span>
                 <textarea
                   rows={2}
@@ -556,7 +563,7 @@ export default function ModelImporterPanel({
 
               <label className="mt-4 block">
                 <span className="text-xs font-bold uppercase tracking-[0.1em] text-white/50">
-                  Motivo da candidatura
+                  {t("motivation")}
                 </span>
                 <textarea
                   rows={3}
@@ -590,8 +597,8 @@ export default function ModelImporterPanel({
               className="rounded-xl bg-emerald-500 px-6 py-3 text-sm font-bold text-white transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {isSaving
-                ? "Salvando..."
-                : `Salvar ${applicants.length > 1 ? `${applicants.length} candidatas` : "candidata"}`}
+                ? tCommon("saving")
+                : t("saveApplicants", { count: applicants.length })}
             </button>
           </div>
 

@@ -2011,6 +2011,33 @@
         "agency": "Agência",
         "both": "Ambos"
       }
+    },
+    "importer": {
+      "autoSave": "Salvar automaticamente",
+      "on": "Ligado",
+      "off": "Desligado",
+      "autoSaveOnHint": "Ligado: os dados extraídos são salvos direto como candidatas, sem revisão.",
+      "autoSaveOffHint": "Desligado (padrão): você revisa e corrige os dados antes de salvar.",
+      "files": "Arquivos",
+      "filesHint": "Envie de 1 a {max} arquivos (PDF, JPG, PNG ou WEBP) usando os campos abaixo. Preencha pelo menos um — os demais são opcionais. Se forem vários prints de uma mesma conversa, envie todos juntos: serão tratados como uma única candidata.",
+      "fileN": "Arquivo {index}",
+      "chooseFile": "Escolher arquivo",
+      "noFileSelected": "Nenhum arquivo selecionado",
+      "analyzing": "Analisando arquivos...",
+      "extract": "Extrair dados",
+      "applicantN": "Candidata {index}",
+      "referredBy": "Quem indicou",
+      "hasOnlyFans": "Já possui OnlyFans",
+      "blockBrazil": "Deseja bloquear o Brasil",
+      "contentFrequency": "Com que frequência pode produzir conteúdo",
+      "motivation": "Motivo da candidatura",
+      "notIdentified": "Não identificado",
+      "saveApplicants": "{count, plural, one {Salvar candidata} other {Salvar # candidatas}}",
+      "settingsSaveFailed": "Não foi possível salvar a configuração.",
+      "readFailed": "Não foi possível ler os arquivos.",
+      "saveApplicantsFailed": "Não foi possível salvar as candidatas.",
+      "ownerOnlySetting": "Apenas o proprietário pode alterar isso.",
+      "showFace": "Confortável em mostrar o rosto"
     }
   },
   "owner": {
