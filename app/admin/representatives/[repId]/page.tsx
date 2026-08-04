@@ -11,13 +11,17 @@ import { normalizeModelStatus } from "@/lib/models/modelStatusOrder";
 import {
   accountStatus,
   STAFF_STATUS_BADGE,
-  STAFF_STATUS_LABELS,
 } from "@/lib/staff/representatives";
 import { createClient } from "@/lib/supabase/server";
 import type { ManagementRole } from "@/types/model";
 
 import RepresentativeCredentialsPanel from "./RepresentativeCredentialsPanel";
 import RepresentativeDetailsForm from "./RepresentativeDetailsForm";
+
+import { getLocale, getTranslations } from "next-intl/server";
+
+import { toLocale, type Locale } from "@/lib/i18n/config";
+import { formatDateTime as formatLocalizedDateTime } from "@/lib/models/formatDateTime";
 
 export const dynamic = "force-dynamic";
 
@@ -51,13 +55,14 @@ type AuditRow = {
   created_at: string;
 };
 
-const ACTION_LABELS: Record<string, string> = {
-  representative_status_changed: "Status alterado",
-  representative_details_updated: "Dados atualizados",
-  account_status_changed: "Status da conta alterado",
-  account_deleted: "Conta excluída",
-  view_as_representative_enter: "Entrou na visualização como o representante",
-  view_as_representative_exit: "Saiu da visualização",
+/** Audit action -> key under `admin.representativeDetail.actions`. */
+const ACTION_KEYS: Record<string, string> = {
+  representative_status_changed: "statusChanged",
+  representative_details_updated: "detailsUpdated",
+  account_status_changed: "accountStatusChanged",
+  account_deleted: "accountDeleted",
+  view_as_representative_enter: "viewAsEnter",
+  view_as_representative_exit: "viewAsExit",
 };
 
 export default async function RepresentativeProfilePage({
@@ -153,6 +158,11 @@ export default async function RepresentativeProfilePage({
           ) / models.length,
         );
 
+  const t = await getTranslations("admin.representativeDetail");
+  const tState = await getTranslations("common.states");
+  const tStatus = await getTranslations("enums.representativeStatus");
+  const locale = toLocale(await getLocale());
+
   return (
     <main className="min-h-screen bg-[#0b0a0d] px-4 py-8 text-white sm:px-6 lg:px-10">
       <div className="mx-auto max-w-6xl">
@@ -160,39 +170,39 @@ export default async function RepresentativeProfilePage({
           href="/admin/representatives"
           className="text-sm font-semibold text-pink-300 transition hover:text-pink-200"
         >
-          ← Voltar para representantes
+          {t("backToList")}
         </Link>
 
         <header className="mt-6 flex flex-col gap-6 rounded-2xl border border-white/10 bg-[#111115] p-6 lg:flex-row lg:items-start lg:justify-between">
           <div>
             <p className="text-xs font-bold uppercase tracking-[0.2em] text-pink-300">
-              Representante
+              {t("representative")}
             </p>
 
             <h1 className="mt-2 text-3xl font-bold">
-              {representative.full_name || "Sem nome"}
+              {representative.full_name || t("noName")}
             </h1>
 
             <div className="mt-4 grid gap-4 sm:grid-cols-2">
-              <Info label="E-mail" value={representative.email || "—"} />
+              <Info label={t("email")} value={representative.email || "—"} />
               <Info
-                label="Telefone / WhatsApp"
-                value={representative.phone || "Não informado"}
+                label={t("phone")}
+                value={representative.phone || tState("notInformed")}
               />
               <Info
-                label="Cadastro"
-                value={formatDateTime(representative.created_at)}
+                label={t("registeredOn")}
+                value={formatDateTime(representative.created_at, locale)}
               />
               <Info
-                label="Último acesso"
+                label={t("lastAccess")}
                 value={
                   representative.last_login_at
-                    ? formatDateTime(representative.last_login_at)
-                    : "Nunca"
+                    ? formatDateTime(representative.last_login_at, locale)
+                    : t("never")
                 }
               />
-              <Info label="Modelos atribuídas" value={`${models.length}`} />
-              <Info label="Onboarding médio" value={`${onboardingAverage}%`} />
+              <Info label={t("assignedModels")} value={`${models.length}`} />
+              <Info label={t("averageOnboarding")} value={`${onboardingAverage}%`} />
             </div>
           </div>
 
@@ -200,13 +210,13 @@ export default async function RepresentativeProfilePage({
             <span
               className={`inline-flex w-fit rounded-full px-3 py-1 text-xs font-bold ring-1 ${STAFF_STATUS_BADGE[status]}`}
             >
-              {STAFF_STATUS_LABELS[status]}
+              {tStatus(status)}
             </span>
 
             {representative.status_changed_at && (
               <p className="text-xs text-white/40">
-                Status alterado em{" "}
-                {formatDateTime(representative.status_changed_at)}
+                {t("statusChangedOn")}{" "}
+                {formatDateTime(representative.status_changed_at, locale)}
               </p>
             )}
 
@@ -215,7 +225,7 @@ export default async function RepresentativeProfilePage({
                 href={`/admin/view-as/representative/${representative.id}`}
                 className="rounded-xl border border-purple-400/40 bg-purple-500/10 px-5 py-3 text-center text-sm font-semibold text-purple-200 transition hover:bg-purple-500/20"
               >
-                Ver como ele vê
+                {t("viewAsThem")}
               </Link>
             ) : (
               <p className="rounded-xl border border-dashed border-white/15 px-4 py-3 text-center text-xs leading-5 text-white/40">
@@ -226,7 +236,7 @@ export default async function RepresentativeProfilePage({
 
             <div className="rounded-xl border border-white/10 bg-black/20 p-4">
               <p className="text-xs font-bold uppercase tracking-[0.14em] text-white/45">
-                Modelos
+                {t("models")}
               </p>
 
               <div className="mt-3">
@@ -241,7 +251,7 @@ export default async function RepresentativeProfilePage({
 
         <section className="mt-6 rounded-2xl border border-white/10 bg-[#111115] p-6">
           <h2 className="text-sm font-bold uppercase tracking-[0.14em] text-pink-100">
-            Dados do representante
+            {t("detailsHeading")}
           </h2>
 
           <p className="mt-2 text-xs leading-5 text-white/45">
@@ -261,20 +271,20 @@ export default async function RepresentativeProfilePage({
 
         <section className="mt-6 rounded-2xl border border-white/10 bg-[#111115] p-6">
           <h2 className="text-sm font-bold uppercase tracking-[0.14em] text-pink-100">
-            Acesso e login
+            {t("accessHeading")}
           </h2>
 
           <p className="mt-2 text-xs leading-5 text-white/45">
             O login e a senha ficam apenas no serviço de autenticação — não há
             senha guardada neste sistema e nenhuma senha aparece no histórico.
-            Uma senha definida aqui é temporária: o representante terá de trocá-la
+            {t("temporaryPasswordNote")}
             no próximo acesso.
           </p>
 
           <div className="mt-5 max-w-xl">
             <RepresentativeCredentialsPanel
               representativeId={representative.id}
-              representativeName={representative.full_name || "este representante"}
+              representativeName={representative.full_name || t("thisRepresentative")}
               currentLogin={currentLogin}
             />
           </div>
@@ -282,12 +292,12 @@ export default async function RepresentativeProfilePage({
 
         <section className="mt-6 overflow-hidden rounded-2xl border border-white/10 bg-[#111115]">
           <h2 className="border-b border-pink-400/20 bg-[#2a1521] px-6 py-4 text-sm font-bold uppercase tracking-[0.14em] text-pink-100">
-            Modelos atribuídas ({models.length})
+            {t("assignedModelsCount", { count: models.length })}
           </h2>
 
           {models.length === 0 ? (
             <p className="px-6 py-10 text-center text-sm text-white/50">
-              Nenhuma modelo atribuída a este representante.
+              {t("noModels")}
             </p>
           ) : (
             <div className="divide-y divide-white/10">
@@ -303,7 +313,7 @@ export default async function RepresentativeProfilePage({
                       {STATUS_TEXT[
                         normalizeModelStatus(model.status, model.active)
                       ] ?? "—"}{" "}
-                      · Onboarding {model.onboarding_percentage ?? 0}%
+                      · {t("onboardingPct", { pct: model.onboarding_percentage ?? 0 })}
                     </p>
                   </div>
 
@@ -312,21 +322,21 @@ export default async function RepresentativeProfilePage({
                       href={`/admin/view-as/model/${model.id}/representative`}
                       className="rounded-lg border border-purple-400/30 bg-purple-500/10 px-4 py-2 text-xs font-bold text-purple-200 transition hover:bg-purple-500/20"
                     >
-                      Como o rep. vê
+                      {t("asRepSees")}
                     </Link>
 
                     <Link
                       href={`/admin/view-as/model/${model.id}/representative/onboarding`}
                       className="rounded-lg border border-purple-400/30 bg-purple-500/10 px-4 py-2 text-xs font-bold text-purple-200 transition hover:bg-purple-500/20"
                     >
-                      Onboarding
+                      {t("onboarding")}
                     </Link>
 
                     <Link
                       href={`/admin/models/${model.slug}`}
                       className="rounded-lg border border-pink-400/30 bg-pink-500/10 px-4 py-2 text-xs font-bold text-pink-200 transition hover:bg-pink-500/20"
                     >
-                      Painel admin
+                      {t("adminPanel")}
                     </Link>
                   </div>
                 </div>
@@ -337,12 +347,12 @@ export default async function RepresentativeProfilePage({
 
         <section className="mt-6 overflow-hidden rounded-2xl border border-white/10 bg-[#111115]">
           <h2 className="border-b border-pink-400/20 bg-[#2a1521] px-6 py-4 text-sm font-bold uppercase tracking-[0.14em] text-pink-100">
-            Notas escritas por este representante ({notes.length})
+            {t("notesCount", { count: notes.length })}
           </h2>
 
           {notes.length === 0 ? (
             <p className="px-6 py-10 text-center text-sm text-white/50">
-              Nenhuma nota registrada por esta conta.
+              {t("noNotes")}
             </p>
           ) : (
             <ul className="divide-y divide-white/10">
@@ -350,12 +360,12 @@ export default async function RepresentativeProfilePage({
                 <li key={note.id} className="px-6 py-4">
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <p className="text-xs font-semibold text-pink-200">
-                      {modelNames.get(note.model_id) ?? "Modelo"}
+                      {modelNames.get(note.model_id) ?? t("model")}
                     </p>
 
                     <p className="text-xs text-white/40">
-                      {formatDateTime(note.created_at)}
-                      {note.deleted_at ? " · excluída" : ""}
+                      {formatDateTime(note.created_at, locale)}
+                      {note.deleted_at ? ` · ${t("deleted")}` : ""}
                     </p>
                   </div>
 
@@ -376,12 +386,12 @@ export default async function RepresentativeProfilePage({
 
         <section className="mt-6 overflow-hidden rounded-2xl border border-white/10 bg-[#111115]">
           <h2 className="border-b border-pink-400/20 bg-[#2a1521] px-6 py-4 text-sm font-bold uppercase tracking-[0.14em] text-pink-100">
-            Histórico da conta
+            {t("historyHeading")}
           </h2>
 
           {activity.length === 0 ? (
             <p className="px-6 py-10 text-center text-sm text-white/50">
-              Nenhum registro ainda. Mudanças de status, edições de dados e
+              {t("noHistory")}
               visualizações como este representante aparecem aqui.
             </p>
           ) : (
@@ -389,17 +399,19 @@ export default async function RepresentativeProfilePage({
               {activity.map((entry) => (
                 <li key={entry.id} className="px-6 py-4">
                   <p className="text-sm font-semibold">
-                    {ACTION_LABELS[entry.action] ?? entry.action}
+                    {ACTION_KEYS[entry.action]
+                      ? t(`actions.${ACTION_KEYS[entry.action]}`)
+                      : entry.action}
                   </p>
 
                   <p className="mt-1 text-xs leading-5 text-white/50">
                     {entry.summary ??
-                      `${entry.actor_name ?? "Sistema"} · ${formatDateTime(entry.created_at)}`}
+                      `${entry.actor_name ?? t("system")} · ${formatDateTime(entry.created_at, locale)}`}
                   </p>
 
                   {entry.summary && (
                     <p className="mt-1 text-xs text-white/35">
-                      {formatDateTime(entry.created_at)}
+                      {formatDateTime(entry.created_at, locale)}
                     </p>
                   )}
                 </li>
@@ -431,10 +443,10 @@ function Info({ label, value }: { label: string; value: string }) {
   );
 }
 
-function formatDateTime(value: string | null): string {
+function formatDateTime(value: string | null, locale: Locale): string {
   if (!value) {
     return "—";
   }
 
-  return new Date(value).toLocaleString("pt-BR");
+  return formatLocalizedDateTime(new Date(value), locale);
 }
