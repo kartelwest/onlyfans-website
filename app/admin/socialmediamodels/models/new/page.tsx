@@ -1,9 +1,12 @@
+import { getTranslations } from "next-intl/server";
 import { requireAdminAmpliaAccess } from "@/lib/amplia/admin";
 import NovoClienteForm from "@/components/amplia/NovoClienteForm";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminSocialMediaNewClientPage() {
+  const t = await getTranslations("admin.ampliaClients");
+
   await requireAdminAmpliaAccess();
 
   return (
@@ -12,9 +15,9 @@ export default async function AdminSocialMediaNewClientPage() {
         <p className="text-xs font-semibold uppercase tracking-[0.28em] text-pink-300">
           PORTAL DA AMPLIA
         </p>
-        <h1 className="mt-2 text-3xl font-bold">Novo cliente Amplia</h1>
+        <h1 className="mt-2 text-3xl font-bold">{t("newClientTitle")}</h1>
         <p className="mt-2 text-sm text-white/55">
-          Criar um cliente sem vinculação ao /admin/models.
+          {t("newClientIntro")}
         </p>
 
         <div className="mt-8">

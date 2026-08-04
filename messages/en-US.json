@@ -1917,7 +1917,8 @@
           "secondaryPositioning": "Secondary positioning",
           "aiGuidance": "Standing AI guidance"
         }
-      }
+      },
+      "openAmplia": "Open now — AMPLIA MODELS"
     },
     "payments": {
       "paymentDetails": "Payment details",
@@ -2286,7 +2287,18 @@
         "model": "Model",
         "agency": "Agency",
         "both": "Both"
-      }
+      },
+      "loading": "Loading onboarding...",
+      "eyebrow": "Full process",
+      "intro": "Tick each step and fill in the fields as the process moves along. The percentage updates itself with every box you tick.",
+      "missingRequired": "Fill these in to complete it: {fields}",
+      "lockedForRepresentative": "This step is complete and locked for the representative.",
+      "saving": "saving…",
+      "saved": "saved",
+      "linkedFieldHint": "This is the same field as in {location} — saving here updates it there, and the other way round.",
+      "alsoIn": "also in {location}",
+      "readOnlyHint": "Read-only here — onboarding never changes this field. Edit it in {location}.",
+      "readOnlyIn": "read-only — edit in {location}"
     },
     "importer": {
       "autoSave": "Save automatically",
@@ -2540,6 +2552,22 @@
       "roleModel": "Model",
       "roleRepresentative": "Representative",
       "roleAdministrator": "Administrator"
+    },
+    "ampliaClients": {
+      "addClient": "+ Brand Growth client",
+      "client": "Client",
+      "type": "Type",
+      "status": "Status",
+      "approvals": "Approvals",
+      "scheduledToday": "Scheduled today",
+      "action": "Action",
+      "empty": "No clients found. The row above is only a layout placeholder.",
+      "typeKarayModel": "Karay model",
+      "typeBrandGrowthOnly": "Brand Growth only",
+      "connected": "Connected",
+      "open": "Open",
+      "newClientTitle": "New Amplia client",
+      "newClientIntro": "Create a client that is not linked to /admin/models."
     }
   },
   "owner": {

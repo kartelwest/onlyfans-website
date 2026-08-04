@@ -1,3 +1,4 @@
+import { getTranslations } from "next-intl/server";
 import Link from "next/link";
 import { requireAdminAmpliaAccess } from "@/lib/amplia/admin";
 import { getAmpliaClients, type AmpliaClient } from "@/lib/amplia/clients";
@@ -5,6 +6,8 @@ import { getAmpliaClients, type AmpliaClient } from "@/lib/amplia/clients";
 export const dynamic = "force-dynamic";
 
 export default async function AdminSocialMediaModelsPage() {
+  const t = await getTranslations("admin.ampliaClients");
+
   await requireAdminAmpliaAccess();
 
   const { clients } = await getAmpliaClients();
@@ -27,7 +30,7 @@ export default async function AdminSocialMediaModelsPage() {
             href="/admin/socialmediamodels/models/new"
             className="rounded-xl bg-pink-500 px-5 py-3 text-center text-sm font-bold text-white transition hover:bg-pink-400"
           >
-            + Cliente Brand Growth
+            {t("addClient")}
           </Link>
         </header>
 
@@ -35,14 +38,14 @@ export default async function AdminSocialMediaModelsPage() {
           <table className="w-full text-left text-sm">
             <thead className="bg-[#111115] text-xs uppercase tracking-[0.14em] text-white/55">
               <tr>
-                <th className="px-6 py-4 font-semibold">Cliente</th>
-                <th className="px-6 py-4 font-semibold">Tipo</th>
-                <th className="px-6 py-4 font-semibold">Status</th>
+                <th className="px-6 py-4 font-semibold">{t("client")}</th>
+                <th className="px-6 py-4 font-semibold">{t("type")}</th>
+                <th className="px-6 py-4 font-semibold">{t("status")}</th>
                 <th className="px-6 py-4 font-semibold">Instagram</th>
                 <th className="px-6 py-4 font-semibold">X</th>
-                <th className="px-6 py-4 font-semibold">Aprovações</th>
-                <th className="px-6 py-4 font-semibold">Agendados hoje</th>
-                <th className="px-6 py-4 text-right font-semibold">Ação</th>
+                <th className="px-6 py-4 font-semibold">{t("approvals")}</th>
+                <th className="px-6 py-4 font-semibold">{t("scheduledToday")}</th>
+                <th className="px-6 py-4 text-right font-semibold">{t("action")}</th>
               </tr>
             </thead>
 
@@ -62,7 +65,7 @@ export default async function AdminSocialMediaModelsPage() {
                       colSpan={8}
                       className="px-6 py-8 text-center text-white/45"
                     >
-                      Nenhum cliente encontrado. O item acima é apenas um placeholder de layout.
+                      {t("empty")}
                     </td>
                   </tr>
                 </>
@@ -75,7 +78,15 @@ export default async function AdminSocialMediaModelsPage() {
   );
 }
 
-function ClientRow({ client, dummy }: { client: AmpliaClient; dummy?: boolean }) {
+async function ClientRow({
+  client,
+  dummy,
+}: {
+  client: AmpliaClient;
+  dummy?: boolean;
+}) {
+  const t = await getTranslations("admin.ampliaClients");
+
   return (
     <tr className={`${dummy ? "opacity-50" : ""} hover:bg-white/[0.02]`}>
       <td className="px-6 py-4">
@@ -100,16 +111,16 @@ function ClientRow({ client, dummy }: { client: AmpliaClient; dummy?: boolean })
         </div>
       </td>
       <td className="px-6 py-4 text-white/70">
-        {client.type === "model" ? "Modelo Karay" : "BG-only"}
+        {client.type === "model" ? t("typeKarayModel") : t("typeBrandGrowthOnly")}
       </td>
       <td className="px-6 py-4">
         <StatusBadge status={client.brandStatus} />
       </td>
       <td className="px-6 py-4 text-white/70">
-        {client.connectedInstagram ? "Conectado" : "—"}
+        {client.connectedInstagram ? t("connected") : "—"}
       </td>
       <td className="px-6 py-4 text-white/70">
-        {client.connectedX ? "Conectado" : "—"}
+        {client.connectedX ? t("connected") : "—"}
       </td>
       <td className="px-6 py-4 text-white/70">
         {client.pendingApprovals > 0 ? client.pendingApprovals : "—"}
@@ -122,7 +133,7 @@ function ClientRow({ client, dummy }: { client: AmpliaClient; dummy?: boolean })
           href={`/admin/socialmediamodels/models/${client.talentId}`}
           className="rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-xs font-semibold text-white/80 transition hover:bg-white/10"
         >
-          Abrir
+          {t("open")}
         </Link>
       </td>
     </tr>
@@ -142,7 +153,7 @@ const dummyClient: AmpliaClient = {
   id: "dummy",
   talentId: "dummy",
   type: "model",
-  displayName: "Modelo Exemplo",
+  displayName: "—",
   stageName: "exemplo",
   fullName: null,
   location: null,

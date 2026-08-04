@@ -240,7 +240,7 @@ export default function OnboardingChecklistPanel({
   if (isLoading) {
     return (
       <section className="rounded-2xl border border-white/10 bg-black/20 p-8 text-center">
-        <p className="text-sm text-white/55">Carregando onboarding...</p>
+        <p className="text-sm text-white/55">{t("loading")}</p>
       </section>
     );
   }
@@ -251,7 +251,7 @@ export default function OnboardingChecklistPanel({
         <div className="flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
           <div>
             <p className="text-xs font-bold uppercase tracking-[0.2em] text-pink-300">
-              Processo completo
+              {t("eyebrow")}
             </p>
 
             <h2 className="mt-2 text-2xl font-bold text-white">
@@ -259,8 +259,7 @@ export default function OnboardingChecklistPanel({
             </h2>
 
             <p className="mt-2 max-w-3xl text-sm leading-6 text-white/55">
-              Marque cada etapa e preencha os campos conforme o processo avança.
-              A porcentagem se atualiza sozinha a cada caixa marcada.
+              {t("intro")}
             </p>
           </div>
 
@@ -558,13 +557,15 @@ function ItemRow({
 
           {blocked && (
             <p className="mt-3 text-xs font-semibold text-yellow-200">
-              Preencha para poder concluir: {item.missingRequired.join(", ")}
+              {t("missingRequired", {
+                fields: item.missingRequired.join(", "),
+              })}
             </p>
           )}
 
           {item.locked && (
             <p className="mt-3 text-xs font-semibold text-white/55">
-              Esta etapa foi concluída e está bloqueada para o representante.
+              {t("lockedForRepresentative")}
             </p>
           )}
 
@@ -689,11 +690,11 @@ function FieldInput({
             {field.label}
 
             {isSaving && (
-              <span className="ml-2 text-xs text-white/35">salvando…</span>
+              <span className="ml-2 text-xs text-white/35">{t("saving")}</span>
             )}
 
             {saved && !isSaving && (
-              <span className="ml-2 text-xs text-emerald-300">salvo</span>
+              <span className="ml-2 text-xs text-emerald-300">{t("saved")}</span>
             )}
           </span>
         </label>
@@ -720,29 +721,35 @@ function FieldInput({
       <span className="flex flex-wrap items-center gap-2 text-[11px] font-bold uppercase tracking-[0.12em] text-white/45">
         {field.label}
 
-        {field.required && <span className="text-pink-300">obrigatório</span>}
+        {field.required && (
+          <span className="text-pink-300">{tState("required")}</span>
+        )}
 
         {field.linkedLocation && !field.readOnly && (
           <span
             className="rounded-full border border-blue-400/25 bg-blue-500/10 px-2 py-0.5 text-[9px] font-bold normal-case tracking-normal text-blue-200"
-            title={`Este campo é o mesmo de ${field.linkedLocation} — salvar aqui atualiza lá, e vice-versa.`}
+            title={t("linkedFieldHint", {
+              location: field.linkedLocation ?? "",
+            })}
           >
-            também em {field.linkedLocation}
+            {t("alsoIn", { location: field.linkedLocation ?? "" })}
           </span>
         )}
 
         {field.readOnly && (
           <span
             className="rounded-full border border-white/15 bg-white/5 px-2 py-0.5 text-[9px] font-bold normal-case tracking-normal text-white/60"
-            title={`Somente leitura aqui — o onboarding nunca altera este campo. Edite em ${field.linkedLocation}.`}
+            title={t("readOnlyHint", {
+              location: field.linkedLocation ?? "",
+            })}
           >
-            somente leitura — edite em {field.linkedLocation}
+            {t("readOnlyIn", { location: field.linkedLocation ?? "" })}
           </span>
         )}
 
-        {isSaving && <span className="text-white/35">salvando…</span>}
+        {isSaving && <span className="text-white/35">{t("saving")}</span>}
         {saved && !isSaving && (
-          <span className="text-emerald-300">salvo</span>
+          <span className="text-emerald-300">{t("saved")}</span>
         )}
       </span>
 

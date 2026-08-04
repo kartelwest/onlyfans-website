@@ -35,7 +35,7 @@ export default async function AdminSocialMediaOverviewPage() {
             href="/admin/socialmediamodels/models"
             className="rounded-xl bg-pink-500 px-6 py-3 text-sm font-bold text-white transition hover:bg-pink-400"
           >
-            Open Now — AMPLIA MODELS
+            {t("openAmplia")}
           </Link>
         </header>
 

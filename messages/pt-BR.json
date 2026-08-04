@@ -1917,7 +1917,8 @@
           "secondaryPositioning": "Posicionamento secundário",
           "aiGuidance": "Diretriz de IA permanente"
         }
-      }
+      },
+      "openAmplia": "Abrir agora — AMPLIA MODELS"
     },
     "payments": {
       "paymentDetails": "Dados de Pagamento",
@@ -2286,7 +2287,18 @@
         "model": "Modelo",
         "agency": "Agência",
         "both": "Ambos"
-      }
+      },
+      "loading": "Carregando onboarding...",
+      "eyebrow": "Processo completo",
+      "intro": "Marque cada etapa e preencha os campos conforme o processo avança. A porcentagem se atualiza sozinha a cada caixa marcada.",
+      "missingRequired": "Preencha para poder concluir: {fields}",
+      "lockedForRepresentative": "Esta etapa foi concluída e está bloqueada para o representante.",
+      "saving": "salvando…",
+      "saved": "salvo",
+      "linkedFieldHint": "Este campo é o mesmo de {location} — salvar aqui atualiza lá, e vice-versa.",
+      "alsoIn": "também em {location}",
+      "readOnlyHint": "Somente leitura aqui — o onboarding nunca altera este campo. Edite em {location}.",
+      "readOnlyIn": "somente leitura — edite em {location}"
     },
     "importer": {
       "autoSave": "Salvar automaticamente",
@@ -2540,6 +2552,22 @@
       "roleModel": "Modelo",
       "roleRepresentative": "Representante",
       "roleAdministrator": "Administrador"
+    },
+    "ampliaClients": {
+      "addClient": "+ Cliente Brand Growth",
+      "client": "Cliente",
+      "type": "Tipo",
+      "status": "Status",
+      "approvals": "Aprovações",
+      "scheduledToday": "Agendados hoje",
+      "action": "Ação",
+      "empty": "Nenhum cliente encontrado. O item acima é apenas um placeholder de layout.",
+      "typeKarayModel": "Modelo Karay",
+      "typeBrandGrowthOnly": "Somente Brand Growth",
+      "connected": "Conectado",
+      "open": "Abrir",
+      "newClientTitle": "Novo cliente Amplia",
+      "newClientIntro": "Criar um cliente sem vinculação ao /admin/models."
     }
   },
   "owner": {
