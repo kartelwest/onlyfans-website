@@ -1972,6 +1972,45 @@
         "frequency": "Diária, semanal...",
         "referral": "Como conheceu a agência"
       }
+    },
+    "onboardingPanel": {
+      "defaultTitle": "Onboarding OnlyFans",
+      "progress": "Progresso",
+      "total": "Total",
+      "completed": "Concluídas",
+      "remaining": "Restantes",
+      "modelResponsibility": "Responsabilidade da modelo",
+      "agencyResponsibility": "Responsabilidade da agência",
+      "stepsCompleted": "{done} de {total} etapas concluídas",
+      "lockedOwner": "Onboarding concluído — apenas você pode editar",
+      "lockedOther": "Onboarding concluído — bloqueado, apenas o proprietário pode editar",
+      "readOnly": "Visualização somente",
+      "noMatches": "Nenhuma etapa corresponde ao filtro selecionado.",
+      "markPending": "Marcar como pendente",
+      "markComplete": "Marcar como concluída",
+      "selfCompleting": "Esta etapa se conclui sozinha: preencha o campo ou marque “não se aplica”.",
+      "lockedForRep": "Concluída e bloqueada para o representante",
+      "skipWarning": "Marcar “não se aplica” apaga o e-mail secundário já preenchido. Deseja continuar?",
+      "skipTitle": "Pular o e-mail secundário?",
+      "skipConfirm": "Sim, pular",
+      "completedOn": "Concluída em {when}",
+      "loadFailed": "Não foi possível carregar o onboarding.",
+      "filters": {
+        "pending": "Pendentes",
+        "done": "Concluídos",
+        "model": "Modelo",
+        "agency": "Agência"
+      },
+      "status": {
+        "completed": "Preenchido",
+        "skipped": "Não se aplica",
+        "pending": "Pendente"
+      },
+      "responsibility": {
+        "model": "Modelo",
+        "agency": "Agência",
+        "both": "Ambos"
+      }
     }
   },
   "owner": {

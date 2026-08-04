@@ -1972,6 +1972,45 @@
         "frequency": "Daily, weekly...",
         "referral": "How she heard about the agency"
       }
+    },
+    "onboardingPanel": {
+      "defaultTitle": "OnlyFans onboarding",
+      "progress": "Progress",
+      "total": "Total",
+      "completed": "Completed",
+      "remaining": "Remaining",
+      "modelResponsibility": "Model's responsibility",
+      "agencyResponsibility": "Agency's responsibility",
+      "stepsCompleted": "{done} of {total} steps completed",
+      "lockedOwner": "Onboarding complete — only you can edit",
+      "lockedOther": "Onboarding complete — locked, only the owner can edit",
+      "readOnly": "View only",
+      "noMatches": "No steps match the selected filter.",
+      "markPending": "Mark as pending",
+      "markComplete": "Mark as complete",
+      "selfCompleting": "This step completes itself: fill in the field or tick \"does not apply\".",
+      "lockedForRep": "Complete and locked for the representative",
+      "skipWarning": "Ticking \"does not apply\" erases the secondary email already on file. Continue?",
+      "skipTitle": "Skip the secondary email?",
+      "skipConfirm": "Yes, skip it",
+      "completedOn": "Completed on {when}",
+      "loadFailed": "We couldn't load the onboarding checklist.",
+      "filters": {
+        "pending": "Pending",
+        "done": "Completed",
+        "model": "Model",
+        "agency": "Agency"
+      },
+      "status": {
+        "completed": "Filled in",
+        "skipped": "Does not apply",
+        "pending": "Pending"
+      },
+      "responsibility": {
+        "model": "Model",
+        "agency": "Agency",
+        "both": "Both"
+      }
     }
   },
   "owner": {

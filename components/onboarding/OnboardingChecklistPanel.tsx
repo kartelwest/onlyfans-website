@@ -1,5 +1,10 @@
 "use client";
 
+import { useLocale, useTranslations } from "next-intl";
+
+import { toLocale, type Locale } from "@/lib/i18n/config";
+import { formatDateTime as formatLocalizedDateTime } from "@/lib/models/formatDateTime";
+
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
@@ -93,29 +98,36 @@ async function fetchOnboarding(
   const result = (await response.json()) as OnboardingResponse;
 
   if (!response.ok) {
-    throw new Error(result.error ?? "Não foi possível carregar o onboarding.");
+    throw new Error(result.error ?? "Failed to load the onboarding checklist.");
   }
 
   return result;
 }
 
-const FILTERS: { id: Filter; label: string }[] = [
-  { id: "all", label: "Todos" },
-  { id: "pending", label: "Pendentes" },
-  { id: "done", label: "Concluídos" },
-  { id: "model", label: "Modelo" },
-  { id: "agency", label: "Agência" },
+/** The id doubles as the key under `admin.onboardingPanel.filters`. */
+const FILTERS: { id: Filter }[] = [
+  { id: "all" },
+  { id: "pending" },
+  { id: "done" },
+  { id: "model" },
+  { id: "agency" },
 ];
 
 export default function OnboardingChecklistPanel({
   modelId,
   currentUserRole,
-  title = "Onboarding OnlyFans",
+  title,
 }: {
   modelId: string;
   currentUserRole: ManagementRole;
+  /** Overrides the default heading; falls back to the translated one. */
   title?: string;
 }) {
+  const t = useTranslations("admin.onboardingPanel");
+  const tCommon = useTranslations("common.actions");
+  const tState = useTranslations("common.states");
+  const tErrors = useTranslations("errors");
+
   const [sections, setSections] = useState<SectionView[]>([]);
   const [summary, setSummary] = useState<Summary>(EMPTY_SUMMARY);
   const [canEdit, setCanEdit] = useState(false);
@@ -156,7 +168,7 @@ export default function OnboardingChecklistPanel({
         setErrorMessage(
           error instanceof Error
             ? error.message
-            : "Não foi possível carregar o onboarding.",
+            : t("loadFailed"),
         );
         setIsLoading(false);
       });
@@ -184,7 +196,7 @@ export default function OnboardingChecklistPanel({
         const result = (await response.json()) as OnboardingResponse;
 
         if (!response.ok) {
-          throw new Error(result.error ?? "Não foi possível salvar.");
+          throw new Error(result.error ?? tErrors("saveFailed"));
         }
 
         applyResponse(result);
@@ -192,7 +204,7 @@ export default function OnboardingChecklistPanel({
         return true;
       } catch (error) {
         setErrorMessage(
-          error instanceof Error ? error.message : "Não foi possível salvar.",
+          error instanceof Error ? error.message : tErrors("saveFailed"),
         );
 
         return false;
@@ -243,7 +255,9 @@ export default function OnboardingChecklistPanel({
               Processo completo
             </p>
 
-            <h2 className="mt-2 text-2xl font-bold text-white">{title}</h2>
+            <h2 className="mt-2 text-2xl font-bold text-white">
+              {title ?? t("defaultTitle")}
+            </h2>
 
             <p className="mt-2 max-w-3xl text-sm leading-6 text-white/55">
               Marque cada etapa e preencha os campos conforme o processo avança.
@@ -252,15 +266,15 @@ export default function OnboardingChecklistPanel({
           </div>
 
           <div className="grid w-full gap-3 sm:grid-cols-4 xl:max-w-2xl">
-            <SummaryCard label="Progresso" value={`${summary.percentage}%`} />
-            <SummaryCard label="Total" value={summary.total} />
+            <SummaryCard label={t("progress")} value={`${summary.percentage}%`} />
+            <SummaryCard label={t("total")} value={summary.total} />
             <SummaryCard
-              label="Concluídas"
+              label={t("completed")}
               value={summary.completed}
               status="success"
             />
             <SummaryCard
-              label="Restantes"
+              label={t("remaining")}
               value={summary.remaining}
               status={summary.remaining === 0 ? "success" : "warning"}
             />
@@ -278,32 +292,31 @@ export default function OnboardingChecklistPanel({
 
         <div className="mt-6 grid gap-4 sm:grid-cols-2">
           <ProgressBar
-            label="Responsabilidade da modelo"
+            label={t("modelResponsibility")}
             value={summary.modelPercentage}
           />
           <ProgressBar
-            label="Responsabilidade da agência"
+            label={t("agencyResponsibility")}
             value={summary.agencyPercentage}
           />
         </div>
 
         <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
           <p className="text-xs text-white/45">
-            {summary.completed} de {summary.total} etapas concluídas
+            {t("stepsCompleted", { done: summary.completed, total: summary.total })}
           </p>
 
           {locked && (
             <p className="rounded-full border border-emerald-400/30 bg-emerald-500/10 px-3 py-1 text-xs font-bold text-emerald-200">
-              Onboarding concluído
               {currentUserRole === "owner"
-                ? " — apenas você pode editar"
-                : " — bloqueado, apenas o proprietário pode editar"}
+                ? t("lockedOwner")
+                : t("lockedOther")}
             </p>
           )}
 
           {!locked && !canEdit && (
             <p className="text-xs font-semibold text-yellow-200">
-              Visualização somente
+              {t("readOnly")}
             </p>
           )}
         </div>
@@ -327,7 +340,7 @@ export default function OnboardingChecklistPanel({
                 : "border-white/10 bg-black/20 text-white/55 hover:border-pink-400/40 hover:text-white"
             }`}
           >
-            {option.label}
+            {option.id === "all" ? tState("all") : t(`filters.${option.id}`)}
           </button>
         ))}
       </div>
@@ -335,7 +348,7 @@ export default function OnboardingChecklistPanel({
       {visibleSections.length === 0 ? (
         <section className="rounded-2xl border border-dashed border-white/15 bg-black/20 p-8 text-center">
           <p className="text-sm text-white/55">
-            Nenhuma etapa corresponde ao filtro selecionado.
+            {t("noMatches")}
           </p>
         </section>
       ) : (
@@ -438,6 +451,9 @@ function ItemRow({
   onToggle: (completed: boolean) => Promise<boolean>;
   onSaveField: (fieldKey: string, value: string) => Promise<boolean>;
 }) {
+  const t = useTranslations("admin.onboardingPanel");
+  const locale = toLocale(useLocale());
+
   const blocked = item.missingRequired.length > 0 && !item.completed;
 
   // A derived step is never clicked: the fields below decide it. Disabling the
@@ -460,13 +476,13 @@ function ItemRow({
           disabled={itemDisabled}
           onClick={() => void onToggle(!item.completed)}
           aria-label={
-            item.completed ? "Marcar como pendente" : "Marcar como concluída"
+            item.completed ? t("markPending") : t("markComplete")
           }
           title={
             item.derived
-              ? "Esta etapa se conclui sozinha: preencha o campo ou marque “não se aplica”."
+              ? t("selfCompleting")
               : item.locked
-                ? "Concluída e bloqueada para o representante"
+                ? t("lockedForRep")
                 : blocked
                   ? `Preencha antes: ${item.missingRequired.join(", ")}`
                   : undefined
@@ -532,7 +548,7 @@ function ItemRow({
                     (item.fields.find(
                       (sibling) => sibling.key === item.completion?.valueField,
                     )?.value ?? "") !== ""
-                      ? "Marcar “não se aplica” apaga o e-mail secundário já preenchido. Deseja continuar?"
+                      ? t("skipWarning")
                       : null
                   }
                   onSave={(value) => onSaveField(field.key, value)}
@@ -555,7 +571,7 @@ function ItemRow({
 
           {item.completed && item.completedAt && (
             <p className="mt-3 text-xs font-semibold text-emerald-300/75">
-              Concluída em {formatDateTime(item.completedAt)}
+              {t("completedOn", { when: formatDateTime(item.completedAt, locale) })}
             </p>
           )}
         </div>
@@ -585,6 +601,10 @@ function FieldInput({
   confirmBeforeChecking?: string | null;
   onSave: (value: string) => Promise<boolean>;
 }) {
+  const t = useTranslations("admin.onboardingPanel");
+  const tCommon = useTranslations("common.actions");
+  const tState = useTranslations("common.states");
+
   const [value, setValue] = useState(field.value);
   const [saved, setSaved] = useState(false);
   const [pendingCheck, setPendingCheck] = useState(false);
@@ -681,10 +701,10 @@ function FieldInput({
 
         <ConfirmDialog
           open={pendingCheck}
-          title="Pular o e-mail secundário?"
+          title={t("skipTitle")}
           description={<p>{confirmBeforeChecking}</p>}
-          confirmLabel="Sim, pular"
-          cancelLabel="Cancelar"
+          confirmLabel={t("skipConfirm")}
+          cancelLabel={tCommon("cancel")}
           busy={isSaving}
           onCancel={() => setPendingCheck(false)}
           onConfirm={() => {
@@ -746,7 +766,7 @@ function FieldInput({
             onBlur={() => void commit()}
             className={inputClassName}
           >
-            <option value="">Não informado</option>
+            <option value="">{tState("notInformed")}</option>
 
             {(field.options ?? []).map((option) => (
               <option key={option} value={option}>
@@ -790,17 +810,16 @@ function StatusChip({
 }: {
   status: "completed" | "skipped" | "pending";
 }) {
+  const t = useTranslations("admin.onboardingPanel.status");
+
   const config = {
     completed: {
-      label: "Preenchido",
       className: "border-emerald-400/30 bg-emerald-500/10 text-emerald-300",
     },
     skipped: {
-      label: "Não se aplica",
       className: "border-white/20 bg-white/10 text-white/70",
     },
     pending: {
-      label: "Pendente",
       className: "border-yellow-400/30 bg-yellow-500/10 text-yellow-200",
     },
   }[status];
@@ -809,7 +828,7 @@ function StatusChip({
     <span
       className={`inline-flex rounded-full border px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.1em] ${config.className}`}
     >
-      {config.label}
+      {t(status)}
     </span>
   );
 }
@@ -819,19 +838,12 @@ function ResponsibilityBadge({
 }: {
   responsibility: Responsibility;
 }) {
-  const config: Record<Responsibility, { label: string; className: string }> = {
-    model: {
-      label: "Modelo",
-      className: "border-blue-400/30 bg-blue-500/10 text-blue-200",
-    },
-    agency: {
-      label: "Agência",
-      className: "border-pink-400/30 bg-pink-500/10 text-pink-200",
-    },
-    both: {
-      label: "Ambos",
-      className: "border-yellow-400/30 bg-yellow-500/10 text-yellow-200",
-    },
+  const t = useTranslations("admin.onboardingPanel.responsibility");
+
+  const config: Record<Responsibility, { className: string }> = {
+    model: { className: "border-blue-400/30 bg-blue-500/10 text-blue-200" },
+    agency: { className: "border-pink-400/30 bg-pink-500/10 text-pink-200" },
+    both: { className: "border-yellow-400/30 bg-yellow-500/10 text-yellow-200" },
   };
 
   const selected = config[responsibility];
@@ -840,7 +852,7 @@ function ResponsibilityBadge({
     <span
       className={`inline-flex w-fit shrink-0 rounded-full border px-3 py-1 text-[10px] font-black uppercase tracking-[0.1em] ${selected.className}`}
     >
-      {selected.label}
+      {t(responsibility)}
     </span>
   );
 }
@@ -889,18 +901,12 @@ function SummaryCard({
   );
 }
 
-function formatDateTime(value: string) {
+function formatDateTime(value: string, locale: Locale) {
   const date = new Date(value);
 
   if (Number.isNaN(date.getTime())) {
     return value;
   }
 
-  return new Intl.DateTimeFormat("pt-BR", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  }).format(date);
+  return formatLocalizedDateTime(date, locale);
 }
