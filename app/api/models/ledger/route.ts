@@ -147,7 +147,7 @@ export async function POST(request: NextRequest) {
   if (error) {
     console.error("Erro ao criar lançamento:", error);
 
-    return rpcErrorResponse(error, tRoute("saveFailed"));
+    return await rpcErrorResponse(error, tRoute("saveFailed"));
   }
 
   // A deduction dated today or earlier is snapshotted immediately instead of

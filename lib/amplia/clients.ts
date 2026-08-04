@@ -1,3 +1,4 @@
+import { getTranslations } from "next-intl/server";
 import "server-only";
 
 import { createClient } from "@/lib/supabase/server";
@@ -308,6 +309,7 @@ export async function getAmpliaClients(): Promise<{
 export async function getAmpliaClientById(
   id: string,
 ): Promise<{ client?: AmpliaClientDetail; error?: string }> {
+  const t = await getTranslations("errors.amplia");
   const supabase = await createClient();
 
   const { data: modelRow } = await supabase
@@ -340,7 +342,7 @@ export async function getAmpliaClientById(
 
     const { talentId: maybeTalentId, error: ensureError } = await ensureOnlyFansEnrollmentForModel(id);
     if (ensureError || !maybeTalentId) {
-      return { error: ensureError ?? "Não foi possível preparar o talento da modelo." };
+      return { error: ensureError ?? t("talentPrepFailed") };
     }
     talentId = maybeTalentId;
 
@@ -386,7 +388,7 @@ export async function getAmpliaClientById(
       .maybeSingle();
 
     if (!talentRow) {
-      return { error: "Cliente não encontrado." };
+      return { error: t("clientNotFound") };
     }
 
     const row = talentRow as unknown as Record<string, unknown>;
@@ -430,7 +432,7 @@ export async function getAmpliaClientById(
   }
 
   if (!talentId) {
-    return { error: "Não foi possível identificar o talento." };
+    return { error: t("talentNotIdentified") };
   }
 
   const [brandProfileResult, platformsResult, consentsResult, boundariesResult, enrollmentsResult] =

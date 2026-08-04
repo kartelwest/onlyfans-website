@@ -1,3 +1,4 @@
+import { getTranslations } from "next-intl/server";
 import "server-only";
 
 import { createClient } from "@/lib/supabase/server";
@@ -43,11 +44,12 @@ export async function updateBrandProfile(
   brandProfileId: string,
   input: UpdateBrandProfileInput,
 ): Promise<{ brandProfile?: BrandProfile; error?: string }> {
+  const t = await getTranslations("errors.brand");
   const supabase = await createClient();
 
   const { data: userData } = await supabase.auth.getUser();
   if (!userData.user) {
-    return { error: "Não autenticado." };
+    return { error: t("notAuthenticated") };
   }
 
   const { data: profile } = await supabase
@@ -57,7 +59,7 @@ export async function updateBrandProfile(
     .single();
 
   if (!profile || !["owner", "administrator"].includes(profile.role)) {
-    return { error: "Permissão negada." };
+    return { error: t("permissionDenied") };
   }
 
   const update: Record<string, unknown> = {};
@@ -97,7 +99,7 @@ export async function updateBrandProfile(
   if (input.allowAdultPlatformLinks !== undefined) update.allow_adult_platform_links = input.allowAdultPlatformLinks;
 
   if (Object.keys(update).length === 0) {
-    return { error: "Nenhum campo para atualizar." };
+    return { error: t("nothingToUpdate") };
   }
 
   const { data, error } = await supabase
@@ -108,7 +110,7 @@ export async function updateBrandProfile(
     .single();
 
   if (error || !data) {
-    return { error: error?.message ?? "Erro ao atualizar perfil de marca." };
+    return { error: error?.message ?? t("profileUpdateFailed") };
   }
 
   return { brandProfile: mapBrandProfile(data) };

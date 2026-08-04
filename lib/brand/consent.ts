@@ -1,3 +1,4 @@
+import { getTranslations } from "next-intl/server";
 import "server-only";
 
 import { createClient } from "@/lib/supabase/server";
@@ -36,11 +37,12 @@ export async function updateConsent(
   granted: boolean,
   notes?: string,
 ): Promise<{ error?: string }> {
+  const t = await getTranslations("errors.brand");
   const supabase = await createClient();
 
   const { data: userData } = await supabase.auth.getUser();
   if (!userData.user) {
-    return { error: "Não autenticado." };
+    return { error: t("notAuthenticated") };
   }
 
   const { error } = await supabase

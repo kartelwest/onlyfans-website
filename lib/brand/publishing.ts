@@ -1,3 +1,4 @@
+import { getTranslations } from "next-intl/server";
 import "server-only";
 
 import { createClient } from "@/lib/supabase/server";
@@ -15,11 +16,12 @@ export interface ScheduleContentInput {
 export async function scheduleContent(
   input: ScheduleContentInput,
 ): Promise<{ error?: string }> {
+  const t = await getTranslations("errors.brand");
   const supabase = await createClient();
 
   const { data: userData } = await supabase.auth.getUser();
   if (!userData.user) {
-    return { error: "Não autenticado." };
+    return { error: t("notAuthenticated") };
   }
 
   const { error } = await supabase
@@ -43,6 +45,7 @@ export async function publishContentItem(contentItemId: string): Promise<{
   publishId?: string;
   error?: string;
 }> {
+  const t = await getTranslations("errors.brand");
   const supabase = await createClient();
 
   const { data: item, error } = await supabase
@@ -52,12 +55,12 @@ export async function publishContentItem(contentItemId: string): Promise<{
     .single();
 
   if (error || !item) {
-    return { success: false, error: error?.message ?? "Item não encontrado." };
+    return { success: false, error: error?.message ?? t("itemNotFound") };
   }
 
   const socialAccount = item.social_accounts as { platform: Platform } | null;
   if (!socialAccount) {
-    return { success: false, error: "Conta social não vinculada." };
+    return { success: false, error: t("socialAccountNotLinked") };
   }
 
   const { data: tokenRow } = await supabase
@@ -67,14 +70,14 @@ export async function publishContentItem(contentItemId: string): Promise<{
     .single();
 
   if (!tokenRow?.encrypted_access_token) {
-    return { success: false, error: "Token de acesso não encontrado ou não criptografado." };
+    return { success: false, error: t("tokenMissing") };
   }
 
   let accessToken: string;
   try {
     accessToken = decryptToken(String(tokenRow.encrypted_access_token));
   } catch {
-    return { success: false, error: "Falha ao descriptografar o token." };
+    return { success: false, error: t("tokenDecryptFailed") };
   }
 
   const contentItem = mapContentItem(item);

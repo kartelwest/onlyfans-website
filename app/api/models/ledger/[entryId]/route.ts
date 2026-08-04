@@ -97,7 +97,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
     if (error) {
       console.error("Erro ao alterar a data de desconto:", error);
 
-      return rpcErrorResponse(
+      return await rpcErrorResponse(
         error,
         tRoute("deductDateFailed"),
       );
@@ -128,7 +128,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
     if (error) {
       console.error("Failed to edit the ledger entry:", error);
 
-      return rpcErrorResponse(error, tRoute("saveFailed"));
+      return await rpcErrorResponse(error, tRoute("saveFailed"));
     }
   }
 
@@ -206,7 +206,7 @@ export async function DELETE(_request: NextRequest, context: RouteContext) {
   if (error) {
     console.error("Failed to delete the ledger entry:", error);
 
-    return rpcErrorResponse(error, tRoute("deleteFailed"));
+    return await rpcErrorResponse(error, tRoute("deleteFailed"));
   }
 
   return NextResponse.json({ success: true });

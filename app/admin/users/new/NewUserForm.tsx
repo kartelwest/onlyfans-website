@@ -8,7 +8,7 @@ import { useRouter } from "next/navigation";
 import BirthdayDatePicker from "@/components/ui/BirthdayDatePicker";
 import {
   generateTemporaryPassword,
-  getModelFieldLabel,
+  getModelFieldLabelKey,
 } from "@/lib/admin/modelOnboardingHelpers";
 
 type NewUserRole =
@@ -78,7 +78,6 @@ type ExtractedFields = {
 
 type ConflictItem = {
   field: keyof ExtractedFields;
-  label: string;
   current: string;
   extracted: string;
 };
@@ -120,6 +119,14 @@ export default function NewUserForm({
 }: NewUserFormProps) {
   const t = useTranslations("admin.newUser");
   const tRole = useTranslations("admin.newUser.roleWord");
+  const tFieldLabels = useTranslations("admin.newUser.fieldLabels");
+
+  /** A field name the extractor produced, shown as the label the user knows. */
+  function fieldLabel(field: string) {
+    const key = getModelFieldLabelKey(field);
+
+    return key ? tFieldLabels(key) : field;
+  }
   const tFields = useTranslations("admin.modelPage.fields");
   const tApply = useTranslations("site.apply.fields");
   const tApplyCountries = useTranslations("site.apply.countries");
@@ -909,13 +916,19 @@ export default function NewUserForm({
                           <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
                             <div>
                               <span className="font-semibold text-amber-100">
-                                {conflict.label}
+                                {fieldLabel(conflict.field)}
                               </span>
                               <p className="text-amber-200/80">
-                                Atual: {conflict.current || "(vazio)"}
+                                {t("conflictCurrent", {
+                                  value:
+                                    conflict.current ||
+                                    t("emptyValue"),
+                                })}
                               </p>
                               <p className="text-amber-100">
-                                Extraído: {conflict.extracted}
+                                {t("conflictExtracted", {
+                                  value: conflict.extracted,
+                                })}
                               </p>
                             </div>
 
@@ -945,7 +958,7 @@ export default function NewUserForm({
                   <ul className="mt-1 list-disc pl-5 text-sm text-red-100/80">
                     {review.missing.map((item) => (
                       <li key={item}>
-                        {getModelFieldLabel(item)}
+                        {fieldLabel(item)}
                       </li>
                     ))}
                   </ul>

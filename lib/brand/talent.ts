@@ -1,3 +1,4 @@
+import { getTranslations } from "next-intl/server";
 import "server-only";
 
 import { createClient } from "@/lib/supabase/server";
@@ -43,11 +44,12 @@ const BRAND_GROWTH_SERVICE_KEYS = ["brand_growth_instagram", "brand_growth_x"];
 export async function createBrandOnlyClient(
   input: CreateBrandOnlyClientInput,
 ): Promise<{ talent?: Talent; brandProfile?: BrandProfile; error?: string }> {
+  const t = await getTranslations("errors.brand");
   const supabase = await createClient();
 
   const { data: userData, error: userError } = await supabase.auth.getUser();
   if (userError || !userData.user) {
-    return { error: "Não autenticado." };
+    return { error: t("notAuthenticated") };
   }
 
   const { data: profile } = await supabase
@@ -57,7 +59,7 @@ export async function createBrandOnlyClient(
     .single();
 
   if (!profile || !profile.active || !["owner", "administrator"].includes(profile.role)) {
-    return { error: "Permissão negada." };
+    return { error: t("permissionDenied") };
   }
 
   const admin = createAdminClient();
@@ -68,7 +70,7 @@ export async function createBrandOnlyClient(
     .in("key", [...BRAND_GROWTH_SERVICE_KEYS]);
 
   if (!serviceTypes || serviceTypes.length === 0) {
-    return { error: "Tipos de serviço Brand Growth não encontrados." };
+    return { error: t("serviceTypesMissing") };
   }
 
   const { data: talent, error: talentError } = await admin
@@ -90,7 +92,7 @@ export async function createBrandOnlyClient(
     .single();
 
   if (talentError || !talent) {
-    return { error: talentError?.message ?? "Erro ao criar talento." };
+    return { error: talentError?.message ?? t("talentCreateFailed") };
   }
 
   const { data: brandProfile, error: profileError } = await admin
@@ -144,11 +146,12 @@ export async function getTalentWithBrandProfile(talentId: string): Promise<{
   enrollments?: ServiceEnrollment[];
   error?: string;
 }> {
+  const t = await getTranslations("errors.brand");
   const supabase = await createClient();
 
   const { data: userData } = await supabase.auth.getUser();
   if (!userData.user) {
-    return { error: "Não autenticado." };
+    return { error: t("notAuthenticated") };
   }
 
   const { data: talent, error: talentError } = await supabase
@@ -158,7 +161,7 @@ export async function getTalentWithBrandProfile(talentId: string): Promise<{
     .single();
 
   if (talentError || !talent) {
-    return { error: talentError?.message ?? "Talento não encontrado." };
+    return { error: talentError?.message ?? t("talentNotFound") };
   }
 
   const { data: brandProfile, error: profileError } = await supabase
@@ -184,9 +187,10 @@ export async function getTalentWithBrandProfile(talentId: string): Promise<{
 }
 
 export async function enrollModelInBrandGrowth(modelId: string): Promise<{ error?: string }> {
+  const t = await getTranslations("errors.brand");
   const supabase = await createClient();
   const { data: userData } = await supabase.auth.getUser();
-  if (!userData.user) return { error: "Não autenticado." };
+  if (!userData.user) return { error: t("notAuthenticated") };
 
   const { data: profile } = await supabase
     .from("profiles")
@@ -195,7 +199,7 @@ export async function enrollModelInBrandGrowth(modelId: string): Promise<{ error
     .single();
 
   if (!profile || !["owner", "administrator"].includes(profile.role)) {
-    return { error: "Permissão negada." };
+    return { error: t("permissionDenied") };
   }
 
   const admin = createAdminClient();
@@ -230,7 +234,7 @@ export async function enrollModelInBrandGrowth(modelId: string): Promise<{ error
     .in("key", BRAND_GROWTH_SERVICE_KEYS);
 
   if (!serviceTypes || serviceTypes.length === 0) {
-    return { error: "Tipos de serviço Brand Growth não encontrados." };
+    return { error: t("serviceTypesMissing") };
   }
 
   const now = new Date().toISOString();
@@ -253,6 +257,7 @@ export async function enrollModelInBrandGrowth(modelId: string): Promise<{ error
 export async function ensureOnlyFansEnrollmentForModel(
   modelId: string,
 ): Promise<{ talentId?: string; error?: string }> {
+  const t = await getTranslations("errors.brand");
   const admin = createAdminClient();
 
   const { data: model, error: modelError } = await admin
@@ -262,7 +267,7 @@ export async function ensureOnlyFansEnrollmentForModel(
     .maybeSingle();
 
   if (modelError || !model) {
-    return { error: modelError?.message ?? "Modelo não encontrado." };
+    return { error: modelError?.message ?? t("modelNotFound") };
   }
 
   const talentResult = await getOrCreateTalentForModel(modelId, admin);
@@ -278,7 +283,7 @@ export async function ensureOnlyFansEnrollmentForModel(
     .single();
 
   if (!serviceType) {
-    return { error: "Tipo de serviço OnlyFans não encontrado." };
+    return { error: t("onlyfansServiceMissing") };
   }
 
   const status = model.active ? "active" : "inactive";
@@ -303,6 +308,7 @@ async function getOrCreateTalentForModel(
   modelId: string,
   adminClient?: SupabaseClient,
 ): Promise<{ id: string } | { error: string }> {
+  const t = await getTranslations("errors.brand");
   const admin = adminClient ?? createAdminClient();
 
   const { data: model, error: modelError } = await admin
@@ -314,7 +320,7 @@ async function getOrCreateTalentForModel(
     .maybeSingle();
 
   if (modelError || !model) {
-    return { error: modelError?.message ?? "Modelo não encontrado." };
+    return { error: modelError?.message ?? t("modelNotFound") };
   }
 
   const { data: existingByModel } = await admin
@@ -353,7 +359,7 @@ async function getOrCreateTalentForModel(
     .single();
 
   if (talentError || !talent) {
-    return { error: talentError?.message ?? "Erro ao criar talento para a modelo." };
+    return { error: talentError?.message ?? t("modelTalentCreateFailed") };
   }
 
   return { id: talent.id };

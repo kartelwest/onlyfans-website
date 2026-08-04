@@ -219,17 +219,22 @@ export function generateTemporaryPassword(phoneDigits: string): string {
   return `${lastFour}1234567`;
 }
 
-const FIELD_LABELS: Record<string, string> = {
-  fullName: "Nome completo",
-  stageName: "Nome artístico",
-  email: "E-mail",
-  phone: "Telefone / WhatsApp",
-  dateOfBirth: "Data de nascimento",
-  country: "País",
+/**
+ * Catalogue keys under `admin.newUser.fieldLabels`. The label itself is UI
+ * copy, so this returns the key and the component resolves it — the field
+ * name is the stable identifier, the wording is not.
+ */
+const FIELD_LABEL_KEYS: Record<string, string> = {
+  fullName: "fullName",
+  stageName: "stageName",
+  email: "email",
+  phone: "phone",
+  dateOfBirth: "dateOfBirth",
+  country: "country",
 };
 
-export function getModelFieldLabel(field: string): string {
-  return FIELD_LABELS[field] || field;
+export function getModelFieldLabelKey(field: string): string | null {
+  return FIELD_LABEL_KEYS[field] ?? null;
 }
 
 type ExtractableField =
@@ -242,7 +247,6 @@ type ExtractableField =
 
 export type ConflictItem = {
   field: ExtractableField;
-  label: string;
   current: string;
   extracted: string;
 };
@@ -277,7 +281,6 @@ export function computeConflicts(
     if (currentValue && currentValue !== extractedValue) {
       conflicts.push({
         field,
-        label: getModelFieldLabel(field),
         current: currentValue,
         extracted: extractedValue,
       });

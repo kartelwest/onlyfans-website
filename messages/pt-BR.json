@@ -1194,7 +1194,8 @@
       "unexpectedRetry": "Ocorreu um erro inesperado. Tente novamente.",
       "unexpected": "Ocorreu um erro inesperado.",
       "internal": "Erro interno.",
-      "passwordOrLoginRequired": "Informe uma nova senha ou um novo login."
+      "passwordOrLoginRequired": "Informe uma nova senha ou um novo login.",
+      "entryNotFound": "Lançamento não encontrado."
     },
     "monthlyEarnings": {
       "loadFailed": "Não foi possível carregar os ganhos mensais.",
@@ -1423,7 +1424,21 @@
     "brand": {
       "clientNotFound": "Cliente não encontrado.",
       "unexpected": "Erro inesperado.",
-      "createClientFailed": "Erro ao criar cliente."
+      "createClientFailed": "Erro ao criar cliente.",
+      "notAuthenticated": "Não autenticado.",
+      "permissionDenied": "Permissão negada.",
+      "nothingToUpdate": "Nenhum campo para atualizar.",
+      "profileUpdateFailed": "Erro ao atualizar perfil de marca.",
+      "itemNotFound": "Item não encontrado.",
+      "socialAccountNotLinked": "Conta social não vinculada.",
+      "tokenMissing": "Token de acesso não encontrado ou não criptografado.",
+      "tokenDecryptFailed": "Falha ao descriptografar o token.",
+      "serviceTypesMissing": "Tipos de serviço Brand Growth não encontrados.",
+      "talentCreateFailed": "Erro ao criar talento.",
+      "talentNotFound": "Talento não encontrado.",
+      "modelNotFound": "Modelo não encontrado.",
+      "onlyfansServiceMissing": "Tipo de serviço OnlyFans não encontrado.",
+      "modelTalentCreateFailed": "Erro ao criar talento para a modelo."
     },
     "chat": {
       "actionCompleted": "Ação concluída.",
@@ -1439,6 +1454,11 @@
     },
     "payments": {
       "loadFailed": "Erro interno ao carregar pagamentos."
+    },
+    "amplia": {
+      "talentPrepFailed": "Não foi possível preparar o talento da modelo.",
+      "clientNotFound": "Cliente não encontrado.",
+      "talentNotIdentified": "Não foi possível identificar o talento."
     }
   },
   "validation": {},
@@ -2450,7 +2470,18 @@
       "fullNameRequiredForDraft": "Informe o nome completo para criar um rascunho.",
       "analyzeBeforeDraft": "Analise o texto com Claude antes de salvar o rascunho.",
       "draftSaved": "Rascunho salvo com sucesso.",
-      "unexpected": "Ocorreu um erro inesperado."
+      "unexpected": "Ocorreu um erro inesperado.",
+      "fieldLabels": {
+        "fullName": "Nome completo",
+        "stageName": "Nome artístico",
+        "email": "E-mail",
+        "phone": "Telefone / WhatsApp",
+        "dateOfBirth": "Data de nascimento",
+        "country": "País"
+      },
+      "conflictCurrent": "Atual: {value}",
+      "conflictExtracted": "Extraído: {value}",
+      "emptyValue": "(vazio)"
     },
     "earnings": {
       "financial": "Financeiro",

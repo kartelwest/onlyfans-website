@@ -1,3 +1,4 @@
+import { getTranslations } from "next-intl/server";
 import "server-only";
 
 import { NextResponse } from "next/server";
@@ -25,6 +26,7 @@ export type RouteAuth =
   | { ok: false; response: NextResponse };
 
 export async function authenticate(): Promise<RouteAuth> {
+  const t = await getTranslations("errors.api");
   const supabase = await createClient();
 
   const {
@@ -36,7 +38,7 @@ export async function authenticate(): Promise<RouteAuth> {
     return {
       ok: false,
       response: NextResponse.json(
-        { error: "Não autenticado." },
+        { error: t("notAuthenticated") },
         { status: 401 },
       ),
     };
@@ -52,7 +54,7 @@ export async function authenticate(): Promise<RouteAuth> {
     return {
       ok: false,
       response: NextResponse.json(
-        { error: "Perfil inválido." },
+        { error: t("invalidProfile") },
         { status: 403 },
       ),
     };
@@ -65,7 +67,7 @@ export async function authenticate(): Promise<RouteAuth> {
     return {
       ok: false,
       response: NextResponse.json(
-        { error: "Representante inativo." },
+        { error: t("inactiveRepresentative") },
         { status: 403 },
       ),
     };
@@ -84,6 +86,7 @@ export async function authenticate(): Promise<RouteAuth> {
 
 /** Owner or administrator. Representatives and models are rejected with 403. */
 export async function requireStaff(): Promise<RouteAuth> {
+  const t = await getTranslations("errors.api");
   const auth = await authenticate();
 
   if (!auth.ok) {
@@ -94,7 +97,7 @@ export async function requireStaff(): Promise<RouteAuth> {
     return {
       ok: false,
       response: NextResponse.json(
-        { error: "Sem permissão." },
+        { error: t("noPermission") },
         { status: 403 },
       ),
     };
@@ -108,20 +111,22 @@ export async function requireStaff(): Promise<RouteAuth> {
  * the caller deserves. The routes pre-check the same conditions, so this only
  * fires when the database is the one saying no.
  */
-export function rpcErrorResponse(
+export async function rpcErrorResponse(
   error: { code?: string; message?: string },
   fallbackMessage: string,
-): NextResponse {
+): Promise<NextResponse> {
+  const t = await getTranslations("errors.api");
+
   if (error.code === "42501") {
     return NextResponse.json(
-      { error: error.message || "Sem permissão." },
+      { error: error.message || t("noPermission") },
       { status: 403 },
     );
   }
 
   if (error.code === "P0002") {
     return NextResponse.json(
-      { error: "Lançamento não encontrado." },
+      { error: t("entryNotFound") },
       { status: 404 },
     );
   }
@@ -142,6 +147,7 @@ export async function requireModelAccess(
   profile: RouteProfile,
   modelId: string,
 ): Promise<ModelAccess> {
+  const t = await getTranslations("errors.api");
   let query = supabase
     .from("models")
     .select("id, expenses_enabled")
@@ -155,7 +161,7 @@ export async function requireModelAccess(
     return {
       ok: false,
       response: NextResponse.json(
-        { error: "Sem permissão." },
+        { error: t("noPermission") },
         { status: 403 },
       ),
     };
@@ -167,7 +173,7 @@ export async function requireModelAccess(
     return {
       ok: false,
       response: NextResponse.json(
-        { error: "Modelo não encontrada." },
+        { error: t("modelNotFound") },
         { status: 404 },
       ),
     };

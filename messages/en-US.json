@@ -1194,7 +1194,8 @@
       "unexpectedRetry": "Something went wrong. Please try again.",
       "unexpected": "Something went wrong.",
       "internal": "Internal error.",
-      "passwordOrLoginRequired": "Enter a new password or a new login."
+      "passwordOrLoginRequired": "Enter a new password or a new login.",
+      "entryNotFound": "Ledger entry not found."
     },
     "monthlyEarnings": {
       "loadFailed": "We couldn't load the monthly earnings.",
@@ -1423,7 +1424,21 @@
     "brand": {
       "clientNotFound": "Client not found.",
       "unexpected": "Unexpected error.",
-      "createClientFailed": "Could not create the client."
+      "createClientFailed": "Could not create the client.",
+      "notAuthenticated": "Not signed in.",
+      "permissionDenied": "Permission denied.",
+      "nothingToUpdate": "No fields to update.",
+      "profileUpdateFailed": "Could not update the brand profile.",
+      "itemNotFound": "Item not found.",
+      "socialAccountNotLinked": "Social account not linked.",
+      "tokenMissing": "Access token missing or not encrypted.",
+      "tokenDecryptFailed": "Could not decrypt the token.",
+      "serviceTypesMissing": "Brand Growth service types not found.",
+      "talentCreateFailed": "Could not create the talent.",
+      "talentNotFound": "Talent not found.",
+      "modelNotFound": "Model not found.",
+      "onlyfansServiceMissing": "OnlyFans service type not found.",
+      "modelTalentCreateFailed": "Could not create the talent record for the model."
     },
     "chat": {
       "actionCompleted": "Done.",
@@ -1439,6 +1454,11 @@
     },
     "payments": {
       "loadFailed": "Internal error while loading the payments."
+    },
+    "amplia": {
+      "talentPrepFailed": "Could not prepare the model's talent record.",
+      "clientNotFound": "Client not found.",
+      "talentNotIdentified": "Could not identify the talent."
     }
   },
   "validation": {},
@@ -2450,7 +2470,18 @@
       "fullNameRequiredForDraft": "Enter the full name to create a draft.",
       "analyzeBeforeDraft": "Analyse the text with Claude before saving the draft.",
       "draftSaved": "Draft saved.",
-      "unexpected": "Something went wrong."
+      "unexpected": "Something went wrong.",
+      "fieldLabels": {
+        "fullName": "Full name",
+        "stageName": "Stage name",
+        "email": "E-mail",
+        "phone": "Phone / WhatsApp",
+        "dateOfBirth": "Date of birth",
+        "country": "Country"
+      },
+      "conflictCurrent": "Current: {value}",
+      "conflictExtracted": "Extracted: {value}",
+      "emptyValue": "(empty)"
     },
     "earnings": {
       "financial": "Financial",
