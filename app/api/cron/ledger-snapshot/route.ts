@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { snapshotDueLedgerEntries } from "@/lib/ledger/snapshot";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { getTranslations } from "next-intl/server";
 
 export const dynamic = "force-dynamic";
 
@@ -10,6 +11,7 @@ export const dynamic = "force-dynamic";
 // lazily whenever the earnings card or the admin ledger is read, so a missed
 // run only delays the snapshot, it never skips one.
 export async function GET(request: NextRequest) {
+  const tRoute = await getTranslations("errors.cron");
   const secret = process.env.CRON_SECRET;
 
   // Vercel sends `Authorization: Bearer $CRON_SECRET`. Without a configured
@@ -18,13 +20,13 @@ export async function GET(request: NextRequest) {
     console.error("CRON_SECRET não configurado — cron de descontos bloqueado.");
 
     return NextResponse.json(
-      { error: "Cron não configurado." },
+      { error: tRoute("notConfigured") },
       { status: 503 },
     );
   }
 
   if (request.headers.get("authorization") !== `Bearer ${secret}`) {
-    return NextResponse.json({ error: "Não autorizado." }, { status: 401 });
+    return NextResponse.json({ error: tRoute("unauthorized") }, { status: 401 });
   }
 
   const result = await snapshotDueLedgerEntries(createAdminClient());

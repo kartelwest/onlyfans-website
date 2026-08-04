@@ -8,6 +8,7 @@ import type { ContentType, Platform } from "@/types/brand";
 export const dynamic = "force-dynamic";
 
 export async function POST(request: Request) {
+  const tRoute = await getTranslations("errors.brand");
   const t = await getTranslations("errors.api");
   const supabase = await createClient();
   const { data: userData } = await supabase.auth.getUser();
@@ -34,7 +35,7 @@ export async function POST(request: Request) {
 
     const { talent, brandProfile, error } = await getTalentWithBrandProfile(talentId);
     if (error || !talent || !brandProfile) {
-      return Response.json({ error: error ?? "Cliente não encontrado." }, { status: 404 });
+      return Response.json({ error: error ?? tRoute("clientNotFound") }, { status: 404 });
     }
 
     const generated = await generateContent({
@@ -71,7 +72,7 @@ export async function POST(request: Request) {
 
     return Response.json(generated, { status: 200 });
   } catch (err) {
-    const message = err instanceof Error ? err.message : "Erro inesperado.";
+    const message = err instanceof Error ? err.message : tRoute("unexpected");
     return Response.json({ error: message }, { status: 500 });
   }
 }

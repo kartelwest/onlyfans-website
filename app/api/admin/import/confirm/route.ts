@@ -26,6 +26,7 @@ type ConfirmBody = {
 
 export async function POST(request: Request) {
   const t = await getTranslations("errors.api");
+  const tRoute = await getTranslations("errors.importConfirm");
   try {
     const supabase = await createClient();
 
@@ -81,7 +82,7 @@ export async function POST(request: Request) {
           index,
           ok: false,
           display_name: "(sem nome)",
-          error: "Nome completo é obrigatório.",
+          error: tRoute("fullNameRequired"),
         });
         continue;
       }

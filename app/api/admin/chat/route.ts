@@ -31,6 +31,7 @@ type ChatBody = {
 };
 
 export async function POST(request: Request) {
+  const tRoute = await getTranslations("errors.chat");
   const t = await getTranslations("errors.api");
   try {
     const supabase = await createClient();
@@ -128,7 +129,7 @@ export async function POST(request: Request) {
     }
 
     return NextResponse.json({
-      reply: finalText || "Ação concluída.",
+      reply: finalText || tRoute("actionCompleted"),
       actions: actionsTaken,
       messages,
     });

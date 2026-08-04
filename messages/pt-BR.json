@@ -1177,7 +1177,8 @@
       "invalidData": "Dados inválidos.",
       "invalidOrInactiveProfile": "Perfil inválido ou inativo.",
       "unknownUser": "Usuário",
-      "internalError": "Erro interno do servidor."
+      "internalError": "Erro interno do servidor.",
+      "inactiveRepresentative": "Representante inativo."
     },
     "monthlyEarnings": {
       "loadFailed": "Não foi possível carregar os ganhos mensais.",
@@ -1333,6 +1334,46 @@
       "modelNotFound": "A modelo solicitada não foi encontrada.",
       "noModelAccess": "Você não tem acesso a esta modelo.",
       "unknownUser": "Usuário"
+    },
+    "parseClaude": {
+      "noPermission": "Você não tem permissão para usar esta funcionalidade.",
+      "notConfigured": "Integração com Claude não configurada.",
+      "parseFailed": "Não foi possível analisar o texto."
+    },
+    "drafts": {
+      "noPermission": "Você não tem permissão para criar rascunhos.",
+      "notFound": "Rascunho não encontrado.",
+      "updateFailed": "Não foi possível atualizar o rascunho."
+    },
+    "representativesApi": {
+      "listFailed": "Não foi possível carregar a lista de representantes."
+    },
+    "importerSettings": {
+      "ownerOnly": "Apenas o proprietário pode alterar esta configuração."
+    },
+    "importConfirm": {
+      "fullNameRequired": "Nome completo é obrigatório."
+    },
+    "applyApi": {
+      "requiredFields": "Preencha todos os campos obrigatórios.",
+      "ageConfirmationRequired": "É necessário confirmar que você tem pelo menos 18 anos.",
+      "mustBeAdult": "É necessário ter pelo menos 18 anos para se candidatar.",
+      "insertUnknownStatus": "Não foi possível registrar a candidatura: o status inicial da candidata não é reconhecido pelo banco de dados. Contate o suporte.",
+      "insertDuplicate": "Já existe uma candidatura registrada com esse identificador. Entre em contato com o suporte.",
+      "insertMissingFields": "Não foi possível registrar a candidatura: faltam informações obrigatórias.",
+      "insertFailed": "Não foi possível registrar a candidatura. Tente novamente em instantes ou entre em contato com o suporte.",
+      "unexpected": "Ocorreu um erro inesperado ao enviar a candidatura."
+    },
+    "cron": {
+      "notConfigured": "Cron não configurado.",
+      "unauthorized": "Não autorizado."
+    },
+    "brand": {
+      "clientNotFound": "Cliente não encontrado.",
+      "unexpected": "Erro inesperado."
+    },
+    "chat": {
+      "actionCompleted": "Ação concluída."
     }
   },
   "validation": {},

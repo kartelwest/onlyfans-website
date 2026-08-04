@@ -56,6 +56,7 @@ export async function GET() {
 }
 
 export async function PATCH(request: Request) {
+  const tRoute = await getTranslations("errors.importerSettings");
   const supabase = await createClient();
   const check = await requireStaffProfile(supabase);
 
@@ -65,7 +66,7 @@ export async function PATCH(request: Request) {
 
   if (check.role !== "owner") {
     return NextResponse.json(
-      { error: "Apenas o proprietário pode alterar esta configuração." },
+      { error: tRoute("ownerOnly") },
       { status: 403 },
     );
   }

@@ -21,6 +21,7 @@ type CurrentForm = {
 
 export async function POST(request: Request) {
   const t = await getTranslations("errors.api");
+  const tRoute = await getTranslations("errors.parseClaude");
   try {
     const supabase = await createClient();
 
@@ -49,7 +50,7 @@ export async function POST(request: Request) {
       (profile.role !== "owner" && profile.role !== "administrator")
     ) {
       return NextResponse.json(
-        { error: "Você não tem permissão para usar esta funcionalidade." },
+        { error: tRoute("noPermission") },
         { status: 403 },
       );
     }
@@ -113,13 +114,13 @@ export async function POST(request: Request) {
       message.includes("not configured")
     ) {
       return NextResponse.json(
-        { error: "Integração com Claude não configurada." },
+        { error: tRoute("notConfigured") },
         { status: 500 },
       );
     }
 
     return NextResponse.json(
-      { error: "Não foi possível analisar o texto." },
+      { error: tRoute("parseFailed") },
       { status: 500 },
     );
   }

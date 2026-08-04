@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { createAdminClient } from "@/lib/supabase/admin";
+import { getTranslations } from "next-intl/server";
 
 export const dynamic = "force-dynamic";
 
@@ -11,6 +12,7 @@ type PublicRepresentative = {
 };
 
 export async function GET() {
+  const tRoute = await getTranslations("errors.representativesApi");
   try {
     const supabase = createAdminClient();
 
@@ -29,7 +31,7 @@ export async function GET() {
       console.error("Erro ao carregar representantes públicos:", error);
 
       return NextResponse.json(
-        { error: "Não foi possível carregar a lista de representantes." },
+        { error: tRoute("listFailed") },
         { status: 500 },
       );
     }

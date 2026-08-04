@@ -32,6 +32,7 @@ type DraftRequest = {
 
 export async function POST(request: Request) {
   const t = await getTranslations("errors.api");
+  const tRoute = await getTranslations("errors.drafts");
   let createdModelId: string | null = null;
   let isNewDraft = false;
 
@@ -63,7 +64,7 @@ export async function POST(request: Request) {
       (profile.role !== "owner" && profile.role !== "administrator")
     ) {
       return NextResponse.json(
-        { error: "Você não tem permissão para criar rascunhos." },
+        { error: tRoute("noPermission") },
         { status: 403 },
       );
     }
@@ -107,7 +108,7 @@ export async function POST(request: Request) {
 
       if (error || !data) {
         return NextResponse.json(
-          { error: "Rascunho não encontrado." },
+          { error: tRoute("notFound") },
           { status: 404 },
         );
       }
@@ -148,7 +149,7 @@ export async function POST(request: Request) {
 
       if (error || !data) {
         return NextResponse.json(
-          { error: "Não foi possível atualizar o rascunho." },
+          { error: tRoute("updateFailed") },
           { status: 500 },
         );
       }

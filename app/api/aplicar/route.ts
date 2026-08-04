@@ -8,6 +8,7 @@ import {
 } from "@/lib/models/createModelSlug";
 import { createApplicationNotes } from "@/lib/models/applicantIntake";
 import { logAuditEntry } from "@/lib/audit/auditLogger";
+import { getTranslations } from "next-intl/server";
 
 export const dynamic = "force-dynamic";
 
@@ -38,6 +39,7 @@ type ApplyBody = {
 const NOTE_AUTHOR_NAME = "Formulário de candidatura (site)";
 
 export async function POST(request: Request) {
+  const tRoute = await getTranslations("errors.applyApi");
   try {
     const body = (await request.json()) as ApplyBody;
 
@@ -74,7 +76,7 @@ export async function POST(request: Request) {
       !motivoCandidatura
     ) {
       return NextResponse.json(
-        { error: "Preencha todos os campos obrigatórios." },
+        { error: tRoute("requiredFields") },
         { status: 400 },
       );
     }
@@ -83,7 +85,7 @@ export async function POST(request: Request) {
       return NextResponse.json(
         {
           error:
-            "É necessário confirmar que você tem pelo menos 18 anos.",
+            tRoute("ageConfirmationRequired"),
         },
         { status: 400 },
       );
@@ -92,7 +94,7 @@ export async function POST(request: Request) {
     if (!isAtLeast18(dataNascimento)) {
       return NextResponse.json(
         {
-          error: "É necessário ter pelo menos 18 anos para se candidatar.",
+          error: tRoute("mustBeAdult"),
         },
         { status: 400 },
       );
@@ -160,7 +162,7 @@ export async function POST(request: Request) {
       );
 
       return NextResponse.json(
-        { error: getApplicantInsertErrorMessage(createModelError) },
+        { error: getApplicantInsertErrorMessage(createModelError, tRoute) },
         { status: 500 },
       );
     }
@@ -210,7 +212,7 @@ export async function POST(request: Request) {
     console.error("Erro inesperado ao processar candidatura:", error);
 
     return NextResponse.json(
-      { error: "Ocorreu um erro inesperado ao enviar a candidatura." },
+      { error: tRoute("unexpected") },
       { status: 500 },
     );
   }
@@ -218,16 +220,17 @@ export async function POST(request: Request) {
 
 function getApplicantInsertErrorMessage(
   error: PostgrestError | null,
+  t: (key: string) => string,
 ): string {
   switch (error?.code) {
     case "22P02":
-      return "Não foi possível registrar a candidatura: o status inicial da candidata não é reconhecido pelo banco de dados. Contate o suporte.";
+      return t("insertUnknownStatus");
     case "23505":
-      return "Já existe uma candidatura registrada com esse identificador. Entre em contato com o suporte.";
+      return t("insertDuplicate");
     case "23502":
-      return "Não foi possível registrar a candidatura: faltam informações obrigatórias.";
+      return t("insertMissingFields");
     default:
-      return "Não foi possível registrar a candidatura. Tente novamente em instantes ou entre em contato com o suporte.";
+      return t("insertFailed");
   }
 }
 

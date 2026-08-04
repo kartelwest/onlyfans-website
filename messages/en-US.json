@@ -1177,7 +1177,8 @@
       "invalidData": "Invalid data.",
       "invalidOrInactiveProfile": "Invalid or inactive profile.",
       "unknownUser": "User",
-      "internalError": "Internal server error."
+      "internalError": "Internal server error.",
+      "inactiveRepresentative": "Inactive representative."
     },
     "monthlyEarnings": {
       "loadFailed": "We couldn't load the monthly earnings.",
@@ -1333,6 +1334,46 @@
       "modelNotFound": "The requested model was not found.",
       "noModelAccess": "You do not have access to this model.",
       "unknownUser": "User"
+    },
+    "parseClaude": {
+      "noPermission": "You do not have permission to use this feature.",
+      "notConfigured": "The Claude integration is not configured.",
+      "parseFailed": "Could not parse the text."
+    },
+    "drafts": {
+      "noPermission": "You do not have permission to create drafts.",
+      "notFound": "Draft not found.",
+      "updateFailed": "Could not update the draft."
+    },
+    "representativesApi": {
+      "listFailed": "Could not load the list of representatives."
+    },
+    "importerSettings": {
+      "ownerOnly": "Only the owner can change this setting."
+    },
+    "importConfirm": {
+      "fullNameRequired": "Full name is required."
+    },
+    "applyApi": {
+      "requiredFields": "Fill in every required field.",
+      "ageConfirmationRequired": "You must confirm that you are at least 18 years old.",
+      "mustBeAdult": "You must be at least 18 years old to apply.",
+      "insertUnknownStatus": "Could not record the application: the database does not recognise the applicant's initial status. Please contact support.",
+      "insertDuplicate": "An application with this identifier already exists. Please contact support.",
+      "insertMissingFields": "Could not record the application: required information is missing.",
+      "insertFailed": "Could not record the application. Try again in a moment or contact support.",
+      "unexpected": "Something went wrong while sending the application."
+    },
+    "cron": {
+      "notConfigured": "Cron is not configured.",
+      "unauthorized": "Not authorised."
+    },
+    "brand": {
+      "clientNotFound": "Client not found.",
+      "unexpected": "Unexpected error."
+    },
+    "chat": {
+      "actionCompleted": "Done."
     }
   },
   "validation": {},
