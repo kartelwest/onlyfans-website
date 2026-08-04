@@ -1462,7 +1462,7 @@ async function getAuthenticatedProfile(): Promise<
                 NextResponse.json(
                     {
                         error:
-                            "Representante inativo.",
+                            t("inactiveRepresentative"),
                     },
                     {
                         status: 403,

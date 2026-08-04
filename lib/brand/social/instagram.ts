@@ -109,14 +109,17 @@ export function nextAccountStatusAfterVerification(
   }
 }
 
-export function accountStatusWarning(status: BrandAccountStatus): string | null {
+/** A key under `errors.instagram`, or null when the account is fine. */
+export function accountStatusWarningKey(
+  status: BrandAccountStatus,
+): string | null {
   switch (status) {
     case "authorization_expired":
-      return "A autorização do Instagram expirou. Reconecte a conta.";
+      return "authorizationExpired";
     case "restricted":
-      return "A conta foi restrita. Reveja antes de publicar.";
+      return "restricted";
     case "suspended":
-      return "A conta está suspensa. Não publique até a recuperação.";
+      return "suspended";
     default:
       return null;
   }

@@ -4,6 +4,20 @@ import type { LedgerEntryType, LedgerProvider } from "@/types/ledger";
 
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 
+/**
+ * Validation failures are reported as catalogue keys under `validation.ledger`.
+ * This module runs on the server and in the browser, and the wording belongs to
+ * whoever renders it — not to the rule that failed.
+ */
+export const LEDGER_VALIDATION_KEYS = {
+  invalidType: "validation.ledger.invalidType",
+  amountRequired: "validation.ledger.amountRequired",
+  incurredOnRequired: "validation.ledger.incurredOnRequired",
+  invalidDeductDate: "validation.ledger.invalidDeductDate",
+  providerRequired: "validation.ledger.providerRequired",
+  hotelNameRequired: "validation.ledger.hotelNameRequired",
+} as const;
+
 export function isIsoDate(value: unknown): value is string {
   return typeof value === "string" && DATE_PATTERN.test(value);
 }
@@ -29,7 +43,7 @@ export type ValidatedLedgerEntry = {
 
 export type LedgerValidation =
   | { ok: true; value: ValidatedLedgerEntry }
-  | { ok: false; error: string };
+  | { ok: false; errorKey: string };
 
 /**
  * Validates a create or edit payload. On edit the type is fixed by the stored
@@ -43,17 +57,17 @@ export function validateLedgerPayload(
   const entryType = currentType ?? body.entryType;
 
   if (!isLedgerEntryType(entryType)) {
-    return { ok: false, error: "Tipo de lançamento inválido." };
+    return { ok: false, errorKey: LEDGER_VALIDATION_KEYS.invalidType };
   }
 
   const amountBrl = Number(body.amountBrl);
 
   if (!Number.isFinite(amountBrl) || amountBrl <= 0) {
-    return { ok: false, error: "Informe um valor maior que zero." };
+    return { ok: false, errorKey: LEDGER_VALIDATION_KEYS.amountRequired };
   }
 
   if (!isIsoDate(body.incurredOn)) {
-    return { ok: false, error: "Informe a data em que o gasto ocorreu." };
+    return { ok: false, errorKey: LEDGER_VALIDATION_KEYS.incurredOnRequired };
   }
 
   const rawDeductOn =
@@ -62,7 +76,7 @@ export function validateLedgerPayload(
       : null;
 
   if (rawDeductOn !== null && !isIsoDate(rawDeductOn)) {
-    return { ok: false, error: "Data de desconto inválida." };
+    return { ok: false, errorKey: LEDGER_VALIDATION_KEYS.invalidDeductDate };
   }
 
   let provider: LedgerProvider | null = null;
@@ -70,7 +84,7 @@ export function validateLedgerPayload(
 
   if (entryType === "transporte") {
     if (!isLedgerProvider(body.provider)) {
-      return { ok: false, error: "Selecione o aplicativo de transporte." };
+      return { ok: false, errorKey: LEDGER_VALIDATION_KEYS.providerRequired };
     }
 
     provider = body.provider;
@@ -80,7 +94,7 @@ export function validateLedgerPayload(
     hotelName = typeof body.hotelName === "string" ? body.hotelName.trim() : "";
 
     if (!hotelName) {
-      return { ok: false, error: "Informe o nome do hotel." };
+      return { ok: false, errorKey: LEDGER_VALIDATION_KEYS.hotelNameRequired };
     }
   }
 

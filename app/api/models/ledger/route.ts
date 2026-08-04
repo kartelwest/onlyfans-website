@@ -83,6 +83,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   const t = await getTranslations("errors.api");
+  const tAll = await getTranslations();
   const tRoute = await getTranslations("errors.ledger");
   const auth = await authenticate();
 
@@ -124,7 +125,7 @@ export async function POST(request: NextRequest) {
   const validation = validateLedgerPayload(body);
 
   if (!validation.ok) {
-    return NextResponse.json({ error: validation.error }, { status: 400 });
+    return NextResponse.json({ error: tAll(validation.errorKey) }, { status: 400 });
   }
 
   const entry = validation.value;

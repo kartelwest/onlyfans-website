@@ -35,6 +35,7 @@ type PatchBody = LedgerWriteBody & {
 };
 
 export async function PATCH(request: NextRequest, context: RouteContext) {
+  const tAll = await getTranslations();
   const tRoute = await getTranslations("errors.ledger");
   const { entryId } = await context.params;
 
@@ -111,7 +112,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
     );
 
     if (!validation.ok) {
-      return NextResponse.json({ error: validation.error }, { status: 400 });
+      return NextResponse.json({ error: tAll(validation.errorKey) }, { status: 400 });
     }
 
     const entry = validation.value;

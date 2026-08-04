@@ -12,6 +12,7 @@ import { toLocale } from "@/lib/i18n/config";
 import {
   AVATAR_ACCEPT_ATTRIBUTE,
   uploadModelAvatar,
+  AVATAR_UPLOAD_FAILED,
   validateAvatarFile,
 } from "@/lib/models/avatarUpload";
 import { BRL, USD } from "@/lib/money/currency";
@@ -209,6 +210,7 @@ function Avatar({
   onAvatarUpdated: (url: string) => void;
 }) {
   const t = useTranslations("dashboard.model");
+  const tAvatar = useTranslations("admin.avatar");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -232,7 +234,7 @@ function Avatar({
     const validation = validateAvatarFile(file);
 
     if (!validation.ok) {
-      setError(validation.message);
+      setError(tAvatar(`errors.${validation.messageKey}`));
       return;
     }
 
@@ -252,7 +254,8 @@ function Avatar({
     } catch (uploadError) {
       setPreview(null);
       setError(
-        uploadError instanceof Error
+        uploadError instanceof Error &&
+          uploadError.message !== AVATAR_UPLOAD_FAILED
           ? uploadError.message
           : t("avatarUploadFailed"),
       );

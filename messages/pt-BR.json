@@ -1405,7 +1405,8 @@
       "nothingToSave": "Nenhuma candidata para salvar.",
       "saveFailed": "Erro ao salvar.",
       "unexpectedSave": "Erro inesperado ao salvar.",
-      "unexpectedSaveAll": "Erro inesperado ao salvar as candidatas."
+      "unexpectedSaveAll": "Erro inesperado ao salvar as candidatas.",
+      "unnamed": "(sem nome)"
     },
     "applyApi": {
       "requiredFields": "Preencha todos os campos obrigatórios.",
@@ -1459,9 +1460,23 @@
       "talentPrepFailed": "Não foi possível preparar o talento da modelo.",
       "clientNotFound": "Cliente não encontrado.",
       "talentNotIdentified": "Não foi possível identificar o talento."
+    },
+    "instagram": {
+      "authorizationExpired": "A autorização do Instagram expirou. Reconecte a conta.",
+      "restricted": "A conta foi restrita. Reveja antes de publicar.",
+      "suspended": "A conta está suspensa. Não publique até a recuperação."
     }
   },
-  "validation": {},
+  "validation": {
+    "ledger": {
+      "invalidType": "Tipo de lançamento inválido.",
+      "amountRequired": "Informe um valor maior que zero.",
+      "incurredOnRequired": "Informe a data em que o gasto ocorreu.",
+      "invalidDeductDate": "Data de desconto inválida.",
+      "providerRequired": "Selecione o aplicativo de transporte.",
+      "hotelNameRequired": "Informe o nome do hotel."
+    }
+  },
   "admin": {
     "nav": {
       "ariaLabel": "Navegação do portal",
@@ -1519,7 +1534,11 @@
       "photoOf": "Foto de {name}",
       "uploadingPercent": "Enviando... {percent}%",
       "replace": "Trocar foto",
-      "upload": "Carregar foto"
+      "upload": "Carregar foto",
+      "errors": {
+        "fileTypeNotAllowed": "Tipo de arquivo não permitido. Use JPG, PNG ou WebP.",
+        "fileTooLarge": "Arquivo muito grande. O máximo é 5 MB."
+      }
     },
     "representatives": {
       "delete": {

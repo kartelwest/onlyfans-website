@@ -54,17 +54,17 @@ test("accepts the three supported image types", () => {
   }
 });
 
-test("rejects other types and oversized files, in Portuguese", () => {
+test("rejects other types and oversized files, naming the reason", () => {
   const wrongType = validateAvatarFile(fakeFile("application/pdf", 1024));
   assert.equal(wrongType.ok, false);
-  assert.match(
-    wrongType.ok === false ? wrongType.message : "",
-    /JPG, PNG ou WebP/,
+  assert.equal(
+    wrongType.ok === false ? wrongType.messageKey : "",
+    "fileTypeNotAllowed",
   );
 
   const tooBig = validateAvatarFile(
     fakeFile("image/jpeg", 5 * 1024 * 1024 + 1),
   );
   assert.equal(tooBig.ok, false);
-  assert.match(tooBig.ok === false ? tooBig.message : "", /5 MB/);
+  assert.equal(tooBig.ok === false ? tooBig.messageKey : "", "fileTooLarge");
 });

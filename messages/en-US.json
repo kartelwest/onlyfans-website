@@ -1405,7 +1405,8 @@
       "nothingToSave": "No applicants to save.",
       "saveFailed": "Could not save.",
       "unexpectedSave": "Something went wrong while saving.",
-      "unexpectedSaveAll": "Something went wrong while saving the applicants."
+      "unexpectedSaveAll": "Something went wrong while saving the applicants.",
+      "unnamed": "(no name)"
     },
     "applyApi": {
       "requiredFields": "Fill in every required field.",
@@ -1459,9 +1460,23 @@
       "talentPrepFailed": "Could not prepare the model's talent record.",
       "clientNotFound": "Client not found.",
       "talentNotIdentified": "Could not identify the talent."
+    },
+    "instagram": {
+      "authorizationExpired": "The Instagram authorisation has expired. Reconnect the account.",
+      "restricted": "The account has been restricted. Review it before publishing.",
+      "suspended": "The account is suspended. Do not publish until it is restored."
     }
   },
-  "validation": {},
+  "validation": {
+    "ledger": {
+      "invalidType": "Invalid entry type.",
+      "amountRequired": "Enter an amount greater than zero.",
+      "incurredOnRequired": "Enter the date the expense happened.",
+      "invalidDeductDate": "Invalid deduction date.",
+      "providerRequired": "Select the ride-hailing app.",
+      "hotelNameRequired": "Enter the hotel name."
+    }
+  },
   "admin": {
     "nav": {
       "ariaLabel": "Portal navigation",
@@ -1519,7 +1534,11 @@
       "photoOf": "Photo of {name}",
       "uploadingPercent": "Uploading... {percent}%",
       "replace": "Replace photo",
-      "upload": "Upload photo"
+      "upload": "Upload photo",
+      "errors": {
+        "fileTypeNotAllowed": "File type not allowed. Use JPG, PNG or WebP.",
+        "fileTooLarge": "File is too large. 5 MB maximum."
+      }
     },
     "representatives": {
       "delete": {

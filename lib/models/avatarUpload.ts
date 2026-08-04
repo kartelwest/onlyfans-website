@@ -28,7 +28,8 @@ export const AVATAR_ACCEPT_ATTRIBUTE =
 
 export type AvatarValidationResult =
   | { ok: true }
-  | { ok: false; message: string };
+  /** A key under `admin.avatar.errors` — the wording is UI copy, this is not. */
+  | { ok: false; messageKey: "fileTypeNotAllowed" | "fileTooLarge" };
 
 export function validateAvatarFile(file: File): AvatarValidationResult {
   if (
@@ -38,14 +39,14 @@ export function validateAvatarFile(file: File): AvatarValidationResult {
   ) {
     return {
       ok: false,
-      message: "Tipo de arquivo não permitido. Use JPG, PNG ou WebP.",
+      messageKey: "fileTypeNotAllowed",
     };
   }
 
   if (file.size > MAX_AVATAR_BYTES) {
     return {
       ok: false,
-      message: "Arquivo muito grande. O máximo é 5 MB.",
+      messageKey: "fileTooLarge",
     };
   }
 
@@ -66,6 +67,9 @@ type UploadArgs = {
  * the models are on phones where a 5 MB photo over mobile data is slow enough
  * that a button stuck on "Enviando..." reads as broken.
  */
+/** Rejection reason when the failure came from the transport, not the server. */
+export const AVATAR_UPLOAD_FAILED = "avatar-upload-failed";
+
 export function uploadModelAvatar({
   modelId,
   file,
@@ -89,7 +93,7 @@ export function uploadModelAvatar({
     };
 
     request.onerror = () => {
-      reject(new Error("Não foi possível enviar a foto."));
+      reject(new Error(AVATAR_UPLOAD_FAILED));
     };
 
     request.onload = () => {
@@ -98,19 +102,19 @@ export function uploadModelAvatar({
       try {
         payload = JSON.parse(request.responseText);
       } catch {
-        reject(new Error("Não foi possível enviar a foto."));
+        reject(new Error(AVATAR_UPLOAD_FAILED));
         return;
       }
 
       if (request.status < 200 || request.status >= 300) {
         reject(
-          new Error(payload.error || "Não foi possível enviar a foto."),
+          new Error(payload.error || AVATAR_UPLOAD_FAILED),
         );
         return;
       }
 
       if (!payload.profilePhotoUrl) {
-        reject(new Error("Não foi possível enviar a foto."));
+        reject(new Error(AVATAR_UPLOAD_FAILED));
         return;
       }
 

@@ -81,7 +81,7 @@ export async function POST(request: Request) {
         results.push({
           index,
           ok: false,
-          display_name: "(sem nome)",
+          display_name: tRoute("unnamed"),
           error: tRoute("fullNameRequired"),
         });
         continue;

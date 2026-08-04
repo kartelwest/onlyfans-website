@@ -6,6 +6,7 @@ import { ChangeEvent, useRef, useState } from "react";
 import {
   AVATAR_ACCEPT_ATTRIBUTE,
   uploadModelAvatar,
+  AVATAR_UPLOAD_FAILED,
   validateAvatarFile,
 } from "@/lib/models/avatarUpload";
 
@@ -51,7 +52,7 @@ export default function ModelAvatarEditor({
     const validation = validateAvatarFile(file);
 
     if (!validation.ok) {
-      setError(validation.message);
+      setError(t(`errors.${validation.messageKey}`));
       return;
     }
 
@@ -74,7 +75,8 @@ export default function ModelAvatarEditor({
     } catch (uploadError) {
       setPreview(null);
       setError(
-        uploadError instanceof Error
+        uploadError instanceof Error &&
+          uploadError.message !== AVATAR_UPLOAD_FAILED
           ? uploadError.message
           : t("uploadFailed"),
       );
