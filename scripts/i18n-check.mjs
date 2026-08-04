@@ -25,12 +25,24 @@ import { fileURLToPath } from "node:url";
 
 const MESSAGES_DIR = join(dirname(fileURLToPath(import.meta.url)), "..", "messages");
 
-/** Depth-first walk producing "a.b.c" paths for every leaf string. */
+/**
+ * Depth-first walk producing "a.b.c" paths for every leaf string.
+ *
+ * Arrays are walked by index rather than treated as leaves, because some copy
+ * is genuinely a list — the FAQ is categories of questions of paragraphs, read
+ * with `t.raw`. Indexing them means a paragraph present in one locale and
+ * missing from the other shows up as a missing key (`…answer.3`) instead of
+ * slipping through as "both sides have an array here".
+ */
 function flatten(value, prefix = "", out = new Map()) {
-  for (const [key, child] of Object.entries(value)) {
+  const entries = Array.isArray(value)
+    ? value.map((child, index) => [String(index), child])
+    : Object.entries(value);
+
+  for (const [key, child] of entries) {
     const path = prefix ? `${prefix}.${key}` : key;
 
-    if (child !== null && typeof child === "object" && !Array.isArray(child)) {
+    if (child !== null && typeof child === "object") {
       flatten(child, path, out);
     } else {
       out.set(path, child);

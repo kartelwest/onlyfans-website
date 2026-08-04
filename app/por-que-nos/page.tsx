@@ -1,102 +1,20 @@
+import type { Metadata } from "next";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
+import { getTranslations } from "next-intl/server";
 
-const supportItems = [
-  "Configuração completa da conta do OnlyFans",
-  "Desenvolvimento e posicionamento da sua marca",
-  "Estratégia e planejamento de conteúdo",
-  "Gerenciamento diário da conta",
-  "Estratégias de mensagens com fãs e vendas",
-  "Gerenciamento profissional de chats",
-  "Marketing em diversas plataformas de redes sociais",
-  "Análise de desempenho e métricas",
-  "Suporte técnico",
-  "Planejamento de crescimento a longo prazo",
-];
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("site.whyUsPage");
 
-const agencyManagementItems = [
-  "Gerenciamento completo da conta",
-  "Estratégias de negócios",
-  "Planejamento de conteúdo",
-  "Estratégias de crescimento de assinantes",
-  "Orientação diária",
-  "Suporte técnico",
-  "Relatórios e análises",
-  "Otimização do perfil",
-  "Estratégias de precificação",
-  "Estratégias de PPV",
-  "Desenvolvimento do negócio a longo prazo",
-];
+  return {
+    title: t("metaTitle"),
+    description: t("metaDescription"),
+  };
+}
 
-const marketingItems = [
-  "Divulgação das suas redes sociais",
-  "Direcionamento de tráfego qualificado para sua página",
-  "Crescimento da sua base de assinantes",
-  "Gerenciamento de campanhas promocionais",
-  "Testes de novas estratégias de marketing",
-  "Aumento da sua visibilidade em diversas plataformas",
-];
-
-const accountItems = [
-  "OnlyFans",
-  "X (Twitter)",
-  "Instagram",
-  "Reddit",
-  "TikTok",
-  "E-mail profissional",
-  "Página de links",
-  "Outras plataformas promocionais utilizadas pela agência",
-];
-
-const existingAccountItems = [
-  "Administrar profissionalmente a conta",
-  "Publicar o mesmo conteúdo postado na conta principal",
-  "Manter consistência entre as duas contas",
-  "Gerenciar as mensagens e a operação diária",
-];
-
-const chatItems = [
-  "Respostas rápidas aos assinantes",
-  "Construção de relacionamentos com os fãs",
-  "Aumento das vendas de PPV",
-  "Incentivo ao envio de gorjetas",
-  "Melhoria da retenção de assinantes",
-  "Conversas envolventes, sempre respeitando seus limites e preferências",
-];
-
-const platformItems = [
-  "X (Twitter)",
-  "Instagram",
-  "Reddit",
-  "TikTok, quando apropriado",
-  "YouTube, quando apropriado",
-  "Páginas de links e ferramentas promocionais",
-];
-
-const infrastructureItems = [
-  "Celular dedicado",
-  "Proxy residencial estático",
-  "Perfil exclusivo de navegador",
-  "Contas dedicadas de redes sociais",
-  "Procedimentos seguros de gerenciamento",
-];
-
-const growthItems = [
-  "Preço da assinatura",
-  "Desempenho dos PPVs",
-  "Estratégia de conteúdo",
-  "Conversão de assinantes",
-  "Retenção de assinantes",
-  "Engajamento dos fãs",
-  "Desempenho das campanhas de marketing",
-  "Ganhos mensais",
-];
-
-const freedomItems = [
-  "Não existe obrigação contratual de longo prazo que impeça sua saída",
-  "Removeremos todo o nosso acesso administrativo",
-  "Sua conta será encerrada conforme previsto no contrato",
-  "Todo o processo será conduzido com profissionalismo e respeito",
-];
+/** The revenue split figures are contract facts, not copy. */
+const SPLIT_SHARES = ["60%", "20%", "20%"] as const;
+const SPLIT_KEYS = ["model", "agency", "marketing"] as const;
 
 function KarayHeartIcon({ className = "h-5 w-5" }: { className?: string }) {
   return (
@@ -181,7 +99,35 @@ function CheckList({ items }: { items: string[] }) {
   );
 }
 
+/** A stack of body paragraphs read out of the catalog as a list. */
+function Paragraphs({
+  items,
+  className = "",
+  emphasise = [],
+}: {
+  items: string[];
+  className?: string;
+  emphasise?: number[];
+}) {
+  return (
+    <>
+      {items.map((text, index) => (
+        <p
+          key={text}
+          className={emphasise.includes(index) ? `font-semibold ${className}` : className}
+        >
+          {text}
+        </p>
+      ))}
+    </>
+  );
+}
+
 export default function WhyUsPage() {
+  const t = useTranslations("site.whyUsPage");
+
+  const list = (key: string) => t.raw(key) as string[];
+
   return (
     <main className="overflow-hidden bg-[#fff9f5] text-[#39272f]">
       {/* HERO */}
@@ -192,47 +138,32 @@ export default function WhyUsPage() {
         <div className="relative mx-auto max-w-[1300px]">
           <div className="max-w-5xl">
             <p className="mt-8 text-sm font-semibold uppercase tracking-[0.34em] text-[#e9a5b8]">
-              CONFIANÇA, ESTRATÉGIA E CRESCIMENTO
+              {t("hero.eyebrow")}
             </p>
 
             <h1 className="mt-6 font-serif text-5xl font-medium leading-[1.04] sm:text-6xl lg:text-7xl">
-              Por Que Escolher a Nossa Agência
+              {t("hero.title")}
             </h1>
 
             <p className="mt-8 max-w-4xl text-lg leading-8 text-white/75 md:text-xl">
               <span className="font-semibold text-[#f4c2d0]">
-                Sim, você pode bloquear o Brasil ou outro país no OnlyFans para
-                proteger sua privacidade.
+                {t("hero.highlight")}
               </span>{" "}
-              Escolher uma agência de OnlyFans é uma das decisões mais
-              importantes que você tomará. Nossa missão não é apenas administrar
-              sua conta — estamos aqui para construir sua marca, maximizar seus
-              ganhos e estabelecer uma parceria de longo prazo baseada em
-              confiança, transparência e sucesso mútuo.
+              {t("hero.body")}
             </p>
           </div>
 
           <div className="mt-16 grid gap-6 sm:grid-cols-3">
-            <div className="border-l border-[#e9a5b8]/50 pl-6">
-              <p className="font-serif text-5xl text-[#e9a5b8]">30</p>
-              <p className="mt-3 text-sm uppercase tracking-[0.14em] text-white/70">
-                Modelos ativas no máximo
-              </p>
-            </div>
-
-            <div className="border-l border-[#e9a5b8]/50 pl-6">
-              <p className="font-serif text-5xl text-[#e9a5b8]">60%</p>
-              <p className="mt-3 text-sm uppercase tracking-[0.14em] text-white/70">
-                Participação destinada à modelo
-              </p>
-            </div>
-
-            <div className="border-l border-[#e9a5b8]/50 pl-6">
-              <p className="font-serif text-5xl text-[#e9a5b8]">360°</p>
-              <p className="mt-3 text-sm uppercase tracking-[0.14em] text-white/70">
-                Gestão completa da marca
-              </p>
-            </div>
+            {(["models", "share", "management"] as const).map((key, index) => (
+              <div key={key} className="border-l border-[#e9a5b8]/50 pl-6">
+                <p className="font-serif text-5xl text-[#e9a5b8]">
+                  {["30", "60%", "360°"][index]}
+                </p>
+                <p className="mt-3 text-sm uppercase tracking-[0.14em] text-white/70">
+                  {t(`hero.stats.${key}`)}
+                </p>
+              </div>
+            ))}
           </div>
         </div>
       </section>
@@ -242,18 +173,15 @@ export default function WhyUsPage() {
           <div className="mx-auto max-w-[1300px]">
             <div className="mx-auto max-w-4xl text-center">
               <p className="text-sm font-semibold uppercase tracking-[0.3em] text-[#b85f79]">
-                Nosso compromisso
+                {t("invest.eyebrow")}
               </p>
 
               <h2 className="mt-5 font-serif text-4xl leading-[1.08] text-[#39272f] md:text-5xl lg:text-6xl">
-                Nós Investimos em Você
+                {t("invest.title")}
               </h2>
 
               <p className="mt-7 text-lg leading-8 text-[#75656c]">
-                Ao contrário de muitas agências, nós não apenas administramos sua
-                conta. Investimos dinheiro, tecnologia, infraestrutura, experiência e
-                tempo para ajudá-la a construir um negócio profissional, seguro e
-                lucrativo.
+                {t("invest.body")}
               </p>
 
               <div className="mx-auto mt-7 flex items-center justify-center gap-3 text-[#c65f7c]">
@@ -287,20 +215,12 @@ export default function WhyUsPage() {
                 </div>
 
                 <h3 className="mt-7 font-serif text-3xl text-[#39272f]">
-                  Proxy Residencial Exclusivo
+                  {t("invest.cards.proxy.title")}
                 </h3>
 
-                <p className="mt-5 leading-8 text-[#75656c]">
-                  Investimos em um proxy residencial estático exclusivo para cada
-                  modelo. Ele fornece uma conexão digital estável e consistente para a
-                  administração da conta.
-                </p>
-
-                <p className="mt-4 leading-8 text-[#75656c]">
-                  Isso reduz os riscos causados por acessos realizados de diferentes
-                  países, endereços de internet e dispositivos, ajudando a proteger a
-                  conta e tornando a gestão muito mais segura e organizada.
-                </p>
+                <div className="mt-5 space-y-4 leading-8 text-[#75656c]">
+                  <Paragraphs items={list("invest.cards.proxy.paragraphs")} />
+                </div>
               </article>
 
               {/* NAVEGADOR */}
@@ -322,20 +242,12 @@ export default function WhyUsPage() {
                 </div>
 
                 <h3 className="mt-7 font-serif text-3xl text-[#39272f]">
-                  Perfil Exclusivo de Navegador
+                  {t("invest.cards.browser.title")}
                 </h3>
 
-                <p className="mt-5 leading-8 text-[#75656c]">
-                  Cada modelo recebe um ambiente de navegador separado e exclusivo,
-                  criado para manter as contas organizadas e evitar conflitos entre
-                  diferentes perfis.
-                </p>
-
-                <p className="mt-4 leading-8 text-[#75656c]">
-                  Essa separação reduz erros operacionais, melhora a segurança e permite
-                  que nossa equipe administre cada marca dentro de uma infraestrutura
-                  própria.
-                </p>
+                <div className="mt-5 space-y-4 leading-8 text-[#75656c]">
+                  <Paragraphs items={list("invest.cards.browser.paragraphs")} />
+                </div>
               </article>
 
               {/* MARKETING */}
@@ -356,20 +268,12 @@ export default function WhyUsPage() {
                 </div>
 
                 <h3 className="mt-7 font-serif text-3xl text-[#39272f]">
-                  Ferramentas Profissionais de Marketing
+                  {t("invest.cards.marketing.title")}
                 </h3>
 
-                <p className="mt-5 leading-8 text-[#75656c]">
-                  Investimos em plataformas e ferramentas profissionais para
-                  planejamento de conteúdo, análise de desempenho, crescimento da
-                  audiência e otimização das campanhas de divulgação.
-                </p>
-
-                <p className="mt-4 leading-8 text-[#75656c]">
-                  Essas ferramentas nos ajudam a identificar o que está funcionando,
-                  testar novas estratégias e direcionar nossos recursos para as ações
-                  que produzem os melhores resultados.
-                </p>
+                <div className="mt-5 space-y-4 leading-8 text-[#75656c]">
+                  <Paragraphs items={list("invest.cards.marketing.paragraphs")} />
+                </div>
               </article>
 
               {/* GESTÃO */}
@@ -390,20 +294,12 @@ export default function WhyUsPage() {
                 </div>
 
                 <h3 className="mt-7 font-serif text-3xl text-[#39272f]">
-                  Ferramentas de Gestão e Análise
+                  {t("invest.cards.analytics.title")}
                 </h3>
 
-                <p className="mt-5 leading-8 text-[#75656c]">
-                  Utilizamos sistemas para organizar conteúdo, acompanhar métricas,
-                  controlar estratégias de vendas e monitorar continuamente o
-                  crescimento da conta.
-                </p>
-
-                <p className="mt-4 leading-8 text-[#75656c]">
-                  Sua página nunca fica no piloto automático. Os resultados são
-                  analisados para que possamos adaptar preços, PPVs, conteúdo,
-                  campanhas e estratégias de retenção.
-                </p>
+                <div className="mt-5 space-y-4 leading-8 text-[#75656c]">
+                  <Paragraphs items={list("invest.cards.analytics.paragraphs")} />
+                </div>
               </article>
             </div>
 
@@ -411,21 +307,20 @@ export default function WhyUsPage() {
               <div className="grid gap-10 lg:grid-cols-[0.7fr_1.3fr]">
                 <div>
                   <p className="text-sm font-semibold uppercase tracking-[0.28em] text-[#e9a5b8]">
-                    Investimento completo
+                    {t("invest.banner.eyebrow")}
                   </p>
 
                   <h3 className="mt-5 font-serif text-3xl leading-tight md:text-4xl">
-                    Nosso investimento vai muito além da tecnologia.
+                    {t("invest.banner.title")}
                   </h3>
 
                   <p className="mt-6 leading-8 text-white/70">
-                    Também investimos diariamente na construção, posicionamento,
-                    administração e expansão da sua marca.
+                    {t("invest.banner.body")}
                   </p>
                 </div>
 
                 <ul className="grid gap-4 sm:grid-cols-2">
-                  {supportItems.map((item) => (
+                  {list("invest.supportItems").map((item) => (
                     <li
                       key={item}
                       className="flex items-start gap-4 rounded-2xl border border-white/10 bg-white/5 p-5"
@@ -443,8 +338,7 @@ export default function WhyUsPage() {
 
             <div className="mt-10 rounded-2xl bg-[#f4e5e8] p-7 text-center md:p-9">
               <p className="mx-auto max-w-4xl font-serif text-2xl leading-9 text-[#8f425a]">
-                Todos esses investimentos são realizados pela agência sem custo
-                adicional para a modelo durante nossa parceria.
+                {t("invest.footnote")}
               </p>
             </div>
           </div>
@@ -454,38 +348,21 @@ export default function WhyUsPage() {
         <section className="bg-[#f4e5e8] px-6 py-24 lg:px-12 lg:py-32">
           <div className="mx-auto grid max-w-[1300px] gap-14 lg:grid-cols-2">
             <SectionHeading
-              eyebrow="Relacionamentos duradouros"
-              title="Tratamos Nossas Modelos Como Família"
+              eyebrow={t("family.eyebrow")}
+              title={t("family.title")}
             />
 
             <div className="space-y-6 text-lg leading-8 text-[#66565d]">
-              <p>
-                Ao entrar para nossa agência, você se torna muito mais do que uma
-                cliente — você passa a fazer parte da nossa família.
-              </p>
-
-              <p>
-                Acreditamos que os negócios mais fortes são construídos com
-                confiança, honestidade, lealdade, comunicação e respeito mútuo.
-              </p>
-
-              <p>
-                Celebramos suas conquistas, ajudamos você a superar desafios e
-                estamos comprometidos com o seu crescimento a longo prazo.
-              </p>
-
-              <p>
-                Nosso objetivo é construir relacionamentos duradouros, e não apenas
-                administrar contas.
-              </p>
+              {list("family.paragraphs").map((text) => (
+                <p key={text}>{text}</p>
+              ))}
 
               <p className="font-semibold text-[#39272f]">
-                Quando uma de nossas modelos tem sucesso, toda a nossa equipe
-                também tem.
+                {t("family.emphasis")}
               </p>
 
               <p className="font-semibold text-[#b85f79]">
-                Estamos ao seu lado em cada etapa da sua jornada.
+                {t("family.closing")}
               </p>
             </div>
           </div>
@@ -495,80 +372,43 @@ export default function WhyUsPage() {
         <section className="px-6 py-24 lg:px-12 lg:py-32">
           <div className="mx-auto max-w-[1300px]">
             <SectionHeading
-              eyebrow="Qualidade acima de quantidade"
-              title="Limitamos Nossa Agência a Apenas 30 Modelos"
-              description="Diferentemente de outras agências que continuam contratando centenas de criadoras, acreditamos que uma equipe menor produz resultados muito melhores."
+              eyebrow={t("thirty.eyebrow")}
+              title={t("thirty.title")}
+              description={t("thirty.description")}
               centered
             />
 
             <div className="mt-16 grid gap-7 lg:grid-cols-2">
-              <article className="rounded-[2rem] border border-[#ead8df] bg-white p-8 md:p-10">
-                <p className="text-sm font-semibold uppercase tracking-[0.28em] text-[#b85f79]">
-                  Motivo 01
-                </p>
-
-                <h3 className="mt-5 font-serif text-3xl">
-                  Queremos Que Todas as Nossas Modelos Tenham Sucesso
-                </h3>
-
-                <div className="mt-7 space-y-5 leading-8 text-[#75656c]">
-                  <p>Nosso objetivo não é ser a maior agência.</p>
-
-                  <p className="font-semibold text-[#39272f]">
-                    Nosso objetivo é ser uma das melhores.
+              {(["one", "two"] as const).map((key) => (
+                <article
+                  key={key}
+                  className="rounded-[2rem] border border-[#ead8df] bg-white p-8 md:p-10"
+                >
+                  <p className="text-sm font-semibold uppercase tracking-[0.28em] text-[#b85f79]">
+                    {t(`thirty.reasons.${key}.label`)}
                   </p>
 
-                  <p>
-                    Ao limitar o número de modelos que representamos, conseguimos
-                    dedicar tempo, estratégia e recursos suficientes para ajudar
-                    cada modelo a atingir seu máximo potencial financeiro.
-                  </p>
+                  <h3 className="mt-5 font-serif text-3xl">
+                    {t(`thirty.reasons.${key}.title`)}
+                  </h3>
 
-                  <p>
-                    Queremos ajudá-la a construir um negócio lucrativo e duradouro.
-                  </p>
-                </div>
-              </article>
-
-              <article className="rounded-[2rem] border border-[#ead8df] bg-white p-8 md:p-10">
-                <p className="text-sm font-semibold uppercase tracking-[0.28em] text-[#b85f79]">
-                  Motivo 02
-                </p>
-
-                <h3 className="mt-5 font-serif text-3xl">
-                  Toda Modelo Merece Atenção Personalizada
-                </h3>
-
-                <div className="mt-7 space-y-5 leading-8 text-[#75656c]">
-                  <p>
-                    Cada modelo recebe orientação individual, suporte de
-                    marketing, gerenciamento da conta, planejamento de conteúdo e
-                    comunicação constante.
-                  </p>
-
-                  <p className="font-semibold text-[#39272f]">
-                    Você nunca será tratada como apenas mais uma conta ou mais um
-                    número.
-                  </p>
-
-                  <p>
-                    Nossa equipe reduzida permite responder rapidamente, resolver
-                    problemas com eficiência e adaptar estratégias sempre que
-                    necessário.
-                  </p>
-                </div>
-              </article>
+                  <div className="mt-7 space-y-5 leading-8 text-[#75656c]">
+                    <Paragraphs
+                      items={list(`thirty.reasons.${key}.paragraphs`)}
+                      emphasise={[1]}
+                    />
+                  </div>
+                </article>
+              ))}
             </div>
 
             <div className="mt-10 rounded-[2rem] bg-[#412a34] px-8 py-10 text-center text-white md:px-14">
               <p className="mx-auto max-w-4xl font-serif text-2xl leading-9">
-                Preferimos ajudar 30 modelos a alcançarem grande sucesso do que
-                representar centenas que nunca recebem a atenção e o suporte
-                necessários.
+                {t("thirty.banner.body")}
               </p>
 
               <p className="mt-5 font-semibold text-[#e9a5b8]">
-                Para nós, qualidade sempre será mais importante do que quantidade.
+                {t("thirty.banner.closing")}
               </p>
             </div>
           </div>
@@ -578,40 +418,28 @@ export default function WhyUsPage() {
         <section className="bg-[#f4e5e8] px-6 py-24 lg:px-12 lg:py-32">
           <div className="mx-auto max-w-[1300px]">
             <SectionHeading
-              eyebrow="Clareza em todas as etapas"
-              title="Transparência Total"
-              description="Você sempre saberá como seus ganhos são distribuídos, como sua conta é administrada e o que recebe em troca."
+              eyebrow={t("transparency.eyebrow")}
+              title={t("transparency.title")}
+              description={t("transparency.description")}
             />
 
             <div className="mt-14 grid gap-6 lg:grid-cols-3">
-              {[
-                {
-                  value: "60%",
-                  title: "Modelo",
-                  text: "Você recebe a maior parte da receita porque é o rosto da marca, cria o conteúdo e constrói o relacionamento com os assinantes.",
-                },
-                {
-                  value: "20%",
-                  title: "Gestão da Agência",
-                  text: "Nossa porcentagem cobre administração diária, estratégia, suporte, otimização e crescimento do negócio.",
-                },
-                {
-                  value: "20%",
-                  title: "Empresa de Marketing",
-                  text: "A equipe de marketing trabalha para aumentar audiência, visibilidade, tráfego e base de assinantes.",
-                },
-              ].map((item) => (
+              {SPLIT_KEYS.map((key, index) => (
                 <article
-                  key={item.title}
+                  key={key}
                   className="rounded-[2rem] bg-[#412a34] p-8 text-white"
                 >
                   <p className="font-serif text-5xl text-[#e9a5b8]">
-                    {item.value}
+                    {SPLIT_SHARES[index]}
                   </p>
 
-                  <h3 className="mt-5 font-serif text-2xl">{item.title}</h3>
+                  <h3 className="mt-5 font-serif text-2xl">
+                    {t(`transparency.split.${key}.title`)}
+                  </h3>
 
-                  <p className="mt-5 leading-7 text-white/70">{item.text}</p>
+                  <p className="mt-5 leading-7 text-white/70">
+                    {t(`transparency.split.${key}.text`)}
+                  </p>
                 </article>
               ))}
             </div>
@@ -619,18 +447,18 @@ export default function WhyUsPage() {
             <div className="mt-16 grid gap-10 lg:grid-cols-2">
               <div>
                 <h3 className="font-serif text-3xl">
-                  O que nossos 20% cobrem
+                  {t("transparency.agencyTitle")}
                 </h3>
 
-                <CheckList items={agencyManagementItems} />
+                <CheckList items={list("transparency.agencyItems")} />
               </div>
 
               <div>
                 <h3 className="font-serif text-3xl">
-                  O que os 20% de marketing cobrem
+                  {t("transparency.marketingTitle")}
                 </h3>
 
-                <CheckList items={marketingItems} />
+                <CheckList items={list("transparency.marketingItems")} />
               </div>
             </div>
           </div>
@@ -640,34 +468,18 @@ export default function WhyUsPage() {
         <section className="px-6 py-24 lg:px-12 lg:py-32">
           <div className="mx-auto grid max-w-[1300px] gap-14 lg:grid-cols-2">
             <SectionHeading
-              eyebrow="Investimento inicial"
-              title="Nosso Compromisso nos Três Primeiros Meses"
+              eyebrow={t("firstMonths.eyebrow")}
+              title={t("firstMonths.title")}
             />
 
             <div className="rounded-[2rem] border border-[#e5cad3] bg-white p-8 md:p-10">
               <div className="space-y-6 text-lg leading-8 text-[#75656c]">
-                <p>Construir um negócio de sucesso no OnlyFans leva tempo.</p>
-
-                <p>
-                  Por isso, durante os seus três primeiros meses conosco,
-                  normalmente abrimos mão da nossa taxa de gestão de 20%.
-                </p>
-
-                <p>
-                  Assim, você poderá ficar com uma parte maior dos seus ganhos
-                  enquanto sua página cresce e sua base de assinantes está sendo
-                  construída.
-                </p>
-
-                <p>
-                  Mesmo sem receber nossa taxa de gestão nesse período,
-                  continuamos oferecendo o mesmo nível de gerenciamento,
-                  estratégia, orientação e suporte.
-                </p>
+                {list("firstMonths.paragraphs").map((text) => (
+                  <p key={text}>{text}</p>
+                ))}
 
                 <p className="font-semibold text-[#b85f79]">
-                  Investir no seu sucesso a longo prazo beneficia todos os
-                  envolvidos.
+                  {t("firstMonths.closing")}
                 </p>
               </div>
             </div>
@@ -678,16 +490,15 @@ export default function WhyUsPage() {
         <section className="bg-[#f4e5e8] px-6 py-24 lg:px-12 lg:py-32">
           <div className="mx-auto max-w-[1300px]">
             <SectionHeading
-              eyebrow="Consistência e profissionalismo"
-              title="Nós Cuidamos da Criação de Todas as Contas"
-              description="Para garantir consistência, segurança e uma gestão profissional, nossa agência cria e configura todas as contas relacionadas ao seu negócio."
+              eyebrow={t("accounts.eyebrow")}
+              title={t("accounts.title")}
+              description={t("accounts.description")}
             />
 
-            <CheckList items={accountItems} />
+            <CheckList items={list("accounts.items")} />
 
             <p className="mt-10 max-w-4xl text-lg leading-8 text-[#75656c]">
-              Todas as contas são configuradas de acordo com nossos padrões
-              internos antes do lançamento oficial da sua marca.
+              {t("accounts.footnote")}
             </p>
           </div>
         </section>
@@ -696,76 +507,35 @@ export default function WhyUsPage() {
         <section className="px-6 py-24 lg:px-12 lg:py-32">
           <div className="mx-auto max-w-[1300px]">
             <SectionHeading
-              eyebrow="Proteção e estabilidade"
-              title="Política de Acesso às Contas"
-              description="Você poderá acompanhar resultados, estatísticas, crescimento de assinantes, ganhos e desempenho. Entretanto, não fornecemos acesso administrativo completo à conta principal gerenciada pela agência."
+              eyebrow={t("access.eyebrow")}
+              title={t("access.title")}
+              description={t("access.description")}
             />
 
             <div className="mt-14 grid gap-7 lg:grid-cols-2">
-              <article className="rounded-[2rem] border border-[#ead8df] bg-white p-8 md:p-10">
-                <p className="text-sm font-semibold uppercase tracking-[0.28em] text-[#b85f79]">
-                  Proteção 01
-                </p>
-
-                <h3 className="mt-5 font-serif text-3xl">
-                  Segurança da Conta
-                </h3>
-
-                <div className="mt-7 space-y-5 leading-8 text-[#75656c]">
-                  <p>
-                    Nossa equipe administra as contas utilizando proxies
-                    residenciais estáticos.
+              {(["security", "investment"] as const).map((key) => (
+                <article
+                  key={key}
+                  className="rounded-[2rem] border border-[#ead8df] bg-white p-8 md:p-10"
+                >
+                  <p className="text-sm font-semibold uppercase tracking-[0.28em] text-[#b85f79]">
+                    {t(`access.cards.${key}.label`)}
                   </p>
 
-                  <p>
-                    Eles fornecem uma conexão residencial estável, permitindo que
-                    nossa equipe localizada nos Estados Unidos administre com
-                    segurança contas de modelos que vivem em países como Brasil e
-                    Colômbia.
-                  </p>
+                  <h3 className="mt-5 font-serif text-3xl">
+                    {t(`access.cards.${key}.title`)}
+                  </h3>
 
-                  <p>
-                    Esse sistema ajuda a manter a consistência dos acessos e reduz
-                    riscos causados por conexões realizadas de diferentes países.
-                  </p>
-                </div>
-              </article>
-
-              <article className="rounded-[2rem] border border-[#ead8df] bg-white p-8 md:p-10">
-                <p className="text-sm font-semibold uppercase tracking-[0.28em] text-[#b85f79]">
-                  Proteção 02
-                </p>
-
-                <h3 className="mt-5 font-serif text-3xl">
-                  Proteção do Nosso Investimento
-                </h3>
-
-                <div className="mt-7 space-y-5 leading-8 text-[#75656c]">
-                  <p>
-                    Construir uma conta de sucesso exige um grande investimento de
-                    tempo, experiência, trabalho e dinheiro.
-                  </p>
-
-                  <p>
-                    Se passarmos sete meses desenvolvendo uma conta até que ela
-                    esteja gerando R$ 30.000 por mês, precisamos proteger todo o
-                    investimento realizado.
-                  </p>
-
-                  <p>
-                    Restringir o acesso administrativo protege tanto a agência
-                    quanto a modelo, evitando alterações não autorizadas e
-                    problemas de segurança.
-                  </p>
-                </div>
-              </article>
+                  <div className="mt-7 space-y-5 leading-8 text-[#75656c]">
+                    <Paragraphs items={list(`access.cards.${key}.paragraphs`)} />
+                  </div>
+                </article>
+              ))}
             </div>
 
             <div className="mt-10 rounded-2xl bg-[#f4e5e8] p-8">
               <p className="text-lg leading-8 text-[#66565d]">
-                Essa política não existe por falta de confiança. Ela existe para
-                proteger o relacionamento comercial e garantir justiça para ambas
-                as partes.
+                {t("access.footnote")}
               </p>
             </div>
           </div>
@@ -775,22 +545,19 @@ export default function WhyUsPage() {
         <section className="bg-[#f4e5e8] px-6 py-24 lg:px-12 lg:py-32">
           <div className="mx-auto max-w-[1300px]">
             <SectionHeading
-              eyebrow="Gestão adicional"
-              title="Contas de OnlyFans Já Existentes"
-              description="Se você já possui uma conta no OnlyFans, também podemos administrá-la. Como esse serviço exige uma gestão adicional, cobramos 5% adicionais sobre nosso percentual padrão."
+              eyebrow={t("existing.eyebrow")}
+              title={t("existing.title")}
+              description={t("existing.description")}
             />
 
             <p className="mt-8 max-w-4xl text-lg leading-8 text-[#75656c]">
-              É importante destacar que não fazemos marketing da conta já
-              existente.
+              {t("existing.note")}
             </p>
 
-            <CheckList items={existingAccountItems} />
+            <CheckList items={list("existing.items")} />
 
             <p className="mt-10 max-w-4xl text-lg leading-8 text-[#75656c]">
-              Todos os investimentos em marketing permanecerão concentrados na
-              conta principal desenvolvida pela agência, permitindo que os
-              recursos promocionais fortaleçam uma única marca.
+              {t("existing.footnote")}
             </p>
           </div>
         </section>
@@ -800,19 +567,18 @@ export default function WhyUsPage() {
           <div className="mx-auto grid max-w-[1300px] gap-14 lg:grid-cols-2">
             <div>
               <SectionHeading
-                eyebrow="Parcerias conquistadas"
-                title="Você Mantém a Liberdade de Escolha"
+                eyebrow={t("freedom.eyebrow")}
+                title={t("freedom.title")}
               />
 
               <p className="mt-8 text-lg leading-8 text-[#75656c]">
-                Acreditamos que parcerias devem ser conquistadas, nunca impostas.
-                Você pode deixar nossa agência a qualquer momento.
+                {t("freedom.body")}
               </p>
             </div>
 
             <div className="rounded-[2rem] bg-[#412a34] p-8 text-white md:p-10">
               <ul className="space-y-6">
-                {freedomItems.map((item) => (
+                {list("freedom.items").map((item) => (
                   <li key={item} className="flex items-start gap-4">
                     <span className="mt-1 text-[#e9a5b8]">
                       <KarayHeartIcon className="h-5 w-5" />
@@ -830,12 +596,12 @@ export default function WhyUsPage() {
         <section className="bg-[#f4e5e8] px-6 py-24 lg:px-12 lg:py-32">
           <div className="mx-auto max-w-[1300px]">
             <SectionHeading
-              eyebrow="Relacionamento e vendas"
-              title="Gerenciamento Profissional de Chats"
-              description="Nossa equipe de chatters trabalha para maximizar seus ganhos e fortalecer o relacionamento com seus assinantes."
+              eyebrow={t("chats.eyebrow")}
+              title={t("chats.title")}
+              description={t("chats.description")}
             />
 
-            <CheckList items={chatItems} />
+            <CheckList items={list("chats.items")} />
           </div>
         </section>
 
@@ -843,16 +609,15 @@ export default function WhyUsPage() {
         <section className="px-6 py-24 lg:px-12 lg:py-32">
           <div className="mx-auto max-w-[1300px]">
             <SectionHeading
-              eyebrow="Visibilidade estratégica"
-              title="Marketing em Diversas Plataformas"
-              description="Ter sucesso no OnlyFans exige muito mais do que apenas publicar conteúdo. Promovemos sua marca em diversas plataformas."
+              eyebrow={t("marketing.eyebrow")}
+              title={t("marketing.title")}
+              description={t("marketing.description")}
             />
 
-            <CheckList items={platformItems} />
+            <CheckList items={list("marketing.items")} />
 
             <p className="mt-10 max-w-4xl text-lg leading-8 text-[#75656c]">
-              Toda estratégia de marketing é personalizada de acordo com sua
-              personalidade, nicho e público.
+              {t("marketing.footnote")}
             </p>
           </div>
         </section>
@@ -861,12 +626,12 @@ export default function WhyUsPage() {
         <section className="bg-[#f4e5e8] px-6 py-24 lg:px-12 lg:py-32">
           <div className="mx-auto max-w-[1300px]">
             <SectionHeading
-              eyebrow="Segurança operacional"
-              title="Infraestrutura Profissional"
-              description="Para proteger sua conta e reduzir riscos, utilizamos uma infraestrutura profissional."
+              eyebrow={t("infrastructure.eyebrow")}
+              title={t("infrastructure.title")}
+              description={t("infrastructure.description")}
             />
 
-            <CheckList items={infrastructureItems} />
+            <CheckList items={list("infrastructure.items")} />
           </div>
         </section>
 
@@ -874,17 +639,16 @@ export default function WhyUsPage() {
         <section className="px-6 py-24 lg:px-12 lg:py-32">
           <div className="mx-auto max-w-[1300px]">
             <SectionHeading
-              eyebrow="Otimização constante"
-              title="Crescimento Contínuo"
-              description="Sua conta nunca fica no piloto automático. Monitoramos e aprimoramos continuamente todos os principais elementos do seu negócio."
+              eyebrow={t("growth.eyebrow")}
+              title={t("growth.title")}
+              description={t("growth.description")}
             />
 
-            <CheckList items={growthItems} />
+            <CheckList items={list("growth.items")} />
 
             <div className="mt-10 rounded-2xl bg-[#f4e5e8] p-8">
               <p className="font-serif text-2xl leading-9 text-[#8f425a]">
-                Nosso objetivo é construir uma renda consistente e duradoura, e
-                não apenas resultados temporários.
+                {t("growth.footnote")}
               </p>
             </div>
           </div>
@@ -894,37 +658,21 @@ export default function WhyUsPage() {
         <section className="bg-[#412a34] px-6 py-28 text-white lg:px-12">
           <div className="mx-auto max-w-5xl text-center">
             <p className="text-sm font-semibold uppercase tracking-[0.34em] text-[#e9a5b8]">
-              O seu sucesso é o nosso sucesso
+              {t("cta.eyebrow")}
             </p>
 
             <h2 className="mt-6 font-serif text-4xl leading-tight md:text-6xl">
-              Uma Parceria Construída Sobre o Sucesso
+              {t("cta.title")}
             </h2>
 
             <div className="mx-auto mt-8 max-w-4xl space-y-6 text-lg leading-8 text-white/75">
-              <p>
-                Não medimos nosso sucesso pela quantidade de modelos que
-                representamos.
-              </p>
+              {list("cta.paragraphs").map((text) => (
+                <p key={text}>{text}</p>
+              ))}
 
-              <p>
-                Medimos nosso sucesso pela quantidade de modelos que alcançam
-                independência financeira, constroem negócios sustentáveis e
-                realizam objetivos que jamais imaginaram ser possíveis.
-              </p>
+              <p className="font-semibold text-white">{t("cta.emphasis")}</p>
 
-              <p>
-                Ao entrar para nossa agência, você passa a fazer parte de uma
-                equipe verdadeiramente comprometida com o seu sucesso.
-              </p>
-
-              <p className="font-semibold text-white">
-                Nós não enxergamos nossas modelos apenas como clientes.
-              </p>
-
-              <p className="font-semibold text-[#e9a5b8]">
-                Nós as enxergamos como parte da nossa família.
-              </p>
+              <p className="font-semibold text-[#e9a5b8]">{t("cta.closing")}</p>
             </div>
 
             <div className="mt-12 flex flex-col justify-center gap-4 sm:flex-row">
@@ -932,14 +680,14 @@ export default function WhyUsPage() {
                 href="/aplicar"
                 className="rounded-full bg-[#c65f7c] px-9 py-4 font-bold uppercase tracking-[0.1em] text-white transition hover:-translate-y-1 hover:bg-[#ae4f6b]"
               >
-                Quero Fazer Parte
+                {t("cta.apply")}
               </a>
 
               <Link
                 href="/"
                 className="rounded-full border border-white/40 px-9 py-4 font-bold uppercase tracking-[0.1em] text-white transition hover:border-[#e9a5b8] hover:text-[#e9a5b8]"
               >
-                Voltar ao Início
+                {t("cta.home")}
               </Link>
             </div>
           </div>

@@ -58,7 +58,6 @@
       "inactive": "Inactive"
     }
   },
-
   "site": {
     "hero": {
       "imageAlt": "Model on a yacht in Rio de Janeiro",
@@ -175,9 +174,530 @@
         "privacy": "Privacy Policy",
         "terms": "Terms of Use"
       }
+    },
+    "faq": {
+      "metaTitle": "Frequently Asked Questions | KARAY Models",
+      "metaDescription": "Straight answers about privacy, earnings, content, contracts and how a partnership with KARAY Models actually works.",
+      "eyebrow": "Information before any commitment",
+      "title": "Frequently Asked Questions",
+      "intro": "Straight answers to the questions a prospective model usually asks before joining our agency.",
+      "highlightTitle": "Yes, you can block Brazil or any other country on OnlyFans.",
+      "highlightBody": "It's the question we're asked most often, so it's the first one we answer.",
+      "stillHaveQuestions": "Still have a question?",
+      "ctaHeadline": "Talk to our team before you decide.",
+      "ctaBody": "We want you to fully understand how the partnership works before you commit to anything.",
+      "ctaApply": "Apply now",
+      "ctaContact": "Contact Us",
+      "groups": [
+        {
+          "category": "Privacy and identity",
+          "questions": [
+            {
+              "question": "Can I block Brazil on OnlyFans?",
+              "answer": [
+                "Yes. This is the question we get most often from Brazilian applicants.",
+                "OnlyFans has geo-blocking features. We can block Brazil, or any other countries you choose, to reduce the chance of people in those places finding or reaching your page.",
+                "No feature offers absolute anonymity online, but geo-blocking is an important step toward greater privacy."
+              ]
+            },
+            {
+              "question": "Could my family or friends find out?",
+              "answer": [
+                "No serious agency can guarantee that will never happen. What we can do is use strategies that reduce the risk considerably.",
+                "Those measures can include geo-blocking, professional accounts kept separate from personal ones, a dedicated residential proxy, a dedicated browser profile, targeted marketing and guidance on digital privacy."
+              ]
+            },
+            {
+              "question": "Do I have to show my face?",
+              "answer": [
+                "Not necessarily.",
+                "Some models show their face; others use strategic framing, masks, lighting, editing or content with no facial identification at all.",
+                "The strategy is built around your goals, your boundaries and your comfort level."
+              ]
+            }
+          ]
+        },
+        {
+          "category": "Earnings, payments and the split",
+          "questions": [
+            {
+              "question": "How much can I earn?",
+              "answer": [
+                "There is no guaranteed income. Anyone promising guaranteed earnings is not being honest with you.",
+                "Results depend on how often you post and the quality of it, consistency, niche, positioning, marketing, subscriber interaction and how readily strategies are adapted.",
+                "Our goal is to build consistent, sustainable income without selling unrealistic expectations."
+              ]
+            },
+            {
+              "question": "How are earnings split?",
+              "answer": [
+                "After platform fees, the standard split is 60% to the model, 20% to agency management and 20% to the marketing company.",
+                "For the first three months we usually waive our 20% management fee, so the model keeps a larger share while the account is still being built.",
+                "Every term is presented clearly before the partnership begins and written into the contract."
+              ]
+            },
+            {
+              "question": "Can I be paid in reais or in dollars?",
+              "answer": [
+                "Yes. Depending on the method agreed, your payouts can be made in reais or in dollars.",
+                "Before the partnership starts we put in writing the currency, the payment schedule, the applicable conversion rates and the method used."
+              ]
+            },
+            {
+              "question": "Can the money be deposited straight into my account?",
+              "answer": [
+                "Yes, that arrangement can be made available.",
+                "When platform payments go directly to the model's account, she becomes responsible for transferring the agency's and the marketing company's contracted percentages within the agreed deadlines.",
+                "This arrangement requires responsibility, financial organization and punctuality. Missing a payment is a breach of contract."
+              ]
+            },
+            {
+              "question": "Why is there an extra charge in the seventh month when I'm paid directly?",
+              "answer": [
+                "When a model chooses to be paid directly, the agency takes on the risk of investing in infrastructure, technology, marketing and daily work without direct control over the percentages owed to it.",
+                "After six full months of partnership, a one-time additional amount equal to 20% of that month's net earnings is charged in the seventh month, as set out in the contract.",
+                "This should be understood as a deposit or security reserve that protects the continuity of the partnership and reduces the risk of future non-payment.",
+                "It is charged only once. The calculation, the due date and all conditions are explained before the contract is signed."
+              ]
+            },
+            {
+              "question": "Could being paid directly affect my Bolsa Família benefit?",
+              "answer": [
+                "Yes, it can.",
+                "Some applicants and models belong to households that receive Bolsa Família. Once significant amounts start arriving directly in the model's bank account, those earnings may be counted in the assessment of household income.",
+                "Depending on the amount received, the household's per-person income and the rules in force, the benefit may be reduced, placed under a protection rule, suspended or ended.",
+                "We include this warning so that every model makes an informed decision before choosing to be paid directly.",
+                "The model should keep her Cadastro Único up to date and consult CRAS or a qualified professional about her specific situation.",
+                "The agency will never advise a model to hide income, withhold information or give incorrect data to the government."
+              ]
+            },
+            {
+              "question": "Who is responsible for taxes?",
+              "answer": [
+                "Each model is responsible for her own filings, tax obligations and any taxes due in her country of residence.",
+                "The agency is not a substitute for an accountant, a lawyer or a tax adviser. Where needed, we recommend consulting a qualified professional."
+              ]
+            }
+          ]
+        },
+        {
+          "category": "Content and production",
+          "questions": [
+            {
+              "question": "Do I have to produce content every day?",
+              "answer": [
+                "You are not required to produce new content every day.",
+                "That said, your income tends to track directly with how often you send content, how much of it, and how good it is.",
+                "The more quality material we have on hand, the better we can keep your page active, plan posts, run campaigns, produce varied PPVs, test formats and keep subscribers interested.",
+                "A model who rarely sends content directly limits what the agency can do — and with it, her own earning potential.",
+                "We'll build a realistic production plan around your routine, but consistency will always matter."
+              ]
+            },
+            {
+              "question": "How do I send my photos and videos to the agency?",
+              "answer": [
+                "Content is sent through a private Google Drive folder or a shared Google Photos album.",
+                "We don't recommend sending your main files over WhatsApp, Instagram, Messenger or similar apps, since those platforms compress photos and videos and degrade the quality.",
+                "When using Google Photos, select the original-quality option so the files keep their full resolution.",
+                "Our team organizes the folders by date, content type, campaign or category to make planning and publishing easier."
+              ]
+            },
+            {
+              "question": "Do I need professional equipment?",
+              "answer": [
+                "Not necessarily.",
+                "A modern phone, good lighting, a tidy space and attention to framing can produce excellent content.",
+                "Our team provides guidance on lighting, settings, posing, formats and how to organize your files."
+              ]
+            },
+            {
+              "question": "Do I need experience?",
+              "answer": [
+                "No.",
+                "We work with beginners as well as models who already have experience. Our team guides every stage of creating, positioning and developing your brand."
+              ]
+            }
+          ]
+        },
+        {
+          "category": "Accounts, security and management",
+          "questions": [
+            {
+              "question": "Does the agency create all the accounts?",
+              "answer": [
+                "Yes. Depending on the strategy, our team can create and configure OnlyFans, X, Instagram, Reddit, TikTok, a professional email address, a links page and any other promotional accounts needed.",
+                "All of them are set up to our security and operating standards before the brand officially launches."
+              ]
+            },
+            {
+              "question": "Can I keep using an account I already have?",
+              "answer": [
+                "Yes.",
+                "We can also manage an OnlyFans account that existed before the partnership. Because that means additional work, an extra 5% may be charged.",
+                "The main marketing investment stays focused on the account the agency builds."
+              ]
+            },
+            {
+              "question": "What is a residential proxy?",
+              "answer": [
+                "It's a technology used to keep a stable, consistent residential connection while the account is managed.",
+                "Each model gets her own dedicated static residential proxy. This helps reduce the risks that come with an account being accessed from different countries, internet addresses and devices."
+              ]
+            },
+            {
+              "question": "What does the agency invest in me?",
+              "answer": [
+                "We invest time, experience, technology, infrastructure and money in developing your brand.",
+                "That can include a dedicated residential proxy, a dedicated browser profile, professional marketing tools, analytics systems, content planning, day-to-day management, technical support, sales strategy and long-term development.",
+                "These resources are provided by the agency at no separate charge during the partnership, except where the contract specifies otherwise."
+              ]
+            },
+            {
+              "question": "Who talks to the subscribers?",
+              "answer": [
+                "Our professional chatter team.",
+                "The work includes fast replies, building relationships, PPV sales, encouraging tips, subscriber retention and engaging conversation.",
+                "All of it respects the boundaries, preferences and rules you set."
+              ]
+            },
+            {
+              "question": "How many models does the agency manage?",
+              "answer": [
+                "Our agency works with a maximum of 30 active models.",
+                "We would rather offer individual attention, constant communication and tailored strategies than manage hundreds of accounts without proper care."
+              ]
+            }
+          ]
+        },
+        {
+          "category": "Contract and ending the partnership",
+          "questions": [
+            {
+              "question": "Can I leave the agency whenever I want?",
+              "answer": [
+                "Yes. You can end the partnership at any time, following the procedure and conditions described in the contract.",
+                "If you decide to leave, we remove our access and handle the separation professionally and respectfully.",
+                "The main OnlyFans account created, structured and developed by the agency will be closed and will not be transferred to the model.",
+                "That is because the account represents an investment the agency made in branding, marketing, infrastructure, strategy, technology and business development.",
+                "If the model already had an account before the partnership and only contracted the additional management, that account remains hers and we remove our access when the partnership ends."
+              ]
+            },
+            {
+              "question": "Is there a long-term contract?",
+              "answer": [
+                "We intend to build a lasting partnership, but it should continue because both sides are happy with the relationship and the results.",
+                "Cancellation procedures, financial responsibilities, account ownership and how operations wind down are all explained clearly in the contract."
+              ]
+            },
+            {
+              "question": "How do I join the agency?",
+              "answer": [
+                "Click the Apply button and fill in the application form.",
+                "Once we receive your application we review your profile, get in touch, answer your questions and explain the process before any commitment."
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "whyUsPage": {
+      "metaTitle": "Why Us | KARAY Models",
+      "metaDescription": "How we invest, how earnings are split, and why we cap the agency at 30 models.",
+      "hero": {
+        "eyebrow": "TRUST, STRATEGY AND GROWTH",
+        "title": "Why Choose Our Agency",
+        "highlight": "Yes, you can block Brazil or any other country on OnlyFans to protect your privacy.",
+        "body": "Choosing an OnlyFans agency is one of the most important decisions you will make. Our job is not just to run your account — we are here to build your brand, maximize your earnings and establish a long-term partnership built on trust, transparency and mutual success.",
+        "stats": {
+          "models": "Active models at most",
+          "share": "Share that goes to the model",
+          "management": "Complete brand management"
+        }
+      },
+      "invest": {
+        "eyebrow": "Our commitment",
+        "title": "We Invest in You",
+        "body": "Unlike many agencies, we don't simply manage your account. We invest money, technology, infrastructure, experience and time to help you build a professional, secure and profitable business.",
+        "cards": {
+          "proxy": {
+            "title": "Dedicated Residential Proxy",
+            "paragraphs": [
+              "We invest in a dedicated static residential proxy for every model. It provides a stable, consistent digital connection for managing the account.",
+              "That reduces the risks caused by logins from different countries, internet addresses and devices, helping protect the account and making management far safer and better organized."
+            ]
+          },
+          "browser": {
+            "title": "Dedicated Browser Profile",
+            "paragraphs": [
+              "Each model gets a separate, dedicated browser environment, built to keep accounts organized and prevent conflicts between different profiles.",
+              "That separation reduces operational mistakes, improves security and lets our team manage each brand inside its own infrastructure."
+            ]
+          },
+          "marketing": {
+            "title": "Professional Marketing Tools",
+            "paragraphs": [
+              "We invest in professional platforms and tools for content planning, performance analysis, audience growth and optimizing promotional campaigns.",
+              "These tools help us see what is working, test new strategies and steer our resources toward the actions that produce the best results."
+            ]
+          },
+          "analytics": {
+            "title": "Management and Analytics Tools",
+            "paragraphs": [
+              "We use systems to organize content, track metrics, manage sales strategies and continuously monitor the account's growth.",
+              "Your page is never on autopilot. Results are reviewed so we can adapt pricing, PPVs, content, campaigns and retention strategies."
+            ]
+          }
+        },
+        "banner": {
+          "eyebrow": "A complete investment",
+          "title": "Our investment goes well beyond technology.",
+          "body": "We also invest every day in building, positioning, running and expanding your brand."
+        },
+        "supportItems": [
+          "Complete OnlyFans account setup",
+          "Brand development and positioning",
+          "Content strategy and planning",
+          "Day-to-day account management",
+          "Fan messaging and sales strategy",
+          "Professional chat management",
+          "Marketing across multiple social platforms",
+          "Performance and metrics analysis",
+          "Technical support",
+          "Long-term growth planning"
+        ],
+        "footnote": "All of this is funded by the agency at no additional cost to the model for the length of our partnership."
+      },
+      "family": {
+        "eyebrow": "Lasting relationships",
+        "title": "We Treat Our Models Like Family",
+        "paragraphs": [
+          "When you join our agency you become far more than a client — you become part of our family.",
+          "We believe the strongest businesses are built on trust, honesty, loyalty, communication and mutual respect.",
+          "We celebrate your wins, help you through the hard parts and commit to your long-term growth.",
+          "Our goal is to build lasting relationships, not simply to manage accounts."
+        ],
+        "emphasis": "When one of our models succeeds, our whole team succeeds with her.",
+        "closing": "We're beside you at every stage of the journey."
+      },
+      "thirty": {
+        "eyebrow": "Quality over quantity",
+        "title": "We Cap Our Agency at Just 30 Models",
+        "description": "Unlike agencies that keep signing hundreds of creators, we believe a smaller roster produces far better results.",
+        "reasons": {
+          "one": {
+            "label": "Reason 01",
+            "title": "We Want Every One of Our Models to Succeed",
+            "paragraphs": [
+              "Our goal is not to be the biggest agency.",
+              "Our goal is to be one of the best.",
+              "By limiting how many models we represent, we can give each one enough time, strategy and resources to reach her full earning potential.",
+              "We want to help you build a profitable business that lasts."
+            ]
+          },
+          "two": {
+            "label": "Reason 02",
+            "title": "Every Model Deserves Personal Attention",
+            "paragraphs": [
+              "Each model gets individual guidance, marketing support, account management, content planning and constant communication.",
+              "You will never be treated as just another account or another number.",
+              "A small roster lets us respond quickly, solve problems efficiently and adapt strategy whenever it's needed."
+            ]
+          }
+        },
+        "banner": {
+          "body": "We would rather help 30 models reach real success than represent hundreds who never get the attention and support they need.",
+          "closing": "For us, quality will always matter more than quantity."
+        }
+      },
+      "transparency": {
+        "eyebrow": "Clarity at every stage",
+        "title": "Full Transparency",
+        "description": "You will always know how your earnings are split, how your account is managed and what you get in return.",
+        "split": {
+          "model": {
+            "title": "Model",
+            "text": "You receive the largest share because you are the face of the brand, you create the content and you build the relationship with subscribers."
+          },
+          "agency": {
+            "title": "Agency Management",
+            "text": "Our percentage covers daily administration, strategy, support, optimization and growing the business."
+          },
+          "marketing": {
+            "title": "Marketing Company",
+            "text": "The marketing team works to grow your audience, visibility, traffic and subscriber base."
+          }
+        },
+        "agencyTitle": "What our 20% covers",
+        "agencyItems": [
+          "Complete account management",
+          "Business strategy",
+          "Content planning",
+          "Subscriber growth strategy",
+          "Daily guidance",
+          "Technical support",
+          "Reporting and analytics",
+          "Profile optimization",
+          "Pricing strategy",
+          "PPV strategy",
+          "Long-term business development"
+        ],
+        "marketingTitle": "What the 20% marketing share covers",
+        "marketingItems": [
+          "Promotion of your social media",
+          "Driving qualified traffic to your page",
+          "Growing your subscriber base",
+          "Running promotional campaigns",
+          "Testing new marketing strategies",
+          "Increasing your visibility across platforms"
+        ]
+      },
+      "firstMonths": {
+        "eyebrow": "Initial investment",
+        "title": "Our Commitment for the First Three Months",
+        "paragraphs": [
+          "Building a successful OnlyFans business takes time.",
+          "That's why, for your first three months with us, we usually waive our 20% management fee.",
+          "You keep a larger share of your earnings while your page grows and your subscriber base is still being built.",
+          "Even without taking our management fee during that period, we provide the same level of management, strategy, guidance and support."
+        ],
+        "closing": "Investing in your long-term success benefits everyone involved."
+      },
+      "accounts": {
+        "eyebrow": "Consistency and professionalism",
+        "title": "We Handle Creating Every Account",
+        "description": "To guarantee consistency, security and professional management, our agency creates and configures every account connected to your business.",
+        "items": [
+          "OnlyFans",
+          "X (Twitter)",
+          "Instagram",
+          "Reddit",
+          "TikTok",
+          "Professional email",
+          "Links page",
+          "Other promotional platforms the agency uses"
+        ],
+        "footnote": "Every account is configured to our internal standards before your brand officially launches."
+      },
+      "access": {
+        "eyebrow": "Protection and stability",
+        "title": "Account Access Policy",
+        "description": "You can follow results, statistics, subscriber growth, earnings and performance. What we don't provide is full administrative access to the main account the agency manages.",
+        "cards": {
+          "security": {
+            "label": "Protection 01",
+            "title": "Account Security",
+            "paragraphs": [
+              "Our team manages accounts through static residential proxies.",
+              "They provide a stable residential connection, which is what lets our US-based team safely manage accounts for models living in countries such as Brazil and Colombia.",
+              "This keeps logins consistent and reduces the risks that come from connections made in different countries."
+            ]
+          },
+          "investment": {
+            "label": "Protection 02",
+            "title": "Protecting Our Investment",
+            "paragraphs": [
+              "Building a successful account takes a large investment of time, experience, work and money.",
+              "If we spend seven months developing an account until it is earning R$ 30,000 a month, that investment has to be protected.",
+              "Restricting administrative access protects the agency and the model alike, preventing unauthorized changes and security problems."
+            ]
+          }
+        },
+        "footnote": "This policy is not about a lack of trust. It exists to protect the business relationship and keep things fair for both sides."
+      },
+      "existing": {
+        "eyebrow": "Additional management",
+        "title": "OnlyFans Accounts You Already Have",
+        "description": "If you already have an OnlyFans account, we can manage that too. Because it takes additional work, we charge 5% on top of our standard percentage.",
+        "note": "It's worth being clear that we do not market the pre-existing account.",
+        "items": [
+          "Manage the account professionally",
+          "Post the same content published on the main account",
+          "Keep both accounts consistent",
+          "Handle messages and daily operations"
+        ],
+        "footnote": "All marketing investment stays focused on the main account the agency builds, so promotional resources strengthen a single brand."
+      },
+      "freedom": {
+        "eyebrow": "Partnerships are earned",
+        "title": "You Keep Your Freedom to Choose",
+        "body": "We believe partnerships should be earned, never imposed. You can leave our agency at any time.",
+        "items": [
+          "There is no long-term contractual obligation keeping you from leaving",
+          "We remove all of our administrative access",
+          "Your account is closed as set out in the contract",
+          "The whole process is handled professionally and respectfully"
+        ]
+      },
+      "chats": {
+        "eyebrow": "Relationships and sales",
+        "title": "Professional Chat Management",
+        "description": "Our chatter team works to maximize your earnings and strengthen the relationship with your subscribers.",
+        "items": [
+          "Fast replies to subscribers",
+          "Building relationships with fans",
+          "Growing PPV sales",
+          "Encouraging tips",
+          "Improving subscriber retention",
+          "Engaging conversation that always respects your boundaries and preferences"
+        ]
+      },
+      "marketing": {
+        "eyebrow": "Strategic visibility",
+        "title": "Marketing Across Multiple Platforms",
+        "description": "Succeeding on OnlyFans takes far more than posting content. We promote your brand across a range of platforms.",
+        "items": [
+          "X (Twitter)",
+          "Instagram",
+          "Reddit",
+          "TikTok, where appropriate",
+          "YouTube, where appropriate",
+          "Links pages and promotional tools"
+        ],
+        "footnote": "Every marketing strategy is tailored to your personality, your niche and your audience."
+      },
+      "infrastructure": {
+        "eyebrow": "Operational security",
+        "title": "Professional Infrastructure",
+        "description": "To protect your account and reduce risk, we run on professional infrastructure.",
+        "items": [
+          "A dedicated phone",
+          "A static residential proxy",
+          "A dedicated browser profile",
+          "Dedicated social media accounts",
+          "Secure management procedures"
+        ]
+      },
+      "growth": {
+        "eyebrow": "Constant optimization",
+        "title": "Continuous Growth",
+        "description": "Your account is never on autopilot. We continuously monitor and improve every key part of your business.",
+        "items": [
+          "Subscription price",
+          "PPV performance",
+          "Content strategy",
+          "Subscriber conversion",
+          "Subscriber retention",
+          "Fan engagement",
+          "Marketing campaign performance",
+          "Monthly earnings"
+        ],
+        "footnote": "Our goal is consistent, durable income — not temporary results."
+      },
+      "cta": {
+        "eyebrow": "Your success is our success",
+        "title": "A Partnership Built on Success",
+        "paragraphs": [
+          "We don't measure our success by how many models we represent.",
+          "We measure it by how many models reach financial independence, build sustainable businesses and achieve goals they never thought possible.",
+          "When you join our agency, you join a team genuinely invested in your success."
+        ],
+        "emphasis": "We don't see our models as just clients.",
+        "closing": "We see them as part of our family.",
+        "apply": "I Want to Join",
+        "home": "Back to Home"
+      }
     }
   },
-
   "nav": {
     "primary": "Main navigation",
     "mobile": "Mobile navigation",
@@ -190,7 +710,6 @@
     "openMenu": "Open menu",
     "closeMenu": "Close menu"
   },
-
   "auth": {
     "signOut": "Sign out",
     "signingOut": "Signing out...",
@@ -215,7 +734,6 @@
       "backToSite": "← Back to the site"
     }
   },
-
   "enums": {
     "modelStatus": {
       "active": "Active",
@@ -279,19 +797,12 @@
       "skipped": "Skipped"
     }
   },
-
   "dashboard": {},
-
   "models": {},
-
   "earnings": {},
-
   "expenses": {},
-
   "loans": {},
-
   "settings": {},
-
   "errors": {
     "login": {
       "invalid_identifier": "Incorrect email, username or password.",
@@ -320,9 +831,7 @@
     "saveFailed": "We couldn't save your changes. Please try again.",
     "loadFailed": "We couldn't load the data."
   },
-
   "validation": {},
-
   "admin": {
     "nav": {
       "ariaLabel": "Portal navigation",
