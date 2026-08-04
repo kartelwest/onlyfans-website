@@ -108,8 +108,9 @@ A rep may also correct a note she wrote (`20260804000000_representative_notes.sq
 the note belongs, to pinned/archived, to the soft-delete columns, or to a ledger note's link — so
 "edit your own note" can never become "un-delete it" or "hand it to someone else". Every edit writes
 a `model_note_history` row carrying the body it replaced, so an edit adds to the record rather than
-replacing it. Deletion is untouched: `authenticated` still holds no DELETE policy on `model_notes`,
-and soft-delete stays owner-only in the API.
+replacing it. Deletion is untouched: the only DELETE policy on `model_notes` is `notes_delete_owner`
+(`is_owner()`), so a rep and an administrator alike are refused by the database and not merely by the
+UI, and soft-delete stays owner-only in the API.
 
 Removal is two-step: soft-delete archives the note (owner and admins), and only the owner may purge
 it from the database afterwards. Both steps confirm in an in-page modal — never `window.confirm` or

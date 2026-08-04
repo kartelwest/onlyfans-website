@@ -31,10 +31,13 @@
 --      history write fails, which under staff-only RLS meant a rep's edit
 --      could never be saved at all.
 --
--- Deletion is untouched: there is still no DELETE policy on model_notes for
--- `authenticated`, so nobody but the owner (through the SECURITY DEFINER
--- delete_model_note) can remove a note, and soft-delete stays owner-only in
--- the API. Reading the history stays staff-only.
+-- Deletion is untouched. The only DELETE policy on model_notes is
+-- notes_delete_owner (`using ( public.is_owner() )`, from 20260801020000), so
+-- a representative and an administrator alike are refused by the database and
+-- not merely by the UI; permanent removal goes through the SECURITY DEFINER
+-- delete_model_note, which checks is_owner() again inside the function.
+-- Soft-delete stays owner-only in the API, and reading the history stays
+-- staff-only.
 -- =============================================================================
 
 -- ----- 1. A rep may update her own note --------------------------------------
