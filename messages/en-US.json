@@ -1831,7 +1831,27 @@
         "passwordRequired": "Enter a password to create this model's access.",
         "loginRequired": "Enter an email or a username to create this model's access.",
         "nothingToChange": "Enter a new password or a new login."
-      }
+      },
+      "currentLoginLabel": "Current login:"
+    },
+    "repCredentials": {
+      "temporaryPassword": "Temporary password",
+      "mustChangeNextLogin": "At their next login the representative will be required to set their own password.",
+      "sessionsRevoked": "Open sessions were ended. They will need to sign in again.",
+      "done": "Done",
+      "confirmTitle": "Confirm access changes",
+      "confirmBody": "This changes <strong>{name}</strong>'s access immediately.",
+      "summarySessionsEnded": "Their open sessions will be ended.",
+      "summaryMustChange": "They will have to set their own password at next login.",
+      "passwordGenerated": "Generate a secure temporary password",
+      "passwordCustom": "Custom temporary password",
+      "passwordPlaceholder": "Enter the temporary password",
+      "generateAnother": "Generate another",
+      "minLength": "Use at least {count} characters.",
+      "loginLabel": "Login (email or username)",
+      "loginPlaceholder": "rep@karaymodels.com or joao.silva",
+      "usernameHint": "Username: they sign in by typing just this, with no email. Use letters, numbers, dot, hyphen or underscore.",
+      "loginHint": "With \"@\" it is treated as an email; without \"@\", as a username. Leave blank to keep the current login."
     }
   },
   "owner": {

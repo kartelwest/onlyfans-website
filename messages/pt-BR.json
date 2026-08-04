@@ -1831,7 +1831,27 @@
         "passwordRequired": "Informe uma senha para criar o acesso desta modelo.",
         "loginRequired": "Informe um e-mail ou um nome de usuário para criar o acesso desta modelo.",
         "nothingToChange": "Informe uma nova senha ou um novo login."
-      }
+      },
+      "currentLoginLabel": "Login atual:"
+    },
+    "repCredentials": {
+      "temporaryPassword": "Senha temporária",
+      "mustChangeNextLogin": "No próximo login o representante será obrigado a definir uma senha própria.",
+      "sessionsRevoked": "As sessões abertas foram encerradas. Ele precisará entrar novamente.",
+      "done": "Concluir",
+      "confirmTitle": "Confirmar alterações de acesso",
+      "confirmBody": "Esta ação altera o acesso de <strong>{name}</strong> imediatamente.",
+      "summarySessionsEnded": "As sessões abertas dele serão encerradas.",
+      "summaryMustChange": "Ele terá de definir uma senha própria no próximo login.",
+      "passwordGenerated": "Gerar uma senha temporária segura",
+      "passwordCustom": "Senha temporária personalizada",
+      "passwordPlaceholder": "Digite a senha temporária",
+      "generateAnother": "Gerar outra",
+      "minLength": "Use pelo menos {count} caracteres.",
+      "loginLabel": "Login (e-mail ou nome de usuário)",
+      "loginPlaceholder": "rep@karaymodels.com ou joao.silva",
+      "usernameHint": "Nome de usuário: ele entra digitando apenas isso, sem e-mail. Use letras, números, ponto, hífen ou sublinhado.",
+      "loginHint": "Com \"@\" será tratado como e-mail; sem \"@\", como nome de usuário. Deixe em branco para manter o login atual."
     }
   },
   "owner": {

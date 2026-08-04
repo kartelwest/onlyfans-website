@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
@@ -63,6 +65,13 @@ export default function RepresentativeCredentialsPanel({
   /** What she signs in with today: a username or an e-mail address. */
   currentLogin: string | null;
 }) {
+  const t = useTranslations("admin.repCredentials");
+  // Shares the model credential dialog's wording where the sentence is the
+  // same, so the two screens cannot drift apart.
+  const tCred = useTranslations("admin.credentials");
+  const tCommon = useTranslations("common.actions");
+  const tErrors = useTranslations("errors");
+
   const router = useRouter();
 
   const [step, setStep] = useState<Step>("form");
@@ -116,7 +125,7 @@ export default function RepresentativeCredentialsPanel({
     setErrorMessage("");
 
     if (!hasSomethingToApply) {
-      setErrorMessage("Informe uma nova senha ou um novo login.");
+      setErrorMessage(tCred("errors.nothingToChange"));
       return;
     }
 
@@ -163,7 +172,7 @@ export default function RepresentativeCredentialsPanel({
 
       if (!response.ok) {
         throw new Error(
-          payload.error || "Ocorreu um erro inesperado. Tente novamente.",
+          payload.error || tErrors("generic"),
         );
       }
 
@@ -182,7 +191,7 @@ export default function RepresentativeCredentialsPanel({
       setErrorMessage(
         error instanceof Error
           ? error.message
-          : "Ocorreu um erro inesperado. Tente novamente.",
+          : tErrors("generic"),
       );
 
       setStep("form");
@@ -195,11 +204,11 @@ export default function RepresentativeCredentialsPanel({
     return (
       <div className="rounded-2xl border border-emerald-400/30 bg-emerald-500/5 p-5">
         <h3 className="text-base font-bold text-emerald-300">
-          Acesso atualizado com sucesso
+          {tCred("updatedSuccess")}
         </h3>
 
         <p className="mt-2 text-sm text-amber-200">
-          Anote estes dados agora. Eles não serão exibidos novamente.
+          {tCred("writeThisDown")}
         </p>
 
         <div className="mt-4 space-y-3">
@@ -207,28 +216,27 @@ export default function RepresentativeCredentialsPanel({
             <CredentialRow
               label={
                 looksLikeEmail(result.login)
-                  ? "E-mail de login"
-                  : "Nome de usuário"
+                  ? tCred("loginEmail")
+                  : tCred("username")
               }
               value={result.login}
             />
           )}
 
           {result.password && (
-            <CredentialRow label="Senha temporária" value={result.password} />
+            <CredentialRow label={t("temporaryPassword")} value={result.password} />
           )}
         </div>
 
         {result.mustChangePassword && (
           <p className="mt-4 rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white/60">
-            No próximo login o representante será obrigado a definir uma senha
-            própria.
+            {t("mustChangeNextLogin")}
           </p>
         )}
 
         {result.sessionsRevoked && (
           <p className="mt-3 rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white/60">
-            As sessões abertas foram encerradas. Ele precisará entrar novamente.
+            {t("sessionsRevoked")}
           </p>
         )}
 
@@ -249,7 +257,7 @@ export default function RepresentativeCredentialsPanel({
           }}
           className="mt-5 rounded-xl bg-pink-400 px-5 py-2.5 text-sm font-bold text-black transition hover:bg-pink-300"
         >
-          Concluir
+          {t("done")}
         </button>
       </div>
     );
@@ -259,31 +267,32 @@ export default function RepresentativeCredentialsPanel({
     return (
       <div className="rounded-2xl border border-white/10 bg-black/20 p-5">
         <h3 className="text-base font-bold text-white">
-          Confirmar alterações de acesso
+          {t("confirmTitle")}
         </h3>
 
         <p className="mt-2 text-sm text-white/60">
-          Esta ação altera o acesso de{" "}
-          <span className="font-semibold text-white">{representativeName}</span>{" "}
-          imediatamente.
+          {t.rich("confirmBody", {
+            name: representativeName,
+            strong: (chunks) => (
+              <span className="font-semibold text-white">{chunks}</span>
+            ),
+          })}
         </p>
 
         <ul className="mt-4 space-y-2 rounded-xl border border-white/10 bg-black/30 p-4 text-sm text-white/75">
           {effectivePassword && (
             <>
-              <li>• A senha será alterada.</li>
-              <li>• As sessões abertas dele serão encerradas.</li>
-              <li>
-                • Ele terá de definir uma senha própria no próximo login.
-              </li>
+              <li>• {tCred("summaryPasswordChanged")}</li>
+              <li>• {t("summarySessionsEnded")}</li>
+              <li>• {t("summaryMustChange")}</li>
             </>
           )}
 
           {loginWillChange && (
             <li>
               •{" "}
-              {loginIsUsername ? "O nome de usuário" : "O e-mail de login"}{" "}
-              passará a ser{" "}
+              {loginIsUsername ? tCred("username") : tCred("loginEmail")}{" "}
+              {tCred("willBecome")}{" "}
               <span className="font-semibold text-white">{trimmedLogin}</span>.
             </li>
           )}
@@ -302,7 +311,7 @@ export default function RepresentativeCredentialsPanel({
             disabled={isSubmitting}
             className="rounded-xl border border-white/15 bg-white/5 px-5 py-2.5 text-sm font-bold text-white/70 transition hover:bg-white/10 disabled:opacity-50"
           >
-            Voltar
+            {tCommon("back")}
           </button>
 
           <button
@@ -311,7 +320,7 @@ export default function RepresentativeCredentialsPanel({
             disabled={isSubmitting}
             className="rounded-xl bg-pink-400 px-5 py-2.5 text-sm font-bold text-black transition hover:bg-pink-300 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {isSubmitting ? "Aplicando..." : "Confirmar e aplicar"}
+            {isSubmitting ? tCred("applying") : tCred("confirmAndApply")}
           </button>
         </div>
       </div>
@@ -321,15 +330,15 @@ export default function RepresentativeCredentialsPanel({
   return (
     <div className="rounded-2xl border border-white/10 bg-black/20 p-5">
       <p className="text-xs text-white/45">
-        Login atual:{" "}
+        {tCred("currentLoginLabel")}{" "}
         <span className="font-semibold text-white/80">
-          {currentLogin || "não informado"}
+          {currentLogin || tCred("notProvided")}
         </span>
       </p>
 
       <section className="mt-5">
         <h4 className="text-xs font-bold uppercase tracking-[0.2em] text-pink-200">
-          Senha
+          {tCred("password")}
         </h4>
 
         <div className="mt-3 space-y-2">
@@ -337,21 +346,21 @@ export default function RepresentativeCredentialsPanel({
             name="rep-password-mode"
             checked={passwordMode === "none"}
             onChange={() => setPasswordMode("none")}
-            label="Não alterar a senha"
+            label={tCred("passwordUnchanged")}
           />
 
           <RadioRow
             name="rep-password-mode"
             checked={passwordMode === "generated"}
             onChange={chooseGenerated}
-            label="Gerar uma senha temporária segura"
+            label={t("passwordGenerated")}
           />
 
           <RadioRow
             name="rep-password-mode"
             checked={passwordMode === "custom"}
             onChange={() => setPasswordMode("custom")}
-            label="Senha temporária personalizada"
+            label={t("passwordCustom")}
           />
         </div>
 
@@ -366,7 +375,7 @@ export default function RepresentativeCredentialsPanel({
               onClick={() => setGeneratedPassword(generatePassword())}
               className="rounded-lg border border-white/15 bg-white/5 px-3 py-1.5 text-xs font-bold text-white/80 transition hover:bg-white/10"
             >
-              Gerar outra
+              {t("generateAnother")}
             </button>
           </div>
         )}
@@ -377,13 +386,13 @@ export default function RepresentativeCredentialsPanel({
               type="text"
               value={customPassword}
               onChange={(event) => setCustomPassword(event.target.value)}
-              placeholder="Digite a senha temporária"
+              placeholder={t("passwordPlaceholder")}
               autoComplete="new-password"
               className="w-full rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none transition placeholder:text-white/30 focus:border-pink-400"
             />
 
             <p className="mt-2 text-xs text-white/45">
-              Use pelo menos {MIN_PASSWORD_LENGTH} caracteres.
+              {t("minLength", { count: MIN_PASSWORD_LENGTH })}
             </p>
           </div>
         )}
@@ -391,14 +400,14 @@ export default function RepresentativeCredentialsPanel({
 
       <section className="mt-6 border-t border-white/10 pt-6">
         <h4 className="text-xs font-bold uppercase tracking-[0.2em] text-pink-200">
-          Login (e-mail ou nome de usuário)
+          {t("loginLabel")}
         </h4>
 
         <input
           type="text"
           value={newLogin}
           onChange={(event) => setNewLogin(event.target.value)}
-          placeholder="rep@karaymodels.com ou joao.silva"
+          placeholder={t("loginPlaceholder")}
           autoComplete="off"
           autoCapitalize="none"
           spellCheck={false}
@@ -407,8 +416,8 @@ export default function RepresentativeCredentialsPanel({
 
         <p className="mt-2 text-xs text-white/45">
           {loginIsUsername
-            ? "Nome de usuário: ele entra digitando apenas isso, sem e-mail. Use letras, números, ponto, hífen ou sublinhado."
-            : 'Com "@" será tratado como e-mail; sem "@", como nome de usuário. Deixe em branco para manter o login atual.'}
+            ? t("usernameHint")
+            : t("loginHint")}
         </p>
       </section>
 
@@ -425,7 +434,7 @@ export default function RepresentativeCredentialsPanel({
           disabled={!hasSomethingToApply}
           className="rounded-xl bg-pink-400 px-5 py-2.5 text-sm font-bold text-black transition hover:bg-pink-300 disabled:cursor-not-allowed disabled:opacity-50"
         >
-          Revisar alterações
+          {tCred("reviewChanges")}
         </button>
       </div>
     </div>
