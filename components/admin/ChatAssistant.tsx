@@ -27,6 +27,7 @@ const TOOL_LABELS: Record<string, string> = {
 export default function ChatAssistant() {
   const t = useTranslations("admin.assistant");
   const tErrors = useTranslations("errors");
+  const tCommon = useTranslations("common.actions");
 
   const [displayMessages, setDisplayMessages] = useState<DisplayMessage[]>(
     [],
@@ -101,9 +102,7 @@ export default function ChatAssistant() {
       <div className="flex-1 space-y-4 overflow-y-auto p-6">
         {displayMessages.length === 0 && (
           <p className="text-sm text-white/45">
-            Peça em português, por exemplo: &ldquo;adicione uma modelo nova
-            chamada Jane Doe, cidade Miami, status candidata&rdquo; ou
-            &ldquo;liste as modelos ativas&rdquo;.
+            {t("emptyHint")}
           </p>
         )}
 
@@ -144,7 +143,7 @@ export default function ChatAssistant() {
         ))}
 
         {isSending && (
-          <p className="mr-auto text-sm text-white/45">Pensando...</p>
+          <p className="mr-auto text-sm text-white/45">{t("thinking")}</p>
         )}
       </div>
 
@@ -172,7 +171,7 @@ export default function ChatAssistant() {
           disabled={isSending || !input.trim()}
           className="rounded-xl bg-pink-500 px-5 py-3 text-sm font-bold text-white transition hover:bg-pink-400 disabled:cursor-not-allowed disabled:opacity-50"
         >
-          Enviar
+          {tCommon("send")}
         </button>
       </form>
     </div>

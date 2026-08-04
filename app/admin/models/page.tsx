@@ -309,7 +309,7 @@ export default async function AdminModelsPage({
               href="/admin/pageview"
               className="rounded-xl border border-purple-400/40 bg-purple-500/10 px-5 py-3 text-sm font-semibold text-purple-200 transition hover:bg-purple-500/20"
             >
-              Pageview
+              {t("pageview")}
             </Link>
 
             <Link
@@ -387,11 +387,11 @@ export default async function AdminModelsPage({
           <div className="flex items-center justify-between gap-4">
             <div>
               <p className="text-sm font-bold">
-                Capacidade de modelos ativas
+                {t("activeCapacity")}
               </p>
 
               <p className="mt-1 text-xs text-white/50">
-                Limite operacional: 30 modelos
+                {t("operationalLimit")}
               </p>
             </div>
 
@@ -639,14 +639,14 @@ export default async function AdminModelsPage({
                               href={`/admin/view-as/model/${model.id}/representative`}
                               className="rounded-lg border border-purple-400/30 bg-purple-500/10 px-4 py-2 text-xs font-bold text-purple-200 transition hover:bg-purple-500/20"
                             >
-                              Visão do representante
+                              {t("representativeView")}
                             </Link>
 
                             <Link
                               href={`/admin/view-as/model/${model.id}`}
                               className="rounded-lg border border-purple-400/30 bg-purple-500/10 px-4 py-2 text-xs font-bold text-purple-200 transition hover:bg-purple-500/20"
                             >
-                              Visão da modelo
+                              {t("modelView")}
                             </Link>
 
                             {canManage && (
@@ -1053,6 +1053,7 @@ function OnboardingProgress({
 }: {
   percentage: number;
 }) {
+  const t = useTranslations("admin.modelsPage");
   const safePercentage = Math.min(
     Math.max(percentage, 0),
     100,
@@ -1069,7 +1070,7 @@ function OnboardingProgress({
     <div className="min-w-[140px]">
       <div className="flex items-center justify-between text-xs">
         <span className="text-white/55">
-          Progresso
+          {t("progress")}
         </span>
 
         <span className="font-bold">

@@ -115,7 +115,7 @@ export default function ModelAdminClient({
                     href="/admin/models"
                     className="text-sm font-semibold text-pink-300 transition hover:text-pink-200"
                 >
-                    ← Voltar para modelos
+                    {t("backToModels")}
                 </Link>
 
                 <section className="mt-6 overflow-hidden rounded-3xl border border-white/10 bg-[#111115] shadow-2xl">
@@ -139,7 +139,7 @@ export default function ModelAdminClient({
                                 <div className="flex flex-1 items-start justify-between gap-4">
                                     <div>
                                         <p className="text-xs font-semibold uppercase tracking-[0.25em] text-pink-200">
-                                            Perfil da modelo
+                                            {t("profileEyebrow")}
                                         </p>
 
                                         <h1 className="mt-2 text-3xl font-bold sm:text-4xl">
@@ -420,7 +420,7 @@ function SummarySection({
                 <div className="mt-6">
                     <div className="flex items-center justify-between">
                         <span className="text-sm text-white/60">
-                            Progresso atual
+                            {t("currentProgress")}
                         </span>
 
                         <span className="text-xl font-bold text-pink-300">
@@ -605,7 +605,7 @@ function ChecklistSection({
                 <div className="w-full max-w-md rounded-2xl border border-white/10 bg-black/20 p-4">
                     <div className="flex items-center justify-between">
                         <span className="text-sm text-white/55">
-                            Progresso do onboarding
+                            {t("onboardingProgress")}
                         </span>
 
                         <span className="text-xl font-bold text-pink-300">
@@ -699,10 +699,12 @@ function TemporarySection({
     title: string;
     description: string;
 }) {
+    const t = useTranslations("admin.modelPage");
+
     return (
         <section className="rounded-2xl border border-dashed border-pink-400/30 bg-pink-500/5 p-8">
             <p className="text-xs font-bold uppercase tracking-[0.2em] text-pink-300">
-                Etapa 3
+                {t("stepThree")}
             </p>
 
             <h2 className="mt-3 text-2xl font-bold">
@@ -833,6 +835,8 @@ function DriveLink({
     label: string;
     url: string | null;
 }) {
+    const t = useTranslations("admin.modelPage");
+
     return (
         <div className="flex items-center justify-between gap-4 rounded-xl border border-white/10 bg-white/5 px-4 py-3">
             <span className="text-sm font-semibold">
@@ -846,11 +850,11 @@ function DriveLink({
                     rel="noreferrer"
                     className="text-xs font-bold text-emerald-300 hover:text-emerald-200"
                 >
-                    Abrir pasta
+                    {t("openFolder")}
                 </a>
             ) : (
                 <span className="text-xs font-bold text-red-300">
-                    Não configurada
+                    {t("notConfigured")}
                 </span>
             )}
         </div>

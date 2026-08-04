@@ -1425,7 +1425,14 @@
     "viewAs": {
       "bannerRepresentative": "Preview mode (Admin) — {label}",
       "exit": "Exit preview",
-      "exiting": "Exiting..."
+      "exiting": "Exiting...",
+      "banner": {
+        "mode": "View-as mode (Admin) — {label}",
+        "modelScreen": "Model's screen",
+        "representativeScreen": "Representative's screen",
+        "adminPanel": "Admin panel",
+        "backToPanel": "← Back to the panel"
+      }
     },
     "avatar": {
       "updated": "Photo updated.",
@@ -1544,7 +1551,9 @@
       },
       "title": "Claude Assistant",
       "intro": "Ask it to add, update or look up models in plain language.",
-      "backToModels": "← Back to models"
+      "backToModels": "← Back to models",
+      "emptyHint": "Ask in plain language, for example: “add a new model called Jane Doe, city Miami, status candidate” or “list the active models”.",
+      "thinking": "Thinking..."
     },
     "proxy": {
       "title": "Infrastructure",
@@ -1599,7 +1608,9 @@
       "none": "No photo on file.",
       "invalidType": "Please choose a valid image file.",
       "tooLarge": "The image must be 10 MB or smaller.",
-      "processFailed": "We couldn't process this image."
+      "processFailed": "We couldn't process this image.",
+      "eyebrow": "Model photo",
+      "hint": "Pick a photo from your computer. The image is cropped, resized and prepared for the profile automatically."
     },
     "social": {
       "restricted": "Management only",
@@ -1688,7 +1699,13 @@
         "An onboarding checklist"
       ],
       "selectPlaceholder": "Select...",
-      "view": "Preview"
+      "view": "Preview",
+      "pageview": "Pageview",
+      "activeCapacity": "Active model capacity",
+      "operationalLimit": "Operational limit: 30 models",
+      "representativeView": "Representative view",
+      "modelView": "Model view",
+      "progress": "Progress"
     },
     "modelPage": {
       "tabs": {
@@ -1820,7 +1837,16 @@
           "title": "Initial content",
           "description": "First photos and videos received."
         }
-      }
+      },
+      "backToModels": "← Back to models",
+      "profileEyebrow": "Model profile",
+      "currentProgress": "Current progress",
+      "onboardingProgress": "Onboarding progress",
+      "stepThree": "Step 3",
+      "openFolder": "Open folder",
+      "notConfigured": "Not configured",
+      "errorEyebrow": "Error",
+      "loadFailed": "Could not load the model"
     },
     "amplia": {
       "portal": "AMPLIA PORTAL",
@@ -1961,7 +1987,7 @@
       "publishFailed": "We couldn't change the publication state."
     },
     "ledger": {
-      "title": "Entries",
+      "title": "Ledger entries",
       "subtitle": "Expenses and loans in reais. The date the cost happened is only a record: the month the deduction date falls in is the month the amount leaves her earnings.",
       "type": "Type",
       "provider": "App",
@@ -1987,7 +2013,8 @@
       "deleteFailed": "We couldn't delete the entry.",
       "deleteTitle": "Delete this entry?",
       "deleteBody": "It disappears from the model's area and stops being deducted from the month. The record and its history are kept.",
-      "deleteConfirm": "Delete entry"
+      "deleteConfirm": "Delete entry",
+      "disabledHint": "Expenses and loans are turned off for this model. Turn them on under Overview → Financial settings to record spending in reais and deduct it from her earnings."
     },
     "platforms": {
       "title": "Registered platforms",
@@ -2190,7 +2217,8 @@
         "prohibitedWords": "Prohibited words",
         "neverReveal": "Never reveal",
         "neverGenerateNudity": "Never generate nudity"
-      }
+      },
+      "back": "← Back to AMPLIA MODELS"
     },
     "overview": {
       "onboarding": "Onboarding",
@@ -2481,6 +2509,11 @@
       "statusInstagram": "Instagram: launching",
       "statusTwitter": "X / Twitter: manual (API off)",
       "statusAiContent": "AI-generated content: manual"
+    },
+    "representativeModels": {
+      "noModels": "No models assigned",
+      "modelCount": "{count, plural, one {# model} other {# models}}",
+      "openRepresentativeScreen": "Open the representative's screen"
     }
   },
   "owner": {
@@ -2584,6 +2617,15 @@
       "confirmPhrase": "DELETE",
       "confirm": "Delete permanently",
       "busy": "Deleting..."
+    }
+  },
+  "representative": {
+    "dashboard": {
+      "title": "Representative Area",
+      "welcome": "Welcome, {name}.",
+      "assignedCount": "{count, plural, one {# model assigned} other {# models assigned}}",
+      "noModels": "No models assigned yet.",
+      "onboarding": "Onboarding"
     }
   }
 }

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 
 import { normalizeModelStatus } from "@/lib/models/modelStatusOrder";
 import type { ModelStatus } from "@/types/model";
@@ -15,14 +16,13 @@ export type RepresentativeDashboardModel = {
   last_login_at: string | null;
 };
 
-const statusDotConfig: Record<
-  ModelStatus,
-  { className: string; label: string }
-> = {
-  active: { className: "bg-green-500", label: "Ativo" },
-  inactive: { className: "bg-gray-400", label: "Inativo" },
-  candidate: { className: "bg-yellow-400", label: "Candidata" },
-  denied: { className: "bg-red-500", label: "Negada" },
+// The colour is presentation; the label it sits next to is UI copy and comes
+// from `enums.modelStatus`, keyed by the same database value.
+const statusDotConfig: Record<ModelStatus, string> = {
+  active: "bg-green-500",
+  inactive: "bg-gray-400",
+  candidate: "bg-yellow-400",
+  denied: "bg-red-500",
 };
 
 /**
@@ -48,6 +48,9 @@ export default function RepresentativeDashboardView({
     onboarding: (model: RepresentativeDashboardModel) => string;
   };
 }) {
+  const t = useTranslations("representative.dashboard");
+  const tStatus = useTranslations("enums.modelStatus");
+
   return (
     <main className="min-h-screen bg-[#f7f1ec] px-6 py-12">
       <div className="mx-auto max-w-7xl">
@@ -58,23 +61,23 @@ export default function RepresentativeDashboardView({
             </p>
 
             <h1 className="mt-3 text-4xl font-bold text-[#4b2438]">
-              Área do Representante
+              {t("title")}
             </h1>
 
             <p className="mt-3 text-[#765c68]">
-              Bem-vindo, {representativeName}.
+              {t("welcome", { name: representativeName })}
             </p>
           </div>
 
           <div className="text-sm text-[#765c68]">
-            {models.length} modelo(s) atribuída(s)
+            {t("assignedCount", { count: models.length })}
           </div>
         </div>
 
         {models.length === 0 ? (
           <div className="rounded-2xl border border-[#eadfd8] bg-white p-8 text-center">
             <p className="text-[#765c68]">
-              Nenhuma modelo atribuída ainda.
+              {t("noModels")}
             </p>
           </div>
         ) : (
@@ -85,7 +88,7 @@ export default function RepresentativeDashboardView({
                 model.active,
               );
 
-              const statusDot = statusDotConfig[modelStatus];
+              const statusDotClass = statusDotConfig[modelStatus];
 
               const percentage = Math.min(
                 Math.max(model.onboarding_percentage ?? 0, 0),
@@ -118,14 +121,14 @@ export default function RepresentativeDashboardView({
                     </div>
 
                     <div
-                      title={statusDot.label}
-                      className={`h-3 w-3 shrink-0 rounded-full ${statusDot.className}`}
+                      title={tStatus(modelStatus)}
+                      className={`h-3 w-3 shrink-0 rounded-full ${statusDotClass}`}
                     />
                   </Link>
 
                   <div className="mt-4 space-y-2">
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-[#765c68]">Onboarding</span>
+                      <span className="text-[#765c68]">{t("onboarding")}</span>
 
                       <span className="font-semibold text-[#4b2438]">
                         {model.onboarding_percentage}%

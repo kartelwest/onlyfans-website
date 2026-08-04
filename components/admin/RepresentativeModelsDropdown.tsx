@@ -1,3 +1,4 @@
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 
 import { normalizeModelStatus } from "@/lib/models/modelStatusOrder";
@@ -37,9 +38,11 @@ export default function RepresentativeModelsDropdown({
   representativeId: string;
   models: RepresentativeModel[];
 }) {
+  const t = useTranslations("admin.representativeModels");
+
   if (models.length === 0) {
     return (
-      <p className="text-xs text-white/40">Nenhuma modelo atribuída</p>
+      <p className="text-xs text-white/40">{t("noModels")}</p>
     );
   }
 
@@ -47,7 +50,7 @@ export default function RepresentativeModelsDropdown({
     <details className="group/models w-full min-w-[220px]">
       <summary className="flex cursor-pointer list-none items-center justify-between gap-2 rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-xs font-bold text-white/80 transition hover:bg-white/10 [&::-webkit-details-marker]:hidden">
         <span>
-          {models.length} modelo(s)
+          {t("modelCount", { count: models.length })}
         </span>
 
         <svg
@@ -96,7 +99,7 @@ export default function RepresentativeModelsDropdown({
           href={`/admin/view-as/representative/${representativeId}`}
           className="mt-1 block rounded-md border border-purple-400/30 bg-purple-500/10 px-2 py-2 text-center text-xs font-bold text-purple-200 transition hover:bg-purple-500/20"
         >
-          Abrir a tela do representante
+          {t("openRepresentativeScreen")}
         </Link>
       </div>
     </details>

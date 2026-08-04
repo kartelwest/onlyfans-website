@@ -38,7 +38,7 @@ export default function AmpliaDetailClient({
               href="/admin/socialmediamodels/models"
               className="text-xs font-semibold text-white/55 transition hover:text-white"
             >
-              ← Voltar para AMPLIA MODELS
+              {t("back")}
             </Link>
 
             <h1 className="mt-3 text-3xl font-bold sm:text-4xl">

@@ -107,7 +107,7 @@ export default function ModelPhotoUpload({
 
         <div className="flex-1">
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">
-            Foto da modelo
+            {t("eyebrow")}
           </p>
 
           <h3 className="mt-2 text-lg font-bold text-white">
@@ -115,9 +115,7 @@ export default function ModelPhotoUpload({
           </h3>
 
           <p className="mt-2 max-w-xl text-sm leading-6 text-zinc-400">
-            Selecione uma foto do computador. A imagem
-            será automaticamente recortada, reduzida e
-            preparada para uso no perfil.
+            {t("hint")}
           </p>
 
           {isEditing && (

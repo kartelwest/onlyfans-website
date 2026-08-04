@@ -1425,7 +1425,14 @@
     "viewAs": {
       "bannerRepresentative": "Modo de visualização (Admin) — {label}",
       "exit": "Sair da visualização",
-      "exiting": "Saindo..."
+      "exiting": "Saindo...",
+      "banner": {
+        "mode": "Modo de visualização (Admin) — {label}",
+        "modelScreen": "Tela da modelo",
+        "representativeScreen": "Tela do representante",
+        "adminPanel": "Painel admin",
+        "backToPanel": "← Voltar ao painel"
+      }
     },
     "avatar": {
       "updated": "Foto atualizada.",
@@ -1544,7 +1551,9 @@
       },
       "title": "Assistente Claude",
       "intro": "Peça para adicionar, atualizar ou consultar modelos usando linguagem natural.",
-      "backToModels": "← Voltar para modelos"
+      "backToModels": "← Voltar para modelos",
+      "emptyHint": "Peça em português, por exemplo: “adicione uma modelo nova chamada Jane Doe, cidade Miami, status candidata” ou “liste as modelos ativas”.",
+      "thinking": "Pensando..."
     },
     "proxy": {
       "title": "Infraestrutura",
@@ -1599,7 +1608,9 @@
       "none": "Nenhuma foto cadastrada.",
       "invalidType": "Selecione um arquivo de imagem válido.",
       "tooLarge": "A imagem deve ter no máximo 10 MB.",
-      "processFailed": "Não foi possível processar esta imagem."
+      "processFailed": "Não foi possível processar esta imagem.",
+      "eyebrow": "Foto da modelo",
+      "hint": "Selecione uma foto do computador. A imagem será automaticamente recortada, reduzida e preparada para uso no perfil."
     },
     "social": {
       "restricted": "Restrito à gestão",
@@ -1688,7 +1699,13 @@
         "Checklist de onboarding"
       ],
       "selectPlaceholder": "Selecione...",
-      "view": "Visualizar"
+      "view": "Visualizar",
+      "pageview": "Pageview",
+      "activeCapacity": "Capacidade de modelos ativas",
+      "operationalLimit": "Limite operacional: 30 modelos",
+      "representativeView": "Visão do representante",
+      "modelView": "Visão da modelo",
+      "progress": "Progresso"
     },
     "modelPage": {
       "tabs": {
@@ -1820,7 +1837,16 @@
           "title": "Conteúdo inicial",
           "description": "Fotos e vídeos iniciais recebidos."
         }
-      }
+      },
+      "backToModels": "← Voltar para modelos",
+      "profileEyebrow": "Perfil da modelo",
+      "currentProgress": "Progresso atual",
+      "onboardingProgress": "Progresso do onboarding",
+      "stepThree": "Etapa 3",
+      "openFolder": "Abrir pasta",
+      "notConfigured": "Não configurada",
+      "errorEyebrow": "Erro",
+      "loadFailed": "Não foi possível carregar a modelo"
     },
     "amplia": {
       "portal": "PORTAL DA AMPLIA",
@@ -1987,7 +2013,8 @@
       "deleteFailed": "Não foi possível excluir o lançamento.",
       "deleteTitle": "Excluir este lançamento?",
       "deleteBody": "Ele sai da área da modelo e deixa de ser descontado do mês. O registro e o histórico são mantidos.",
-      "deleteConfirm": "Excluir lançamento"
+      "deleteConfirm": "Excluir lançamento",
+      "disabledHint": "Despesas e empréstimos estão desativados para esta modelo. Ative em Resumo → Configurações financeiras para registrar gastos em reais e descontá-los dos ganhos."
     },
     "platforms": {
       "title": "Plataformas cadastradas",
@@ -2190,7 +2217,8 @@
         "prohibitedWords": "Palavras proibidas",
         "neverReveal": "Nunca revelar",
         "neverGenerateNudity": "Nunca gerar nudez"
-      }
+      },
+      "back": "← Voltar para AMPLIA MODELS"
     },
     "overview": {
       "onboarding": "Onboarding",
@@ -2481,6 +2509,11 @@
       "statusInstagram": "Instagram: em lançamento",
       "statusTwitter": "X / Twitter: manual (API desligada)",
       "statusAiContent": "Conteúdo gerado por IA: manual"
+    },
+    "representativeModels": {
+      "noModels": "Nenhuma modelo atribuída",
+      "modelCount": "{count, plural, one {# modelo} other {# modelos}}",
+      "openRepresentativeScreen": "Abrir a tela do representante"
     }
   },
   "owner": {
@@ -2584,6 +2617,15 @@
       "confirmPhrase": "EXCLUIR",
       "confirm": "Excluir permanentemente",
       "busy": "Excluindo..."
+    }
+  },
+  "representative": {
+    "dashboard": {
+      "title": "Área do Representante",
+      "welcome": "Bem-vindo, {name}.",
+      "assignedCount": "{count, plural, one {# modelo atribuída} other {# modelos atribuídas}}",
+      "noModels": "Nenhuma modelo atribuída ainda.",
+      "onboarding": "Onboarding"
     }
   }
 }
