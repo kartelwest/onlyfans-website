@@ -763,6 +763,48 @@ function ProfileInfoSection({ model }: { model: ModelDashboardModel }) {
 // Section 7 — Enviar conteúdo
 // ---------------------------------------------------------------------------
 
+/**
+ * One agency-assigned Drive folder, read-only.
+ *
+ * The label is always shown, whether or not a folder has been assigned, so an
+ * unassigned folder reads as "not set up yet" instead of simply being absent —
+ * and so the two folders can never be confused for one another.
+ */
+function DriveFolderLink({
+  label,
+  description,
+  url,
+}: {
+  label: string;
+  description: string;
+  url: string | null;
+}) {
+  return (
+    <div className="rounded-xl border border-white/10 bg-black/20 p-3">
+      <p className="text-xs font-bold uppercase tracking-[0.12em] text-white/50">
+        {label}
+      </p>
+
+      <p className="mt-1 text-[11px] text-white/40">{description}</p>
+
+      {url ? (
+        <a
+          href={url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mt-3 flex items-center justify-center rounded-xl border border-white/15 bg-white/5 px-4 py-3 text-sm font-bold text-white transition hover:bg-white/10"
+        >
+          Abrir pasta no Google Drive
+        </a>
+      ) : (
+        <p className="mt-3 rounded-xl border border-dashed border-white/10 px-4 py-3 text-center text-xs text-white/45">
+          Pasta ainda não configurada. Fale com a agência.
+        </p>
+      )}
+    </div>
+  );
+}
+
 function ContentSection({
   model,
   viewerRole,
@@ -842,20 +884,24 @@ function ContentSection({
       </p>
 
       <div className="mt-4 flex flex-col gap-3">
-        {model.contentDriveUrl ? (
-          <a
-            href={model.contentDriveUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center justify-center rounded-xl border border-white/15 bg-white/5 px-4 py-3 text-sm font-bold text-white transition hover:bg-white/10"
-          >
-            Abrir pasta no Google Drive
-          </a>
-        ) : (
-          <p className="rounded-xl border border-white/10 bg-black/20 px-4 py-3 text-center text-xs text-white/45">
-            Pasta do Google Drive ainda não configurada. Fale com a agência.
-          </p>
-        )}
+        {/*
+          Two folders, two purposes, and they must never be mistaken for each
+          other: the content folder is where her material goes, the Instagram
+          one is for her Instagram material. Both are set by the agency — there
+          is no editor here, and /api/models/update refuses anyone who is not
+          an owner or an administrator.
+        */}
+        <DriveFolderLink
+          label="Google Drive / Conteúdo"
+          description="Onde o seu conteúdo é enviado."
+          url={model.contentDriveUrl}
+        />
+
+        <DriveFolderLink
+          label="Google Drive / Instagram"
+          description="Material do seu Instagram."
+          url={model.driveInstagramUrl}
+        />
 
         <button
           type="button"

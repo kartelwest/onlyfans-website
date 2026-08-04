@@ -1206,6 +1206,11 @@ function NoteCard({
                                 note.createdByName}
                         </span>{" "}
                         ·{" "}
+                        {roleLabel(
+                            note.updatedByRole ??
+                                note.createdByRole,
+                        )}{" "}
+                        ·{" "}
                         {formatDateTime(
                             note.updatedAt,
                         )}

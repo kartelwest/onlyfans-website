@@ -409,19 +409,21 @@ export async function POST(
             );
         }
 
-        const historyError = isStaff
-            ? await createHistoryEntry(
-                  supabase,
-                  {
-                      noteId: createdNote.id,
-                      modelId,
-                      action: "created",
-                      originalBody: null,
-                      updatedBody: body,
-                      profile,
-                  },
-              )
-            : null;
+        // Every note is recorded, whoever wrote it. This used to skip the
+        // history for a representative because RLS refused her the insert; the
+        // representative_notes migration lets an assigned rep record her own
+        // note, so a rep's note is no longer the one kind with no trail.
+        const historyError = await createHistoryEntry(
+            supabase,
+            {
+                noteId: createdNote.id,
+                modelId,
+                action: "created",
+                originalBody: null,
+                updatedBody: body,
+                profile,
+            },
+        );
 
         if (historyError) {
             await supabase
@@ -792,11 +794,24 @@ async function editNote({
     modelId: string;
     requestBody: NotesRequestBody;
 }) {
-    if (profile.role !== "owner") {
+    // The owner edits any note. A representative edits the ones she wrote, on
+    // a model still assigned to her, and only while they are not deleted —
+    // checked here, then again by notes_update and by the
+    // guard_note_representative_update trigger, which narrows her to the text.
+    // An administrator edits none: an admin who disagrees with a note adds one.
+    const isOwner = profile.role === "owner";
+    const isAuthoringRep =
+        profile.role === "representative" &&
+        readRequiredString(existingNote.created_by) === profile.id &&
+        !existingNote.deleted_at;
+
+    if (!isOwner && !isAuthoringRep) {
         return NextResponse.json(
             {
                 error:
-                    "Somente o proprietário pode editar notas existentes.",
+                    profile.role === "representative"
+                        ? "Você só pode editar as notas que você mesmo escreveu."
+                        : "Somente o proprietário pode editar notas existentes.",
             },
             {
                 status: 403,
@@ -1601,7 +1616,11 @@ function createPermissions(
 
     return {
         canCreate: isStaff || isRep,
-        canEdit: role === "owner",
+        // A representative may correct what she wrote — and only what she
+        // wrote. RLS shows her nothing but her own notes, so this flag needs no
+        // per-note qualifier on her side; the API and a database trigger check
+        // authorship again on the write itself.
+        canEdit: role === "owner" || isRep,
         canPin: isStaff,
         canArchive: isStaff,
         // Soft delete (Excluir) is owner-only. Admins may archive; reps may create.

@@ -4,7 +4,9 @@ import { notFound, redirect } from "next/navigation";
 import RepresentativeModelsDropdown, {
   type RepresentativeModel,
 } from "@/components/admin/RepresentativeModelsDropdown";
+import { describeLogin } from "@/lib/auth/loginIdentifier";
 import { isStaffRole } from "@/lib/auth/roles";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { normalizeModelStatus } from "@/lib/models/modelStatusOrder";
 import {
   accountStatus,
@@ -14,6 +16,7 @@ import {
 import { createClient } from "@/lib/supabase/server";
 import type { ManagementRole } from "@/types/model";
 
+import RepresentativeCredentialsPanel from "./RepresentativeCredentialsPanel";
 import RepresentativeDetailsForm from "./RepresentativeDetailsForm";
 
 export const dynamic = "force-dynamic";
@@ -121,6 +124,14 @@ export default async function RepresentativeProfilePage({
         .order("created_at", { ascending: false })
         .limit(25),
     ]);
+
+  // The address she actually authenticates against. It lives in auth.users,
+  // which only the service-role client can read, and it is NOT necessarily the
+  // contact e-mail on her profile — once she has a username the two diverge.
+  const { data: authUser } = await createAdminClient()
+    .auth.admin.getUserById(repId);
+
+  const currentLogin = describeLogin(authUser?.user?.email ?? null);
 
   const models = (modelRows ?? []) as unknown as AssignedModel[];
   const notes = (noteRows ?? []) as unknown as RepNote[];
@@ -244,6 +255,27 @@ export default async function RepresentativeProfilePage({
               fullName={representative.full_name ?? ""}
               email={representative.email ?? ""}
               phone={representative.phone ?? ""}
+            />
+          </div>
+        </section>
+
+        <section className="mt-6 rounded-2xl border border-white/10 bg-[#111115] p-6">
+          <h2 className="text-sm font-bold uppercase tracking-[0.14em] text-pink-100">
+            Acesso e login
+          </h2>
+
+          <p className="mt-2 text-xs leading-5 text-white/45">
+            O login e a senha ficam apenas no serviço de autenticação — não há
+            senha guardada neste sistema e nenhuma senha aparece no histórico.
+            Uma senha definida aqui é temporária: o representante terá de trocá-la
+            no próximo acesso.
+          </p>
+
+          <div className="mt-5 max-w-xl">
+            <RepresentativeCredentialsPanel
+              representativeId={representative.id}
+              representativeName={representative.full_name || "este representante"}
+              currentLogin={currentLogin}
             />
           </div>
         </section>

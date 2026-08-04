@@ -31,7 +31,8 @@ type EditableField =
   | "preferredCurrency"
   | "contentFrequency"
   | "referralSource"
-  | "contentDriveUrl";
+  | "contentDriveUrl"
+  | "driveInstagram";
 
 type BooleanEditableField = "blockBrazil" | "showFace";
 
@@ -362,12 +363,25 @@ export default function OverviewTab({
               onSave={(value) => updateField("referralSource", value)}
             />
 
+            {/*
+              Both folders the model sees are edited here, and only here. They
+              are separate columns — content_drive_url and drive_instagram —
+              so neither ever overwrites the other.
+            */}
             <EditableTextField
-              label="Pasta do Google Drive (conteúdo)"
+              label="Google Drive / Conteúdo"
               value={model.contentDriveUrl}
               placeholder="https://drive.google.com/drive/folders/..."
               inputType="url"
               onSave={(value) => updateField("contentDriveUrl", value)}
+            />
+
+            <EditableTextField
+              label="Google Drive / Instagram"
+              value={model.driveInstagram}
+              placeholder="https://drive.google.com/drive/folders/..."
+              inputType="url"
+              onSave={(value) => updateField("driveInstagram", value)}
             />
 
             <BooleanToggle
@@ -387,8 +401,12 @@ export default function OverviewTab({
             <Info label="Frequência de conteúdo" value={model.contentFrequency} />
             <Info label="Indicação" value={model.referralSource} />
             <Info
-              label="Pasta do Google Drive (conteúdo)"
+              label="Google Drive / Conteúdo"
               value={model.contentDriveUrl}
+            />
+            <Info
+              label="Google Drive / Instagram"
+              value={model.driveInstagram}
             />
             <Info
               label="Bloquear Brasil"

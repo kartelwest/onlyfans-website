@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
+import DeleteRepresentativeButton from "@/components/admin/DeleteRepresentativeButton";
 import ModelRowActions from "@/components/admin/ModelRowActions";
 import ModelStatusDropdown from "@/components/admin/ModelStatusDropdown";
 import RepresentativeModelsDropdown, {
@@ -294,13 +295,6 @@ export default async function AdminModelsPage({
           </div>
 
           <div className="flex flex-wrap gap-3">
-            <Link
-              href="/admin"
-              className="rounded-xl border border-white/10 bg-white/5 px-5 py-3 text-sm font-semibold text-white/80 transition hover:bg-white/10"
-            >
-              Dashboard
-            </Link>
-
             <Link
               href="/admin/pageview"
               className="rounded-xl border border-purple-400/40 bg-purple-500/10 px-5 py-3 text-sm font-semibold text-purple-200 transition hover:bg-purple-500/20"
@@ -673,7 +667,8 @@ export default async function AdminModelsPage({
           emptyMessage="Nenhum representante cadastrado."
           isOwner={role === "owner"}
           manageAllHref="/admin/representatives"
-          manageAllLabel="Gerenciar representantes"
+          manageAllLabel="Ver todos os representantes"
+          showDeleteRepresentative
           profileHref={(profileId) => `/admin/representatives/${profileId}`}
           viewAsHref={(profileId) =>
             `/admin/view-as/representative/${profileId}`
@@ -748,6 +743,7 @@ function ProfileListSection({
   isOwner,
   manageAllHref,
   manageAllLabel,
+  showDeleteRepresentative = false,
   profileHref,
   viewAsHref,
   modelsByProfile,
@@ -759,6 +755,12 @@ function ProfileListSection({
   /** Link to the full management screen for this kind of account. */
   manageAllHref?: string;
   manageAllLabel?: string;
+  /**
+   * Representatives only. Swaps the per-row account link for "Excluir Rep",
+   * which the owner alone ever sees — and which the server action refuses for
+   * anyone else regardless.
+   */
+  showDeleteRepresentative?: boolean;
   profileHref?: (profileId: string) => string;
   viewAsHref?: (profileId: string) => string;
   modelsByProfile?: Map<string, RepresentativeModel[]>;
@@ -885,14 +887,24 @@ function ProfileListSection({
                             </Link>
                           )}
 
-                          {isOwner && (
-                            <Link
-                              href={`/owner/users/${profile.id}`}
-                              className="rounded-lg border border-white/15 px-4 py-2 text-center text-xs font-bold text-white/70 transition hover:bg-white/10"
-                            >
-                              Gerenciar conta
-                            </Link>
-                          )}
+                          {isOwner &&
+                            (showDeleteRepresentative ? (
+                              <DeleteRepresentativeButton
+                                representativeId={profile.id}
+                                representativeName={profile.full_name ?? ""}
+                                assignedModelCount={
+                                  modelsByProfile?.get(profile.id)?.length ?? 0
+                                }
+                                profileHref={`/admin/representatives/${profile.id}`}
+                              />
+                            ) : (
+                              <Link
+                                href={`/owner/users/${profile.id}`}
+                                className="rounded-lg border border-white/15 px-4 py-2 text-center text-xs font-bold text-white/70 transition hover:bg-white/10"
+                              >
+                                Gerenciar conta
+                              </Link>
+                            ))}
                         </div>
                       </TableCell>
                     )}

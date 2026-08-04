@@ -47,26 +47,10 @@ function getDriveClient() {
   return google.drive({ version: "v3", auth });
 }
 
-export function extractDriveFolderId(folderUrl: string): string | null {
-  const trimmed = folderUrl.trim();
-
-  const folderMatch = trimmed.match(/\/folders\/([a-zA-Z0-9_-]+)/);
-  if (folderMatch) {
-    return folderMatch[1];
-  }
-
-  const idParamMatch = trimmed.match(/[?&]id=([a-zA-Z0-9_-]+)/);
-  if (idParamMatch) {
-    return idParamMatch[1];
-  }
-
-  // A bare folder ID (no URL wrapper) is also accepted.
-  if (/^[a-zA-Z0-9_-]{10,}$/.test(trimmed)) {
-    return trimmed;
-  }
-
-  return null;
-}
+// Parsing a folder reference is not a server concern — the admin screens have
+// to apply the same rule as they type. It lives in lib/models/driveFolder.ts
+// and is re-exported here so this module stays the one import for uploads.
+export { extractDriveFolderId } from "@/lib/models/driveFolder";
 
 export async function uploadFileToDriveFolder(
   folderId: string,

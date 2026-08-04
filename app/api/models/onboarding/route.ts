@@ -4,12 +4,19 @@ import { logAuditEntry } from "@/lib/audit/auditLogger";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import {
+  CHECKBOX_TRUE,
   ONBOARDING_PLATFORM,
   findOnboardingField,
   findOnboardingItem,
   isReadOnlyLinkedFieldKey,
   linkedFieldLocation,
+  resolveDerivedStatus,
+  type OnboardingItemStatus,
 } from "@/lib/onboarding/definition";
+import {
+  DRIVE_FOLDER_ERROR,
+  isValidDriveFolderValue,
+} from "@/lib/models/driveFolder";
 import {
   syncOnboardingItems,
   loadOnboarding,
@@ -34,6 +41,27 @@ type PatchBody = {
     key?: string;
     value?: string;
   };
+};
+
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+/**
+ * Linked columns that hold a Google Drive folder. The checklist writes them
+ * through set_onboarding_linked_field, which does not know a folder from a
+ * sentence — so the shape is checked here, the same rule /api/models/update
+ * applies when the same columns are edited from the admin screens.
+ */
+const DRIVE_LINKED_FIELDS = new Set<string>([
+  "drive_onlyfans",
+  "drive_instagram",
+  "drive_twitter",
+  "content_drive_url",
+]);
+
+const STATUS_WORDS: Record<OnboardingItemStatus, string> = {
+  completed: "preenchido",
+  skipped: "pulado (não se aplica)",
+  pending: "pendente",
 };
 
 function fail(message: string, status: number) {
@@ -194,15 +222,48 @@ export async function PATCH(request: Request) {
       return fail("Etapa concluída: o representante não pode alterá-la.", 403);
     }
 
+    // The checklist as it stands right now. Read before anything is written so
+    // every audit row can carry the value that is being replaced, and so a save
+    // that changes nothing can be recognised as such and left unrecorded.
+    const before = await loadOnboarding({
+      supabase: auth.supabase,
+      modelId,
+      viewerRole: auth.profile.role,
+    });
+
+    const beforeItem = before.sections
+      .flatMap((section) => section.items)
+      .find((item) => item.itemKey === itemKey);
+
+    const actor = {
+      id: auth.profile.id,
+      fullName: auth.profile.full_name || "Usuário",
+      role: auth.profile.role,
+    };
+
     // ----- a fill-in box -----------------------------------------------------
-    if (body.field?.key) {
-      const fieldDefinition = findOnboardingField(itemKey, body.field.key);
+    //
+    // A request may carry a field, a checkbox, or both, so this half decides on
+    // its own whether it has work to do — an untouched field must not abandon
+    // the checkbox that came with it.
+    const fieldDefinition = body.field?.key
+      ? findOnboardingField(itemKey, body.field.key)
+      : undefined;
 
-      if (!fieldDefinition) {
-        return fail("Campo de onboarding desconhecido.", 400);
-      }
+    if (body.field?.key && !fieldDefinition) {
+      return fail("Campo de onboarding desconhecido.", 400);
+    }
 
-      const value = (body.field.value ?? "").trim();
+    if (fieldDefinition) {
+      const isCheckbox = fieldDefinition.type === "checkbox";
+
+      // A checkbox is stored as the literal "true" or as nothing at all, so
+      // there is exactly one truthy representation to reason about.
+      const value = isCheckbox
+        ? (body.field?.value ?? "") === CHECKBOX_TRUE
+          ? CHECKBOX_TRUE
+          : ""
+        : (body.field?.value ?? "").trim();
 
       // The actress's legal name and anything else read-only is shown for
       // reference only. The RPC would refuse it anyway (no allowlist entry);
@@ -217,7 +278,30 @@ export async function PATCH(request: Request) {
         );
       }
 
-      if (fieldDefinition.linked) {
+      if (
+        fieldDefinition.type === "email" &&
+        value !== "" &&
+        !EMAIL_PATTERN.test(value)
+      ) {
+        return fail("Informe um endereço de e-mail válido.", 400);
+      }
+
+      if (
+        fieldDefinition.linked &&
+        DRIVE_LINKED_FIELDS.has(fieldDefinition.linked) &&
+        !isValidDriveFolderValue(value)
+      ) {
+        return fail(DRIVE_FOLDER_ERROR, 400);
+      }
+
+      const previousValue =
+        beforeItem?.fields.find((field) => field.key === fieldDefinition.key)
+          ?.value ?? "";
+
+      // Saving a form without touching this box must not manufacture history.
+      const changed = previousValue !== value;
+
+      if (changed && fieldDefinition.linked) {
         // Goes to the column that already holds this value elsewhere in the
         // app, so it shows up there too — and stays editable there.
         const { error: rpcError } = await auth.supabase.rpc(
@@ -237,8 +321,8 @@ export async function PATCH(request: Request) {
             400,
           );
         }
-      } else {
-        const merged = {
+      } else if (changed) {
+        const merged: Record<string, unknown> = {
           ...(existing.field_values ?? {}),
           [fieldDefinition.key]: value,
         };
@@ -247,9 +331,52 @@ export async function PATCH(request: Request) {
           delete merged[fieldDefinition.key];
         }
 
+        // A step that ticks itself keeps its two fields mutually exclusive:
+        // typing an e-mail clears "does not apply", and ticking "does not
+        // apply" clears the e-mail. Done here rather than in the browser, so a
+        // direct API call cannot leave the pair in a state the UI never shows.
+        if (definition.completion) {
+          const { valueField, skipField } = definition.completion;
+
+          if (fieldDefinition.key === valueField && value !== "") {
+            delete merged[skipField];
+          }
+
+          if (fieldDefinition.key === skipField && value === CHECKBOX_TRUE) {
+            delete merged[valueField];
+          }
+        }
+
+        const update: Record<string, unknown> = {
+          field_values: merged,
+          updated_by: auth.user.id,
+        };
+
+        // The percentage counts `completed` rows, so a derived step has to
+        // write that column too — otherwise "skipped" would look identical to
+        // "nobody has looked at this yet" to the progress trigger.
+        if (definition.completion) {
+          const status = resolveDerivedStatus(
+            definition.completion,
+            Object.fromEntries(
+              Object.entries(merged).map(([key, entry]) => [
+                key,
+                typeof entry === "string" ? entry : String(entry ?? ""),
+              ]),
+            ),
+          );
+
+          const shouldBeComplete = status !== "pending";
+
+          if (shouldBeComplete !== existing.completed) {
+            update.completed = shouldBeComplete;
+            update.completed_by = shouldBeComplete ? auth.user.id : null;
+          }
+        }
+
         const { error: updateError } = await auth.supabase
           .from("model_onboarding_items")
-          .update({ field_values: merged, updated_by: auth.user.id })
+          .update(update)
           .eq("id", existing.id);
 
         if (updateError) {
@@ -262,24 +389,74 @@ export async function PATCH(request: Request) {
         }
       }
 
-      await logAuditEntry(auth.supabase, {
-        modelId,
-        action: "onboarding_update",
-        fieldName: `${itemKey}.${fieldDefinition.key}`,
-        previousValue: null,
-        newValue: value || null,
-        actor: {
-          id: auth.profile.id,
-          fullName: auth.profile.full_name || "Usuário",
-          role: auth.profile.role,
-        },
-        source: "api:/api/models/onboarding",
-        summary: `Onboarding — "${definition.title}": ${fieldDefinition.label} atualizado`,
-      });
+      const readableValue = (raw: string) =>
+        isCheckbox ? (raw === CHECKBOX_TRUE ? "sim" : "não") : raw || null;
+
+      if (changed) {
+        await logAuditEntry(auth.supabase, {
+          modelId,
+          action: "onboarding_update",
+          fieldName: `${itemKey}.${fieldDefinition.key}`,
+          previousValue: readableValue(previousValue),
+          newValue: readableValue(value),
+          actor,
+          source: "api:/api/models/onboarding",
+          summary: `Onboarding — "${definition.title}": ${fieldDefinition.label} alterado de "${
+            readableValue(previousValue) ?? "vazio"
+          }" para "${readableValue(value) ?? "vazio"}"`,
+        });
+      }
+
+      // A derived step's completion moved with the field; record that too, so
+      // the history says "skipped" rather than leaving the reader to infer it.
+      if (definition.completion) {
+        const after = await loadOnboarding({
+          supabase: auth.supabase,
+          modelId,
+          viewerRole: auth.profile.role,
+        });
+
+        const afterItem = after.sections
+          .flatMap((section) => section.items)
+          .find((item) => item.itemKey === itemKey);
+
+        if (
+          afterItem?.status &&
+          beforeItem?.status &&
+          afterItem.status !== beforeItem.status
+        ) {
+          await logAuditEntry(auth.supabase, {
+            modelId,
+            action: "onboarding_update",
+            fieldName: itemKey,
+            previousValue: STATUS_WORDS[beforeItem.status],
+            newValue: STATUS_WORDS[afterItem.status],
+            actor,
+            source: "api:/api/models/onboarding",
+            summary: `Onboarding — "${definition.title}" passou de ${
+              STATUS_WORDS[beforeItem.status]
+            } para ${STATUS_WORDS[afterItem.status]}`,
+          });
+        }
+
+        return respondWithCurrent(auth, modelId, after);
+      }
     }
 
     // ----- the checkbox ------------------------------------------------------
     if (typeof body.completed === "boolean") {
+      if (definition.completion) {
+        return fail(
+          `"${definition.title}" conclui-se sozinha: preencha o campo ou marque a caixa de "não se aplica".`,
+          400,
+        );
+      }
+
+      // Nothing changed, so nothing is recorded.
+      if (body.completed === existing.completed) {
+        return respondWithCurrent(auth, modelId);
+      }
+
       // Re-read after any field write above, so a box being ticked in the same
       // request as its last required field is judged on the new values.
       const { sections } = await loadOnboarding({
@@ -321,45 +498,59 @@ export async function PATCH(request: Request) {
         modelId,
         action: "onboarding_update",
         fieldName: itemKey,
-        previousValue: existing.completed ? "completed" : "pending",
-        newValue: body.completed ? "completed" : "pending",
-        actor: {
-          id: auth.profile.id,
-          fullName: auth.profile.full_name || "Usuário",
-          role: auth.profile.role,
-        },
+        previousValue: existing.completed ? "concluída" : "pendente",
+        newValue: body.completed ? "concluída" : "pendente",
+        actor,
         source: "api:/api/models/onboarding",
-        summary: `Onboarding — "${definition.title}" marcado como ${
-          body.completed ? "concluído" : "pendente"
+        summary: `Onboarding — "${definition.title}" ${
+          body.completed ? "marcada como concluída" : "reaberta"
         }`,
       });
     }
 
-    // The percentage is maintained by trg_onboarding_progress, so re-reading
-    // here is what the client gets back — never a number computed twice.
-    const refreshed = await resolveOnboardingAccess({
-      supabase: auth.supabase,
-      modelId,
-      userId: auth.user.id,
-      role: auth.profile.role,
-    });
-
-    const { sections, summary } = await loadOnboarding({
-      supabase: auth.supabase,
-      modelId,
-      viewerRole: auth.profile.role,
-    });
-
-    return NextResponse.json({
-      sections,
-      summary,
-      canEdit: refreshed.canEdit,
-      locked: refreshed.locked,
-      viewerRole: auth.profile.role,
-    });
+    return respondWithCurrent(auth, modelId);
   } catch (error) {
     console.error("Erro ao atualizar onboarding:", error);
 
     return fail("Erro interno ao atualizar o onboarding.", 500);
   }
+}
+
+/**
+ * The checklist as it stands after the write.
+ *
+ * The percentage is maintained by trg_onboarding_progress, so it is read back
+ * from the database rather than computed a second time here.
+ */
+async function respondWithCurrent(
+  auth: {
+    supabase: Awaited<ReturnType<typeof createClient>>;
+    user: { id: string };
+    profile: ProfileRecord;
+  },
+  modelId: string,
+  preloaded?: Awaited<ReturnType<typeof loadOnboarding>>,
+) {
+  const refreshed = await resolveOnboardingAccess({
+    supabase: auth.supabase,
+    modelId,
+    userId: auth.user.id,
+    role: auth.profile.role,
+  });
+
+  const { sections, summary } =
+    preloaded ??
+    (await loadOnboarding({
+      supabase: auth.supabase,
+      modelId,
+      viewerRole: auth.profile.role,
+    }));
+
+  return NextResponse.json({
+    sections,
+    summary,
+    canEdit: refreshed.canEdit,
+    locked: refreshed.locked,
+    viewerRole: auth.profile.role,
+  });
 }

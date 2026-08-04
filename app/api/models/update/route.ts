@@ -3,6 +3,10 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { logAuditEntry, getFieldLabel } from "@/lib/audit/auditLogger";
 import { isCountryCode } from "@/lib/countries";
+import {
+  DRIVE_FOLDER_ERROR,
+  isValidDriveFolderValue,
+} from "@/lib/models/driveFolder";
 import { normalizeCurrencyCode } from "@/lib/money/currency";
 
 import type { ManagementRole } from "@/types/model";
@@ -38,6 +42,19 @@ const allowedModelFields = {
   contentFrequency: "content_frequency",
   referralSource: "referral_source",
 } as const;
+
+/**
+ * The columns holding a Google Drive folder reference. Both of the two the
+ * model herself ever sees are here — `content_drive_url` (her content folder)
+ * and `drive_instagram` (Google Drive / Instagram) — plus the two the agency
+ * keeps internally.
+ */
+const DRIVE_FOLDER_FIELDS = new Set<string>([
+  "drive_onlyfans",
+  "drive_instagram",
+  "drive_twitter",
+  "content_drive_url",
+]);
 
 const allowedBooleanModelFields = {
   blockBrazil: "block_brazil",
@@ -326,6 +343,18 @@ export async function PATCH(
       if (!normalizeCurrencyCode(normalizedValue)) {
         return NextResponse.json(
           { error: "Moeda inválida. Use um código ISO 4217, como BRL ou USD." },
+          { status: 400 },
+        );
+      }
+    }
+
+    // A Drive folder that does not parse is a dead link handed to a model, and
+    // the upload route cannot resolve a folder ID from it either. Clearing the
+    // field is still allowed — that is how a folder is removed.
+    if (DRIVE_FOLDER_FIELDS.has(dbField)) {
+      if (!isValidDriveFolderValue(normalizedValue)) {
+        return NextResponse.json(
+          { error: DRIVE_FOLDER_ERROR },
           { status: 400 },
         );
       }

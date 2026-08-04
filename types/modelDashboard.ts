@@ -27,7 +27,10 @@ export interface ModelDashboardModel {
   showFace: boolean;
   referralSource: string | null;
 
+  /** The content folder she uploads into. Read-only to her. */
   contentDriveUrl: string | null;
+  /** "Google Drive / Instagram" — a different folder, for a different purpose. */
+  driveInstagramUrl: string | null;
 }
 
 export interface ModelDashboardChecklist {

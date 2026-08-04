@@ -4,13 +4,12 @@ import { useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
-import ConfirmDialog from "@/components/ui/ConfirmDialog";
+import DeleteRepresentativeButton from "@/components/admin/DeleteRepresentativeButton";
 import RepresentativeModelsDropdown, {
   type RepresentativeModel,
 } from "@/components/admin/RepresentativeModelsDropdown";
 
 import {
-  deleteRepresentative,
   updateRepresentativeStatus,
   viewAsRepresentative,
 } from "./actions";
@@ -78,11 +77,6 @@ export default function RepresentativesClient({
   const [isPending, startTransition] = useTransition();
   const [statusFilter, setStatusFilter] = useState(initialStatusFilter);
   const [message, setMessage] = useState<string | null>(null);
-  const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [pendingDelete, setPendingDelete] = useState<{
-    id: string;
-    name: string;
-  } | null>(null);
 
   const filtered =
     statusFilter === "all"
@@ -100,33 +94,6 @@ export default function RepresentativesClient({
       setMessage(result.message);
 
       if (result.success) {
-        router.refresh();
-      }
-    });
-  }
-
-  // The confirmation happens in the page (see ConfirmDialog): window.prompt is
-  // suppressed by some mobile in-app browsers, and a suppressed prompt returns
-  // null, so the button silently does nothing.
-  function requestDelete(representativeId: string, fullName: string) {
-    setPendingDelete({ id: representativeId, name: fullName || "sem nome" });
-  }
-
-  async function handleDelete(representativeId: string) {
-    const formData = new FormData();
-    formData.set("representativeId", representativeId);
-    formData.set("confirmation", "EXCLUIR");
-
-    setDeletingId(representativeId);
-
-    startTransition(async () => {
-      const result = await deleteRepresentative(null, formData);
-
-      setDeletingId(null);
-      setMessage(result.message);
-
-      if (result.success) {
-        setPendingDelete(null);
         router.refresh();
       }
     });
@@ -284,7 +251,7 @@ export default function RepresentativesClient({
                         {rep.status === "ativa" && (
                           <button
                             type="button"
-                            disabled={isPending || deletingId === rep.id}
+                            disabled={isPending}
                             onClick={() => handleViewAs(rep.id)}
                             className="rounded-lg border border-pink-400/30 bg-pink-500/10 px-3 py-2 text-xs font-bold text-pink-200 transition hover:bg-pink-500/20 disabled:opacity-40"
                           >
@@ -300,19 +267,15 @@ export default function RepresentativesClient({
                         </Link>
 
                         {isOwner && (
-                          <button
-                            type="button"
-                            disabled={isPending || deletingId === rep.id}
-                            onClick={() =>
-                              requestDelete(
-                                rep.id,
-                                rep.full_name || "",
-                              )
+                          <DeleteRepresentativeButton
+                            representativeId={rep.id}
+                            representativeName={rep.full_name ?? ""}
+                            assignedModelCount={
+                              modelsByRepresentative.get(rep.id)?.length ?? 0
                             }
-                            className="rounded-lg border border-red-600/40 bg-red-500/10 px-3 py-2 text-xs font-bold text-red-300 transition hover:bg-red-500/20 disabled:opacity-40"
-                          >
-                            Excluir
-                          </button>
+                            profileHref={`/admin/representatives/${rep.id}`}
+                            className="rounded-lg border border-red-600/40 bg-red-500/10 px-3 py-2 text-xs font-bold text-red-300 transition hover:bg-red-500/20 disabled:cursor-not-allowed disabled:opacity-40"
+                          />
                         )}
                       </div>
                     </td>
@@ -324,35 +287,6 @@ export default function RepresentativesClient({
         </div>
       </div>
 
-      <ConfirmDialog
-        open={pendingDelete !== null}
-        title="Excluir este representante em definitivo?"
-        description={
-          <>
-            <p>
-              A conta e o login são apagados e a ação não pode ser desfeita. As
-              modelos atribuídas continuam no sistema, mas ficam sem
-              representante.
-            </p>
-            <p>
-              Prefere manter o histórico acessível? Use <strong>Arquivar</strong>
-              : a conta perde o acesso, sai das listas ativas e pode voltar
-              depois.
-            </p>
-          </>
-        }
-        detail={pendingDelete?.name}
-        requirePhrase="EXCLUIR"
-        confirmLabel="Excluir permanentemente"
-        busyLabel="Excluindo..."
-        busy={deletingId !== null}
-        onCancel={() => setPendingDelete(null)}
-        onConfirm={() => {
-          if (pendingDelete) {
-            void handleDelete(pendingDelete.id);
-          }
-        }}
-      />
     </>
   );
 }

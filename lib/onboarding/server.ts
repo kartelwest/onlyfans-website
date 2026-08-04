@@ -9,8 +9,11 @@ import {
   flattenOnboarding,
   isReadOnlyLinkedFieldKey,
   linkedFieldLocation,
+  resolveDerivedStatus,
   type AnyLinkedFieldKey,
   type LinkedFieldKey,
+  type OnboardingDerivedCompletion,
+  type OnboardingItemStatus,
   type OnboardingResponsibility,
 } from "./definition";
 
@@ -246,6 +249,16 @@ export type OnboardingItemView = {
   missingRequired: string[];
   /** True when a representative may no longer change this completed item. */
   locked: boolean;
+  /**
+   * Set only on a step that ticks itself (see OnboardingDerivedCompletion).
+   * "skipped" means intentionally not applicable, which counts as done — the
+   * distinction `completed` alone cannot carry.
+   */
+  status: OnboardingItemStatus | null;
+  /** True when the checkbox is derived and must not be clicked by hand. */
+  derived: boolean;
+  /** Which field carries the value and which one skips it. Null when not derived. */
+  completion: OnboardingDerivedCompletion | null;
 };
 
 export type OnboardingSectionView = {
@@ -456,9 +469,22 @@ export async function loadOnboarding({
         },
       );
 
-      const missingRequired = fields
-        .filter((field) => field.required && field.value.trim() === "")
-        .map((field) => field.label);
+      // A derived step has nothing to block on: it is finished by filling the
+      // value in or by ticking the skip box, and neither is "required".
+      const missingRequired = item.completion
+        ? []
+        : fields
+            .filter((field) => field.required && field.value.trim() === "")
+            .map((field) => field.label);
+
+      const status: OnboardingItemStatus | null = item.completion
+        ? resolveDerivedStatus(
+            item.completion,
+            Object.fromEntries(
+              fields.map((field) => [field.key, field.value]),
+            ),
+          )
+        : null;
 
       items.push({
         id: row.id,
@@ -475,6 +501,9 @@ export async function loadOnboarding({
         fields,
         missingRequired,
         locked: isRep && row.completed,
+        status,
+        derived: Boolean(item.completion),
+        completion: item.completion ?? null,
       });
 
       total += 1;

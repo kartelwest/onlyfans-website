@@ -30,7 +30,16 @@ export type OnboardingFieldType =
   | "email"
   | "tel"
   | "date"
-  | "select";
+  | "select"
+  /** A tick box. Stored as the string "true", or absent when not ticked. */
+  | "checkbox";
+
+/** The stored value of a ticked checkbox field. */
+export const CHECKBOX_TRUE = "true";
+
+export function isCheckboxChecked(value: string | null | undefined): boolean {
+  return value === CHECKBOX_TRUE;
+}
 
 /**
  * Every column the checklist is allowed to write through
@@ -62,9 +71,15 @@ export const LINKED_FIELDS = {
   facebook: { label: "Facebook", location: "Aba Plataformas" },
 
   drive_onlyfans: { label: "Drive — OnlyFans", location: "Aba Google Drive" },
-  drive_instagram: { label: "Drive — Instagram", location: "Aba Google Drive" },
+  drive_instagram: {
+    label: "Google Drive / Instagram",
+    location: "Resumo ou aba Google Drive",
+  },
   drive_twitter: { label: "Drive — X / Twitter", location: "Aba Google Drive" },
-  content_drive_url: { label: "Pasta de conteúdo", location: "Aba Google Drive" },
+  content_drive_url: {
+    label: "Google Drive / Conteúdo",
+    location: "Resumo ou aba Google Drive",
+  },
 
   // These are the columns public.model_payments ACTUALLY has. The names in
   // 20260722000001_initial_schema.sql (pix_type, bank_agency, bank_account,
@@ -145,6 +160,29 @@ export type OnboardingField = {
   linked?: AnyLinkedFieldKey;
 };
 
+/**
+ * A step that ticks itself.
+ *
+ * Some requirements are genuinely optional: either the value is supplied, or
+ * somebody decides it does not apply. Both outcomes are a finished decision, so
+ * both count towards the percentage — and "nobody has looked at this yet" must
+ * not. A hand-ticked checkbox cannot express that difference, so these steps
+ * derive their state from two fields instead:
+ *
+ *   value filled in  → completed
+ *   skip box ticked  → skipped   (also counts as done)
+ *   neither          → pending   (does not count)
+ *
+ * The two are mutually exclusive and the server keeps them that way: filling in
+ * the value clears the skip box, and ticking the skip box clears the value.
+ */
+export type OnboardingDerivedCompletion = {
+  /** Field key whose value satisfies the step. */
+  valueField: string;
+  /** Checkbox field key that satisfies the step instead. */
+  skipField: string;
+};
+
 export type OnboardingItem = {
   /** Permanent. See the file header. */
   key: string;
@@ -152,7 +190,31 @@ export type OnboardingItem = {
   description?: string;
   responsibility: OnboardingResponsibility;
   fields?: OnboardingField[];
+  /** When set, the step is never ticked by hand. See the type above. */
+  completion?: OnboardingDerivedCompletion;
 };
+
+export type OnboardingItemStatus = "completed" | "skipped" | "pending";
+
+/**
+ * The tri-state of a derived step, from the values its fields currently hold.
+ * The single place this rule is expressed — the API, the percentage and the UI
+ * all read it from here.
+ */
+export function resolveDerivedStatus(
+  completion: OnboardingDerivedCompletion,
+  values: Record<string, string>,
+): OnboardingItemStatus {
+  if ((values[completion.valueField] ?? "").trim() !== "") {
+    return "completed";
+  }
+
+  if (isCheckboxChecked(values[completion.skipField])) {
+    return "skipped";
+  }
+
+  return "pending";
+}
 
 export type OnboardingSection = {
   /** Permanent, same reasoning as item keys. */
@@ -222,6 +284,33 @@ export const ONBOARDING_SECTIONS: OnboardingSection[] = [
             type: "tel",
             required: true,
             linked: "whatsapp",
+          },
+        ],
+      },
+      {
+        // Optional by design: an e-mail OR an explicit "does not apply". Both
+        // finish the step; leaving both empty does not. See
+        // OnboardingDerivedCompletion.
+        key: "secondary_email",
+        title: "E-mail secundário",
+        description:
+          "Um segundo e-mail de contato, quando existir. Se a modelo não tiver um, marque a caixa para pular — a etapa conta como concluída nos dois casos, e fica pendente enquanto nenhum dos dois for preenchido.",
+        responsibility: "both",
+        completion: {
+          valueField: "secondary_email",
+          skipField: "skip_secondary_email",
+        },
+        fields: [
+          {
+            key: "secondary_email",
+            label: "E-mail secundário",
+            type: "email",
+            placeholder: "segundo@exemplo.com",
+          },
+          {
+            key: "skip_secondary_email",
+            label: "Não se aplica / pular e-mail secundário",
+            type: "checkbox",
           },
         ],
       },

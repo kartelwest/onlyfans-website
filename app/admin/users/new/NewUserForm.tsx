@@ -640,17 +640,38 @@ export default function NewUserForm({
           </FormField>
         )}
 
-        <FormField label="E-mail" required>
+        {/*
+          A model always signs in with a real address — it is her contact
+          e-mail too. A representative or an administrator may instead be given
+          a bare username, which the server registers under the reserved login
+          domain, so the field cannot be type="email" for them.
+        */}
+        <FormField
+          label={isModel ? "E-mail" : "E-mail ou nome de usuário"}
+          required
+        >
           <input
-            type="email"
+            type={isModel ? "email" : "text"}
             value={form.email}
             onChange={(event) =>
               updateField("email", event.target.value)
             }
-            placeholder="email@exemplo.com"
-            autoComplete="email"
+            placeholder={
+              isModel ? "email@exemplo.com" : "email@exemplo.com ou joao.silva"
+            }
+            autoComplete={isModel ? "email" : "off"}
+            autoCapitalize={isModel ? undefined : "none"}
+            spellCheck={isModel ? undefined : false}
             className={inputClassName}
           />
+
+          {!isModel && (
+            <p className="mt-2 text-xs text-white/45">
+              Com &quot;@&quot; será tratado como e-mail; sem &quot;@&quot;, como
+              nome de usuário. A senha temporária definida abaixo terá de ser
+              trocada no primeiro acesso.
+            </p>
+          )}
         </FormField>
 
         <FormField label="Telefone / WhatsApp" required={isModel}>

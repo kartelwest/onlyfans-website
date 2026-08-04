@@ -8,6 +8,11 @@ import {
   normalizePhone,
   normalizeCountry,
 } from "@/lib/admin/modelOnboardingHelpers";
+import {
+  resolveLoginIdentifier,
+  USERNAME_MAX_LENGTH,
+  USERNAME_MIN_LENGTH,
+} from "@/lib/auth/loginIdentifier";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { ensureOnlyFansEnrollmentForModel } from "@/lib/brand/talent";
@@ -196,6 +201,36 @@ export async function POST(request: Request) {
       }
     }
 
+    // A representative or an administrator may be given a bare username instead
+    // of an address — the same rule a model's login already follows. Supabase
+    // authenticates by e-mail only, so a username is registered under the
+    // reserved login domain and the person types just the username.
+    //
+    // `loginEmail` is what Supabase Auth registers; `contactEmail` is the
+    // address written to the profile, and stays null for a username, because a
+    // synthetic address is not somewhere anyone can be reached.
+    let loginEmail = email;
+    let contactEmail: string | null = emailResult.valid ? email : null;
+
+    if (role !== "model") {
+      const resolved = resolveLoginIdentifier(email);
+
+      if (!resolved.ok) {
+        return NextResponse.json(
+          {
+            error:
+              resolved.reason === "invalid_email"
+                ? "Informe um endereço de e-mail válido."
+                : `O nome de usuário deve ter de ${USERNAME_MIN_LENGTH} a ${USERNAME_MAX_LENGTH} caracteres e usar apenas letras, números, ponto, hífen ou sublinhado.`,
+          },
+          { status: 400 },
+        );
+      }
+
+      loginEmail = resolved.email;
+      contactEmail = resolved.username ? null : resolved.email;
+    }
+
     const adminSupabase = createAdminClient();
 
     let assignedRepresentativeId: string | null = null;
@@ -303,7 +338,7 @@ export async function POST(request: Request) {
       data: createdAuthData,
       error: createAuthError,
     } = await adminSupabase.auth.admin.createUser({
-      email,
+      email: loginEmail,
       password: temporaryPassword,
       email_confirm: true,
       user_metadata: {
@@ -356,7 +391,14 @@ export async function POST(request: Request) {
         full_name: fullName,
         role,
         active,
-        must_change_password: role === "model" ? true : false,
+        // The profile carries the contact address so the representative and
+        // administrator lists have something to show; a username-only account
+        // leaves it null rather than displaying an internal synthetic address.
+        email: contactEmail,
+        // Anyone handed a password by somebody else replaces it at first
+        // login. That has always applied to a model; a representative is given
+        // her password the same way, so it applies to her too.
+        must_change_password: role === "model" || role === "representative",
       });
 
     if (createProfileError) {

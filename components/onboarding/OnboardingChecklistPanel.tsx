@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 
+import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import type { ManagementRole } from "@/types/model";
 
 type Responsibility = "model" | "agency" | "both";
@@ -31,7 +32,17 @@ type ItemView = {
   fields: FieldView[];
   missingRequired: string[];
   locked: boolean;
+  /** Only on a step that ticks itself. See `derived`. */
+  status: "completed" | "skipped" | "pending" | null;
+  /**
+   * The step's completion follows its fields instead of a click: fill the
+   * value in, or tick "does not apply". Both finish it.
+   */
+  derived: boolean;
+  completion: { valueField: string; skipField: string } | null;
 };
+
+const CHECKBOX_TRUE = "true";
 
 type SectionView = {
   key: string;
@@ -428,7 +439,14 @@ function ItemRow({
   onSaveField: (fieldKey: string, value: string) => Promise<boolean>;
 }) {
   const blocked = item.missingRequired.length > 0 && !item.completed;
-  const itemDisabled = !canEdit || isSaving || blocked || item.locked;
+
+  // A derived step is never clicked: the fields below decide it. Disabling the
+  // box (rather than hiding it) keeps the row's shape and still shows the
+  // state — and the API refuses a manual toggle regardless.
+  const itemDisabled =
+    !canEdit || isSaving || blocked || item.locked || item.derived;
+
+  const skipped = item.status === "skipped";
 
   return (
     <div
@@ -445,30 +463,42 @@ function ItemRow({
             item.completed ? "Marcar como pendente" : "Marcar como concluída"
           }
           title={
-            item.locked
-              ? "Concluída e bloqueada para o representante"
-              : blocked
-                ? `Preencha antes: ${item.missingRequired.join(", ")}`
-                : undefined
+            item.derived
+              ? "Esta etapa se conclui sozinha: preencha o campo ou marque “não se aplica”."
+              : item.locked
+                ? "Concluída e bloqueada para o representante"
+                : blocked
+                  ? `Preencha antes: ${item.missingRequired.join(", ")}`
+                  : undefined
           }
           className={`mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border text-sm font-black transition ${
-            item.completed
-              ? "border-emerald-400 bg-emerald-400 text-black"
-              : "border-white/25 bg-white/5 text-transparent hover:border-pink-300"
+            skipped
+              ? "border-white/30 bg-white/15 text-white/70"
+              : item.completed
+                ? "border-emerald-400 bg-emerald-400 text-black"
+                : "border-white/25 bg-white/5 text-transparent hover:border-pink-300"
           } disabled:cursor-not-allowed disabled:opacity-50`}
         >
-          {isSaving ? "…" : item.completed ? "✓" : ""}
+          {isSaving ? "…" : skipped ? "–" : item.completed ? "✓" : ""}
         </button>
 
         <div className="min-w-0 flex-1">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <div>
               <h4
-                className={`text-sm font-bold ${
-                  item.completed ? "text-emerald-200" : "text-white"
+                className={`flex flex-wrap items-center gap-2 text-sm font-bold ${
+                  skipped
+                    ? "text-white/70"
+                    : item.completed
+                      ? "text-emerald-200"
+                      : "text-white"
                 }`}
               >
                 {item.title}
+
+                {item.derived && item.status && (
+                  <StatusChip status={item.status} />
+                )}
               </h4>
 
               {item.description && (
@@ -487,8 +517,24 @@ function ItemRow({
                 <FieldInput
                   key={field.key}
                   field={field}
-                  disabled={!canEdit || field.readOnly || item.locked}
+                  disabled={
+                    !canEdit ||
+                    field.readOnly ||
+                    item.locked ||
+                    // Ticking "does not apply" is what empties this box, and it
+                    // asks first. Typing into a field the step has been told
+                    // does not apply would only put the pair back in conflict.
+                    (skipped && field.key === item.completion?.valueField)
+                  }
                   isSaving={savingKey === `${item.itemKey}.${field.key}`}
+                  confirmBeforeChecking={
+                    item.completion?.skipField === field.key &&
+                    (item.fields.find(
+                      (sibling) => sibling.key === item.completion?.valueField,
+                    )?.value ?? "") !== ""
+                      ? "Marcar “não se aplica” apaga o e-mail secundário já preenchido. Deseja continuar?"
+                      : null
+                  }
                   onSave={(value) => onSaveField(field.key, value)}
                 />
               ))}
@@ -526,15 +572,22 @@ function FieldInput({
   field,
   disabled,
   isSaving,
+  confirmBeforeChecking = null,
   onSave,
 }: {
   field: FieldView;
   disabled: boolean;
   isSaving: boolean;
+  /**
+   * Shown before a checkbox is ticked, when ticking it discards a value the
+   * step already holds. Null when there is nothing to lose.
+   */
+  confirmBeforeChecking?: string | null;
   onSave: (value: string) => Promise<boolean>;
 }) {
   const [value, setValue] = useState(field.value);
   const [saved, setSaved] = useState(false);
+  const [pendingCheck, setPendingCheck] = useState(false);
 
   // A save re-reads the whole checklist, so the value can change underneath
   // this input — including from someone editing the same linked field in the
@@ -566,6 +619,82 @@ function FieldInput({
 
   const inputClassName =
     "w-full rounded-lg border border-white/15 bg-black/30 px-3 py-2 text-sm text-white outline-none transition placeholder:text-white/25 focus:border-pink-400/60 disabled:cursor-not-allowed disabled:opacity-50";
+
+  // A checkbox saves the moment it is clicked — there is no blur to wait for,
+  // and an unsaved tick would misrepresent the step's state.
+  if (field.type === "checkbox") {
+    const checked = value === CHECKBOX_TRUE;
+
+    async function applyCheckbox(next: boolean) {
+      const nextValue = next ? CHECKBOX_TRUE : "";
+
+      setValue(nextValue);
+
+      const ok = await onSave(nextValue);
+
+      if (ok) {
+        setSaved(true);
+        window.setTimeout(() => setSaved(false), 2000);
+      } else {
+        setValue(field.value);
+      }
+    }
+
+    return (
+      <>
+        <label
+          className={`flex items-start gap-3 rounded-lg border px-3 py-3 text-sm transition ${
+            disabled
+              ? "cursor-not-allowed border-white/5 bg-white/[0.02] text-white/30"
+              : checked
+                ? "cursor-pointer border-pink-400/50 bg-pink-500/10 text-white"
+                : "cursor-pointer border-white/15 bg-black/30 text-white/70 hover:bg-white/5"
+          }`}
+        >
+          <input
+            type="checkbox"
+            checked={checked}
+            disabled={disabled || isSaving}
+            onChange={(event) => {
+              if (event.target.checked && confirmBeforeChecking) {
+                setPendingCheck(true);
+                return;
+              }
+
+              void applyCheckbox(event.target.checked);
+            }}
+            className="mt-0.5 h-4 w-4 shrink-0 accent-pink-400"
+          />
+
+          <span>
+            {field.label}
+
+            {isSaving && (
+              <span className="ml-2 text-xs text-white/35">salvando…</span>
+            )}
+
+            {saved && !isSaving && (
+              <span className="ml-2 text-xs text-emerald-300">salvo</span>
+            )}
+          </span>
+        </label>
+
+        <ConfirmDialog
+          open={pendingCheck}
+          title="Pular o e-mail secundário?"
+          description={<p>{confirmBeforeChecking}</p>}
+          confirmLabel="Sim, pular"
+          cancelLabel="Cancelar"
+          busy={isSaving}
+          onCancel={() => setPendingCheck(false)}
+          onConfirm={() => {
+            setPendingCheck(false);
+            void applyCheckbox(true);
+          }}
+        />
+      </>
+    );
+  }
 
   return (
     <label className="block">
@@ -648,6 +777,40 @@ function FieldInput({
         )}
       </span>
     </label>
+  );
+}
+
+/**
+ * "Skipped" is a decision, not a gap — it has to look different from both
+ * "done" and "nobody has looked at this yet", because it counts towards the
+ * percentage while the third one does not.
+ */
+function StatusChip({
+  status,
+}: {
+  status: "completed" | "skipped" | "pending";
+}) {
+  const config = {
+    completed: {
+      label: "Preenchido",
+      className: "border-emerald-400/30 bg-emerald-500/10 text-emerald-300",
+    },
+    skipped: {
+      label: "Não se aplica",
+      className: "border-white/20 bg-white/10 text-white/70",
+    },
+    pending: {
+      label: "Pendente",
+      className: "border-yellow-400/30 bg-yellow-500/10 text-yellow-200",
+    },
+  }[status];
+
+  return (
+    <span
+      className={`inline-flex rounded-full border px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.1em] ${config.className}`}
+    >
+      {config.label}
+    </span>
   );
 }
 

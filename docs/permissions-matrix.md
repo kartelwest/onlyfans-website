@@ -25,8 +25,23 @@ relaxed by mistake in one place does not silently open the system:
 | Archive / restore representative | Yes | Yes | No | No |
 | Permanently delete representative | Yes | No — archive instead | No | No |
 | _(enforced in the database, not only the UI — see 20260803020000)_ | | | | |
+| Edit representative login / password | Yes | Yes | No | No |
 | Manage administrators | Yes | No | No | No |
 | Change own account status | No (nobody may, from these screens) | No | No | No |
+
+Deleting a representative is refused while any model is still assigned to her: `models.representative_id`
+is `ON DELETE SET NULL`, so the deletion would quietly unassign them. The button
+(`components/admin/DeleteRepresentativeButton.tsx`, labelled **Excluir Rep**) names the representative,
+requires the word `EXCLUIR` to be typed, disables itself while the action is in flight, and sends you to
+reassign the models first. The deletion itself is written to `system_audit_log` as
+`representative_deleted` — name, actor, timestamp — and that row outlives the profile it describes,
+because `system_audit_log.target_id` carries no foreign key.
+
+Credentials (`/api/admin/representatives/credentials`) are owner- and administrator-only. The password
+is handed to Supabase Auth and never stored, logged or re-displayed by this application: it is returned
+to the caller exactly once so it can be passed on. Changing it ends the representative's open sessions
+and sets `must_change_password`, so she replaces it at her next login. The audit row records that a
+password changed, never what it changed to.
 
 Enforcement: `app/admin/representatives/actions.ts` (server actions: `updateRepresentativeStatus`,
 `deleteRepresentative`, `viewAsRepresentative`), the `manage_profile_columns` trigger (role changes
@@ -52,7 +67,18 @@ audit entry.
 | Change model status | Yes | Yes | No | No |
 | Complete onboarding | Yes (also after completion) | Yes, until complete | Assigned models, until complete | No |
 | Upload content to Drive | Yes | Yes | Assigned models | Own folder |
+| Edit either Google Drive folder | Yes | Yes | No | No |
+| Open either Google Drive folder | Yes | Yes | Assigned models | Own folders |
 | Edit own avatar | — | — | No | Yes |
+
+Two Drive folders reach the model, held in two separate columns that never overwrite each other:
+`models.content_drive_url` (**Google Drive / Conteúdo**, where her content is uploaded) and
+`models.drive_instagram` (**Google Drive / Instagram**). Both are edited on the admin Resumo tab and
+on the Google Drive tab, both are read-only wherever a model or a representative sees them, and
+`/api/models/update` refuses anyone who is not an owner or an administrator — the model-facing screen
+has no editor to hide. A folder reference that cannot be resolved to a Drive folder ID is rejected on
+save (`lib/models/driveFolder.ts`), and clearing one is allowed: that is how a folder is removed, and
+the model's screen then reads "Pasta ainda não configurada" instead of showing a stale link.
 
 Enforcement: `models_select` RLS (`is_management() OR is_own_model() OR is_assigned_representative()`),
 `requireModelAccess`, `resolveOnboardingAccess`, `/api/models/status`, `/api/models/drive-upload`.
@@ -61,9 +87,9 @@ Enforcement: `models_select` RLS (`is_management() OR is_own_model() OR is_assig
 
 | Action | Owner | Administrator | Representative | Model |
 | --- | --- | --- | --- | --- |
-| Read internal notes | Yes | Yes | No | No |
-| Create internal note | Yes | Yes | No | No |
-| Edit note | Yes | No | No | No |
+| Read internal notes | Yes | Yes | Own notes, assigned models | No |
+| Create internal note | Yes | Yes | Assigned models | No |
+| Edit note | Yes | No | Own notes only, while not deleted | No |
 | Pin / archive note | Yes | Yes | No | No |
 | Soft-delete (archive) a note | Yes | Yes | No | No |
 | Purge a note permanently | Yes | No | No | No |
@@ -76,6 +102,14 @@ Enforcement: `notes_staff_only_access` migration (staff-only RLS), `notes_delete
 Representative notes: a rep may write a note on a model assigned to them and read back their own —
 never an owner's, an admin's, or another representative's. Rep-authored notes flow into the same
 central notes and history area the owner and admins read.
+
+A rep may also correct a note she wrote (`20260804000000_representative_notes.sql`), and only the
+**text** of it: `guard_note_representative_update` refuses any change to authorship, to which model
+the note belongs, to pinned/archived, to the soft-delete columns, or to a ledger note's link — so
+"edit your own note" can never become "un-delete it" or "hand it to someone else". Every edit writes
+a `model_note_history` row carrying the body it replaced, so an edit adds to the record rather than
+replacing it. Deletion is untouched: `authenticated` still holds no DELETE policy on `model_notes`,
+and soft-delete stays owner-only in the API.
 
 Removal is two-step: soft-delete archives the note (owner and admins), and only the owner may purge
 it from the database afterwards. Both steps confirm in an in-page modal — never `window.confirm` or

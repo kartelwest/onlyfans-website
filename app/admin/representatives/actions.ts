@@ -219,7 +219,7 @@ export async function deleteRepresentative(
 
   const { data: actor } = await supabase
     .from("profiles")
-    .select("role")
+    .select("id, full_name, role")
     .eq("id", user.id)
     .single();
 
@@ -246,17 +246,21 @@ export async function deleteRepresentative(
     return { success: false, message: "O perfil selecionado não é um representante." };
   }
 
+  // A representative who still holds models is never deleted: dropping the
+  // profile row would set models.representative_id to null (ON DELETE SET NULL)
+  // and those models would quietly become unassigned, with nothing on screen
+  // saying so. Reassignment first, deletion second.
   const { data: assignedModels } = await adminSupabase
     .from("models")
-    .select("id")
-    .eq("representative_id", representativeId)
-    .limit(1);
+    .select("id, display_name")
+    .eq("representative_id", representativeId);
 
-  if ((assignedModels ?? []).length > 0) {
+  const assignedCount = (assignedModels ?? []).length;
+
+  if (assignedCount > 0) {
     return {
       success: false,
-      message:
-        "Este representante ainda tem modelos atribuídos. Reatribua ou exclua os modelos antes de excluí-lo.",
+      message: `Este representante ainda tem ${assignedCount} modelo(s) atribuído(s). Reatribua as modelos antes de excluí-lo.`,
     };
   }
 
@@ -288,7 +292,33 @@ export async function deleteRepresentative(
     };
   }
 
+  // The account is gone; the record of its removal is not. system_audit_log
+  // holds no foreign key to profiles on target_id, so this row survives the
+  // profile it describes — which is the entire point of writing it.
+  await logSystemAuditEntry(supabase, {
+    action: "representative_deleted",
+    targetType: "representative",
+    targetId: representativeId,
+    targetName: target.full_name,
+    actor: {
+      id: actor.id,
+      fullName: actor.full_name ?? "Usuário",
+      role: "owner",
+    },
+    previousValue: {
+      full_name: target.full_name,
+      email: target.email,
+      assigned_models: 0,
+    },
+    newValue: null,
+    source: "admin/representatives",
+    summary: `${actor.full_name ?? "Usuário"} excluiu permanentemente o representante ${
+      target.full_name ?? "sem nome"
+    }.`,
+  });
+
   revalidatePath("/admin/representatives");
+  revalidatePath("/admin/models");
 
   return {
     success: true,

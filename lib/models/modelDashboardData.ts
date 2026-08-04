@@ -53,7 +53,8 @@ export const DASHBOARD_MODEL_COLUMNS = `
   block_brazil,
   show_face,
   referral_source,
-  content_drive_url
+  content_drive_url,
+  drive_instagram
 `;
 
 export type DashboardModelRow = {
@@ -76,6 +77,7 @@ export type DashboardModelRow = {
   show_face: boolean;
   referral_source: string | null;
   content_drive_url: string | null;
+  drive_instagram: string | null;
 };
 
 type ChecklistRow = {
@@ -119,6 +121,10 @@ export function buildDashboardModel(
     referralSource: row.referral_source,
 
     contentDriveUrl: row.content_drive_url,
+    // The Instagram folder is a separate column and a separate folder — it is
+    // never a fallback for the content one, and neither ever overwrites the
+    // other.
+    driveInstagramUrl: row.drive_instagram,
   };
 }
 
