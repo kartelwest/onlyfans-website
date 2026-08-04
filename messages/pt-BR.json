@@ -1954,6 +1954,24 @@
         "neverReveal": "Nunca revelar",
         "neverGenerateNudity": "Nunca gerar nudez"
       }
+    },
+    "overview": {
+      "onboarding": "Onboarding",
+      "configured": "Configurado",
+      "personalInfo": "Informações pessoais",
+      "personalInfoSubtitle": "Dados pessoais e informações de contato.",
+      "dashboardData": "Dados do Model Dashboard",
+      "dashboardDataSubtitle": "Campos exibidos na Área da Modelo / visão do representante.",
+      "birth": "Nascimento",
+      "placeholders": {
+        "fullName": "Nome completo da modelo",
+        "date": "AAAA-MM-DD",
+        "language": "Idioma principal",
+        "email": "email@exemplo.com",
+        "whatsapp": "+55...",
+        "frequency": "Diária, semanal...",
+        "referral": "Como conheceu a agência"
+      }
     }
   },
   "owner": {

@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
 import { useState } from "react";
 
 import EditableTextField from "@/components/admin/model/EditableTextField";
@@ -42,6 +44,16 @@ export default function OverviewTab({
   currentUserRole,
   onModelUpdate,
 }: OverviewTabProps) {
+  const t = useTranslations("admin.overview");
+  const tFields = useTranslations("admin.modelPage.fields");
+  const tProfile = useTranslations("dashboard.profile");
+  const tContent = useTranslations("dashboard.content");
+  const tSocial = useTranslations("admin.social");
+  const tChecklist = useTranslations("enums.checklistStatus");
+  const tCommon = useTranslations("common.actions");
+  const tState = useTranslations("common.states");
+  const tErrors = useTranslations("errors");
+
   const [isEditing, setIsEditing] =
     useState(false);
 
@@ -81,7 +93,7 @@ export default function OverviewTab({
     if (!response.ok || !data.success) {
       throw new Error(
         data.error ??
-          "Não foi possível salvar.",
+          tErrors("saveFailed"),
       );
     }
 
@@ -112,7 +124,7 @@ export default function OverviewTab({
     };
 
     if (!response.ok || !data.success) {
-      throw new Error(data.error ?? "Não foi possível salvar.");
+      throw new Error(data.error ?? tErrors("saveFailed"));
     }
 
     onModelUpdate({ ...model, [field]: value });
@@ -136,7 +148,7 @@ export default function OverviewTab({
 
       <section className="grid gap-5 md:grid-cols-3">
         <StatusCard
-          title="Onboarding"
+          title={t("onboarding")}
           value={`${checklist.onboardingPercentage}%`}
         />
 
@@ -144,8 +156,8 @@ export default function OverviewTab({
           title="OnlyFans"
           value={
             model.onlyfans
-              ? "Configurado"
-              : "Não iniciado"
+              ? t("configured")
+              : tChecklist("not_started")
           }
         />
 
@@ -153,8 +165,8 @@ export default function OverviewTab({
           title="Fansly"
           value={
             model.fansly
-              ? "Configurado"
-              : "Não iniciado"
+              ? t("configured")
+              : tChecklist("not_started")
           }
         />
       </section>
@@ -163,11 +175,11 @@ export default function OverviewTab({
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
             <h3 className="text-xl font-bold">
-              Informações pessoais
+              {t("personalInfo")}
             </h3>
 
             <p className="mt-1 text-sm text-white/45">
-              Dados pessoais e informações de contato.
+              {t("personalInfoSubtitle")}
             </p>
           </div>
 
@@ -186,8 +198,8 @@ export default function OverviewTab({
               }
             >
               {isEditing
-                ? "Concluir edição"
-                : "Editar"}
+                ? tSocial("finishEditing")
+                : tCommon("edit")}
             </button>
           )}
         </div>
@@ -195,9 +207,9 @@ export default function OverviewTab({
         {isEditing && canEdit ? (
           <div className="mt-6 grid gap-5 md:grid-cols-2">
             <EditableTextField
-              label="Nome completo"
+              label={tFields("fullName")}
               value={model.fullName}
-              placeholder="Nome completo da modelo"
+              placeholder={t("placeholders.fullName")}
               onSave={(value) =>
                 updateField(
                   "fullName",
@@ -207,9 +219,9 @@ export default function OverviewTab({
             />
 
             <EditableTextField
-              label="Nome artístico"
+              label={tFields("stageName")}
               value={model.stageName}
-              placeholder="Nome artístico"
+              placeholder={tFields("stageName")}
               onSave={(value) =>
                 updateField(
                   "stageName",
@@ -219,9 +231,9 @@ export default function OverviewTab({
             />
 
             <EditableTextField
-              label="Nascimento"
+              label={t("birth")}
               value={model.birthday}
-              placeholder="AAAA-MM-DD"
+              placeholder={t("placeholders.date")}
               onSave={(value) =>
                 updateField(
                   "birthday",
@@ -231,9 +243,9 @@ export default function OverviewTab({
             />
 
             <EditableTextField
-              label="Cidade"
+              label={tFields("city")}
               value={model.city}
-              placeholder="Cidade"
+              placeholder={tFields("city")}
               onSave={(value) =>
                 updateField(
                   "city",
@@ -243,9 +255,9 @@ export default function OverviewTab({
             />
 
             <EditableTextField
-              label="Nacionalidade"
+              label={tFields("nationality")}
               value={model.nationality}
-              placeholder="Nacionalidade"
+              placeholder={tFields("nationality")}
               onSave={(value) =>
                 updateField(
                   "nationality",
@@ -255,9 +267,9 @@ export default function OverviewTab({
             />
 
             <EditableTextField
-              label="Idioma"
+              label={tFields("language")}
               value={model.language}
-              placeholder="Idioma principal"
+              placeholder={t("placeholders.language")}
               onSave={(value) =>
                 updateField(
                   "language",
@@ -267,9 +279,9 @@ export default function OverviewTab({
             />
 
             <EditableTextField
-              label="E-mail"
+              label={tFields("email")}
               value={model.email}
-              placeholder="email@exemplo.com"
+              placeholder={t("placeholders.email")}
               inputType="email"
               onSave={(value) =>
                 updateField(
@@ -280,9 +292,9 @@ export default function OverviewTab({
             />
 
             <EditableTextField
-              label="WhatsApp"
+              label={tFields("whatsapp")}
               value={model.whatsapp}
-              placeholder="+55..."
+              placeholder={t("placeholders.whatsapp")}
               inputType="tel"
               onSave={(value) =>
                 updateField(
@@ -295,42 +307,42 @@ export default function OverviewTab({
         ) : (
           <div className="mt-6 grid gap-5 md:grid-cols-2">
             <Info
-              label="Nome completo"
+              label={tFields("fullName")}
               value={model.fullName}
             />
 
             <Info
-              label="Nome artístico"
+              label={tFields("stageName")}
               value={model.stageName}
             />
 
             <Info
-              label="Nascimento"
+              label={t("birth")}
               value={model.birthday}
             />
 
             <Info
-              label="Cidade"
+              label={tFields("city")}
               value={model.city}
             />
 
             <Info
-              label="Nacionalidade"
+              label={tFields("nationality")}
               value={model.nationality}
             />
 
             <Info
-              label="Idioma"
+              label={tFields("language")}
               value={model.language}
             />
 
             <Info
-              label="E-mail"
+              label={tFields("email")}
               value={model.email}
             />
 
             <Info
-              label="WhatsApp"
+              label={tFields("whatsapp")}
               value={model.whatsapp}
             />
           </div>
@@ -340,26 +352,26 @@ export default function OverviewTab({
       <section className="rounded-2xl border border-white/10 bg-[#111115] p-6">
         <div>
           <h3 className="text-xl font-bold">
-            Dados do Model Dashboard
+            {t("dashboardData")}
           </h3>
           <p className="mt-1 text-sm text-white/45">
-            Campos exibidos na Área da Modelo / visão do representante.
+            {t("dashboardDataSubtitle")}
           </p>
         </div>
 
         {isEditing && canEdit ? (
           <div className="mt-6 grid gap-5 md:grid-cols-2">
             <EditableTextField
-              label="Frequência de conteúdo"
+              label={tProfile("contentFrequency")}
               value={model.contentFrequency}
-              placeholder="Diária, semanal..."
+              placeholder={t("placeholders.frequency")}
               onSave={(value) => updateField("contentFrequency", value)}
             />
 
             <EditableTextField
-              label="Indicação"
+              label={tProfile("referral")}
               value={model.referralSource}
-              placeholder="Como conheceu a agência"
+              placeholder={t("placeholders.referral")}
               onSave={(value) => updateField("referralSource", value)}
             />
 
@@ -369,7 +381,7 @@ export default function OverviewTab({
               so neither ever overwrites the other.
             */}
             <EditableTextField
-              label="Google Drive / Conteúdo"
+              label={tContent("contentFolderLabel")}
               value={model.contentDriveUrl}
               placeholder="https://drive.google.com/drive/folders/..."
               inputType="url"
@@ -377,7 +389,7 @@ export default function OverviewTab({
             />
 
             <EditableTextField
-              label="Google Drive / Instagram"
+              label={tContent("instagramFolderLabel")}
               value={model.driveInstagram}
               placeholder="https://drive.google.com/drive/folders/..."
               inputType="url"
@@ -385,34 +397,37 @@ export default function OverviewTab({
             />
 
             <BooleanToggle
-              label="Bloquear Brasil"
+              label={tProfile("blockBrazil")}
               value={model.blockBrazil}
               onChange={(value) => updateBooleanField("blockBrazil", value)}
             />
 
             <BooleanToggle
-              label="Mostrar rosto"
+              label={tProfile("showFace")}
               value={model.showFace}
               onChange={(value) => updateBooleanField("showFace", value)}
             />
           </div>
         ) : (
           <div className="mt-6 grid gap-5 md:grid-cols-2">
-            <Info label="Frequência de conteúdo" value={model.contentFrequency} />
-            <Info label="Indicação" value={model.referralSource} />
+            <Info label={tProfile("contentFrequency")} value={model.contentFrequency} />
+            <Info label={tProfile("referral")} value={model.referralSource} />
             <Info
-              label="Google Drive / Conteúdo"
+              label={tContent("contentFolderLabel")}
               value={model.contentDriveUrl}
             />
             <Info
-              label="Google Drive / Instagram"
+              label={tContent("instagramFolderLabel")}
               value={model.driveInstagram}
             />
             <Info
-              label="Bloquear Brasil"
-              value={model.blockBrazil ? "Sim" : "Não"}
+              label={tProfile("blockBrazil")}
+              value={model.blockBrazil ? tState("yes") : tState("no")}
             />
-            <Info label="Mostrar rosto" value={model.showFace ? "Sim" : "Não"} />
+            <Info
+              label={tProfile("showFace")}
+              value={model.showFace ? tState("yes") : tState("no")}
+            />
           </div>
         )}
       </section>
@@ -505,6 +520,8 @@ function Info({
   label: string;
   value: string | null;
 }) {
+  const tState = useTranslations("common.states");
+
   return (
     <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
       <p className="text-xs font-bold uppercase tracking-[0.14em] text-white/45">
@@ -512,7 +529,7 @@ function Info({
       </p>
 
       <p className="mt-3 text-sm text-white">
-        {value || "Não informado"}
+        {value || tState("notInformed")}
       </p>
     </div>
   );
