@@ -191,8 +191,7 @@ export async function PATCH(request: Request) {
         );
       }
     } else if (willBeActive) {
-      warning =
-        'Status alterado para ativo, mas esta modelo ainda não tem login no portal. Use "Criar acesso" na ficha dela para liberar a entrada.';
+      warning = tRoute("noPortalLogin");
     }
 
     await logAuditEntry(supabase, {
@@ -221,7 +220,7 @@ export async function PATCH(request: Request) {
     console.error("Erro ao alterar status da modelo:", error);
 
     return NextResponse.json(
-      { error: "Erro interno." },
+      { error: t("internal") },
       { status: 500 },
     );
   }

@@ -436,7 +436,7 @@ export async function PATCH(
 
     return NextResponse.json(
       {
-        error: "Erro interno.",
+        error: t("internal"),
       },
       {
         status: 500,

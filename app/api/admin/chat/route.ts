@@ -141,7 +141,7 @@ export async function POST(request: Request) {
         error:
           error instanceof Error
             ? error.message
-            : "Erro inesperado ao conversar com o assistente.",
+            : tRoute("failed"),
       },
       { status: 500 },
     );

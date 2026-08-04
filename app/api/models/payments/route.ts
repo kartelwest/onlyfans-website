@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 
 export async function GET(request: NextRequest) {
   const t = await getTranslations("errors.api");
+  const tRoute = await getTranslations("errors.payments");
   const supabase = await createClient();
 
   const {
@@ -82,7 +83,7 @@ export async function GET(request: NextRequest) {
   if (error) {
     console.error("Erro ao carregar pagamentos:", error);
     return NextResponse.json(
-      { error: "Erro interno ao carregar pagamentos." },
+      { error: tRoute("loadFailed") },
       { status: 500 },
     );
   }

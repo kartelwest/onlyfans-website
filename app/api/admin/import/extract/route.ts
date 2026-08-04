@@ -19,6 +19,7 @@ const MAX_FILES = 6;
 
 export async function POST(request: Request) {
   const t = await getTranslations("errors.api");
+  const tRoute = await getTranslations("errors.importExtract");
   try {
     const supabase = await createClient();
 
@@ -52,7 +53,7 @@ export async function POST(request: Request) {
 
     if (files.length === 0) {
       return NextResponse.json(
-        { error: "Envie ao menos 1 arquivo (PDF, JPG ou PNG)." },
+        { error: tRoute("fileRequired") },
         { status: 400 },
       );
     }
@@ -104,7 +105,7 @@ export async function POST(request: Request) {
         error:
           error instanceof Error
             ? error.message
-            : "Erro inesperado ao processar os arquivos.",
+            : tRoute("unexpected"),
       },
       { status: 500 },
     );

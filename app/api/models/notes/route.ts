@@ -300,7 +300,7 @@ export async function GET(
         return NextResponse.json(
             {
                 error:
-                    "Ocorreu um erro inesperado ao carregar as notas.",
+                    tRoute("unexpectedLoad"),
             },
             {
                 status: 500,
@@ -500,7 +500,7 @@ export async function POST(
         return NextResponse.json(
             {
                 error:
-                    "Ocorreu um erro inesperado ao adicionar a nota.",
+                    tRoute("unexpectedAdd"),
             },
             {
                 status: 500,
@@ -653,7 +653,7 @@ export async function PATCH(
         return NextResponse.json(
             {
                 error:
-                    "Ocorreu um erro inesperado ao atualizar a nota.",
+                    tRoute("unexpectedUpdate"),
             },
             {
                 status: 500,
@@ -808,7 +808,7 @@ export async function DELETE(
         return NextResponse.json(
             {
                 error:
-                    "Ocorreu um erro inesperado ao excluir a nota.",
+                    tRoute("unexpectedDelete"),
             },
             {
                 status: 500,

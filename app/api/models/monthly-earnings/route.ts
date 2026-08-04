@@ -215,7 +215,7 @@ export async function POST(request: NextRequest) {
       console.error("Erro ao enviar a captura de tela:", upload.error);
 
       return NextResponse.json(
-        { error: "Erro ao enviar a captura de tela." },
+        { error: tRoute("screenshotUploadFailed") },
         { status: 500 },
       );
     }

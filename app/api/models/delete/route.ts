@@ -134,7 +134,7 @@ export async function POST(request: Request) {
     console.error("Erro ao excluir modelo:", error);
 
     return NextResponse.json(
-      { error: "Erro interno." },
+      { error: t("internal") },
       { status: 500 },
     );
   }

@@ -6,6 +6,7 @@ import { logAuditEntry } from "@/lib/audit/auditLogger";
 
 export async function GET(request: NextRequest) {
   const t = await getTranslations("errors.api");
+  const tRoute = await getTranslations("errors.earningsApi");
   const supabase = await createClient();
 
   const {
@@ -96,7 +97,7 @@ export async function GET(request: NextRequest) {
   if (error) {
     console.error("Erro ao carregar ganhos:", error);
     return NextResponse.json(
-      { error: "Erro interno ao carregar ganhos." },
+      { error: tRoute("loadFailed") },
       { status: 500 },
     );
   }
@@ -300,7 +301,7 @@ export async function POST(request: NextRequest) {
   if (upload.error) {
     console.error("Erro ao fazer upload:", upload.error);
     return NextResponse.json(
-      { error: "Erro ao fazer upload da imagem." },
+      { error: tRoute("imageUploadFailed") },
       { status: 500 },
     );
   }

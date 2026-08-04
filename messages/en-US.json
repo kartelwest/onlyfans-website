@@ -67,6 +67,11 @@
       "cancel": "Cancel",
       "busy": "Please wait...",
       "typePhrase": "Type {phrase} to confirm"
+    },
+    "idleTimeout": {
+      "warning": "Your session will expire in 1 minute due to inactivity.",
+      "stayConnected": "Stay signed in",
+      "refreshing": "Please wait..."
     }
   },
   "site": {
@@ -853,7 +858,8 @@
           "title": "Paste the link into the form",
           "text": "Paste the link into the Google Photos field and carry on with the rest of the application."
         }
-      ]
+      ],
+      "shareAlbum": "Share album"
     },
     "apply": {
       "eyebrow": "KARAY Models application",
@@ -1184,7 +1190,11 @@
       "invalidOrInactiveProfile": "Invalid or inactive profile.",
       "unknownUser": "User",
       "internalError": "Internal server error.",
-      "inactiveRepresentative": "Inactive representative."
+      "inactiveRepresentative": "Inactive representative.",
+      "unexpectedRetry": "Something went wrong. Please try again.",
+      "unexpected": "Something went wrong.",
+      "internal": "Internal error.",
+      "passwordOrLoginRequired": "Enter a new password or a new login."
     },
     "monthlyEarnings": {
       "loadFailed": "We couldn't load the monthly earnings.",
@@ -1195,7 +1205,8 @@
       "saveFailed": "We couldn't save the month's earnings.",
       "reportIdMissing": "No report identifier provided.",
       "reportNotFound": "Report not found.",
-      "updateFailed": "We couldn't update the month's earnings."
+      "updateFailed": "We couldn't update the month's earnings.",
+      "screenshotUploadFailed": "Could not upload the screenshot."
     },
     "repCredentials": {
       "notPermitted": "You don't have permission to change this access.",
@@ -1222,7 +1233,9 @@
       "passwordTooShort": "The temporary password must be at least 8 characters.",
       "createAccessFailed": "We couldn't create the user's access.",
       "userEmailTaken": "A user is already registered with this email.",
-      "created": "User created successfully."
+      "created": "User created successfully.",
+      "fullNameRequired": "Enter the full name.",
+      "emailRequired": "Enter the e-mail address."
     },
     "ledger": {
       "entryNotFound": "Entry not found.",
@@ -1246,7 +1259,9 @@
       "ownerOnly": "Only the owner can edit these fields.",
       "invalidIp": "Enter a valid IP, for example 48.45.165.230.",
       "invalidCompany": "Invalid company.",
-      "invalidCountry": "Invalid country."
+      "invalidCountry": "Invalid country.",
+      "companyRequired": "Enter the proxy provider's name.",
+      "saveFailed": "Internal error while saving the proxy details."
     },
     "historyApi": {
       "modelsNoAccess": "Models do not have access to the audit history.",
@@ -1263,17 +1278,26 @@
       "invalidRevenue": "Invalid revenue amount.",
       "fileTooLarge": "File is too large. 10MB maximum.",
       "saveReportFailed": "Could not save the report.",
-      "reportNotFound": "Report not found."
+      "reportNotFound": "Report not found.",
+      "loadFailed": "Internal error while loading the earnings.",
+      "imageUploadFailed": "Could not upload the image."
     },
     "documentsApi": {
       "descriptionRequired": "Write a description for the file.",
       "fileEmpty": "The selected file is empty.",
       "fileTooLarge": "The file must be 25 MB or smaller.",
-      "fileLimitReached": "This model has already reached the limit of 10 files."
+      "fileLimitReached": "This model has already reached the limit of 10 files.",
+      "loadFailed": "Internal error while loading the documents.",
+      "fileRequired": "Select a file.",
+      "limitCheckFailed": "Internal error while checking the document limit.",
+      "uploadFailed": "Could not upload the file.",
+      "saveFailed": "Internal error while saving the document.",
+      "sendFailed": "Internal error while sending the document."
     },
     "statusApi": {
       "maxActiveModels": "You have reached the limit of 30 active models. Deactivate another model first.",
-      "portalAccessMismatch": "The status was changed, but portal access did not follow. Let support know before handing over the login."
+      "portalAccessMismatch": "The status was changed, but portal access did not follow. Let support know before handing over the login.",
+      "noPortalLogin": "Status changed to active, but this model still has no portal login. Use \"Create access\" on her record to let her in."
     },
     "expensesEnabled": {
       "invalidValue": "Invalid value.",
@@ -1281,7 +1305,9 @@
     },
     "avatarApi": {
       "fileRequired": "A file is required.",
-      "fileTooLarge": "File is too large. 5MB maximum."
+      "fileTooLarge": "File is too large. 5MB maximum.",
+      "uploadFailed": "Could not upload the avatar.",
+      "saveFailed": "Could not save the avatar."
     },
     "checklistApi": {
       "noChecklistPermission": "You do not have permission to change this checklist.",
@@ -1300,7 +1326,12 @@
       "fieldSaveFailed": "Could not save this field.",
       "autoCompletingStep": "\"{title}\" completes itself: fill in the field or tick the \"not applicable\" box.",
       "stepUpdateFailed": "Could not update this step.",
-      "unexpected": "Internal error while updating the onboarding."
+      "unexpected": "Internal error while updating the onboarding.",
+      "readOnlyField": "\"{label}\" cannot be edited from onboarding. Change it in {location}.",
+      "loadFailed": "Internal error while loading the onboarding.",
+      "unknownStep": "Unknown onboarding step.",
+      "stepLookupFailed": "Internal error while looking up the step.",
+      "unknownField": "Unknown onboarding field."
     },
     "modelCredentials": {
       "noPermission": "You do not have permission to change this model's access.",
@@ -1311,7 +1342,8 @@
       "linkFailed": "Access was created, but it could not be linked to the model's record. Let support know before handing over the password.",
       "emailSyncFailed": "Access was changed, but the e-mail shown on the model's record could not be updated.",
       "sessionRevokeFailed": "Access was changed, but the model's open sessions could not be ended.",
-      "auditNoteFailed": "Access was changed, but the audit note could not be recorded."
+      "auditNoteFailed": "Access was changed, but the audit note could not be recorded.",
+      "passwordRequired": "Enter a password to create this model's access."
     },
     "notesApi": {
       "loadFailed": "Could not load the notes.",
@@ -1339,26 +1371,40 @@
       "noAdminNotesAccess": "You do not have access to the administrative notes.",
       "modelNotFound": "The requested model was not found.",
       "noModelAccess": "You do not have access to this model.",
-      "unknownUser": "User"
+      "unknownUser": "User",
+      "unexpectedLoad": "Something went wrong while loading the notes.",
+      "unexpectedAdd": "Something went wrong while adding the note.",
+      "unexpectedUpdate": "Something went wrong while updating the note.",
+      "unexpectedDelete": "Something went wrong while deleting the note."
     },
     "parseClaude": {
       "noPermission": "You do not have permission to use this feature.",
       "notConfigured": "The Claude integration is not configured.",
-      "parseFailed": "Could not parse the text."
+      "parseFailed": "Could not parse the text.",
+      "pasteTextFirst": "Paste the model's text before analysing it.",
+      "timedOut": "Claude took too long to answer. Please try again."
     },
     "drafts": {
       "noPermission": "You do not have permission to create drafts.",
       "notFound": "Draft not found.",
-      "updateFailed": "Could not update the draft."
+      "updateFailed": "Could not update the draft.",
+      "fullNameRequired": "Enter the full name to create a draft.",
+      "saved": "Draft saved.",
+      "unexpected": "Something went wrong while saving the draft."
     },
     "representativesApi": {
-      "listFailed": "Could not load the list of representatives."
+      "listFailed": "Could not load the list of representatives.",
+      "unexpected": "Something went wrong."
     },
     "importerSettings": {
       "ownerOnly": "Only the owner can change this setting."
     },
     "importConfirm": {
-      "fullNameRequired": "Full name is required."
+      "fullNameRequired": "Full name is required.",
+      "nothingToSave": "No applicants to save.",
+      "saveFailed": "Could not save.",
+      "unexpectedSave": "Something went wrong while saving.",
+      "unexpectedSaveAll": "Something went wrong while saving the applicants."
     },
     "applyApi": {
       "requiredFields": "Fill in every required field.",
@@ -1376,10 +1422,23 @@
     },
     "brand": {
       "clientNotFound": "Client not found.",
-      "unexpected": "Unexpected error."
+      "unexpected": "Unexpected error.",
+      "createClientFailed": "Could not create the client."
     },
     "chat": {
-      "actionCompleted": "Done."
+      "actionCompleted": "Done.",
+      "failed": "Something went wrong while talking to the assistant."
+    },
+    "importExtract": {
+      "fileRequired": "Upload at least 1 file (PDF, JPG or PNG).",
+      "unexpected": "Something went wrong while processing the files."
+    },
+    "marketing": {
+      "loadFailed": "Internal error while loading the marketing accounts.",
+      "saveFailed": "Internal error while saving the marketing accounts."
+    },
+    "payments": {
+      "loadFailed": "Internal error while loading the payments."
     }
   },
   "validation": {},
@@ -1455,7 +1514,8 @@
         "bodyArchive": "Want to keep the history reachable? Use <strong>Archive</strong> on the representatives screen: the account loses access and drops off the active lists, but can be restored later.",
         "bodyAudit": "The deletion is recorded in the system history with the representative's name, who deleted it, and the date and time.",
         "understood": "Got it",
-        "confirmButton": "Delete permanently"
+        "confirmButton": "Delete permanently",
+        "confirmPhrase": "DELETE"
       },
       "details": {
         "name": "Name",
@@ -2687,6 +2747,390 @@
       "onboarding": "Onboarding",
       "stageName": "Stage name: {name}",
       "viewAsNotice": "This is the screen the representative opens. Changes made here are recorded as the signed-in administrator's changes, with your name in the model's history."
+    }
+  },
+  "onboarding": {
+    "sections": {
+      "model_information": {
+        "title": "Model information"
+      },
+      "account_verification": {
+        "title": "Account verification"
+      },
+      "profile_optimization": {
+        "title": "Profile optimisation"
+      },
+      "content_strategy": {
+        "title": "Content strategy"
+      },
+      "marketing_promotion": {
+        "title": "Marketing and promotion"
+      },
+      "legal_financial": {
+        "title": "Legal and financial"
+      },
+      "continuous_improvement": {
+        "title": "Continuous improvement"
+      }
+    },
+    "items": {
+      "model_information": {
+        "model_details": {
+          "title": "Model details recorded",
+          "description": "Actress name, OnlyFans username, e-mail and phone checked. The actress name and the OnlyFans username are different — never swap one for the other."
+        },
+        "secondary_email": {
+          "title": "Secondary e-mail",
+          "description": "A second contact e-mail, where one exists. If the model does not have one, tick the box to skip it — the step counts as complete either way, and stays pending while neither is filled in."
+        },
+        "social_media_links": {
+          "title": "Social media links recorded",
+          "description": "Every profile used for promotion, plus the personal Instagram that must not appear anywhere."
+        },
+        "account_status": {
+          "title": "Account status recorded"
+        }
+      },
+      "account_verification": {
+        "identity_confirmation": {
+          "title": "Identity confirmation",
+          "description": "Submit an official document with a sharp photo and the legal name details. The name on OnlyFans must match the one on the document."
+        },
+        "social_media_linking": {
+          "title": "Social media linking",
+          "description": "Connect Instagram, Twitter, TikTok and Reddit for verification and cross-promotion. Post the verification announcements on the platforms."
+        },
+        "bank_account_setup": {
+          "title": "Bank account setup",
+          "description": "Link a personal or business bank account to receive payouts. Check which methods OnlyFans accepts in the model's country."
+        },
+        "approval_timeline": {
+          "title": "Approval timeline tracked",
+          "description": "Start verification as early as possible: approval takes anywhere from 24 hours to a few days. If it takes longer, contact OnlyFans support."
+        }
+      },
+      "profile_optimization": {
+        "username_selection": {
+          "title": "Username chosen",
+          "description": "Short, memorable, aligned with the niche and representing the model's brand."
+        },
+        "profile_photo": {
+          "title": "Profile photo published",
+          "description": "A professional, well-lit photo showing the face or the brand identity."
+        },
+        "banner_image": {
+          "title": "Banner published",
+          "description": "A banner that matches the content theme and complements the brand. Use Canva or Photoshop for a professional finish."
+        },
+        "bio_description": {
+          "title": "Bio written",
+          "description": "A concise, engaging bio that makes the niche clear and says what subscribers can expect."
+        },
+        "call_to_action": {
+          "title": "Call to action included",
+          "description": "For example: \"Subscribe for exclusive content every day!\"."
+        },
+        "content_previews": {
+          "title": "Content previews published",
+          "description": "Pin a sample post that shows the quality of the content to people who have not subscribed yet."
+        },
+        "visibility_settings": {
+          "title": "Visibility settings adjusted",
+          "description": "At the start, hide likes and follower counts so potential subscribers are not put off."
+        },
+        "subscription_model": {
+          "title": "Subscription model decided",
+          "description": "Free page: draws a wider audience, but depends on selling content and messages (PPV). Paid page: direct, guaranteed subscription revenue with PPV on top, but needs more aggressive promotion."
+        },
+        "seo_optimization": {
+          "title": "SEO optimisation",
+          "description": "Use relevant keywords in the bio and post descriptions to improve discovery."
+        },
+        "hashtag_usage": {
+          "title": "Hashtag usage",
+          "description": "Research and use trending, niche-specific hashtags to increase reach."
+        },
+        "internal_linking": {
+          "title": "Internal linking between posts",
+          "description": "Promote older posts by linking them to related content in the captions."
+        },
+        "subscriber_lists": {
+          "title": "Subscriber lists set up",
+          "description": "Use the \"Lists\" feature to group subscribers by interest and spend, and send targeted promotions."
+        }
+      },
+      "content_strategy": {
+        "niche_identification": {
+          "title": "Niche identified",
+          "description": "Define a clear differentiator and a consistent theme (fitness, cosplay, glamour, and so on)."
+        },
+        "content_planning": {
+          "title": "Content planning",
+          "description": "Build a weekly/monthly calendar with posts, stories and engagement activity planned in advance."
+        },
+        "quality_assurance": {
+          "title": "Quality assurance",
+          "description": "Invest in proper lighting, an HD camera and editing tools to keep production value high."
+        }
+      },
+      "marketing_promotion": {
+        "social_media_integration": {
+          "title": "Social media integration",
+          "description": "Promote OnlyFans on Instagram, Twitter, TikTok, Reddit and Telegram, posting previews consistently across every platform."
+        },
+        "collaborations": {
+          "title": "Collaborations",
+          "description": "Set up partnerships with other creators for cross-promotion, collabs and an engagement boost."
+        },
+        "engagement": {
+          "title": "Engagement",
+          "description": "Reply to messages daily, run Q&As and go live to build a loyal community."
+        }
+      },
+      "legal_financial": {
+        "contracts": {
+          "title": "Contracts signed",
+          "description": "A legally binding agreement between the model and the agency, setting out content rights in a legal document."
+        },
+        "tax_compliance": {
+          "title": "Tax position handled",
+          "description": "Talk through the tax obligations on OnlyFans earnings and recommend an accountant where needed."
+        },
+        "content_rights": {
+          "title": "Content rights settled",
+          "description": "Make clear who owns the content and how it may be distributed. Register the rights and monitor for piracy."
+        }
+      },
+      "continuous_improvement": {
+        "analytics_monitoring": {
+          "title": "Analytics monitoring",
+          "description": "Track subscriber growth and engagement rates, and check which content performs best."
+        },
+        "feedback_collection": {
+          "title": "Feedback collection",
+          "description": "Ask subscribers what they want to see more of and use it to refine the content."
+        },
+        "professional_development": {
+          "title": "Professional development",
+          "description": "Keep up with OnlyFans features and marketing trends."
+        }
+      }
+    },
+    "fields": {
+      "model_information": {
+        "model_details": {
+          "full_name": {
+            "label": "Full name (actress name)"
+          },
+          "onlyfans_username": {
+            "label": "OnlyFans username",
+            "placeholder": "@username"
+          },
+          "email": {
+            "label": "E-mail"
+          },
+          "phone": {
+            "label": "Phone"
+          }
+        },
+        "secondary_email": {
+          "secondary_email": {
+            "label": "Secondary e-mail",
+            "placeholder": "second@example.com"
+          },
+          "skip_secondary_email": {
+            "label": "Not applicable / skip the secondary e-mail"
+          }
+        },
+        "social_media_links": {
+          "instagram_private": {
+            "label": "Instagram (MUST NOT BE SEEN)"
+          },
+          "instagram_second": {
+            "label": "Second Instagram"
+          },
+          "bumpy": {
+            "label": "Bumpy"
+          },
+          "twitter": {
+            "label": "Twitter / X"
+          },
+          "tiktok": {
+            "label": "TikTok"
+          },
+          "reddit": {
+            "label": "Reddit"
+          },
+          "other": {
+            "label": "Other"
+          }
+        },
+        "account_status": {
+          "bank_account_linked": {
+            "label": "Bank account linked"
+          },
+          "approval_date": {
+            "label": "Account approval date"
+          }
+        }
+      },
+      "profile_optimization": {
+        "bio_description": {
+          "bio": {
+            "label": "Published bio"
+          }
+        },
+        "call_to_action": {
+          "cta": {
+            "label": "Call to action"
+          }
+        },
+        "subscription_model": {
+          "page_type": {
+            "label": "Page type"
+          },
+          "subscription_price": {
+            "label": "Subscription price (USD)"
+          }
+        }
+      },
+      "content_strategy": {
+        "niche_identification": {
+          "niche": {
+            "label": "Niche"
+          }
+        },
+        "content_planning": {
+          "content_frequency": {
+            "label": "Agreed frequency"
+          }
+        }
+      },
+      "legal_financial": {
+        "contracts": {
+          "signed_at": {
+            "label": "Signature date"
+          }
+        }
+      }
+    },
+    "linkedFields": {
+      "stage_name": {
+        "label": "Stage name",
+        "location": "Overview"
+      },
+      "birthday": {
+        "label": "Date of birth",
+        "location": "Overview"
+      },
+      "email": {
+        "label": "E-mail",
+        "location": "Overview"
+      },
+      "whatsapp": {
+        "label": "WhatsApp",
+        "location": "Overview"
+      },
+      "nationality": {
+        "label": "Nationality",
+        "location": "Overview"
+      },
+      "city": {
+        "label": "City",
+        "location": "Overview"
+      },
+      "language": {
+        "label": "Language",
+        "location": "Overview"
+      },
+      "country_code": {
+        "label": "Country (ISO)",
+        "location": "Overview"
+      },
+      "preferred_currency": {
+        "label": "Currency",
+        "location": "Overview"
+      },
+      "content_frequency": {
+        "label": "Content frequency",
+        "location": "Overview"
+      },
+      "referral_source": {
+        "label": "How they found us",
+        "location": "Overview"
+      },
+      "onlyfans": {
+        "label": "OnlyFans",
+        "location": "OnlyFans tab"
+      },
+      "fansly": {
+        "label": "Fansly",
+        "location": "Fansly tab"
+      },
+      "instagram": {
+        "label": "Instagram",
+        "location": "Platforms tab"
+      },
+      "twitter": {
+        "label": "X / Twitter",
+        "location": "Platforms tab"
+      },
+      "reddit": {
+        "label": "Reddit",
+        "location": "Platforms tab"
+      },
+      "tiktok": {
+        "label": "TikTok",
+        "location": "Platforms tab"
+      },
+      "youtube": {
+        "label": "YouTube",
+        "location": "Platforms tab"
+      },
+      "facebook": {
+        "label": "Facebook",
+        "location": "Platforms tab"
+      },
+      "drive_onlyfans": {
+        "label": "Drive — OnlyFans",
+        "location": "Google Drive tab"
+      },
+      "drive_instagram": {
+        "label": "Google Drive / Instagram",
+        "location": "Overview or Google Drive tab"
+      },
+      "drive_twitter": {
+        "label": "Drive — X / Twitter",
+        "location": "Google Drive tab"
+      },
+      "content_drive_url": {
+        "label": "Google Drive / Content",
+        "location": "Overview or Google Drive tab"
+      },
+      "pix_key": {
+        "label": "PIX key",
+        "location": "Payments tab"
+      },
+      "pix_key_type": {
+        "label": "PIX key type",
+        "location": "Payments tab"
+      },
+      "bank_name": {
+        "label": "Bank",
+        "location": "Payments tab"
+      },
+      "account_holder_name": {
+        "label": "Account holder",
+        "location": "Payments tab"
+      },
+      "payout_frequency": {
+        "label": "Payout frequency",
+        "location": "Payments tab"
+      },
+      "display_name": {
+        "label": "Full name (actress name)",
+        "location": "Overview"
+      }
     }
   }
 }

@@ -69,6 +69,8 @@ export default function DeleteRepresentativeButton({
 
     const formData = new FormData();
     formData.set("representativeId", representativeId);
+    // The wire value the server action checks — a protocol constant, not the
+    // phrase the user types (that one is localised, see requirePhrase below).
     formData.set("confirmation", "EXCLUIR");
 
     setBusy(true);
@@ -151,7 +153,7 @@ export default function DeleteRepresentativeButton({
           )
         }
         detail={displayName}
-        requirePhrase={blocked ? undefined : "EXCLUIR"}
+        requirePhrase={blocked ? undefined : t("confirmPhrase")}
         confirmLabel={blocked ? t("understood") : t("confirmButton")}
         cancelLabel={blocked ? tCommon("close") : tCommon("cancel")}
         busyLabel={tCommon("deleting")}

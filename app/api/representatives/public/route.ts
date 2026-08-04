@@ -52,7 +52,7 @@ export async function GET() {
     console.error("Erro inesperado ao listar representantes:", error);
 
     return NextResponse.json(
-      { error: "Ocorreu um erro inesperado." },
+      { error: tRoute("unexpected") },
       { status: 500 },
     );
   }

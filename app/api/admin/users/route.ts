@@ -166,7 +166,7 @@ export async function POST(request: Request) {
     if (!fullName) {
       return NextResponse.json(
         {
-          error: "Informe o nome completo.",
+          error: tRoute("fullNameRequired"),
         },
         {
           status: 400,
@@ -177,7 +177,7 @@ export async function POST(request: Request) {
     if (!email) {
       return NextResponse.json(
         {
-          error: "Informe o e-mail.",
+          error: tRoute("emailRequired"),
         },
         {
           status: 400,
@@ -606,7 +606,7 @@ export async function POST(request: Request) {
         error:
           error instanceof Error
             ? error.message
-            : "Ocorreu um erro inesperado.",
+            : t("unexpected"),
       },
       {
         status: 500,

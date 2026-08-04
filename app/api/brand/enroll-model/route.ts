@@ -34,7 +34,7 @@ export async function POST(request: Request) {
 
     return Response.json({ success: true }, { status: 200 });
   } catch (err) {
-    const message = err instanceof Error ? err.message : "Erro inesperado.";
+    const message = err instanceof Error ? err.message : t("unexpected");
     return Response.json({ error: message }, { status: 500 });
   }
 }

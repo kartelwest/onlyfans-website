@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 
@@ -7,7 +8,6 @@ import { createClient } from "@/lib/supabase/client";
 import {
   BROADCAST_CHANNEL_NAME,
   INACTIVITY_TIMEOUT_MS,
-  WARNING_MESSAGE,
   WARNING_THRESHOLD_MS,
 } from "@/lib/auth/inactivityConfig";
 
@@ -40,6 +40,7 @@ export default function IdleTimeoutProvider({
 }: {
   children: React.ReactNode;
 }) {
+  const t = useTranslations("common.idleTimeout");
   const pathname = usePathname();
   const router = useRouter();
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -254,7 +255,7 @@ export default function IdleTimeoutProvider({
         <div className="fixed bottom-4 left-1/2 z-[9999] -translate-x-1/2 transform">
           <div className="flex items-center gap-4 rounded-2xl border border-amber-400/50 bg-[#1a1a1e] px-6 py-4 shadow-2xl">
             <p className="text-sm font-medium text-amber-200">
-              {WARNING_MESSAGE}
+              {t("warning")}
             </p>
 
             <button
@@ -263,7 +264,7 @@ export default function IdleTimeoutProvider({
               onClick={refreshSession}
               className="rounded-lg bg-amber-400 px-4 py-2 text-sm font-bold text-black transition hover:bg-amber-300 disabled:cursor-not-allowed disabled:opacity-60"
             >
-              {refreshing ? "Aguarde..." : "Stay signed in"}
+              {refreshing ? t("refreshing") : t("stayConnected")}
             </button>
           </div>
         </div>

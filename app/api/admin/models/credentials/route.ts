@@ -110,7 +110,7 @@ export async function POST(request: Request) {
 
     if (!requestedPassword && !rawLogin) {
       return NextResponse.json(
-        { error: "Informe uma nova senha ou um novo login." },
+        { error: t("passwordOrLoginRequired") },
         { status: 400 },
       );
     }
@@ -164,7 +164,7 @@ export async function POST(request: Request) {
       console.error("Erro ao carregar a modelo:", modelError);
 
       return NextResponse.json(
-        { error: "Ocorreu um erro inesperado. Tente novamente." },
+        { error: t("unexpectedRetry") },
         { status: 500 },
       );
     }
@@ -198,7 +198,7 @@ export async function POST(request: Request) {
     if (isProvisioning) {
       if (!requestedPassword) {
         return NextResponse.json(
-          { error: "Informe uma senha para criar o acesso desta modelo." },
+          { error: tRoute("passwordRequired") },
           { status: 400 },
         );
       }
@@ -284,7 +284,7 @@ export async function POST(request: Request) {
 
       if (Object.keys(attributes).length === 0) {
         return NextResponse.json(
-          { error: "Informe uma nova senha ou um novo login." },
+          { error: t("passwordOrLoginRequired") },
           { status: 400 },
         );
       }
@@ -328,7 +328,7 @@ export async function POST(request: Request) {
       console.error("Erro ao atualizar o acesso:", authError);
 
       return NextResponse.json(
-        { error: "Ocorreu um erro inesperado. Tente novamente." },
+        { error: t("unexpectedRetry") },
         { status: 500 },
       );
     }
@@ -498,7 +498,7 @@ export async function POST(request: Request) {
     console.error("Erro inesperado ao alterar o acesso:", error);
 
     return NextResponse.json(
-      { error: "Ocorreu um erro inesperado. Tente novamente." },
+      { error: t("unexpectedRetry") },
       { status: 500 },
     );
   }

@@ -6,6 +6,7 @@ export const dynamic = "force-dynamic";
 
 export async function POST(request: Request) {
   const t = await getTranslations("errors.api");
+  const tRoute = await getTranslations("errors.brand");
   const supabase = await createClient();
   const { data: userData } = await supabase.auth.getUser();
 
@@ -43,12 +44,12 @@ export async function POST(request: Request) {
     });
 
     if (error || !talent) {
-      return Response.json({ error: error ?? "Erro ao criar cliente." }, { status: 400 });
+      return Response.json({ error: error ?? tRoute("createClientFailed") }, { status: 400 });
     }
 
     return Response.json({ id: talent.id }, { status: 201 });
   } catch (err) {
-    const message = err instanceof Error ? err.message : "Erro inesperado.";
+    const message = err instanceof Error ? err.message : t("unexpected");
     return Response.json({ error: message }, { status: 500 });
   }
 }

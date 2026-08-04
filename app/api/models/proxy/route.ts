@@ -86,7 +86,7 @@ export async function PATCH(request: Request) {
 
     if (proxyCompany === "other" && !proxyCompanyOther) {
       return NextResponse.json(
-        { error: "Informe o nome da empresa do proxy." },
+        { error: tRoute("companyRequired") },
         { status: 400 },
       );
     }
@@ -109,7 +109,7 @@ export async function PATCH(request: Request) {
       console.error("Erro ao salvar dados de proxy:", error);
 
       return NextResponse.json(
-        { error: "Erro interno ao salvar dados de proxy." },
+        { error: tRoute("saveFailed") },
         { status: 500 },
       );
     }
@@ -133,6 +133,6 @@ export async function PATCH(request: Request) {
   } catch (error) {
     console.error("Erro ao salvar dados de proxy:", error);
 
-    return NextResponse.json({ error: "Erro interno." }, { status: 500 });
+    return NextResponse.json({ error: t("internal") }, { status: 500 });
   }
 }

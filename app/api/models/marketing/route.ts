@@ -64,6 +64,7 @@ async function requireStaff(supabase: Awaited<ReturnType<typeof createClient>>) 
 // public.is_management() at the database level.
 export async function GET(request: NextRequest) {
   const t = await getTranslations("errors.api");
+  const tRoute = await getTranslations("errors.marketing");
   const supabase = await createClient();
 
   const { error: authError } = await requireStaff(supabase);
@@ -90,7 +91,7 @@ export async function GET(request: NextRequest) {
   if (error) {
     console.error("Erro ao carregar contas de marketing:", error);
     return NextResponse.json(
-      { error: "Erro interno ao carregar contas de marketing." },
+      { error: tRoute("loadFailed") },
       { status: 500 },
     );
   }
@@ -103,6 +104,7 @@ export async function GET(request: NextRequest) {
 
 export async function PATCH(request: NextRequest) {
   const t = await getTranslations("errors.api");
+  const tRoute = await getTranslations("errors.marketing");
   const supabase = await createClient();
 
   const { error: authError, profile } = await requireStaff(supabase);
@@ -135,7 +137,7 @@ export async function PATCH(request: NextRequest) {
   if (error) {
     console.error("Erro ao salvar contas de marketing:", error);
     return NextResponse.json(
-      { error: "Erro interno ao salvar contas de marketing." },
+      { error: tRoute("saveFailed") },
       { status: 500 },
     );
   }

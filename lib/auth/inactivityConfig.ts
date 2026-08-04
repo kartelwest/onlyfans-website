@@ -14,12 +14,6 @@ export const LAST_ACTIVITY_COOKIE = "karay-last-activity";
 
 export const BROADCAST_CHANNEL_NAME = "karay-inactivity";
 
-export const EXPIRED_SESSION_MESSAGE =
-  "Your session expired after 8 minutes of inactivity. Please sign in again.";
-
-export const WARNING_MESSAGE =
-  "Your session will expire in 1 minute due to inactivity.";
-
 function parseTimeoutMs(
   envValue: string | undefined,
   defaultValue: number,

@@ -1,6 +1,7 @@
 import "server-only";
 
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { getTranslations } from "next-intl/server";
 
 import {
   ONBOARDING_PLATFORM,
@@ -8,7 +9,6 @@ import {
   buildItemKey,
   flattenOnboarding,
   isReadOnlyLinkedFieldKey,
-  linkedFieldLocation,
   resolveDerivedStatus,
   type AnyLinkedFieldKey,
   type LinkedFieldKey,
@@ -408,6 +408,12 @@ export async function loadOnboarding({
   summary: OnboardingSummary;
 }> {
   const isRep = viewerRole === "representative";
+
+  // Titles, descriptions, labels and placeholders are UI copy. The definition
+  // file owns the keys and the structure; the catalogue owns the words, keyed
+  // by the same permanent keys.
+  const t = await getTranslations("onboarding");
+
   const [{ data: rows, error: rowsError }, linkedValues] = await Promise.all([
     supabase
       .from("model_onboarding_items")
@@ -454,13 +460,21 @@ export async function loadOnboarding({
 
           return {
             key: field.key,
-            label: field.label,
+            label: t(
+              `fields.${section.key}.${item.key}.${field.key}.label`,
+            ),
             type: field.type,
-            placeholder: field.placeholder ?? null,
+            placeholder: field.placeholder
+              ? t(
+                  `fields.${section.key}.${item.key}.${field.key}.placeholder`,
+                )
+              : null,
             options: field.options ?? null,
             required: field.required === true,
             linked,
-            linkedLocation: linked ? linkedFieldLocation(linked) : null,
+            linkedLocation: linked
+              ? t(`linkedFields.${linked}.location`)
+              : null,
             readOnly: linked ? isReadOnlyLinkedFieldKey(linked) : false,
             value: linked
               ? (linkedValues[linked] ?? "")
@@ -490,10 +504,12 @@ export async function loadOnboarding({
         id: row.id,
         itemKey,
         sectionKey: section.key,
-        sectionTitle: section.title,
+        sectionTitle: t(`sections.${section.key}.title`),
         sectionOrder: sectionIndex + 1,
-        title: item.title,
-        description: item.description ?? null,
+        title: t(`items.${section.key}.${item.key}.title`),
+        description: item.description
+          ? t(`items.${section.key}.${item.key}.description`)
+          : null,
         itemOrder: itemIndex + 1,
         responsibility: item.responsibility,
         completed: row.completed,
@@ -526,7 +542,7 @@ export async function loadOnboarding({
 
     sections.push({
       key: section.key,
-      title: section.title,
+      title: t(`sections.${section.key}.title`),
       order: sectionIndex + 1,
       items,
       completed: sectionDone,

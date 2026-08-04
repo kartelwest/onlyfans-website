@@ -75,7 +75,7 @@ export async function POST(request: Request) {
 
     if (!fullName) {
       return NextResponse.json(
-        { error: "Informe o nome completo para criar um rascunho." },
+        { error: tRoute("fullNameRequired") },
         { status: 400 },
       );
     }
@@ -213,7 +213,7 @@ export async function POST(request: Request) {
       success: true,
       modelId,
       slug,
-      message: "Rascunho salvo com sucesso.",
+      message: tRoute("saved"),
     });
   } catch (error) {
     console.error("Erro inesperado ao criar rascunho:", error);
@@ -237,7 +237,7 @@ export async function POST(request: Request) {
     }
 
     return NextResponse.json(
-      { error: "Ocorreu um erro inesperado ao salvar o rascunho." },
+      { error: tRoute("unexpected") },
       { status: 500 },
     );
   }

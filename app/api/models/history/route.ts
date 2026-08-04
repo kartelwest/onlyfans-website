@@ -19,13 +19,14 @@ const DEFAULT_PAGE_SIZE = 25;
 // history can tell them apart from profile changes in `model_audit_history`.
 const NOTE_ACTION_PREFIX = "note_";
 
-const NOTE_ACTION_SUMMARIES: Record<string, string> = {
-  created: "Nota adicionada",
-  edited: "Nota editada",
-  pinned: "Nota fixada",
-  unpinned: "Nota desafixada",
-  archived: "Nota arquivada",
-  restored: "Nota restaurada",
+/** Catalogue keys under `admin.notes.actions`, keyed by the stored action. */
+const NOTE_ACTION_KEYS: Record<string, string> = {
+  created: "noteCreated",
+  edited: "noteEdited",
+  pinned: "notePinned",
+  unpinned: "noteUnpinned",
+  archived: "noteArchived",
+  restored: "noteRestored",
 };
 
 const MAX_SUMMARY_EXCERPT = 140;
@@ -48,6 +49,7 @@ function excerpt(value: unknown): string | null {
 
 export async function GET(request: NextRequest) {
   const t = await getTranslations("errors.api");
+  const tNoteAction = await getTranslations("admin.notes.actions");
   const tRoute = await getTranslations("errors.historyApi");
   try {
     const supabase = await createClient();
@@ -264,7 +266,9 @@ export async function GET(request: NextRequest) {
 
     const merged = [
       ...(auditResult?.data ?? []).map((entry) => mapAuditEntry(entry, t("unknownUser"))),
-      ...(notesResult?.data ?? []).map((entry) => mapNoteEntry(entry, t("unknownUser"))),
+      ...(notesResult?.data ?? []).map((entry) =>
+        mapNoteEntry(entry, t("unknownUser"), tNoteAction),
+      ),
     ].sort(
       (first, second) =>
         new Date(second.createdAt).getTime() -
@@ -322,9 +326,11 @@ function mapNoteEntry(
   entry: Record<string, unknown>,
   /** See mapAuditEntry. */
   unknownUser: string,
+  /** Resolves an `admin.notes.actions` key. UI copy, so it is passed in. */
+  actionLabel: (key: string) => string,
 ) {
   const rawAction = String(entry.action ?? "");
-  const label = NOTE_ACTION_SUMMARIES[rawAction] ?? "Nota atualizada";
+  const label = actionLabel(NOTE_ACTION_KEYS[rawAction] ?? "noteUpdated");
 
   // For a brand-new note the body arrives in `updated_body`; for edits the
   // previous text is in `original_body`. Show whichever represents the note

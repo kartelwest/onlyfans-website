@@ -137,7 +137,7 @@ export async function POST(request: Request) {
     if (upload.error) {
       console.error("Erro ao fazer upload do avatar:", upload.error);
       return NextResponse.json(
-        { error: "Erro ao fazer upload do avatar." },
+        { error: tRoute("uploadFailed") },
         { status: 500 },
       );
     }
@@ -155,7 +155,7 @@ export async function POST(request: Request) {
       await admin.storage.from("model-avatars").remove([path]);
       console.error("Erro ao salvar avatar:", updateError);
       return NextResponse.json(
-        { error: "Erro ao salvar avatar." },
+        { error: tRoute("saveFailed") },
         { status: 500 },
       );
     }
@@ -208,7 +208,7 @@ export async function POST(request: Request) {
     console.error("Erro ao atualizar avatar:", error);
 
     return NextResponse.json(
-      { error: "Erro interno." },
+      { error: t("internal") },
       { status: 500 },
     );
   }

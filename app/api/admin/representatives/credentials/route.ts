@@ -108,7 +108,7 @@ export async function POST(request: Request) {
 
     if (!requestedPassword && !rawLogin) {
       return NextResponse.json(
-        { error: "Informe uma nova senha ou um novo login." },
+        { error: t("passwordOrLoginRequired") },
         { status: 400 },
       );
     }
@@ -162,7 +162,7 @@ export async function POST(request: Request) {
       console.error("Erro ao carregar o representante:", representativeError);
 
       return NextResponse.json(
-        { error: "Ocorreu um erro inesperado. Tente novamente." },
+        { error: t("unexpectedRetry") },
         { status: 500 },
       );
     }
@@ -248,7 +248,7 @@ export async function POST(request: Request) {
 
     if (Object.keys(attributes).length === 0) {
       return NextResponse.json(
-        { error: "Informe uma nova senha ou um novo login." },
+        { error: t("passwordOrLoginRequired") },
         { status: 400 },
       );
     }
@@ -285,7 +285,7 @@ export async function POST(request: Request) {
       console.error("Erro ao atualizar o acesso do representante:", updateAuthError);
 
       return NextResponse.json(
-        { error: "Ocorreu um erro inesperado. Tente novamente." },
+        { error: t("unexpectedRetry") },
         { status: 500 },
       );
     }
@@ -407,7 +407,7 @@ export async function POST(request: Request) {
     console.error("Erro inesperado ao alterar o acesso do representante:", error);
 
     return NextResponse.json(
-      { error: "Ocorreu um erro inesperado. Tente novamente." },
+      { error: t("unexpectedRetry") },
       { status: 500 },
     );
   }

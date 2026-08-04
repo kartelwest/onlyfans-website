@@ -59,7 +59,7 @@ export async function POST(request: Request) {
 
     if (!Array.isArray(body.applicants) || body.applicants.length === 0) {
       return NextResponse.json(
-        { error: "Nenhuma candidata para salvar." },
+        { error: tRoute("nothingToSave") },
         { status: 400 },
       );
     }
@@ -163,7 +163,7 @@ export async function POST(request: Request) {
             index,
             ok: false,
             display_name: nomeCompleto,
-            error: error?.message || "Erro ao salvar.",
+            error: error?.message || tRoute("saveFailed"),
           });
           continue;
         }
@@ -221,7 +221,7 @@ export async function POST(request: Request) {
           error:
             rowError instanceof Error
               ? rowError.message
-              : "Erro inesperado ao salvar.",
+              : tRoute("unexpectedSave"),
         });
       }
     }
@@ -235,7 +235,7 @@ export async function POST(request: Request) {
         error:
           error instanceof Error
             ? error.message
-            : "Erro inesperado ao salvar as candidatas.",
+            : tRoute("unexpectedSaveAll"),
       },
       { status: 500 },
     );

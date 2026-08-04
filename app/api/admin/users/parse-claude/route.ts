@@ -64,7 +64,7 @@ export async function POST(request: Request) {
 
     if (!text) {
       return NextResponse.json(
-        { error: "Cole o texto da modelo antes de analisar." },
+        { error: tRoute("pasteTextFirst") },
         { status: 400 },
       );
     }
@@ -97,14 +97,14 @@ export async function POST(request: Request) {
     console.error("Erro ao analisar texto com Claude:", error);
 
     const message =
-      error instanceof Error ? error.message : "Erro inesperado.";
+      error instanceof Error ? error.message : t("unexpected");
 
     if (
       message.toLowerCase().includes("timeout") ||
       message.toLowerCase().includes("time-out")
     ) {
       return NextResponse.json(
-        { error: "O Claude demorou muito para responder. Tente novamente." },
+        { error: tRoute("timedOut") },
         { status: 504 },
       );
     }

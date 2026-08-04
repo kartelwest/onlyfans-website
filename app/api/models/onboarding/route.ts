@@ -151,7 +151,7 @@ export async function GET(request: Request) {
   } catch (error) {
     console.error("Erro ao carregar onboarding:", error);
 
-    return fail("Erro interno ao carregar o onboarding.", 500);
+    return fail(tRoute("loadFailed"), 500);
   }
 }
 
@@ -176,7 +176,7 @@ export async function PATCH(request: Request) {
     const definition = findOnboardingItem(itemKey);
 
     if (!definition) {
-      return fail("Etapa de onboarding desconhecida.", 400);
+      return fail(tRoute("unknownStep"), 400);
     }
 
     const access = await resolveOnboardingAccess({
@@ -214,7 +214,7 @@ export async function PATCH(request: Request) {
     if (existingError) {
       console.error("Erro ao buscar etapa:", existingError);
 
-      return fail("Erro interno ao buscar a etapa.", 500);
+      return fail(tRoute("stepLookupFailed"), 500);
     }
 
     if (!existing) {
@@ -257,7 +257,7 @@ export async function PATCH(request: Request) {
       : undefined;
 
     if (body.field?.key && !fieldDefinition) {
-      return fail("Campo de onboarding desconhecido.", 400);
+      return fail(tRoute("unknownField"), 400);
     }
 
     if (fieldDefinition) {
@@ -279,7 +279,10 @@ export async function PATCH(request: Request) {
         isReadOnlyLinkedFieldKey(fieldDefinition.linked)
       ) {
         return fail(
-          `"${fieldDefinition.label}" não é editável pelo onboarding. Altere em ${linkedFieldLocation(fieldDefinition.linked)}.`,
+          tRoute("readOnlyField", {
+            label: fieldDefinition.label,
+            location: linkedFieldLocation(fieldDefinition.linked),
+          }),
           400,
         );
       }

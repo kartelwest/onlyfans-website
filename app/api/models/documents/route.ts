@@ -36,6 +36,7 @@ export async function GET(
   request: Request,
 ) {
   const t = await getTranslations("errors.api");
+  const tRoute = await getTranslations("errors.documentsApi");
   try {
     const supabase =
       await createClient();
@@ -166,7 +167,7 @@ export async function GET(
       return NextResponse.json(
         {
           error:
-            "Erro interno ao carregar documentos.",
+            tRoute("loadFailed"),
         },
         {
           status: 500,
@@ -220,7 +221,7 @@ export async function GET(
     return NextResponse.json(
       {
         error:
-          "Erro interno ao carregar documentos.",
+          tRoute("loadFailed"),
       },
       {
         status: 500,
@@ -340,7 +341,7 @@ export async function POST(
       return NextResponse.json(
         {
           error:
-            "Selecione um arquivo.",
+            tRoute("fileRequired"),
         },
         {
           status: 400,
@@ -420,7 +421,7 @@ export async function POST(
       return NextResponse.json(
         {
           error:
-            "Erro interno ao verificar limite de documentos.",
+            tRoute("limitCheckFailed"),
         },
         {
           status: 500,
@@ -482,7 +483,7 @@ export async function POST(
       return NextResponse.json(
         {
           error:
-            "Erro ao fazer upload do arquivo.",
+            tRoute("uploadFailed"),
         },
         {
           status: 500,
@@ -537,7 +538,7 @@ export async function POST(
       return NextResponse.json(
         {
           error:
-            "Erro interno ao salvar documento.",
+            tRoute("saveFailed"),
         },
         {
           status: 500,
@@ -595,7 +596,7 @@ export async function POST(
     return NextResponse.json(
       {
         error:
-          "Erro interno ao enviar documento.",
+          tRoute("sendFailed"),
       },
       {
         status: 500,

@@ -32,7 +32,7 @@ function PhoneIllustration({
 
           <div className="mt-5 rounded-xl bg-white p-3">
             <p className="text-center text-[10px] font-semibold text-[#66565d]">
-              Compartilhar álbum
+              {t("shareAlbum")}
             </p>
 
             <div className="mx-auto mt-3 h-8 w-20 rounded-full bg-[#c65f7c]" />
