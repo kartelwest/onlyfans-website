@@ -995,7 +995,8 @@
     },
     "representativeStatus": {
       "ativa": "Ativa",
-      "inativa": "Inativa"
+      "inativa": "Inativa",
+      "arquivada": "Arquivada"
     },
     "ledgerEntryType": {
       "transporte": "Transporte",
@@ -1229,6 +1230,22 @@
         "email": "E-mail",
         "phone": "Telefone / WhatsApp",
         "saveChanges": "Salvar alterações"
+      },
+      "list": {
+        "name": "Nome",
+        "contact": "Contato",
+        "status": "Status",
+        "models": "Modelos",
+        "lastAccess": "Último acesso",
+        "since": "Desde",
+        "actions": "Ações",
+        "empty": "Nenhum representante encontrado.",
+        "noName": "Sem nome",
+        "activate": "Ativar",
+        "deactivate": "Inativar",
+        "archive": "Arquivar",
+        "viewAsThem": "Ver como ele vê",
+        "openProfile": "Abrir perfil"
       }
     },
     "reassign": {
@@ -1650,6 +1667,24 @@
         "pctMarketing": "% Marketing",
         "status": "Status"
       }
+    },
+    "pageview": {
+      "intro": "A tela exata que a modelo está vendo. Quando ela ligar, abra a tela dela primeiro para acompanhar o que ela descreve — o próprio painel de visualização leva você ao lado admin da mesma modelo.",
+      "modelList": "Lista de modelos",
+      "representatives": "Representantes",
+      "searchLabel": "Buscar modelo",
+      "searchPlaceholder": "Nome, nome artístico, número ou representante",
+      "count": "{shown} de {total} modelo(s)",
+      "noneFound": "Nenhuma modelo encontrada",
+      "tryAnother": "Tente outro nome ou limpe a busca.",
+      "empty": "Adicione a primeira modelo para começar.",
+      "representative": "Representante",
+      "none": "Nenhum",
+      "lastAccess": "Último acesso",
+      "never": "Nunca",
+      "viewModelScreen": "Ver a tela da modelo",
+      "repScreen": "Tela do rep.",
+      "adminPanel": "Painel admin"
     }
   }
 }

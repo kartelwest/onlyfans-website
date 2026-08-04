@@ -995,7 +995,8 @@
     },
     "representativeStatus": {
       "ativa": "Active",
-      "inativa": "Inactive"
+      "inativa": "Inactive",
+      "arquivada": "Archived"
     },
     "ledgerEntryType": {
       "transporte": "Transport",
@@ -1229,6 +1230,22 @@
         "email": "Email",
         "phone": "Phone / WhatsApp",
         "saveChanges": "Save changes"
+      },
+      "list": {
+        "name": "Name",
+        "contact": "Contact",
+        "status": "Status",
+        "models": "Models",
+        "lastAccess": "Last access",
+        "since": "Since",
+        "actions": "Actions",
+        "empty": "No representatives found.",
+        "noName": "Unnamed",
+        "activate": "Activate",
+        "deactivate": "Deactivate",
+        "archive": "Archive",
+        "viewAsThem": "See what they see",
+        "openProfile": "Open profile"
       }
     },
     "reassign": {
@@ -1650,6 +1667,24 @@
         "pctMarketing": "% Marketing",
         "status": "Status"
       }
+    },
+    "pageview": {
+      "intro": "The exact screen the model is looking at. When she calls, open her screen first so you can follow what she describes — the preview panel then takes you to the admin side for the same model.",
+      "modelList": "Model list",
+      "representatives": "Representatives",
+      "searchLabel": "Search models",
+      "searchPlaceholder": "Name, stage name, number or representative",
+      "count": "{shown} of {total} model(s)",
+      "noneFound": "No models found",
+      "tryAnother": "Try another name, or clear the search.",
+      "empty": "Add your first model to get started.",
+      "representative": "Representative",
+      "none": "None",
+      "lastAccess": "Last access",
+      "never": "Never",
+      "viewModelScreen": "View the model's screen",
+      "repScreen": "Rep's screen",
+      "adminPanel": "Admin panel"
     }
   }
 }

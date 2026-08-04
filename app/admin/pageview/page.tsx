@@ -9,6 +9,11 @@ import {
 import { createClient } from "@/lib/supabase/server";
 import type { ManagementRole, ModelStatus } from "@/types/model";
 
+import { getLocale, getTranslations } from "next-intl/server";
+
+import { formatCalendarDate } from "@/lib/earnings/period";
+import { toLocale } from "@/lib/i18n/config";
+
 export const dynamic = "force-dynamic";
 
 /**
@@ -33,16 +38,12 @@ type PageviewModelRow = {
 
 const statusStyles: Record<
   ModelStatus,
-  { dot: string; label: string; text: string }
+  { dot: string; text: string }
 > = {
-  active: { dot: "bg-emerald-400", label: "Ativa", text: "text-emerald-300" },
-  inactive: { dot: "bg-white/40", label: "Inativa", text: "text-white/50" },
-  candidate: {
-    dot: "bg-yellow-400",
-    label: "Candidata",
-    text: "text-yellow-300",
-  },
-  denied: { dot: "bg-red-400", label: "Negada", text: "text-red-300" },
+  active: { dot: "bg-emerald-400", text: "text-emerald-300" },
+  inactive: { dot: "bg-white/40", text: "text-white/50" },
+  candidate: { dot: "bg-yellow-400", text: "text-yellow-300" },
+  denied: { dot: "bg-red-400", text: "text-red-300" },
 };
 
 export default async function AdminPageviewPage({
@@ -97,7 +98,7 @@ export default async function AdminPageviewPage({
     .order("created_at", { ascending: true });
 
   if (modelsError) {
-    console.error("Erro ao carregar modelos:", modelsError);
+    console.error("Failed to load models:", modelsError);
   }
 
   const models = sortByModelStatus(
@@ -150,6 +151,11 @@ export default async function AdminPageviewPage({
       )
     : models;
 
+  const t = await getTranslations("admin.pageview");
+  const tCommon = await getTranslations("common.actions");
+  const tStatus = await getTranslations("enums.modelStatus");
+  const locale = toLocale(await getLocale());
+
   return (
     <main className="min-h-screen bg-[#08080a] px-4 py-8 text-white sm:px-6 lg:px-10">
       <div className="mx-auto max-w-[1400px]">
@@ -162,9 +168,7 @@ export default async function AdminPageviewPage({
             <h1 className="mt-2 text-3xl font-bold sm:text-4xl">Pageview</h1>
 
             <p className="mt-3 max-w-2xl text-sm leading-6 text-white/55">
-              A tela exata que a modelo está vendo. Quando ela ligar, abra a
-              tela dela primeiro para acompanhar o que ela descreve — o próprio
-              painel de visualização leva você ao lado admin da mesma modelo.
+              {t("intro")}
             </p>
           </div>
 
@@ -173,14 +177,14 @@ export default async function AdminPageviewPage({
               href="/admin/models"
               className="rounded-xl border border-white/10 bg-white/5 px-5 py-3 text-sm font-semibold text-white/80 transition hover:bg-white/10"
             >
-              Lista de modelos
+              {t("modelList")}
             </Link>
 
             <Link
               href="/admin/representatives"
               className="rounded-xl border border-white/10 bg-white/5 px-5 py-3 text-sm font-semibold text-white/80 transition hover:bg-white/10"
             >
-              Representantes
+              {t("representatives")}
             </Link>
           </div>
         </header>
@@ -193,14 +197,14 @@ export default async function AdminPageviewPage({
             htmlFor="pageview-search"
             className="text-xs font-bold uppercase tracking-[0.12em] text-white/50"
           >
-            Buscar modelo
+            {t("searchLabel")}
           </label>
 
           <input
             id="pageview-search"
             name="q"
             defaultValue={search}
-            placeholder="Nome, nome artístico, número ou representante"
+            placeholder={t("searchPlaceholder")}
             className="min-w-[260px] flex-1 rounded-lg border border-white/15 bg-[#1a1a1f] px-4 py-2 text-sm text-white outline-none placeholder:text-white/30 focus:border-pink-400/60"
           />
 
@@ -208,7 +212,7 @@ export default async function AdminPageviewPage({
             type="submit"
             className="rounded-lg bg-pink-500 px-5 py-2 text-xs font-bold uppercase tracking-wider text-white transition hover:bg-pink-400"
           >
-            Buscar
+            {tCommon("search")}
           </button>
 
           {search && (
@@ -216,23 +220,26 @@ export default async function AdminPageviewPage({
               href="/admin/pageview"
               className="rounded-lg border border-white/15 px-4 py-2 text-xs font-bold uppercase tracking-wider text-white/70 transition hover:bg-white/10"
             >
-              Limpar
+              {tCommon("clear")}
             </Link>
           )}
 
           <span className="text-xs text-white/40">
-            {filteredModels.length} de {models.length} modelo(s)
+            {t("count", {
+              shown: filteredModels.length,
+              total: models.length,
+            })}
           </span>
         </form>
 
         {filteredModels.length === 0 ? (
           <div className="mt-6 rounded-2xl border border-white/10 bg-[#111115] p-12 text-center">
-            <p className="text-lg font-bold">Nenhuma modelo encontrada</p>
+            <p className="text-lg font-bold">{t("noneFound")}</p>
 
             <p className="mt-2 text-sm text-white/50">
               {search
-                ? "Tente outro nome ou limpe a busca."
-                : "Adicione a primeira modelo para começar."}
+                ? t("tryAnother")
+                : t("empty")}
             </p>
           </div>
         ) : (
@@ -273,29 +280,30 @@ export default async function AdminPageviewPage({
 
                     <div className="mt-3 flex items-center gap-2 text-xs font-semibold">
                       <span className={`h-2 w-2 rounded-full ${style.dot}`} />
-                      <span className={style.text}>{style.label}</span>
+                      <span className={style.text}>{tStatus(status)}</span>
                     </div>
 
                     <dl className="mt-4 space-y-1 text-xs text-white/50">
                       <div className="flex justify-between gap-3">
-                        <dt>Representante</dt>
+                        <dt>{t("representative")}</dt>
                         <dd className="truncate text-white/70">
                           {(model.representative_id
                             ? representativeNames.get(
                                 model.representative_id,
                               )
-                            : "") || "Nenhum"}
+                            : "") || t("none")}
                         </dd>
                       </div>
 
                       <div className="flex justify-between gap-3">
-                        <dt>Último acesso</dt>
+                        <dt>{t("lastAccess")}</dt>
                         <dd className="text-white/70">
                           {model.last_login_at
-                            ? new Date(
-                                model.last_login_at,
-                              ).toLocaleDateString("pt-BR")
-                            : "Nunca"}
+                            ? formatCalendarDate(
+                                model.last_login_at.slice(0, 10),
+                                locale,
+                              )
+                            : t("never")}
                         </dd>
                       </div>
                     </dl>
@@ -306,7 +314,7 @@ export default async function AdminPageviewPage({
                       href={`/admin/view-as/model/${model.id}`}
                       className="rounded-lg bg-pink-500 px-4 py-2 text-center text-xs font-bold uppercase tracking-wider text-white transition hover:bg-pink-400"
                     >
-                      Ver a tela da modelo
+                      {t("viewModelScreen")}
                     </Link>
 
                     <div className="grid grid-cols-2 gap-2">
@@ -314,14 +322,14 @@ export default async function AdminPageviewPage({
                         href={`/admin/view-as/model/${model.id}/representative`}
                         className="rounded-lg border border-purple-400/30 bg-purple-500/10 px-3 py-2 text-center text-xs font-bold text-purple-200 transition hover:bg-purple-500/20"
                       >
-                        Tela do rep.
+                        {t("repScreen")}
                       </Link>
 
                       <Link
                         href={`/admin/models/${model.slug}`}
                         className="rounded-lg border border-pink-400/30 bg-pink-500/10 px-3 py-2 text-center text-xs font-bold text-pink-200 transition hover:bg-pink-500/20"
                       >
-                        Painel admin
+                        {t("adminPanel")}
                       </Link>
                     </div>
                   </div>

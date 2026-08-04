@@ -1,5 +1,10 @@
 "use client";
 
+import { useLocale, useTranslations } from "next-intl";
+
+import { toLocale, type Locale } from "@/lib/i18n/config";
+import { formatDateTime } from "@/lib/models/formatDateTime";
+
 import { useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -34,20 +39,10 @@ type RepresentativesClientProps = {
   isOwner: boolean;
 };
 
-const STATUS_OPTIONS = [
-  { value: "all", label: "Todos" },
-  { value: "ativa", label: "Ativa" },
-  { value: "inativa", label: "Inativa" },
-  { value: "arquivada", label: "Arquivada" },
-] as const;
+/** Database status values; the words come from `enums.representativeStatus`. */
+const STATUS_OPTIONS = ["all", "ativa", "inativa", "arquivada"] as const;
 
-const STATUS_LABELS: Record<string, string> = {
-  ativa: "Ativa",
-  inativa: "Inativa",
-  arquivada: "Arquivada",
-};
-
-function formatDate(value: string | null) {
+function formatDate(value: string | null, locale: Locale) {
   if (!value) {
     return "—";
   }
@@ -58,13 +53,7 @@ function formatDate(value: string | null) {
     return "—";
   }
 
-  return date.toLocaleString("pt-BR", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+  return formatDateTime(date, locale);
 }
 
 export default function RepresentativesClient({
@@ -73,10 +62,20 @@ export default function RepresentativesClient({
   modelsByRepresentative,
   isOwner,
 }: RepresentativesClientProps) {
+  const t = useTranslations("admin.representatives.list");
+  const tStatus = useTranslations("enums.representativeStatus");
+  const tCommon = useTranslations("common.states");
+  const locale = toLocale(useLocale());
+
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [statusFilter, setStatusFilter] = useState(initialStatusFilter);
-  const [message, setMessage] = useState<string | null>(null);
+  // Kept with its own success flag rather than sniffing the sentence for
+  // "sucesso"/"excluído" — that test fails the moment the server answers in
+  // another language, turning every success red.
+  const [result, setResult] = useState<{ text: string; ok: boolean } | null>(
+    null,
+  );
 
   const filtered =
     statusFilter === "all"
@@ -89,11 +88,11 @@ export default function RepresentativesClient({
     formData.set("status", status);
 
     startTransition(async () => {
-      const result = await updateRepresentativeStatus(null, formData);
+      const outcome = await updateRepresentativeStatus(null, formData);
 
-      setMessage(result.message);
+      setResult({ text: outcome.message, ok: outcome.success });
 
-      if (result.success) {
+      if (outcome.success) {
         router.refresh();
       }
     });
@@ -107,34 +106,34 @@ export default function RepresentativesClient({
 
   return (
     <>
-      {message && (
+      {result && (
         <div
           className={`mb-6 rounded-2xl border px-5 py-4 text-sm ${
-            message.includes("sucesso") || message.includes("excluído")
+            result.ok
               ? "border-emerald-400/30 bg-emerald-500/10 text-emerald-200"
               : "border-red-400/30 bg-red-500/10 text-red-200"
           }`}
         >
-          {message}
+          {result.text}
         </div>
       )}
 
       <div className="mt-8 flex flex-wrap items-center gap-3">
         {STATUS_OPTIONS.map((option) => (
           <button
-            key={option.value}
+            key={option}
             type="button"
             onClick={() => {
-              setStatusFilter(option.value);
-              setMessage(null);
+              setStatusFilter(option);
+              setResult(null);
             }}
             className={`rounded-xl border px-4 py-2 text-sm font-semibold transition ${
-              statusFilter === option.value
+              statusFilter === option
                 ? "border-pink-400/50 bg-pink-500/20 text-pink-200"
                 : "border-white/10 bg-white/5 text-white/60 hover:bg-white/10"
             }`}
           >
-            {option.label}
+            {option === "all" ? tCommon("all") : tStatus(option)}
           </button>
         ))}
       </div>
@@ -144,13 +143,13 @@ export default function RepresentativesClient({
           <table className="w-full text-left text-sm">
             <thead className="border-b border-white/10 bg-white/5 text-xs uppercase tracking-wider text-white/50">
               <tr>
-                <th className="px-5 py-4 font-semibold">Nome</th>
-                <th className="px-5 py-4 font-semibold">Contato</th>
-                <th className="px-5 py-4 font-semibold">Status</th>
-                <th className="px-5 py-4 font-semibold">Modelos</th>
-                <th className="px-5 py-4 font-semibold">Último acesso</th>
-                <th className="px-5 py-4 font-semibold">Desde</th>
-                <th className="px-5 py-4 font-semibold">Ações</th>
+                <th className="px-5 py-4 font-semibold">{t("name")}</th>
+                <th className="px-5 py-4 font-semibold">{t("contact")}</th>
+                <th className="px-5 py-4 font-semibold">{t("status")}</th>
+                <th className="px-5 py-4 font-semibold">{t("models")}</th>
+                <th className="px-5 py-4 font-semibold">{t("lastAccess")}</th>
+                <th className="px-5 py-4 font-semibold">{t("since")}</th>
+                <th className="px-5 py-4 font-semibold">{t("actions")}</th>
               </tr>
             </thead>
 
@@ -161,7 +160,7 @@ export default function RepresentativesClient({
                     colSpan={7}
                     className="px-5 py-12 text-center text-white/40"
                   >
-                    Nenhum representante encontrado.
+                    {t("empty")}
                   </td>
                 </tr>
               ) : (
@@ -175,7 +174,7 @@ export default function RepresentativesClient({
                         href={`/admin/representatives/${rep.id}`}
                         className="font-semibold text-white/90 transition hover:text-pink-300"
                       >
-                        {rep.full_name || "Sem nome"}
+                        {rep.full_name || t("noName")}
                       </Link>
                     </td>
 
@@ -194,7 +193,11 @@ export default function RepresentativesClient({
                               : "border-white/15 bg-white/5 text-white/50"
                         }`}
                       >
-                        {STATUS_LABELS[rep.status ?? ""] || rep.status || "—"}
+                        {rep.status === "ativa" ||
+                        rep.status === "inativa" ||
+                        rep.status === "arquivada"
+                          ? tStatus(rep.status)
+                          : (rep.status ?? "—")}
                       </span>
                     </td>
 
@@ -206,11 +209,11 @@ export default function RepresentativesClient({
                     </td>
 
                     <td className="px-5 py-4 align-top text-white/50">
-                      {formatDate(rep.last_login_at)}
+                      {formatDate(rep.last_login_at, locale)}
                     </td>
 
                     <td className="px-5 py-4 align-top text-white/50">
-                      {formatDate(rep.created_at)}
+                      {formatDate(rep.created_at, locale)}
                     </td>
 
                     <td className="px-5 py-4 align-top">
@@ -222,7 +225,7 @@ export default function RepresentativesClient({
                             onClick={() => handleStatusChange(rep.id, "ativa")}
                             className="rounded-lg border border-emerald-400/30 bg-emerald-500/10 px-3 py-2 text-xs font-bold text-emerald-200 transition hover:bg-emerald-500/20 disabled:opacity-40"
                           >
-                            Ativar
+                            {t("activate")}
                           </button>
                         )}
 
@@ -233,7 +236,7 @@ export default function RepresentativesClient({
                             onClick={() => handleStatusChange(rep.id, "inativa")}
                             className="rounded-lg border border-amber-400/30 bg-amber-500/10 px-3 py-2 text-xs font-bold text-amber-200 transition hover:bg-amber-500/20 disabled:opacity-40"
                           >
-                            Inativar
+                            {t("deactivate")}
                           </button>
                         )}
 
@@ -244,7 +247,7 @@ export default function RepresentativesClient({
                             onClick={() => handleStatusChange(rep.id, "arquivada")}
                             className="rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-xs font-bold text-white/70 transition hover:bg-white/10 disabled:opacity-40"
                           >
-                            Arquivar
+                            {t("archive")}
                           </button>
                         )}
 
@@ -255,7 +258,7 @@ export default function RepresentativesClient({
                             onClick={() => handleViewAs(rep.id)}
                             className="rounded-lg border border-pink-400/30 bg-pink-500/10 px-3 py-2 text-xs font-bold text-pink-200 transition hover:bg-pink-500/20 disabled:opacity-40"
                           >
-                            Ver como ele vê
+                            {t("viewAsThem")}
                           </button>
                         )}
 
@@ -263,7 +266,7 @@ export default function RepresentativesClient({
                           href={`/admin/representatives/${rep.id}`}
                           className="rounded-lg border border-white/15 px-3 py-2 text-xs font-bold text-white/70 transition hover:bg-white/10"
                         >
-                          Abrir perfil
+                          {t("openProfile")}
                         </Link>
 
                         {isOwner && (
