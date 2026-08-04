@@ -1,5 +1,10 @@
 "use client";
 
+import { useLocale, useTranslations } from "next-intl";
+
+import { toLocale, type Locale } from "@/lib/i18n/config";
+import { formatDateTime } from "@/lib/models/formatDateTime";
+
 import { useCallback, useEffect, useState } from "react";
 
 import type { ManagementRole } from "@/types/model";
@@ -32,26 +37,30 @@ type HistoryTabProps = {
   currentUserRole: ManagementRole;
 };
 
-const ACTION_LABELS: Record<string, string> = {
-  field_update: "Campo atualizado",
-  status_change: "Status alterado",
-  proxy_update: "Proxy atualizado",
-  avatar_update: "Avatar atualizado",
-  checklist_update: "Checklist atualizado",
-  marketing_update: "Marketing atualizado",
-  onboarding_update: "Onboarding atualizado",
-  earnings_created: "Relatório de ganhos criado",
-  document_uploaded: "Documento enviado",
-  model_deleted: "Modelo excluída",
-  model_created: "Modelo criada",
-  model_imported: "Modelo importada",
-  model_applied: "Candidatura recebida",
-  note_created: "Nota adicionada",
-  note_edited: "Nota editada",
-  note_pinned: "Nota fixada",
-  note_unpinned: "Nota desafixada",
-  note_archived: "Nota arquivada",
-  note_restored: "Nota restaurada",
+/**
+ * Audit action -> key under `admin.history.actions`. The action itself is a
+ * database value and never changes; only how it reads does.
+ */
+const ACTION_KEYS: Record<string, string> = {
+  field_update: "field_update",
+  status_change: "status_change",
+  proxy_update: "proxy_update",
+  avatar_update: "avatar_update",
+  checklist_update: "checklist_update",
+  marketing_update: "marketing_update",
+  onboarding_update: "onboarding_update",
+  earnings_created: "earnings_created",
+  document_uploaded: "document_uploaded",
+  model_deleted: "model_deleted",
+  model_created: "model_created",
+  model_imported: "model_imported",
+  model_applied: "model_applied",
+  note_created: "note_created",
+  note_edited: "note_edited",
+  note_pinned: "note_pinned",
+  note_unpinned: "note_unpinned",
+  note_archived: "note_archived",
+  note_restored: "note_restored",
 };
 
 const ACTION_COLORS: Record<string, string> = {
@@ -98,48 +107,47 @@ const ACTION_FILTERS = [
   "note_restored",
 ];
 
-function formatDate(iso: string): string {
+/**
+ * An audit row's timestamp. Always São Paulo time, whatever zone the admin is
+ * reading from — the history has to agree with itself across a team spread over
+ * several countries — and always in the reader's field order.
+ */
+function formatAuditTimestamp(iso: string, locale: Locale): string {
   try {
-    const d = new Date(iso);
-    return d.toLocaleString("pt-BR", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
+    return formatDateTime(new Date(iso), locale);
   } catch {
     return iso;
   }
 }
 
-function getActionLabel(action: string): string {
-  return ACTION_LABELS[action] ?? action;
-}
+
 
 function getActionColor(action: string): string {
   return ACTION_COLORS[action] ?? "text-zinc-300";
 }
 
-function getRoleLabel(role: string): string {
-  switch (role) {
-    case "owner":
-      return "Proprietário";
-    case "administrator":
-      return "Administrador";
-    case "representative":
-      return "Representante";
-    case "model":
-      return "Modelo";
-    default:
-      return role;
-  }
-}
+
 
 export default function HistoryTab({
   modelId,
   currentUserRole,
 }: HistoryTabProps) {
+  const t = useTranslations("admin.history");
+  const tRole = useTranslations("enums.role");
+  const locale = toLocale(useLocale());
+
+  /** Falls back to the raw action when the catalog has no entry for it. */
+  const actionLabel = (action: string) =>
+    ACTION_KEYS[action] ? t(`actions.${ACTION_KEYS[action]}`) : action;
+
+  const roleLabel = (role: string) =>
+    role === "owner" ||
+    role === "administrator" ||
+    role === "representative" ||
+    role === "model"
+      ? tRole(role)
+      : role;
+
   const [entries, setEntries] = useState<AuditEntry[]>([]);
   const [pagination, setPagination] = useState<Pagination | null>(null);
   const [loading, setLoading] = useState(true);
@@ -166,7 +174,7 @@ export default function HistoryTab({
 
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        throw new Error(data.error || "Erro ao carregar histórico.");
+        throw new Error(data.error || t("loadFailed"));
       }
 
       const data = await res.json();
@@ -177,7 +185,7 @@ export default function HistoryTab({
       setError(
         err instanceof Error
           ? err.message
-          : "Erro inesperado ao carregar histórico.",
+          : t("loadFailed"),
       );
     } finally {
       setLoading(false);
@@ -198,25 +206,24 @@ export default function HistoryTab({
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h3 className="text-lg font-bold text-pink-200">
-            Histórico
+            {t("title")}
           </h3>
           <p className="mt-1 text-sm text-zinc-400">
-            Registro completo de todas as alterações na conta da modelo,
-            incluindo notas.
+            {t("subtitle")}
           </p>
         </div>
 
         <div className="flex items-center gap-2">
-          <label className="text-sm text-zinc-400">Filtrar:</label>
+          <label className="text-sm text-zinc-400">{t("filter")}</label>
           <select
             value={actionFilter}
             onChange={(e) => handleFilterChange(e.target.value)}
             className="rounded-lg border border-zinc-700 bg-[#1a1a1e] px-3 py-2 text-sm text-white outline-none transition focus:border-pink-400"
           >
-            <option value="">Todas as ações</option>
+            <option value="">{t("allActions")}</option>
             {ACTION_FILTERS.map((action) => (
               <option key={action} value={action}>
-                {getActionLabel(action)}
+                {actionLabel(action)}
               </option>
             ))}
           </select>
@@ -231,11 +238,11 @@ export default function HistoryTab({
 
       {loading ? (
         <div className="py-12 text-center text-zinc-400">
-          Carregando histórico…
+          {t("loading")}
         </div>
       ) : entries.length === 0 ? (
         <div className="py-12 text-center text-zinc-400">
-          Nenhuma alteração registrada.
+          {t("empty")}
         </div>
       ) : (
         <>
@@ -251,7 +258,7 @@ export default function HistoryTab({
                       <span
                         className={`text-sm font-semibold ${getActionColor(entry.action)}`}
                       >
-                        {getActionLabel(entry.action)}
+                        {actionLabel(entry.action)}
                       </span>
                       {entry.fieldName && (
                         <span className="rounded bg-white/10 px-2 py-0.5 text-xs text-zinc-300">
@@ -268,13 +275,13 @@ export default function HistoryTab({
                       entry.newValue !== null && (
                         <div className="mt-2 flex flex-col gap-1 text-xs sm:flex-row sm:gap-3">
                           <span className="text-zinc-500">
-                            Antes:{" "}
+                            {t("before")}{" "}
                             <span className="text-zinc-300">
                               {entry.previousValue}
                             </span>
                           </span>
                           <span className="text-zinc-500">
-                            Depois:{" "}
+                            {t("after")}{" "}
                             <span className="text-zinc-300">
                               {entry.newValue}
                             </span>
@@ -284,14 +291,16 @@ export default function HistoryTab({
 
                     <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-zinc-500">
                       <span>
-                        Por{" "}
+                        {t("by")}{" "}
                         <span className="text-zinc-300">
                           {entry.actorName}
                         </span>{" "}
-                        ({getRoleLabel(entry.actorRole)})
+                        ({roleLabel(entry.actorRole)})
                       </span>
                       <span>·</span>
-                      <span>{formatDate(entry.createdAt)}</span>
+                      <span>
+                        {formatAuditTimestamp(entry.createdAt, locale)}
+                      </span>
                       {entry.source && (
                         <>
                           <span>·</span>
@@ -315,12 +324,15 @@ export default function HistoryTab({
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                 className="rounded-lg border border-zinc-700 px-4 py-2 text-sm font-semibold text-zinc-200 transition enabled:hover:border-pink-400 enabled:hover:text-pink-300 disabled:opacity-40"
               >
-                ← Anterior
+                {t("previous")}
               </button>
 
               <span className="text-sm text-zinc-400">
-                Página {pagination.page} de {pagination.totalPages} ·{" "}
-                {pagination.totalCount} registro(s)
+                {t("pagination", {
+                  page: pagination.page,
+                  totalPages: pagination.totalPages,
+                  count: pagination.totalCount,
+                })}
               </span>
 
               <button
@@ -331,7 +343,7 @@ export default function HistoryTab({
                 }
                 className="rounded-lg border border-zinc-700 px-4 py-2 text-sm font-semibold text-zinc-200 transition enabled:hover:border-pink-400 enabled:hover:text-pink-300 disabled:opacity-40"
               >
-                Próxima →
+                {t("next")}
               </button>
             </div>
           )}

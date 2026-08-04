@@ -1103,6 +1103,51 @@
       "country": "Country",
       "invalidIp": "Enter a valid IP, for example 48.45.165.230.",
       "companyRequired": "Enter the proxy company's name."
+    },
+    "history": {
+      "title": "History",
+      "subtitle": "A complete record of every change to this model's account, notes included.",
+      "filter": "Filter:",
+      "allActions": "All actions",
+      "loading": "Loading history…",
+      "empty": "No changes recorded.",
+      "loadFailed": "We couldn't load the history.",
+      "before": "Before:",
+      "after": "After:",
+      "by": "By",
+      "previous": "← Previous",
+      "next": "Next →",
+      "pagination": "Page {page} of {totalPages} · {count, plural, one {# record} other {# records}}",
+      "actions": {
+        "field_update": "Field updated",
+        "status_change": "Status changed",
+        "proxy_update": "Proxy updated",
+        "avatar_update": "Avatar updated",
+        "checklist_update": "Checklist updated",
+        "marketing_update": "Marketing updated",
+        "onboarding_update": "Onboarding updated",
+        "earnings_created": "Earnings report created",
+        "document_uploaded": "Document uploaded",
+        "model_deleted": "Model deleted",
+        "model_created": "Model created",
+        "model_imported": "Model imported",
+        "model_applied": "Application received",
+        "note_created": "Note added",
+        "note_edited": "Note edited",
+        "note_pinned": "Note pinned",
+        "note_unpinned": "Note unpinned",
+        "note_archived": "Note archived",
+        "note_restored": "Note restored"
+      }
+    },
+    "photoUpload": {
+      "model": "Model",
+      "processing": "Processing...",
+      "remove": "Remove photo",
+      "none": "No photo on file.",
+      "invalidType": "Please choose a valid image file.",
+      "tooLarge": "The image must be 10 MB or smaller.",
+      "processFailed": "We couldn't process this image."
     }
   }
 }

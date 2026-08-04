@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
 import { ChangeEvent, useRef, useState } from "react";
 
 type ModelPhotoUploadProps = {
@@ -17,6 +19,9 @@ export default function ModelPhotoUpload({
   isEditing,
   onPhotoChange,
 }: ModelPhotoUploadProps) {
+  const t = useTranslations("admin.photoUpload");
+  const tAvatar = useTranslations("admin.avatar");
+
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [error, setError] = useState("");
@@ -42,14 +47,14 @@ export default function ModelPhotoUpload({
 
     if (!file.type.startsWith("image/")) {
       setError(
-        "Selecione um arquivo de imagem válido."
+        t("invalidType")
       );
       return;
     }
 
     if (file.size > MAX_FILE_SIZE) {
       setError(
-        "A imagem deve ter no máximo 10 MB."
+        t("tooLarge")
       );
       return;
     }
@@ -63,12 +68,12 @@ export default function ModelPhotoUpload({
       onPhotoChange(compressedPhoto);
     } catch (processingError) {
       console.error(
-        "Erro ao processar a foto:",
+        "Failed to process the photo:",
         processingError
       );
 
       setError(
-        "Não foi possível processar esta imagem."
+        t("processFailed")
       );
     } finally {
       setIsProcessing(false);
@@ -106,7 +111,7 @@ export default function ModelPhotoUpload({
           </p>
 
           <h3 className="mt-2 text-lg font-bold text-white">
-            {modelName || "Modelo"}
+            {modelName || t("model")}
           </h3>
 
           <p className="mt-2 max-w-xl text-sm leading-6 text-zinc-400">
@@ -124,10 +129,10 @@ export default function ModelPhotoUpload({
                 className="rounded-lg border border-pink-400/50 bg-pink-400/10 px-4 py-2 text-sm font-semibold text-pink-200 transition hover:bg-pink-400 hover:text-black disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {isProcessing
-                  ? "Processando..."
+                  ? t("processing")
                   : photo
-                    ? "Trocar foto"
-                    : "Carregar foto"}
+                    ? tAvatar("replace")
+                    : tAvatar("upload")}
               </button>
 
               {photo && (
@@ -137,7 +142,7 @@ export default function ModelPhotoUpload({
                   disabled={isProcessing}
                   className="rounded-lg border border-red-500/40 bg-red-500/10 px-4 py-2 text-sm font-semibold text-red-300 transition hover:bg-red-500 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  Remover foto
+                  {t("remove")}
                 </button>
               )}
             </div>
@@ -159,7 +164,7 @@ export default function ModelPhotoUpload({
 
           {!isEditing && !photo && (
             <p className="mt-3 text-sm text-zinc-500">
-              Nenhuma foto cadastrada.
+              {t("none")}
             </p>
           )}
         </div>
@@ -176,7 +181,7 @@ function compressProfilePhoto(
 
     reader.onerror = () => {
       reject(
-        new Error("Não foi possível ler o arquivo.")
+        new Error("Could not read the selected file.")
       );
     };
 
@@ -184,7 +189,7 @@ function compressProfilePhoto(
       if (typeof reader.result !== "string") {
         reject(
           new Error(
-            "O arquivo não gerou uma imagem válida."
+            "The file did not decode to a valid image."
           )
         );
         return;
@@ -195,7 +200,7 @@ function compressProfilePhoto(
       image.onerror = () => {
         reject(
           new Error(
-            "Não foi possível carregar a imagem."
+            "The image could not be loaded."
           )
         );
       };
@@ -214,7 +219,7 @@ function compressProfilePhoto(
         if (!context) {
           reject(
             new Error(
-              "Não foi possível preparar a imagem."
+              "The image could not be prepared."
             )
           );
           return;

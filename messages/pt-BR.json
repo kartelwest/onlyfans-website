@@ -1103,6 +1103,51 @@
       "country": "País",
       "invalidIp": "Informe um IP válido, por exemplo 48.45.165.230.",
       "companyRequired": "Informe o nome da empresa do proxy."
+    },
+    "history": {
+      "title": "Histórico",
+      "subtitle": "Registro completo de todas as alterações na conta da modelo, incluindo notas.",
+      "filter": "Filtrar:",
+      "allActions": "Todas as ações",
+      "loading": "Carregando histórico…",
+      "empty": "Nenhuma alteração registrada.",
+      "loadFailed": "Erro ao carregar histórico.",
+      "before": "Antes:",
+      "after": "Depois:",
+      "by": "Por",
+      "previous": "← Anterior",
+      "next": "Próxima →",
+      "pagination": "Página {page} de {totalPages} · {count, plural, one {# registro} other {# registros}}",
+      "actions": {
+        "field_update": "Campo atualizado",
+        "status_change": "Status alterado",
+        "proxy_update": "Proxy atualizado",
+        "avatar_update": "Avatar atualizado",
+        "checklist_update": "Checklist atualizado",
+        "marketing_update": "Marketing atualizado",
+        "onboarding_update": "Onboarding atualizado",
+        "earnings_created": "Relatório de ganhos criado",
+        "document_uploaded": "Documento enviado",
+        "model_deleted": "Modelo excluída",
+        "model_created": "Modelo criada",
+        "model_imported": "Modelo importada",
+        "model_applied": "Candidatura recebida",
+        "note_created": "Nota adicionada",
+        "note_edited": "Nota editada",
+        "note_pinned": "Nota fixada",
+        "note_unpinned": "Nota desafixada",
+        "note_archived": "Nota arquivada",
+        "note_restored": "Nota restaurada"
+      }
+    },
+    "photoUpload": {
+      "model": "Modelo",
+      "processing": "Processando...",
+      "remove": "Remover foto",
+      "none": "Nenhuma foto cadastrada.",
+      "invalidType": "Selecione um arquivo de imagem válido.",
+      "tooLarge": "A imagem deve ter no máximo 10 MB.",
+      "processFailed": "Não foi possível processar esta imagem."
     }
   }
 }
