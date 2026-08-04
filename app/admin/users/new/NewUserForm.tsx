@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
@@ -116,6 +118,17 @@ export default function NewUserForm({
   selectedDraft,
   representatives,
 }: NewUserFormProps) {
+  const t = useTranslations("admin.newUser");
+  const tRole = useTranslations("admin.newUser.roleWord");
+  const tFields = useTranslations("admin.modelPage.fields");
+  const tApply = useTranslations("site.apply.fields");
+  const tApplyCountries = useTranslations("site.apply.countries");
+  const tOwnerNew = useTranslations("owner.newUser");
+  const tRepDetails = useTranslations("admin.representatives.details");
+  const tReassign = useTranslations("admin.reassign");
+  const tCommon = useTranslations("common.actions");
+  const tRoleEnum = useTranslations("enums.role");
+
   const router = useRouter();
 
   const [form, setForm] = useState<FormState>(
@@ -139,17 +152,10 @@ export default function NewUserForm({
 
   const isModel = role === "model";
 
-  const roleLabel = useMemo(() => {
-    if (role === "representative") {
-      return "representante";
-    }
-
-    if (role === "administrator") {
-      return "administrador";
-    }
-
-    return "modelo";
-  }, [role]);
+  // Lowercase, because it is dropped mid-sentence ("Criar modelo"). The
+  // capitalised form is produced by `capitalize()` at the one place that needs
+  // it, so the catalog only carries the word once.
+  const roleLabel = useMemo(() => tRole(role), [role, tRole]);
 
   const generatedPassword = useMemo(() => {
     if (!isModel) {
@@ -259,7 +265,7 @@ export default function NewUserForm({
     setAiError("");
 
     if (!isModel) {
-      setAiError("A análise com Claude está disponível apenas para modelos.");
+      setAiError(t("claudeModelsOnly"));
       return;
     }
 
@@ -271,7 +277,7 @@ export default function NewUserForm({
     }
 
     if (!useAI) {
-      setAiError("Ative a opção de preenchimento inteligente para analisar.");
+      setAiError(t("enableSmartFill"));
       return;
     }
 
@@ -303,7 +309,7 @@ export default function NewUserForm({
 
       if (!response.ok) {
         throw new Error(
-          result.error || "Não foi possível analisar o texto.",
+          result.error || t("analyzeFailed"),
         );
       }
 
@@ -380,7 +386,7 @@ export default function NewUserForm({
 
     if (isModel && form.phone.replace(/\D/g, "").length < 8) {
       setErrorMessage(
-        "Informe um número de WhatsApp válido com pelo menos 8 dígitos.",
+        t("invalidWhatsapp"),
       );
       return;
     }
@@ -395,7 +401,7 @@ export default function NewUserForm({
       currentUserRole !== "owner"
     ) {
       setErrorMessage(
-        "Somente o proprietário pode criar administradores.",
+        t("ownerOnlyAdmins"),
       );
       return;
     }
@@ -411,7 +417,7 @@ export default function NewUserForm({
       }
     } else if (temporaryPassword.length < 8) {
       setErrorMessage(
-        "A senha temporária deve ter pelo menos 8 caracteres.",
+        t("passwordTooShort"),
       );
       return;
     }
@@ -446,12 +452,12 @@ export default function NewUserForm({
       if (!response.ok) {
         throw new Error(
           result.error ||
-            `Não foi possível criar o ${roleLabel}.`,
+            t("createFailed", { role: roleLabel }),
         );
       }
 
       setSuccessMessage(
-        `${capitalize(roleLabel)} criado com sucesso.`,
+        t("createSuccess", { role: capitalize(roleLabel) }),
       );
 
       setForm(initialFormState);
@@ -481,7 +487,7 @@ export default function NewUserForm({
     setAiError("");
 
     if (!isModel) {
-      setErrorMessage("Rascunhos só podem ser criados para modelos.");
+      setErrorMessage(t("draftsModelsOnly"));
       return;
     }
 
@@ -525,7 +531,7 @@ export default function NewUserForm({
       if (!response.ok) {
         throw new Error(
           result.error ||
-            "Não foi possível salvar o rascunho.",
+            t("draftSaveFailed"),
         );
       }
 
@@ -578,7 +584,7 @@ export default function NewUserForm({
     >
       {isModel && drafts.length > 0 && (
         <div className="mb-6">
-          <FormField label="Carregar rascunho">
+          <FormField label={t("loadDraft")}>
             <select
               value={draftModelId ?? ""}
               onChange={(event) => {
@@ -592,7 +598,7 @@ export default function NewUserForm({
               }}
               className={inputClassName}
             >
-              <option value="">Novo cadastro</option>
+              <option value="">{t("newRecord")}</option>
 
               {drafts.map((draft) => (
                 <option key={draft.id} value={draft.id}>
@@ -606,7 +612,7 @@ export default function NewUserForm({
 
       <div className="grid gap-6 md:grid-cols-2">
         <FormField
-          label="Nome completo"
+          label={tApply("fullName")}
           required
         >
           <input
@@ -618,13 +624,13 @@ export default function NewUserForm({
                 event.target.value,
               )
             }
-            placeholder="Nome completo"
+            placeholder={tApply("fullName")}
             className={inputClassName}
           />
         </FormField>
 
         {isModel && (
-          <FormField label="Nome artístico">
+          <FormField label={tFields("stageName")}>
             <input
               type="text"
               value={form.stageName}
@@ -634,7 +640,7 @@ export default function NewUserForm({
                   event.target.value,
                 )
               }
-              placeholder="Nome usado profissionalmente"
+              placeholder={t("stageNamePlaceholder")}
               className={inputClassName}
             />
           </FormField>
@@ -647,7 +653,7 @@ export default function NewUserForm({
           domain, so the field cannot be type="email" for them.
         */}
         <FormField
-          label={isModel ? "E-mail" : "E-mail ou nome de usuário"}
+          label={isModel ? tFields("email") : t("emailOrUsername")}
           required
         >
           <input
@@ -657,7 +663,7 @@ export default function NewUserForm({
               updateField("email", event.target.value)
             }
             placeholder={
-              isModel ? "email@exemplo.com" : "email@exemplo.com ou joao.silva"
+              isModel ? t("emailPlaceholder") : t("emailOrUsernamePlaceholder")
             }
             autoComplete={isModel ? "email" : "off"}
             autoCapitalize={isModel ? undefined : "none"}
@@ -667,28 +673,26 @@ export default function NewUserForm({
 
           {!isModel && (
             <p className="mt-2 text-xs text-white/45">
-              Com &quot;@&quot; será tratado como e-mail; sem &quot;@&quot;, como
-              nome de usuário. A senha temporária definida abaixo terá de ser
-              trocada no primeiro acesso.
+              {t("usernameHint")}
             </p>
           )}
         </FormField>
 
-        <FormField label="Telefone / WhatsApp" required={isModel}>
+        <FormField label={tRepDetails("phone")} required={isModel}>
           <input
             type="tel"
             value={form.phone}
             onChange={(event) =>
               updateField("phone", event.target.value)
             }
-            placeholder="+55 21 99999-9999"
+            placeholder={tOwnerNew("whatsappPlaceholder")}
             className={inputClassName}
           />
         </FormField>
 
         {isModel && (
           <>
-            <FormField label="Data de nascimento">
+            <FormField label={tFields("birthday")}>
               <BirthdayDatePicker
                 theme="dark"
                 value={form.dateOfBirth}
@@ -699,7 +703,7 @@ export default function NewUserForm({
               />
             </FormField>
 
-            <FormField label="País">
+            <FormField label={tApply("country")}>
               <input
                 type="text"
                 value={form.country}
@@ -709,7 +713,7 @@ export default function NewUserForm({
                     event.target.value,
                   )
                 }
-                placeholder="Brasil"
+                placeholder={tApplyCountries("brazil")}
                 className={inputClassName}
               />
             </FormField>
@@ -717,12 +721,12 @@ export default function NewUserForm({
         )}
 
         <FormField
-          label="Senha temporária"
+          label={tOwnerNew("temporaryPassword")}
           required={!isModel}
           description={
             isModel
-              ? "Gerada automaticamente pelos 4 últimos dígitos do WhatsApp + 1234567."
-              : "Use pelo menos 8 caracteres."
+              ? t("passwordGeneratedHint")
+              : t("passwordMinLength")
           }
         >
           <input
@@ -736,8 +740,8 @@ export default function NewUserForm({
             }
             placeholder={
               isModel
-                ? "Preencha o WhatsApp para gerar a senha"
-                : "Senha temporária"
+                ? t("passwordFromWhatsappPlaceholder")
+                : tOwnerNew("temporaryPassword")
             }
             autoComplete="new-password"
             disabled={isModel}
@@ -747,9 +751,9 @@ export default function NewUserForm({
 
         {isModel && (
           <FormField
-            label="Representante / responsável"
+            label={tReassign("title")}
             required
-            description="O responsável pode ser um proprietário, administrador ou representante ativo."
+            description={t("ownerHint")}
           >
             <select
               value={form.representativeId}
@@ -758,33 +762,33 @@ export default function NewUserForm({
               }
               className={`${inputClassName} appearance-none bg-black/30`}
             >
-              <option value="">Selecione um responsável</option>
+              <option value="">{tOwnerNew("selectRepresentative")}</option>
 
               {representatives.map((rep) => (
                 <option key={rep.id} value={rep.id}>
                   {rep.fullName}
-                  {rep.role === "owner"
-                    ? " (Proprietário)"
-                    : rep.role === "administrator"
-                      ? " (Administrador)"
-                      : " (Representante)"}
+                  {rep.role === "owner" ||
+                  rep.role === "administrator" ||
+                  rep.role === "representative"
+                    ? ` (${tRoleEnum(rep.role)})`
+                    : ""}
                 </option>
               ))}
             </select>
 
             <p className="mt-2 text-xs text-zinc-500">
-              Não encontrou o representante?{" "}
+              {tOwnerNew("representativeNotFound")}{" "}
               <a
                 href="/admin/users/new?role=representative"
                 className="text-pink-400 underline transition hover:text-pink-300"
               >
-                Cadastre um novo.
+                {tOwnerNew("registerNew")}
               </a>
             </p>
           </FormField>
         )}
 
-        <FormField label="Tipo de usuário">
+        <FormField label={t("userType")}>
           <input
             type="text"
             value={capitalize(roleLabel)}
@@ -796,8 +800,8 @@ export default function NewUserForm({
 
       <div className="mt-8 grid gap-4 sm:grid-cols-2">
         <ToggleField
-          label="Conta ativa"
-          description="Permite que o usuário seja reconhecido pelo CRM."
+          label={t("accountActive")}
+          description={t("activeHint")}
           checked={form.active}
           onChange={(checked) =>
             updateField("active", checked)
@@ -805,8 +809,8 @@ export default function NewUserForm({
         />
 
         <ToggleField
-          label="Login no website"
-          description="Permite acesso à área privada do sistema."
+          label={t("websiteLogin")}
+          description={t("loginHint")}
           checked={form.websiteLoginEnabled}
           onChange={(checked) =>
             updateField(
@@ -820,11 +824,11 @@ export default function NewUserForm({
       {isModel && (
         <div className="mt-8 border-t border-white/10 pt-8">
           <h2 className="text-lg font-bold text-white">
-            Cadastro inteligente com Claude
+            {t("claudeTitle")}
           </h2>
 
           <p className="mt-1 text-sm text-white/55">
-            Cole aqui as informações completas da modelo. Claude analisará o texto e preencherá os campos correspondentes automaticamente.
+            {t("claudeSubtitle")}
           </p>
 
           <div className="mt-4">
@@ -833,7 +837,7 @@ export default function NewUserForm({
               onChange={(event) =>
                 setAiText(event.target.value)
               }
-              placeholder="Cole aqui nome completo, nome artístico, e-mail, WhatsApp, data de nascimento, país e demais informações disponíveis."
+              placeholder={t("claudePlaceholder")}
               rows={5}
               className={`${inputClassName} min-h-[120px] resize-y`}
             />
@@ -851,11 +855,11 @@ export default function NewUserForm({
 
             <div>
               <p className="text-sm font-bold text-white">
-                Usar este texto para preencher o cadastro e substituir o preenchimento manual dos campos obrigatórios
+                {t("useTextToggle")}
               </p>
 
               <p className="text-xs leading-5 text-white/55">
-                Quando ativado, o sistema usará o texto acima para identificar e preencher os campos obrigatórios antes de criar o cadastro.
+                {t("useTextHint")}
               </p>
             </div>
           </label>
@@ -872,8 +876,8 @@ export default function NewUserForm({
               className="rounded-xl bg-purple-500 px-5 py-3 text-sm font-bold text-white transition hover:bg-purple-400 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {isAnalyzing
-                ? "Analisando informações…"
-                : "Analisar com Claude"}
+                ? t("analyzing")
+                : t("analyzeWithClaude")}
             </button>
           </div>
 
@@ -886,13 +890,13 @@ export default function NewUserForm({
           {review && (
             <div className="mt-6 rounded-xl border border-white/10 bg-white/[0.03] p-4 sm:p-6">
               <h3 className="font-bold text-white">
-                Resultado da análise
+                {t("analysisResult")}
               </h3>
 
               {review.conflicts.length > 0 && (
                 <div className="mt-4">
                   <p className="text-sm font-bold text-amber-200">
-                    Conflitos detectados (valor manual mantido por padrão)
+                    {t("conflicts")}
                   </p>
 
                   <ul className="mt-2 space-y-2">
@@ -922,7 +926,7 @@ export default function NewUserForm({
                               }
                               className="mt-2 rounded-lg bg-amber-500/20 px-3 py-1.5 text-xs font-bold text-amber-200 transition hover:bg-amber-500/30 sm:mt-0"
                             >
-                              Usar extraído
+                              {t("useExtracted")}
                             </button>
                           </div>
                         </li>
@@ -935,7 +939,7 @@ export default function NewUserForm({
               {review.missing.length > 0 && (
                 <div className="mt-4">
                   <p className="text-sm font-bold text-red-200">
-                    Campos obrigatórios ou úteis não encontrados
+                    {t("missingFields")}
                   </p>
 
                   <ul className="mt-1 list-disc pl-5 text-sm text-red-100/80">
@@ -951,7 +955,7 @@ export default function NewUserForm({
               {review.unmapped.length > 0 && (
                 <div className="mt-4">
                   <p className="text-sm font-bold text-white/70">
-                    Informação não mapeada
+                    {t("unmapped")}
                   </p>
 
                   <ul className="mt-1 list-disc pl-5 text-sm text-white/60">
@@ -968,7 +972,7 @@ export default function NewUserForm({
                 review.conflicts.length === 0 &&
                 review.unmapped.length === 0 && (
                   <p className="mt-4 text-sm text-emerald-200">
-                    Todos os campos foram identificados com sucesso.
+                    {t("allFound")}
                   </p>
                 )}
             </div>
@@ -996,7 +1000,7 @@ export default function NewUserForm({
           }
           className="rounded-xl border border-white/10 bg-white/5 px-6 py-3 text-sm font-semibold text-white/70 transition hover:bg-white/10"
         >
-          Cancelar
+          {tCommon("cancel")}
         </button>
 
         {isModel && needsReview && !canCreateModel && (
@@ -1011,8 +1015,8 @@ export default function NewUserForm({
             className="rounded-xl bg-white/10 px-6 py-3 text-sm font-bold text-white transition hover:bg-white/20 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {draftModelId
-              ? "Atualizar rascunho"
-              : "Criar rascunho"}
+              ? t("updateDraft")
+              : t("createDraft")}
           </button>
         )}
 
@@ -1028,14 +1032,14 @@ export default function NewUserForm({
           className="rounded-xl bg-pink-500 px-6 py-3 text-sm font-bold text-white transition hover:bg-pink-400 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {isSubmitting
-            ? "Criando..."
-            : `Criar ${roleLabel}`}
+            ? t("creating")
+            : t("createRole", { role: roleLabel })}
         </button>
       </div>
 
       {isModel && needsReview && !reviewLoaded && (
         <p className="mt-3 text-right text-xs text-white/50">
-          Analise o texto com Claude antes de criar o cadastro.
+          {t("analyzeFirst")}
         </p>
       )}
     </form>
