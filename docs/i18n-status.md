@@ -8,24 +8,23 @@ Companion doc: the README's *Internationalization* section is the day-to-day
 usage guide (how to add a string, how to add a locale). This file is the
 project state and the design rationale.
 
-**Branch:** `claude/language-switcher-i18n-kw8hko`
-**Not merged to `main`** — see §6 for why and what "done" means.
+**Branch:** `claude/language-switcher-i18n-kw8hko` — **complete**, all eight
+acceptance criteria met (§6).
 
 ---
 
 ## 1. TL;DR for whoever picks this up
 
-The **mechanism is finished and verified**. What remains is **mechanical
-sweeping**: 14 UI files and 37 API routes still contain hardcoded Portuguese
-strings that need moving into the message catalogs.
+**The work is done.** Every user-facing screen, every API route handler and
+every shared `lib/` module that produces UI text now reads from the catalogs.
 
-- Nothing is broken. An unswept screen renders its original Portuguese exactly
-  as it always did — those strings were never turned into keys, so there are no
-  missing-key placeholders anywhere.
-- Everything committed is green: `build`, `lint` (0 errors), 279 tests,
-  `i18n:check` at 1212 keys.
-- Go to **§5** for the exact remaining list and the working recipe. Go to **§7**
-  for the traps.
+- Green as committed: `build` compiles, `lint` reports 0 errors, 279/279 tests
+  pass, `i18n:check` passes at **2213 keys**, identical across both locales.
+- Everything still hardcoded in Portuguese is deliberate and listed in **§8**:
+  audit-log and note text (records, not UI), LLM prompt text, database enum
+  values, storage-path components, and one wire-protocol constant.
+- Go to **§5** for the recipe when you add a screen, **§7** for the traps, and
+  **§8** for the judgment calls and why each went the way it did.
 
 ---
 
@@ -197,39 +196,30 @@ values themselves.
 
 ---
 
-## 5. What is left, and how to do it
+## 5. How to translate a new screen
 
-### 5.1 Exact remaining list
+### 5.1 Finding what is left
 
-Counts are *accented* strings only — see the §7 warning, the real count per file
-is higher.
+Nothing is outstanding, but new code arrives untranslated. Two scanners were
+written for this sweep and both are worth re-running after any feature lands.
 
-| Strings | File |
-| --- | --- |
-| 30 | `components/admin/model/NotesTab.tsx` (1962 lines — the big one) |
-| 25 | `app/admin/representatives/actions.ts` |
-| 22 | `components/admin/model/ModelEarningsPanel.tsx` |
-| 22 | `app/admin/users/new/NewUserForm.tsx` |
-| 21 | `components/admin/ModelImporterPanel.tsx` |
-| 19 | `components/admin/model/OverviewTab.tsx` |
-| 18 | `components/onboarding/OnboardingChecklistPanel.tsx` |
-| 14 | `components/amplia/AmpliaDetailClient.tsx` |
-| 14 | `components/admin/model/ModelCredentialsReset.tsx` |
-| 11 | `components/admin/model/PlatformsTab.tsx` |
-| 10 | `app/admin/representatives/[repId]/RepresentativeCredentialsPanel.tsx` |
-| 8 | `components/admin/model/DocumentsTab.tsx` |
-| 8 | `app/owner/users/new/actions.ts` |
-| 8 | `app/admin/representatives/[repId]/page.tsx` |
-| — | `app/api/**` — 37 route handlers |
-
-Regenerate this list any time with:
+The accent grep is the quick one — and it is the one that **lies** (§7.1):
 
 ```bash
-grep -rlE '"[^"]*[áàâãéêíóôõúçÁÉÍÓÚÇ][^"]*"' --include=*.tsx --include=*.ts app components \
-  | grep -v '^app/api/' \
-  | while read f; do echo "$(grep -coE '"[^"]*[áàâãéêíóôõúçÁÉÍÓÚÇ][^"]*"' "$f") $f"; done \
-  | sort -rn
+grep -rlE '"[^"]*[áàâãéêíóôõúçÁÉÍÓÚÇ][^"]*"' --include=*.tsx --include=*.ts app components lib
 ```
+
+It misses two whole classes that this sweep had to chase down separately:
+
+1. **Unaccented Portuguese** — `Salvar`, `Nome`, `Enviar`, `Erro interno.`,
+   `Ocorreu um erro inesperado.` Match on common Portuguese words instead of
+   accents.
+2. **Bare JSX text nodes** — `<p>Perfil da modelo</p>` has no quotes at all, so
+   no string-literal grep will ever see it. Roughly a third of what this sweep
+   fixed was of this shape. Extract text nodes with a `>([^<>{}]+)<` scan over
+   the file, skipping anything that is only punctuation, digits or a brand name.
+
+**Known false positives — already handled, do not re-open:**
 
 **Known false positives — already handled, do not re-open:**
 
@@ -314,11 +304,12 @@ else is done and verified:
 3. ✅ Switching on a deep page keeps you on that exact page
 4. ✅ Hard refresh preserves it; profile column carries it across devices
 5. ✅ Zero hydration warnings
-6. ⬜ **No hardcoded strings** ← the remaining work
+6. ✅ **No hardcoded user-facing strings** — everything that remains in
+   Portuguese is deliberate and enumerated in §8
 7. ✅ `npm run i18n:check` passes
 8. ✅ No URL, route or database enum value changed
 
-**Merge to `main` only once 6 is met.** Verified behaviour so far, in a real
+Verified behaviour, in a real
 browser against a production build across `/`, `/faq`, `/por-que-nos`,
 `/termos`, `/privacidade`, `/diretrizes-de-gravacao`, `/login` and a bad URL, in
 both locales: correct `<html lang>`, correct 404 status, no raw translation keys
@@ -326,7 +317,7 @@ in the DOM, and a console carrying only the pre-existing
 `Supabase environment variables are missing` warning (this sandbox has no
 credentials).
 
-### Screens already fully translated
+### Coverage
 
 The entire public marketing site (home, Why Us, FAQ, terms, privacy, recording
 guidelines, the Google Photos guide and the public **application form**), both
@@ -335,6 +326,27 @@ site headers and the footer, login, change-password, the 404/500 pages, the
 model detail page and its checklist, the history tab, payments, the ledger,
 monthly earnings, social accounts, financial settings, the representatives list,
 pageview, the Amplia overview and new-client form, and the owner account pages.
+
+Completed in the final sweep: the notes tab and its history, the documents,
+platforms, earnings and overview tabs, the onboarding checklist panel (including
+every step title, description, field label and placeholder from
+`lib/onboarding/definition.ts`), the new-user form and page, the assistant and
+importer screens, the representative detail page and dashboards, the view-as
+banner, the Amplia client list, the owner portal, the shared confirmation
+dialog, the idle-timeout warning, and all 37 API route handlers plus the shared
+`lib/` modules they call.
+
+Two structural choices worth knowing about:
+
+- **`lib/onboarding/definition.ts` keeps its Portuguese text.** The file stays
+  the structural source of truth — permanent `key` values, field types, linked
+  columns — and the words now live in the `onboarding.*` catalog keyed by those
+  same keys. `lib/onboarding/server.ts` resolves them when it builds the view.
+  The Portuguese in the definition file is what the audit log records.
+- **Validation and upload failures travel as keys, not sentences.**
+  `lib/ledger/validation.ts` returns `errorKey`, `lib/models/avatarUpload.ts`
+  returns `messageKey`. Both run on the server *and* in the browser, so neither
+  can know the reader's locale — whoever renders resolves it.
 
 ---
 
@@ -403,7 +415,13 @@ or stored/user content.
 | `app/api/admin/models/credentials/route.ts` | credential note text | Same. |
 | `app/api/admin/import/confirm/route.ts` | `"Candidata importada de PDF/imagem"` | Written to the audit summary column. |
 | `supabase/migrations/*` | trigger `raise exception` messages | Database-level, e.g. `'Apenas o proprietário pode alterar o papel.'`. These reach a user only through a generic failure path. Translating them means moving them into the app layer — a real change to error handling, not an i18n change. **Flagged, not done.** |
-| `DeleteRepresentativeButton` | the typed confirmation phrase `EXCLUIR` | Matched **verbatim** by the server action, so it must be the same string in every language. |
+| `DeleteRepresentativeButton` → `deleteRepresentative` | the **wire value** `"EXCLUIR"` sent in the form data | Compared verbatim by the server action, so it is a protocol constant. The phrase the *user types* is separate and localised (`admin.representatives.delete.confirmPhrase` → `EXCLUIR` / `DELETE`); the dialog gates locally on that, then the client sends the constant. Same split in `owner/users/[id]/DeleteAccountButton`. |
+| `lib/audit/auditLogger.ts` | `getFieldLabel` field-name map | Used **only** to compose audit summaries, which are stored. The same field names are separately translated for display under `onboarding.linkedFields.*`. |
+| `lib/anthropic/*.ts` | tool schemas and system prompts | Instructions **to Claude**, not to a reader. They are written in Portuguese on purpose: they describe Portuguese-language intake documents and the field vocabulary of the Brazilian form. |
+| `app/api/models/documents/route.ts` | `sanitizeFileName`'s `"arquivo"` fallback | Becomes part of the storage path. A locale-dependent path would scatter the same model's files across two prefixes. |
+| `app/api/models/onboarding/route.ts` | `STATUS_WORDS`, the `"sim"`/`"não"` readable values | Written into audit summaries as before/after values. |
+| `lib/brand/boundaries.ts` | the nudity-flag note | Ends up in `riskNotes` on the generated content item — a stored moderation annotation. |
+| `lib/onboarding/definition.ts` | every `title`, `description`, `label` | The file remains the canonical structure; the *displayed* words come from the `onboarding.*` catalog keyed by the same permanent keys, resolved in `lib/onboarding/server.ts`. The Portuguese here is what audit summaries record. |
 
 If you want these to follow the reader, the fix is to store a machine-readable
 code plus params and render the sentence at read time. That is a schema change,
@@ -419,4 +437,6 @@ so it was not done unasked.
 | `site.hero.imageAlt` | Alt text is UI copy — it is read aloud to the reader. |
 | Hotel names in ledger rows | **Not** translated. Admin-entered; it is a place. The `Hotel ·` prefix around it is. |
 | Country names in `app/aplicar` | Labels translated, **values** left as-is — they are persisted. |
-| Model names, note bodies, uploaded filenames | Not translated, per the brief. |
+| Model names, note bodies, uploaded filenames | Not translated, per the brief — **a note stays in whatever language it was written in**, on the way in and on the way out. Only the surrounding chrome (buttons, errors, the "unknown user" fallback) follows the reader. |
+| `admin.notes.actions.*` (note-history labels) | The action itself is a stored database value; only the sentence shown beside it in the timeline is translated. `app/api/models/history/route.ts` maps the value to a catalog key. |
+| `errors.instagram.*` | `accountStatusWarningKey` returns a key rather than a sentence, so the same helper serves a server route and a client panel. |
