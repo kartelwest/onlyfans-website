@@ -1,5 +1,10 @@
 "use client";
 
+import { useLocale, useTranslations } from "next-intl";
+
+import { toLocale, type Locale } from "@/lib/i18n/config";
+import { formatDateTime as formatLocalizedDateTime } from "@/lib/models/formatDateTime";
+
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import type { ManagementRole } from "@/types/model";
@@ -67,29 +72,22 @@ type NotesApiResponse = {
     error?: string;
 };
 
-const priorityOptions: {
-    value: NotePriority;
-    label: string;
-}[] = [
-    {
-        value: "normal",
-        label: "Normal",
-    },
-    {
-        value: "important",
-        label: "Importante",
-    },
-    {
-        value: "urgent",
-        label: "Urgente",
-    },
-];
+/** The value is the stored priority; the word comes from `enums.notePriority`. */
+const priorityOptions: NotePriority[] = ["normal", "important", "urgent"];
 
 export default function NotesTab({
     modelId,
     currentUserRole,
     historyOnly = false,
 }: NotesTabProps) {
+    const t = useTranslations("admin.notes");
+    const tCommon = useTranslations("common.actions");
+    const tPriority = useTranslations("enums.notePriority");
+    const tRole = useTranslations("enums.role");
+    const locale = toLocale(useLocale());
+
+    const unknownUser = t("unknownUser");
+
     const [notes, setNotes] = useState<ModelNote[]>([]);
     const [history, setHistory] = useState<NoteHistory[]>([]);
 
@@ -187,7 +185,7 @@ export default function NotesTab({
             if (!response.ok) {
                 throw new Error(
                     result.error ??
-                        "Não foi possível carregar as notas.",
+                        t("loadFailed"),
                 );
             }
 
@@ -205,7 +203,7 @@ export default function NotesTab({
 
             setNotes(
                 rawNotes
-                    .map(normalizeNote)
+                    .map((raw) => normalizeNote(raw, unknownUser))
                     .filter(
                         (
                             note,
@@ -216,7 +214,7 @@ export default function NotesTab({
 
             setHistory(
                 rawHistory
-                    .map(normalizeHistory)
+                    .map((raw) => normalizeHistory(raw, unknownUser))
                     .filter(
                         (
                             item,
@@ -323,7 +321,7 @@ export default function NotesTab({
             if (!response.ok) {
                 throw new Error(
                     result.error ??
-                        "Não foi possível adicionar a nota.",
+                        t("addFailed"),
                 );
             }
 
@@ -376,7 +374,7 @@ export default function NotesTab({
 
         if (!body) {
             setErrorMessage(
-                "A nota não pode ficar vazia.",
+                t("emptyNote"),
             );
             return;
         }
@@ -412,7 +410,7 @@ export default function NotesTab({
             if (!response.ok) {
                 throw new Error(
                     result.error ??
-                        "Não foi possível editar a nota.",
+                        t("editFailed"),
                 );
             }
 
@@ -468,7 +466,7 @@ export default function NotesTab({
             if (!response.ok) {
                 throw new Error(
                     result.error ??
-                        "Não foi possível alterar a fixação da nota.",
+                        t("pinFailed"),
                 );
             }
 
@@ -521,7 +519,7 @@ export default function NotesTab({
             if (!response.ok) {
                 throw new Error(
                     result.error ??
-                        "Não foi possível alterar o arquivamento da nota.",
+                        t("archiveFailed"),
                 );
             }
 
@@ -589,13 +587,13 @@ export default function NotesTab({
             if (!response.ok) {
                 throw new Error(
                     result.error ??
-                        "Não foi possível excluir a nota.",
+                        t("deleteFailed"),
                 );
             }
 
             setPendingRemoval(null);
             setSuccessMessage(
-                "Nota excluída. Ela fica arquivada e o histórico foi mantido.",
+                t("deletedSoft"),
             );
 
             await loadNotes();
@@ -644,15 +642,15 @@ export default function NotesTab({
             if (!response.ok) {
                 throw new Error(
                     result.error ??
-                        "Não foi possível excluir a nota permanentemente.",
+                        t("hardDeleteFailed"),
                 );
             }
 
             setPendingRemoval(null);
             setSuccessMessage(
                 note.source === "ledger"
-                    ? "Nota e lançamento removidos em definitivo. O conteúdo continua no histórico."
-                    : "Nota removida em definitivo. O conteúdo continua no histórico.",
+                    ? t("deletedHardWithEntry")
+                    : t("deletedHard"),
             );
 
             await loadNotes();
@@ -704,11 +702,11 @@ export default function NotesTab({
                     <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                         <div>
                             <p className="text-xs font-bold uppercase tracking-[0.2em] text-pink-300">
-                                Observações internas
+                                {t("internalNotes")}
                             </p>
 
                             <h2 className="mt-2 text-2xl font-bold">
-                                Notas
+                                {t("notes")}
                             </h2>
 
                             <p className="mt-2 max-w-2xl text-sm leading-6 text-white/50">
@@ -731,7 +729,7 @@ export default function NotesTab({
                                 className="h-4 w-4 accent-pink-500"
                             />
 
-                            Mostrar arquivadas
+                            {t("showArchived")}
                         </label>
                     </div>
 
@@ -739,7 +737,7 @@ export default function NotesTab({
                         <div className="mt-6 rounded-2xl border border-pink-400/20 bg-pink-500/5 p-4 sm:p-5">
                             <label className="block">
                                 <span className="text-xs font-bold uppercase tracking-[0.16em] text-white/45">
-                                    Nova nota
+                                    {t("newNote")}
                                 </span>
 
                                 <textarea
@@ -754,7 +752,7 @@ export default function NotesTab({
                                     }
                                     rows={5}
                                     maxLength={5000}
-                                    placeholder="Escreva uma observação interna sobre esta modelo..."
+                                    placeholder={t("notePlaceholder")}
                                     className="mt-3 w-full resize-y rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-sm leading-6 text-white outline-none transition placeholder:text-white/25 focus:border-pink-400/60"
                                 />
                             </label>
@@ -762,7 +760,7 @@ export default function NotesTab({
                             <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
                                 <label className="block">
                                     <span className="text-xs font-bold uppercase tracking-[0.16em] text-white/45">
-                                        Prioridade
+                                        {t("priority")}
                                     </span>
 
                                     <select
@@ -780,24 +778,11 @@ export default function NotesTab({
                                         }
                                         className="mt-2 w-full min-w-[180px] rounded-xl border border-white/10 bg-[#111115] px-4 py-3 text-sm text-white outline-none focus:border-pink-400/60"
                                     >
-                                        {priorityOptions.map(
-                                            (
-                                                option,
-                                            ) => (
-                                                <option
-                                                    key={
-                                                        option.value
-                                                    }
-                                                    value={
-                                                        option.value
-                                                    }
-                                                >
-                                                    {
-                                                        option.label
-                                                    }
+                                        {priorityOptions.map((option) => (
+                                                <option key={option} value={option}>
+                                                    {tPriority(option)}
                                                 </option>
-                                            ),
-                                        )}
+                                            ))}
                                     </select>
                                 </label>
 
@@ -977,6 +962,12 @@ function RemoveNoteModal({
     onCancel: () => void;
     onConfirm: () => void;
 }) {
+    const t = useTranslations("admin.notes");
+    const tCommon = useTranslations("common.actions");
+    const tPriority = useTranslations("enums.notePriority");
+    const tRole = useTranslations("enums.role");
+    const locale = toLocale(useLocale());
+
     const isPurge = kind === "purge";
 
     return (
@@ -999,7 +990,7 @@ function RemoveNoteModal({
                 <div className="mt-4 space-y-3 text-sm leading-6 text-white/70">
                     <p>
                         {isPurge
-                            ? "A nota é removida do banco de dados e não pode ser recuperada. O conteúdo fica registrado no histórico da modelo, com quem excluiu e quando."
+                            ? t("hardDeleteBody")
                             : "A nota sai da lista ativa e fica arquivada. Ela pode ser restaurada, ou removida em definitivo depois."}
                     </p>
 
@@ -1025,7 +1016,7 @@ function RemoveNoteModal({
                         disabled={isWorking}
                         className="rounded-xl border border-white/15 px-5 py-3 text-xs font-bold uppercase tracking-wider text-white/70 transition hover:bg-white/10 disabled:opacity-50"
                     >
-                        Cancelar
+                        {tCommon("cancel")}
                     </button>
 
                     <button
@@ -1073,6 +1064,12 @@ function NoteCard({
     onSoftDelete: () => void;
     onPurge: () => void;
 }) {
+    const t = useTranslations("admin.notes");
+    const tCommon = useTranslations("common.actions");
+    const tPriority = useTranslations("enums.notePriority");
+    const tRole = useTranslations("enums.role");
+    const locale = toLocale(useLocale());
+
     const priority =
         priorityConfig(note.priority);
 
@@ -1090,25 +1087,25 @@ function NoteCard({
                 <div className="flex flex-wrap items-center gap-2">
                     {note.pinned && (
                         <span className="rounded-full border border-pink-400/30 bg-pink-500/15 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.12em] text-pink-200">
-                            Fixada
+                            {t("pinned")}
                         </span>
                     )}
 
                     {note.archived && (
                         <span className="rounded-full border border-white/15 bg-white/5 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.12em] text-white/50">
-                            Arquivada
+                            {t("archived")}
                         </span>
                     )}
 
                     <span
                         className={`rounded-full border px-3 py-1 text-[11px] font-bold uppercase tracking-[0.12em] ${priority.className}`}
                     >
-                        {priority.label}
+                        {tPriority(note.priority)}
                     </span>
 
                     {note.source === "ledger" && (
                         <span className="rounded-full border border-emerald-400/30 bg-emerald-500/10 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.12em] text-emerald-200">
-                            Lançamento
+                            {t("entry")}
                         </span>
                     )}
                 </div>
@@ -1135,7 +1132,7 @@ function NoteCard({
                                     onEdit
                                 }
                             >
-                                Editar
+                                {tCommon("edit")}
                             </ActionButton>
                         )}
 
@@ -1160,7 +1157,7 @@ function NoteCard({
                                 onClick={onSoftDelete}
                                 className="rounded-xl border border-red-400/30 px-4 py-2 text-xs font-bold text-red-200 transition hover:bg-red-500/10 disabled:opacity-40"
                             >
-                                Excluir
+                                {tCommon("delete")}
                             </button>
                         )}
 
@@ -1171,7 +1168,7 @@ function NoteCard({
                             onClick={onPurge}
                             className="rounded-xl border border-red-600/40 bg-red-500/10 px-4 py-2 text-xs font-bold text-red-300 transition hover:bg-red-500/20 disabled:opacity-40"
                         >
-                            Excluir permanentemente
+                            {t("deletePermanently")}
                         </button>
                     )}
                 </div>
@@ -1188,13 +1185,9 @@ function NoteCard({
                         {note.createdByName}
                     </span>{" "}
                     ·{" "}
-                    {roleLabel(
-                        note.createdByRole,
-                    )}{" "}
+                    {tRole(note.createdByRole)}{" "}
                     ·{" "}
-                    {formatDateTime(
-                        note.createdAt,
-                    )}
+                    {formatDateTime(note.createdAt, locale)}
                 </p>
 
                 {note.updatedAt !==
@@ -1206,14 +1199,12 @@ function NoteCard({
                                 note.createdByName}
                         </span>{" "}
                         ·{" "}
-                        {roleLabel(
+                        {tRole(
                             note.updatedByRole ??
                                 note.createdByRole,
                         )}{" "}
                         ·{" "}
-                        {formatDateTime(
-                            note.updatedAt,
-                        )}
+                        {formatDateTime(note.updatedAt, locale)}
                     </p>
                 )}
             </div>
@@ -1230,6 +1221,12 @@ function HistoryPanel({
     errorMessage: string | null;
     fullWidth?: boolean;
 }) {
+    const t = useTranslations("admin.notes");
+    const tCommon = useTranslations("common.actions");
+    const tPriority = useTranslations("enums.notePriority");
+    const tRole = useTranslations("enums.role");
+    const locale = toLocale(useLocale());
+
     return (
         <section
             className={`rounded-2xl border border-white/10 bg-black/20 p-5 sm:p-6 ${
@@ -1239,13 +1236,13 @@ function HistoryPanel({
             }`}
         >
             <p className="text-xs font-bold uppercase tracking-[0.2em] text-pink-300">
-                Registro permanente
+                {t("permanentRecord")}
             </p>
 
             <h2 className="mt-2 text-2xl font-bold">
                 {fullWidth
-                    ? "Histórico completo"
-                    : "Histórico recente"}
+                    ? t("fullHistory")
+                    : t("recentHistory")}
             </h2>
 
             <p className="mt-2 text-sm leading-6 text-white/50">
@@ -1264,7 +1261,7 @@ function HistoryPanel({
                 {history.length === 0 ? (
                     <div className="rounded-2xl border border-dashed border-white/10 bg-white/[0.025] px-5 py-10 text-center">
                         <p className="text-sm font-semibold text-white/60">
-                            Nenhuma alteração
+                            {t("noChanges")}
                             registrada.
                         </p>
 
@@ -1291,19 +1288,21 @@ function HistoryCard({
 }: {
     item: NoteHistory;
 }) {
+    const t = useTranslations("admin.notes");
+    const tCommon = useTranslations("common.actions");
+    const tPriority = useTranslations("enums.notePriority");
+    const tRole = useTranslations("enums.role");
+    const locale = toLocale(useLocale());
+
     return (
         <article className="rounded-2xl border border-white/10 bg-[#111115] p-4">
             <div className="flex flex-wrap items-center justify-between gap-3">
                 <span className="rounded-full border border-pink-400/25 bg-pink-500/10 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.12em] text-pink-200">
-                    {historyActionLabel(
-                        item.action,
-                    )}
+                    {t(`actions.${historyActionKey(item.action)}`)}
                 </span>
 
                 <span className="text-xs text-white/35">
-                    {formatDateTime(
-                        item.createdAt,
-                    )}
+                    {formatDateTime(item.createdAt, locale)}
                 </span>
             </div>
 
@@ -1325,9 +1324,7 @@ function HistoryCard({
                     {item.editorName}
                 </span>{" "}
                 ·{" "}
-                {roleLabel(
-                    item.editorRole,
-                )}
+                {tRole(item.editorRole)}
             </p>
 
             {item.originalBody &&
@@ -1336,7 +1333,7 @@ function HistoryCard({
                     item.updatedBody && (
                     <div className="mt-4 space-y-3">
                         <HistoryText
-                            label="Versão anterior"
+                            label={t("previousVersion")}
                             text={
                                 item.originalBody
                             }
@@ -1344,7 +1341,7 @@ function HistoryCard({
                         />
 
                         <HistoryText
-                            label="Nova versão"
+                            label={t("newVersion")}
                             text={
                                 item.updatedBody
                             }
@@ -1355,7 +1352,7 @@ function HistoryCard({
             {!item.originalBody &&
                 item.updatedBody && (
                     <HistoryText
-                        label="Conteúdo"
+                        label={t("content")}
                         text={item.updatedBody}
                     />
                 )}
@@ -1363,7 +1360,7 @@ function HistoryCard({
             {item.originalBody &&
                 !item.updatedBody && (
                     <HistoryText
-                        label="Conteúdo registrado"
+                        label={t("recordedContent")}
                         text={item.originalBody}
                         muted
                     />
@@ -1421,15 +1418,21 @@ function EditConfirmationModal({
     onCancel: () => void;
     onConfirm: () => void;
 }) {
+    const t = useTranslations("admin.notes");
+    const tCommon = useTranslations("common.actions");
+    const tPriority = useTranslations("enums.notePriority");
+    const tRole = useTranslations("enums.role");
+    const locale = toLocale(useLocale());
+
     return (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 px-4 py-8 backdrop-blur-sm">
             <div className="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-3xl border border-pink-400/30 bg-[#111115] p-5 shadow-2xl sm:p-7">
                 <p className="text-xs font-bold uppercase tracking-[0.2em] text-pink-300">
-                    Confirmação obrigatória
+                    {t("confirmationRequired")}
                 </p>
 
                 <h2 className="mt-2 text-2xl font-bold">
-                    Editar esta nota?
+                    {t("editThisNote")}
                 </h2>
 
                 <p className="mt-3 text-sm leading-6 text-white/55">
@@ -1441,7 +1444,7 @@ function EditConfirmationModal({
 
                 <div className="mt-6 rounded-2xl border border-white/10 bg-black/20 p-4">
                     <p className="text-xs font-bold uppercase tracking-[0.14em] text-white/35">
-                        Versão atual
+                        {t("currentVersion")}
                     </p>
 
                     <p className="mt-3 whitespace-pre-wrap break-words text-sm leading-6 text-white/55">
@@ -1451,7 +1454,7 @@ function EditConfirmationModal({
 
                 <label className="mt-5 block">
                     <span className="text-xs font-bold uppercase tracking-[0.14em] text-white/45">
-                        Nova versão
+                        {t("newVersion")}
                     </span>
 
                     <textarea
@@ -1469,7 +1472,7 @@ function EditConfirmationModal({
 
                 <label className="mt-4 block">
                     <span className="text-xs font-bold uppercase tracking-[0.14em] text-white/45">
-                        Prioridade
+                        {t("priority")}
                     </span>
 
                     <select
@@ -1482,22 +1485,11 @@ function EditConfirmationModal({
                         }
                         className="mt-2 w-full rounded-xl border border-white/10 bg-[#08080a] px-4 py-3 text-sm text-white outline-none focus:border-pink-400/60"
                     >
-                        {priorityOptions.map(
-                            (option) => (
-                                <option
-                                    key={
-                                        option.value
-                                    }
-                                    value={
-                                        option.value
-                                    }
-                                >
-                                    {
-                                        option.label
-                                    }
-                                </option>
-                            ),
-                        )}
+                        {priorityOptions.map((option) => (
+                                                <option key={option} value={option}>
+                                                    {tPriority(option)}
+                                                </option>
+                                            ))}
                     </select>
                 </label>
 
@@ -1508,7 +1500,7 @@ function EditConfirmationModal({
                         disabled={isSaving}
                         className="rounded-xl border border-white/10 bg-white/5 px-5 py-3 text-sm font-semibold text-white/70 transition hover:bg-white/10 disabled:opacity-40"
                     >
-                        Cancelar
+                        {tCommon("cancel")}
                     </button>
 
                     <button
@@ -1522,7 +1514,7 @@ function EditConfirmationModal({
                     >
                         {isSaving
                             ? "Salvando..."
-                            : "Confirmar edição"}
+                            : t("confirmEdit")}
                     </button>
                 </div>
             </div>
@@ -1556,6 +1548,12 @@ function EmptyNotes({
 }: {
     showArchived: boolean;
 }) {
+    const t = useTranslations("admin.notes");
+    const tCommon = useTranslations("common.actions");
+    const tPriority = useTranslations("enums.notePriority");
+    const tRole = useTranslations("enums.role");
+    const locale = toLocale(useLocale());
+
     return (
         <div className="rounded-2xl border border-dashed border-white/10 bg-white/[0.025] px-5 py-12 text-center">
             <p className="text-base font-bold text-white/65">
@@ -1566,8 +1564,8 @@ function EmptyNotes({
 
             <p className="mt-2 text-sm text-white/35">
                 {showArchived
-                    ? "Ainda não existem notas para esta modelo."
-                    : "Adicione uma observação usando o formulário acima."}
+                    ? t("emptyTitle")
+                    : t("emptyBody")}
             </p>
         </div>
     );
@@ -1604,6 +1602,11 @@ function LoadingSection({
 
 function normalizeNote(
     value: unknown,
+    /**
+     * Shown when the API returns no author name. UI copy, so it is passed in
+     * rather than hardcoded — this is a plain helper and cannot hold a hook.
+     */
+    fallbackName: string,
 ): ModelNote | null {
     if (!isRecord(value)) {
         return null;
@@ -1670,7 +1673,7 @@ function normalizeNote(
                 value.created_by_name,
                 value.authorName,
                 value.author_name,
-            ) ?? "Usuário",
+            ) ?? fallbackName,
         createdByRole:
             readString(
                 value.createdByRole,
@@ -1719,6 +1722,8 @@ function normalizeNote(
 
 function normalizeHistory(
     value: unknown,
+    /** See normalizeNote. */
+    fallbackName: string,
 ): NoteHistory | null {
     if (!isRecord(value)) {
         return null;
@@ -1772,7 +1777,7 @@ function normalizeHistory(
                 value.editor_name,
                 value.createdByName,
                 value.created_by_name,
-            ) ?? "Usuário",
+            ) ?? fallbackName,
         editorRole:
             readString(
                 value.editorRole,
@@ -1850,25 +1855,17 @@ function normalizePriority(
 function priorityConfig(
     priority: NotePriority,
 ) {
-    const configs: Record<
-        NotePriority,
-        {
-            label: string;
-            className: string;
-        }
-    > = {
+    // Colour only; the word comes from `enums.notePriority`.
+    const configs: Record<NotePriority, { className: string }> = {
         normal: {
-            label: "Normal",
             className:
                 "border-white/15 bg-white/5 text-white/50",
         },
         important: {
-            label: "Importante",
             className:
                 "border-yellow-400/30 bg-yellow-500/10 text-yellow-200",
         },
         urgent: {
-            label: "Urgente",
             className:
                 "border-red-400/30 bg-red-500/10 text-red-200",
         },
@@ -1877,87 +1874,57 @@ function priorityConfig(
     return configs[priority];
 }
 
-function historyActionLabel(
-    action: string,
-) {
-    const normalized =
-        action.toLowerCase();
+/**
+ * Maps an audit action to a key under `admin.notes.actions`.
+ *
+ * Returns the key rather than the sentence because this is a plain helper, not
+ * a component — it cannot hold a hook, and threading a translator through it
+ * would be worse than letting the caller translate.
+ */
+function historyActionKey(action: string): string {
+    const normalized = action.toLowerCase();
 
-    const labels: Record<
-        string,
-        string
-    > = {
-        created: "Nota criada",
-        create: "Nota criada",
-        edited: "Nota editada",
-        edit: "Nota editada",
-        updated: "Nota atualizada",
-        update: "Nota atualizada",
-        pinned: "Nota fixada",
-        pin: "Fixação alterada",
-        unpinned: "Nota desafixada",
-        archived: "Nota arquivada",
-        archive: "Arquivamento alterado",
-        restored: "Nota restaurada",
-        restore: "Nota restaurada",
+    const keys: Record<string, string> = {
+        created: "noteCreated",
+        create: "noteCreated",
+        edited: "noteEdited",
+        edit: "noteEdited",
+        updated: "noteUpdated",
+        update: "noteUpdated",
+        pinned: "notePinned",
+        pin: "pinChanged",
+        unpinned: "noteUnpinned",
+        archived: "noteArchived",
+        archive: "archiveChanged",
+        restored: "noteRestored",
+        restore: "noteRestored",
         // Account changes from `model_audit_history`, shown alongside notes.
-        field_update: "Campo atualizado",
-        status_change: "Status alterado",
-        proxy_update: "Proxy atualizado",
-        avatar_update: "Avatar atualizado",
-        checklist_update: "Checklist atualizado",
-        marketing_update: "Marketing atualizado",
-        onboarding_update: "Onboarding atualizado",
-        earnings_created: "Relatório de ganhos criado",
-        document_uploaded: "Documento enviado",
-        note_deleted: "Nota excluída",
-        model_deleted: "Modelo excluída",
-        model_created: "Modelo criada",
-        model_imported: "Modelo importada",
-        model_applied: "Candidatura recebida",
+        field_update: "fieldUpdate",
+        status_change: "statusChange",
+        proxy_update: "proxyUpdate",
+        avatar_update: "avatarUpdate",
+        checklist_update: "checklistUpdate",
+        marketing_update: "marketingUpdate",
+        onboarding_update: "onboardingUpdate",
+        earnings_created: "earningsCreated",
+        document_uploaded: "documentUploaded",
+        note_deleted: "noteDeleted",
+        model_deleted: "modelDeleted",
+        model_created: "modelCreated",
+        model_imported: "modelImported",
+        model_applied: "modelApplied",
     };
 
-    return (
-        labels[normalized] ??
-        "Alteração registrada"
-    );
+    return keys[normalized] ?? "changeRecorded";
 }
 
-function roleLabel(
-    role: string,
-) {
-    const labels: Record<
-        string,
-        string
-    > = {
-        owner: "Proprietário",
-        administrator: "Administrador",
-        representative: "Representante",
-        model: "Modelo",
-    };
-
-    return labels[role] ?? role;
-}
-
-function formatDateTime(
-    value: string,
-) {
+/** Audit timestamps: São Paulo time, in the reader's field order. */
+function formatDateTime(value: string, locale: Locale) {
     const date = new Date(value);
 
-    if (
-        Number.isNaN(date.getTime())
-    ) {
+    if (Number.isNaN(date.getTime())) {
         return value;
     }
 
-    return new Intl.DateTimeFormat(
-        "pt-BR",
-        {
-            day: "2-digit",
-            month: "2-digit",
-            year: "numeric",
-            hour: "2-digit",
-            minute: "2-digit",
-        },
-    ).format(date);
+    return formatLocalizedDateTime(date, locale);
 }
