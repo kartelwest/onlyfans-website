@@ -328,7 +328,7 @@ export default function ModelEarningsPanel({
       event.target.value = "";
 
       setErrorMessage(
-        "Selecione uma imagem JPG, PNG ou WEBP.",
+        t("selectImageFormat"),
       );
 
       return;
@@ -400,7 +400,7 @@ export default function ModelEarningsPanel({
 
     if (!selectedFile) {
       setErrorMessage(
-        "Selecione a captura de tela dos ganhos.",
+        t("selectScreenshot"),
       );
       return;
     }
@@ -751,9 +751,7 @@ export default function ModelEarningsPanel({
                 />
 
                 <p className="mt-2 text-xs leading-5 text-zinc-500">
-                  JPG, PNG ou WEBP. Máximo de
-                  10 MB. Uma imagem por
-                  lançamento.
+                  {t("uploadHint")}
                 </p>
               </div>
             </div>
@@ -993,8 +991,8 @@ export default function ModelEarningsPanel({
                           className="text-xs font-semibold text-red-300 transition hover:text-red-200 disabled:cursor-not-allowed disabled:opacity-50"
                         >
                           {deletingId === report.id
-                            ? "Excluindo..."
-                            : "Excluir"}
+                            ? tCommon("deleting")
+                            : tCommon("delete")}
                         </button>
                       </td>
                     )}

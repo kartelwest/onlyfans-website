@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useId, useState } from "react";
+import { useTranslations } from "next-intl";
 
 /**
  * The one confirmation dialog for destructive actions.
@@ -19,8 +20,8 @@ export default function ConfirmDialog({
   title,
   description,
   detail,
-  confirmLabel = "Confirmar",
-  cancelLabel = "Cancelar",
+  confirmLabel,
+  cancelLabel,
   busyLabel,
   busy = false,
   requirePhrase,
@@ -41,6 +42,7 @@ export default function ConfirmDialog({
   onCancel: () => void;
   onConfirm: () => void;
 }) {
+  const t = useTranslations("common.confirmDialog");
   const titleId = useId();
   const [phrase, setPhrase] = useState("");
   const [wasOpen, setWasOpen] = useState(open);
@@ -111,7 +113,7 @@ export default function ConfirmDialog({
         {requirePhrase && (
           <label className="mt-4 block">
             <span className="text-xs font-bold uppercase tracking-[0.14em] text-white/45">
-              Digite {requirePhrase} para confirmar
+              {t("typePhrase", { phrase: requirePhrase })}
             </span>
 
             <input
@@ -131,7 +133,7 @@ export default function ConfirmDialog({
             disabled={busy}
             className="rounded-xl border border-white/15 px-5 py-3 text-xs font-bold uppercase tracking-wider text-white/70 transition hover:bg-white/10 disabled:opacity-50"
           >
-            {cancelLabel}
+            {cancelLabel ?? t("cancel")}
           </button>
 
           <button
@@ -140,7 +142,9 @@ export default function ConfirmDialog({
             disabled={busy || !phraseSatisfied}
             className="rounded-xl bg-red-500 px-5 py-3 text-xs font-bold uppercase tracking-wider text-white transition hover:bg-red-400 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {busy ? (busyLabel ?? "Aguarde...") : confirmLabel}
+            {busy
+              ? (busyLabel ?? t("busy"))
+              : (confirmLabel ?? t("confirm"))}
           </button>
         </div>
       </div>

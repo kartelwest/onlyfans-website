@@ -61,6 +61,12 @@
       "placeholder": "MM/DD/YYYY",
       "previousMonth": "Previous month",
       "nextMonth": "Next month"
+    },
+    "confirmDialog": {
+      "confirm": "Confirm",
+      "cancel": "Cancel",
+      "busy": "Please wait...",
+      "typePhrase": "Type {phrase} to confirm"
     }
   },
   "site": {
@@ -2302,12 +2308,21 @@
       "createSuccess": "{role} created successfully.",
       "claudeModelsOnly": "Claude analysis is only available for models.",
       "enableSmartFill": "Turn on smart fill to run the analysis.",
-      "analyzeFailed": "We couldn't analyze the text.",
+      "analyzeFailed": "Something went wrong while analysing the text.",
       "invalidWhatsapp": "Enter a valid WhatsApp number with at least 8 digits.",
       "ownerOnlyAdmins": "Only the owner can create administrators.",
       "passwordTooShort": "The temporary password must be at least 8 characters.",
       "draftsModelsOnly": "Drafts can only be created for models.",
-      "draftSaveFailed": "We couldn't save the draft."
+      "draftSaveFailed": "We couldn't save the draft.",
+      "pasteTextFirst": "Paste the model's text before analysing it.",
+      "fullNameRequired": "Enter the full name.",
+      "emailRequired": "Enter the e-mail address.",
+      "representativeRequired": "Select a representative for the model.",
+      "analyzeBeforeCreate": "Analyse the text with Claude before creating the record.",
+      "fullNameRequiredForDraft": "Enter the full name to create a draft.",
+      "analyzeBeforeDraft": "Analyse the text with Claude before saving the draft.",
+      "draftSaved": "Draft saved.",
+      "unexpected": "Something went wrong."
     },
     "earnings": {
       "financial": "Financial",
@@ -2351,7 +2366,10 @@
       "deleteSuccess": "Report deleted successfully.",
       "periodRequired": "Enter the period for this entry.",
       "grossRequired": "Enter a valid gross revenue.",
-      "fanslyNotPermitted": "You don't have permission to record Fansly earnings."
+      "fanslyNotPermitted": "You don't have permission to record Fansly earnings.",
+      "selectImageFormat": "Select a JPG, PNG or WEBP image.",
+      "selectScreenshot": "Select the earnings screenshot.",
+      "uploadHint": "JPG, PNG or WEBP. 10 MB maximum. One image per entry."
     },
     "notes": {
       "internalNotes": "Internal notes",
@@ -2416,7 +2434,38 @@
         "modelImported": "Model imported",
         "modelApplied": "Application received",
         "changeRecorded": "Change recorded"
-      }
+      },
+      "intro": "Record important information about the model and follow every change.",
+      "addNote": "Add note",
+      "readOnlyNotice": "Your access level lets you read the notes, but not add new ones.",
+      "softDeleteBody": "The note leaves the active list and is archived. It can be restored, or removed for good later.",
+      "ledgerDeleteWarning": "This note came from a financial entry. Removing it also takes the expense or loan out of the model's area, and it stops being deducted from the month.",
+      "deleteForever": "Delete forever",
+      "deleteNote": "Delete note",
+      "restore": "Restore",
+      "archive": "Archive",
+      "historyIntro": "Notes and every other change to the model's account, with who made it, when, and the previous content.",
+      "noChangesRecorded": "No changes recorded.",
+      "historyEmptyBody": "Actions taken on notes will show up here.",
+      "editNotice": "The previous version is kept permanently in the history along with your name, role, date and time.",
+      "emptyArchivedTitle": "No notes found",
+      "emptyActiveTitle": "No active notes",
+      "updateFailed": "Could not update the note.",
+      "hardDeleteTitle": "Delete this note for good?",
+      "softDeleteTitle": "Delete this note?"
+    },
+    "brandGrowth": {
+      "enrollFailed": "Could not enrol the model.",
+      "enrolled": "Model enrolled in Brand Growth.",
+      "unexpected": "Unexpected error.",
+      "intro": "Enrol this model in Brand Growth to manage Instagram and X/Twitter with assistance.",
+      "enroll": "Enrol in Brand Growth",
+      "enrolling": "Enrolling...",
+      "viewClients": "View Amplia clients",
+      "status": "Status",
+      "statusInstagram": "Instagram: launching",
+      "statusTwitter": "X / Twitter: manual (API off)",
+      "statusAiContent": "AI-generated content: manual"
     }
   },
   "owner": {
@@ -2468,6 +2517,58 @@
         "createFailed": "We couldn't create the account.",
         "created": "Account created successfully."
       }
+    },
+    "usersPage": {
+      "portal": "Owner Portal",
+      "title": "Account Management",
+      "subtitle": "Manage every KARAY Models user account.",
+      "backToModels": "Back to Models",
+      "addModel": "Add Model",
+      "addAdministrator": "Add Administrator",
+      "addRepresentative": "Add Representative",
+      "models": "Models",
+      "representatives": "Representatives",
+      "administrators": "Administrators",
+      "noModels": "No models registered",
+      "noRepresentatives": "No representatives registered",
+      "noAdministrators": "No administrators registered",
+      "viewAll": "View all",
+      "listLoadFailed": "Something went wrong while loading this list.",
+      "name": "Name",
+      "status": "Status",
+      "action": "Action",
+      "noName": "No name",
+      "active": "Active",
+      "inactive": "Inactive",
+      "manage": "Manage"
+    },
+    "newUserPage": {
+      "back": "← Back to Account Management",
+      "panel": "Owner Panel",
+      "accountType": "Account type",
+      "model": {
+        "title": "Add Model",
+        "description": "Create a new account for a model.",
+        "label": "Model"
+      },
+      "administrator": {
+        "title": "Add Administrator",
+        "description": "Create a new administrator account.",
+        "label": "Administrator"
+      },
+      "representative": {
+        "title": "Add Representative",
+        "description": "Create a new representative account.",
+        "label": "Representative"
+      }
+    },
+    "deleteAccount": {
+      "button": "Delete Account Permanently",
+      "title": "Delete this account for good?",
+      "body": "The login and profile are erased and the action cannot be undone. Records created by this account remain, but are no longer linked to it.",
+      "confirmPhrase": "DELETE",
+      "confirm": "Delete permanently",
+      "busy": "Deleting..."
     }
   }
 }

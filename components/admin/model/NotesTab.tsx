@@ -81,6 +81,7 @@ export default function NotesTab({
     historyOnly = false,
 }: NotesTabProps) {
     const t = useTranslations("admin.notes");
+    const tCommon = useTranslations("common.actions");
     const tPriority = useTranslations("enums.notePriority");
     const locale = toLocale(useLocale());
 
@@ -228,7 +229,7 @@ export default function NotesTab({
             setErrorMessage(
                 error instanceof Error
                     ? error.message
-                    : "Erro desconhecido ao carregar as notas.",
+                    : t("loadFailed"),
             );
         } finally {
             setIsLoading(false);
@@ -284,7 +285,7 @@ export default function NotesTab({
 
         if (!body) {
             setErrorMessage(
-                "Escreva a nota antes de salvar.",
+                t("emptyNote"),
             );
             return;
         }
@@ -331,7 +332,7 @@ export default function NotesTab({
             setErrorMessage(
                 error instanceof Error
                     ? error.message
-                    : "Erro desconhecido ao adicionar a nota.",
+                    : t("addFailed"),
             );
         } finally {
             setIsSaving(false);
@@ -421,7 +422,7 @@ export default function NotesTab({
             setErrorMessage(
                 error instanceof Error
                     ? error.message
-                    : "Erro desconhecido ao editar a nota.",
+                    : t("editFailed"),
             );
         } finally {
             setIsSaving(false);
@@ -473,7 +474,7 @@ export default function NotesTab({
             setErrorMessage(
                 error instanceof Error
                     ? error.message
-                    : "Erro desconhecido ao atualizar a nota.",
+                    : t("updateFailed"),
             );
         } finally {
             setActionNoteId(null);
@@ -526,7 +527,7 @@ export default function NotesTab({
             setErrorMessage(
                 error instanceof Error
                     ? error.message
-                    : "Erro desconhecido ao atualizar a nota.",
+                    : t("updateFailed"),
             );
         } finally {
             setActionNoteId(null);
@@ -599,7 +600,7 @@ export default function NotesTab({
             setErrorMessage(
                 error instanceof Error
                     ? error.message
-                    : "Erro desconhecido ao excluir a nota.",
+                    : t("deleteFailed"),
             );
         } finally {
             setActionNoteId(null);
@@ -656,7 +657,7 @@ export default function NotesTab({
             setErrorMessage(
                 error instanceof Error
                     ? error.message
-                    : "Erro desconhecido ao excluir a nota permanentemente.",
+                    : t("hardDeleteFailed"),
             );
         } finally {
             setActionNoteId(null);
@@ -708,9 +709,7 @@ export default function NotesTab({
                             </h2>
 
                             <p className="mt-2 max-w-2xl text-sm leading-6 text-white/50">
-                                Registre informações importantes
-                                sobre a modelo e acompanhe todas
-                                as alterações.
+                                {t("intro")}
                             </p>
                         </div>
 
@@ -796,8 +795,8 @@ export default function NotesTab({
                                     className="rounded-xl bg-pink-500 px-5 py-3 text-sm font-bold text-white transition hover:bg-pink-400 disabled:cursor-not-allowed disabled:opacity-40"
                                 >
                                     {isSaving
-                                        ? "Salvando..."
-                                        : "Adicionar nota"}
+                                        ? tCommon("saving")
+                                        : t("addNote")}
                                 </button>
                             </div>
 
@@ -808,9 +807,7 @@ export default function NotesTab({
                         </div>
                     ) : (
                         <div className="mt-6 rounded-2xl border border-white/10 bg-white/5 px-5 py-4 text-sm text-white/50">
-                            Seu nível de acesso permite
-                            visualizar as notas, mas não
-                            adicionar novas observações.
+                            {t("readOnlyNotice")}
                         </div>
                     )}
 
@@ -979,24 +976,20 @@ function RemoveNoteModal({
                     className="text-lg font-bold text-white"
                 >
                     {isPurge
-                        ? "Excluir esta nota em definitivo?"
-                        : "Excluir esta nota?"}
+                        ? t("hardDeleteTitle")
+                        : t("softDeleteTitle")}
                 </h2>
 
                 <div className="mt-4 space-y-3 text-sm leading-6 text-white/70">
                     <p>
                         {isPurge
                             ? t("hardDeleteBody")
-                            : "A nota sai da lista ativa e fica arquivada. Ela pode ser restaurada, ou removida em definitivo depois."}
+                            : t("softDeleteBody")}
                     </p>
 
                     {note.source === "ledger" && isPurge && (
                         <p className="rounded-xl border border-amber-400/30 bg-amber-500/10 p-3 text-amber-200">
-                            Esta nota veio de um lançamento
-                            financeiro. Ao removê-la, a despesa
-                            ou o empréstimo também sai da área
-                            da modelo e deixa de ser descontado
-                            do mês.
+                            {t("ledgerDeleteWarning")}
                         </p>
                     )}
 
@@ -1022,10 +1015,10 @@ function RemoveNoteModal({
                         className="rounded-xl bg-red-500 px-5 py-3 text-xs font-bold uppercase tracking-wider text-white transition hover:bg-red-400 disabled:opacity-50"
                     >
                         {isWorking
-                            ? "Excluindo..."
+                            ? tCommon("deleting")
                             : isPurge
-                              ? "Excluir para sempre"
-                              : "Excluir nota"}
+                              ? t("deleteForever")
+                              : t("deleteNote")}
                     </button>
                 </div>
             </div>
@@ -1140,8 +1133,8 @@ function NoteCard({
                             }
                         >
                             {note.archived
-                                ? "Restaurar"
-                                : "Arquivar"}
+                                ? t("restore")
+                                : t("archive")}
                         </ActionButton>
                     )}
 
@@ -1239,9 +1232,7 @@ function HistoryPanel({
             </h2>
 
             <p className="mt-2 text-sm leading-6 text-white/50">
-                Notas e demais alterações na conta
-                da modelo, com responsável, data e
-                conteúdo anterior.
+                {t("historyIntro")}
             </p>
 
             {errorMessage && (
@@ -1254,13 +1245,11 @@ function HistoryPanel({
                 {history.length === 0 ? (
                     <div className="rounded-2xl border border-dashed border-white/10 bg-white/[0.025] px-5 py-10 text-center">
                         <p className="text-sm font-semibold text-white/60">
-                            {t("noChanges")}
-                            registrada.
+                            {t("noChangesRecorded")}
                         </p>
 
                         <p className="mt-2 text-xs text-white/35">
-                            As ações realizadas nas
-                            notas aparecerão aqui.
+                            {t("historyEmptyBody")}
                         </p>
                     </div>
                 ) : (
@@ -1426,10 +1415,7 @@ function EditConfirmationModal({
                 </h2>
 
                 <p className="mt-3 text-sm leading-6 text-white/55">
-                    A versão anterior será mantida
-                    permanentemente no histórico
-                    junto com seu nome, função, data
-                    e horário.
+                    {t("editNotice")}
                 </p>
 
                 <div className="mt-6 rounded-2xl border border-white/10 bg-black/20 p-4">
@@ -1503,7 +1489,7 @@ function EditConfirmationModal({
                         className="rounded-xl bg-pink-500 px-5 py-3 text-sm font-bold text-white transition hover:bg-pink-400 disabled:cursor-not-allowed disabled:opacity-40"
                     >
                         {isSaving
-                            ? "Salvando..."
+                            ? tCommon("saving")
                             : t("confirmEdit")}
                     </button>
                 </div>
@@ -1545,8 +1531,8 @@ function EmptyNotes({
         <div className="rounded-2xl border border-dashed border-white/10 bg-white/[0.025] px-5 py-12 text-center">
             <p className="text-base font-bold text-white/65">
                 {showArchived
-                    ? "Nenhuma nota encontrada"
-                    : "Nenhuma nota ativa"}
+                    ? t("emptyArchivedTitle")
+                    : t("emptyActiveTitle")}
             </p>
 
             <p className="mt-2 text-sm text-white/35">

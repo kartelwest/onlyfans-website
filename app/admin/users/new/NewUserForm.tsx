@@ -272,7 +272,7 @@ export default function NewUserForm({
     const text = aiText.trim();
 
     if (!text) {
-      setAiError("Cole o texto da modelo antes de analisar.");
+      setAiError(t("pasteTextFirst"));
       return;
     }
 
@@ -362,7 +362,7 @@ export default function NewUserForm({
       setAiError(
         error instanceof Error
           ? error.message
-          : "Ocorreu um erro ao analisar o texto.",
+          : t("analyzeFailed"),
       );
     } finally {
       setIsAnalyzing(false);
@@ -375,12 +375,12 @@ export default function NewUserForm({
     setAiError("");
 
     if (!form.fullName.trim()) {
-      setErrorMessage("Informe o nome completo.");
+      setErrorMessage(t("fullNameRequired"));
       return;
     }
 
     if (!form.email.trim()) {
-      setErrorMessage("Informe o e-mail.");
+      setErrorMessage(t("emailRequired"));
       return;
     }
 
@@ -392,7 +392,7 @@ export default function NewUserForm({
     }
 
     if (isModel && !form.representativeId) {
-      setErrorMessage("Selecione um representante para a modelo.");
+      setErrorMessage(t("representativeRequired"));
       return;
     }
 
@@ -411,7 +411,7 @@ export default function NewUserForm({
     if (isModel) {
       if (useAI && aiText.trim() && !review) {
         setErrorMessage(
-          "Analise o texto com Claude antes de criar o cadastro.",
+          t("analyzeBeforeCreate"),
         );
         return;
       }
@@ -474,7 +474,7 @@ export default function NewUserForm({
       setErrorMessage(
         error instanceof Error
           ? error.message
-          : "Ocorreu um erro inesperado.",
+          : t("unexpected"),
       );
     } finally {
       setIsSubmitting(false);
@@ -492,13 +492,13 @@ export default function NewUserForm({
     }
 
     if (!form.fullName.trim()) {
-      setErrorMessage("Informe o nome completo para criar um rascunho.");
+      setErrorMessage(t("fullNameRequiredForDraft"));
       return;
     }
 
     if (useAI && aiText.trim() && !review) {
       setErrorMessage(
-        "Analise o texto com Claude antes de salvar o rascunho.",
+        t("analyzeBeforeDraft"),
       );
       return;
     }
@@ -536,7 +536,7 @@ export default function NewUserForm({
       }
 
       setDraftModelId(result.modelId);
-      setSuccessMessage("Rascunho salvo com sucesso.");
+      setSuccessMessage(t("draftSaved"));
 
       window.setTimeout(() => {
         router.push("/admin/users/new?role=model");
@@ -546,7 +546,7 @@ export default function NewUserForm({
       setErrorMessage(
         error instanceof Error
           ? error.message
-          : "Ocorreu um erro inesperado.",
+          : t("unexpected"),
       );
     } finally {
       setIsSubmitting(false);

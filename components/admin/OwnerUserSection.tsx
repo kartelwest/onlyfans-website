@@ -1,5 +1,7 @@
 import Link from "next/link";
 
+import { getTranslations } from "next-intl/server";
+
 import { createClient } from "@/lib/supabase/server";
 
 type UserRole =
@@ -24,7 +26,7 @@ type OwnerUserSectionProps = {
   limit?: number;
 };
 
-function SectionShell({
+async function SectionShell({
   title,
   count,
   viewAllHref,
@@ -37,6 +39,8 @@ function SectionShell({
   viewAllLabel?: string;
   children: React.ReactNode;
 }) {
+  const t = await getTranslations("owner.usersPage");
+
   return (
     <div className="overflow-hidden rounded-2xl border border-pink-400/30 bg-[#111114]">
       <div className="flex items-center justify-between gap-4 border-b border-pink-400/20 bg-[#291521] px-5 py-4">
@@ -52,7 +56,7 @@ function SectionShell({
             href={viewAllHref}
             className="rounded-lg border border-pink-400/50 bg-pink-400/10 px-4 py-2 text-xs font-bold uppercase tracking-wider text-pink-200 transition hover:bg-pink-400 hover:text-black"
           >
-            {viewAllLabel ?? "Ver todas"}
+            {viewAllLabel ?? t("viewAll")}
           </Link>
         )}
       </div>
@@ -70,6 +74,7 @@ export default async function OwnerUserSection({
   viewAllLabel,
   limit,
 }: OwnerUserSectionProps) {
+  const t = await getTranslations("owner.usersPage");
   const supabase = await createClient();
 
   let query = supabase
@@ -89,7 +94,7 @@ export default async function OwnerUserSection({
       <SectionShell title={title} count="!">
         <div className="px-5 py-10 text-center">
           <p className="font-semibold text-red-400">
-            Ocorreu um problema ao carregar esta lista.
+            {t("listLoadFailed")}
           </p>
 
           <p className="mt-2 text-sm text-zinc-500">
@@ -114,15 +119,15 @@ export default async function OwnerUserSection({
           <thead className="bg-[#1c1119] text-xs uppercase tracking-[0.14em] text-pink-100/80">
             <tr>
               <th className="border-b border-r border-pink-400/20 px-5 py-4">
-                Nome
+                {t("name")}
               </th>
 
               <th className="border-b border-r border-pink-400/20 px-5 py-4">
-                Status
+                {t("status")}
               </th>
 
               <th className="border-b border-pink-400/20 px-5 py-4">
-                Ação
+                {t("action")}
               </th>
             </tr>
           </thead>
@@ -135,7 +140,7 @@ export default async function OwnerUserSection({
               >
                 <td className="border-r border-white/10 px-5 py-5">
                   <p className="font-semibold text-white">
-                    {profile.full_name || "Sem nome"}
+                    {profile.full_name || t("noName")}
                   </p>
 
                   <p className="mt-1 text-xs text-zinc-600">
@@ -151,7 +156,7 @@ export default async function OwnerUserSection({
                         : "bg-red-500/10 text-red-300 ring-red-500/30"
                     }`}
                   >
-                    {profile.active ? "Ativo" : "Inativo"}
+                    {profile.active ? t("active") : t("inactive")}
                   </span>
                 </td>
 
@@ -160,7 +165,7 @@ export default async function OwnerUserSection({
                     href={`/owner/users/${profile.id}`}
                     className="inline-flex rounded-lg border border-pink-400/50 bg-pink-400/10 px-4 py-2 text-xs font-bold uppercase tracking-wider text-pink-200 transition hover:bg-pink-400 hover:text-black"
                   >
-                    Gerenciar
+                    {t("manage")}
                   </Link>
                 </td>
               </tr>

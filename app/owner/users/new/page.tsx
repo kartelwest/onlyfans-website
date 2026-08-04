@@ -1,6 +1,7 @@
 import NewUserForm from "./NewUserForm";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 
 import { createClient } from "@/lib/supabase/server";
 
@@ -18,34 +19,21 @@ type PageProps = {
     }>;
 };
 
-function getRoleInformation(role: UserRole) {
-    switch (role) {
-        case "model":
-            return {
-                title: "Adicionar Modelo",
-                description: "Crie uma nova conta para uma modelo.",
-                roleLabel: "Modelo",
-            };
-
-        case "administrator":
-            return {
-                title: "Adicionar Administrador",
-                description: "Crie uma nova conta de administrador.",
-                roleLabel: "Administrador",
-            };
-
-        case "representative":
-            return {
-                title: "Adicionar Representante",
-                description: "Crie uma nova conta de representante.",
-                roleLabel: "Representante",
-            };
-    }
+function getRoleInformation(
+    role: UserRole,
+    t: (key: string) => string,
+) {
+    return {
+        title: t(`${role}.title`),
+        description: t(`${role}.description`),
+        roleLabel: t(`${role}.label`),
+    };
 }
 
 export default async function NewUserPage({
     searchParams,
 }: PageProps) {
+    const t = await getTranslations("owner.newUserPage");
     const params = await searchParams;
     const role = params.role as UserRole;
 
@@ -82,7 +70,7 @@ export default async function NewUserPage({
         redirect("/admin/models");
     }
 
-    const roleInformation = getRoleInformation(role);
+    const roleInformation = getRoleInformation(role, t);
 
     const { data: representatives } = await supabase
         .from("profiles")
@@ -106,12 +94,12 @@ export default async function NewUserPage({
                     href="/owner/users"
                     className="text-sm font-semibold text-pink-300 transition hover:text-pink-200 hover:underline"
                 >
-                    ← Voltar para Gerenciamento de Contas
+                    {t("back")}
                 </Link>
 
                 <div className="mt-8">
                     <p className="text-xs font-semibold uppercase tracking-[0.3em] text-pink-300">
-                        Painel do Proprietário
+                        {t("panel")}
                     </p>
 
                     <h1 className="mt-3 text-3xl font-bold text-white lg:text-4xl">
@@ -126,7 +114,7 @@ export default async function NewUserPage({
                 <div className="mt-10 rounded-2xl border border-pink-400/30 bg-[#111114] p-6 lg:p-8">
                     <div className="rounded-xl border border-pink-400/20 bg-[#1a1218] p-5">
                         <p className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">
-                            Tipo de conta
+                            {t("accountType")}
                         </p>
 
                         <p className="mt-2 text-lg font-semibold text-pink-300">

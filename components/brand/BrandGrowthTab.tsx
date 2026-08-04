@@ -1,10 +1,12 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import type { Model } from "@/types/model";
 
 export default function BrandGrowthTab({ model }: { model: Model }) {
+  const t = useTranslations("admin.brandGrowth");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
 
@@ -21,12 +23,12 @@ export default function BrandGrowthTab({ model }: { model: Model }) {
 
       const result = (await res.json()) as { error?: string };
       if (!res.ok || result.error) {
-        throw new Error(result.error ?? "Erro ao matricular.");
+        throw new Error(result.error ?? t("enrollFailed"));
       }
 
-      setMessage("Modelo matriculada no Brand Growth.");
+      setMessage(t("enrolled"));
     } catch (err) {
-      setMessage(err instanceof Error ? err.message : "Erro inesperado.");
+      setMessage(err instanceof Error ? err.message : t("unexpected"));
     } finally {
       setLoading(false);
     }
@@ -40,7 +42,7 @@ export default function BrandGrowthTab({ model }: { model: Model }) {
         </h2>
 
         <p className="mt-4 text-sm text-white/60">
-          Matricule esta modelo no serviço de Brand Growth para gerenciar Instagram e X/Twitter de forma assistida.
+          {t("intro")}
         </p>
 
         {message && (
@@ -56,26 +58,26 @@ export default function BrandGrowthTab({ model }: { model: Model }) {
             disabled={loading}
             className="rounded-xl bg-pink-500 px-5 py-3 text-sm font-bold text-white transition hover:bg-pink-400 disabled:opacity-60"
           >
-            {loading ? "Matriculando..." : "Matricular em Brand Growth"}
+            {loading ? t("enrolling") : t("enroll")}
           </button>
 
           <Link
             href="/admin/socialmediamodels/models"
             className="rounded-xl border border-white/10 bg-white/5 px-5 py-3 text-sm font-semibold text-white/70 transition hover:bg-white/10"
           >
-            Ver clientes Amplia
+            {t("viewClients")}
           </Link>
         </div>
       </div>
 
       <div className="rounded-2xl border border-white/10 bg-black/20 p-6">
         <h2 className="text-sm font-semibold uppercase tracking-[0.14em] text-pink-100">
-          Status
+          {t("status")}
         </h2>
         <ul className="mt-4 space-y-2 text-sm text-white/70">
-          <li>Instagram: em lançamento</li>
-          <li>X / Twitter: manual (API off)</li>
-          <li>Conteúdo gerado por IA: manual</li>
+          <li>{t("statusInstagram")}</li>
+          <li>{t("statusTwitter")}</li>
+          <li>{t("statusAiContent")}</li>
         </ul>
       </div>
     </section>

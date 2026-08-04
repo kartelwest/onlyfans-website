@@ -61,6 +61,12 @@
       "placeholder": "DD/MM/AAAA",
       "previousMonth": "Mês anterior",
       "nextMonth": "Mês seguinte"
+    },
+    "confirmDialog": {
+      "confirm": "Confirmar",
+      "cancel": "Cancelar",
+      "busy": "Aguarde...",
+      "typePhrase": "Digite {phrase} para confirmar"
     }
   },
   "site": {
@@ -2302,12 +2308,21 @@
       "createSuccess": "{role} criado com sucesso.",
       "claudeModelsOnly": "A análise com Claude está disponível apenas para modelos.",
       "enableSmartFill": "Ative a opção de preenchimento inteligente para analisar.",
-      "analyzeFailed": "Não foi possível analisar o texto.",
+      "analyzeFailed": "Ocorreu um erro ao analisar o texto.",
       "invalidWhatsapp": "Informe um número de WhatsApp válido com pelo menos 8 dígitos.",
       "ownerOnlyAdmins": "Somente o proprietário pode criar administradores.",
       "passwordTooShort": "A senha temporária deve ter pelo menos 8 caracteres.",
       "draftsModelsOnly": "Rascunhos só podem ser criados para modelos.",
-      "draftSaveFailed": "Não foi possível salvar o rascunho."
+      "draftSaveFailed": "Não foi possível salvar o rascunho.",
+      "pasteTextFirst": "Cole o texto da modelo antes de analisar.",
+      "fullNameRequired": "Informe o nome completo.",
+      "emailRequired": "Informe o e-mail.",
+      "representativeRequired": "Selecione um representante para a modelo.",
+      "analyzeBeforeCreate": "Analise o texto com Claude antes de criar o cadastro.",
+      "fullNameRequiredForDraft": "Informe o nome completo para criar um rascunho.",
+      "analyzeBeforeDraft": "Analise o texto com Claude antes de salvar o rascunho.",
+      "draftSaved": "Rascunho salvo com sucesso.",
+      "unexpected": "Ocorreu um erro inesperado."
     },
     "earnings": {
       "financial": "Financeiro",
@@ -2351,7 +2366,10 @@
       "deleteSuccess": "Relatório excluído com sucesso.",
       "periodRequired": "Informe o período do lançamento.",
       "grossRequired": "Informe uma receita bruta válida.",
-      "fanslyNotPermitted": "Você não tem permissão para registrar ganhos da Fansly."
+      "fanslyNotPermitted": "Você não tem permissão para registrar ganhos da Fansly.",
+      "selectImageFormat": "Selecione uma imagem JPG, PNG ou WEBP.",
+      "selectScreenshot": "Selecione a captura de tela dos ganhos.",
+      "uploadHint": "JPG, PNG ou WEBP. Máximo de 10 MB. Uma imagem por lançamento."
     },
     "notes": {
       "internalNotes": "Observações internas",
@@ -2416,7 +2434,38 @@
         "modelImported": "Modelo importada",
         "modelApplied": "Candidatura recebida",
         "changeRecorded": "Alteração registrada"
-      }
+      },
+      "intro": "Registre informações importantes sobre a modelo e acompanhe todas as alterações.",
+      "addNote": "Adicionar nota",
+      "readOnlyNotice": "Seu nível de acesso permite visualizar as notas, mas não adicionar novas observações.",
+      "softDeleteBody": "A nota sai da lista ativa e fica arquivada. Ela pode ser restaurada, ou removida em definitivo depois.",
+      "ledgerDeleteWarning": "Esta nota veio de um lançamento financeiro. Ao removê-la, a despesa ou o empréstimo também sai da área da modelo e deixa de ser descontado do mês.",
+      "deleteForever": "Excluir para sempre",
+      "deleteNote": "Excluir nota",
+      "restore": "Restaurar",
+      "archive": "Arquivar",
+      "historyIntro": "Notas e demais alterações na conta da modelo, com responsável, data e conteúdo anterior.",
+      "noChangesRecorded": "Nenhuma alteração registrada.",
+      "historyEmptyBody": "As ações realizadas nas notas aparecerão aqui.",
+      "editNotice": "A versão anterior será mantida permanentemente no histórico junto com seu nome, função, data e horário.",
+      "emptyArchivedTitle": "Nenhuma nota encontrada",
+      "emptyActiveTitle": "Nenhuma nota ativa",
+      "updateFailed": "Não foi possível atualizar a nota.",
+      "hardDeleteTitle": "Excluir esta nota em definitivo?",
+      "softDeleteTitle": "Excluir esta nota?"
+    },
+    "brandGrowth": {
+      "enrollFailed": "Erro ao matricular.",
+      "enrolled": "Modelo matriculada no Brand Growth.",
+      "unexpected": "Erro inesperado.",
+      "intro": "Matricule esta modelo no serviço de Brand Growth para gerenciar Instagram e X/Twitter de forma assistida.",
+      "enroll": "Matricular em Brand Growth",
+      "enrolling": "Matriculando...",
+      "viewClients": "Ver clientes Amplia",
+      "status": "Status",
+      "statusInstagram": "Instagram: em lançamento",
+      "statusTwitter": "X / Twitter: manual (API desligada)",
+      "statusAiContent": "Conteúdo gerado por IA: manual"
     }
   },
   "owner": {
@@ -2468,6 +2517,58 @@
         "createFailed": "Não foi possível criar a conta.",
         "created": "Conta criada com sucesso."
       }
+    },
+    "usersPage": {
+      "portal": "Portal do Proprietário",
+      "title": "Gerenciamento de Contas",
+      "subtitle": "Gerencie todas as contas de usuários da KARAY Models.",
+      "backToModels": "Voltar para Modelos",
+      "addModel": "Adicionar Modelo",
+      "addAdministrator": "Adicionar Administrador",
+      "addRepresentative": "Adicionar Representante",
+      "models": "Modelos",
+      "representatives": "Representantes",
+      "administrators": "Administradores",
+      "noModels": "Nenhuma modelo cadastrada",
+      "noRepresentatives": "Nenhum representante cadastrado",
+      "noAdministrators": "Nenhum administrador cadastrado",
+      "viewAll": "Ver todas",
+      "listLoadFailed": "Ocorreu um problema ao carregar esta lista.",
+      "name": "Nome",
+      "status": "Status",
+      "action": "Ação",
+      "noName": "Sem nome",
+      "active": "Ativo",
+      "inactive": "Inativo",
+      "manage": "Gerenciar"
+    },
+    "newUserPage": {
+      "back": "← Voltar para Gerenciamento de Contas",
+      "panel": "Painel do Proprietário",
+      "accountType": "Tipo de conta",
+      "model": {
+        "title": "Adicionar Modelo",
+        "description": "Crie uma nova conta para uma modelo.",
+        "label": "Modelo"
+      },
+      "administrator": {
+        "title": "Adicionar Administrador",
+        "description": "Crie uma nova conta de administrador.",
+        "label": "Administrador"
+      },
+      "representative": {
+        "title": "Adicionar Representante",
+        "description": "Crie uma nova conta de representante.",
+        "label": "Representante"
+      }
+    },
+    "deleteAccount": {
+      "button": "Excluir Conta Permanentemente",
+      "title": "Excluir esta conta em definitivo?",
+      "body": "O login e o perfil são apagados e a ação não pode ser desfeita. Os registros criados por esta conta permanecem, mas deixam de estar ligados a ela.",
+      "confirmPhrase": "EXCLUIR",
+      "confirm": "Excluir permanentemente",
+      "busy": "Excluindo..."
     }
   }
 }
