@@ -1,16 +1,19 @@
 "use client";
 
+import { useLocale, useTranslations } from "next-intl";
+
+import { toLocale } from "@/lib/i18n/config";
+import { useMoney } from "@/lib/i18n/money";
+
 import { useCallback, useEffect, useMemo, useState } from "react";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 
-import { formatDatePtBr } from "@/lib/earnings/period";
+import { formatCalendarDate, formatMonthYear } from "@/lib/earnings/period";
 import {
   LEDGER_ENTRY_TYPES,
   LEDGER_PROVIDERS,
-  LEDGER_PROVIDER_LABELS,
-  LEDGER_TYPE_LABELS,
 } from "@/lib/ledger/entries";
-import { BRL, USD, formatMoney } from "@/lib/money/currency";
+import { BRL, USD } from "@/lib/money/currency";
 
 import type {
   LedgerEntry,
@@ -26,11 +29,12 @@ type LedgerPanelProps = {
 type StatusFilter = "todos" | LedgerStatusKind;
 type TypeFilter = "todos" | LedgerEntryType;
 
-const STATUS_FILTERS: { value: StatusFilter; label: string }[] = [
-  { value: "todos", label: "Todos" },
-  { value: "pendente", label: "Pendentes" },
-  { value: "agendado", label: "Agendados" },
-  { value: "descontado", label: "Descontados" },
+/** Values are database statuses; words come from `enums.deductionStatus`. */
+const STATUS_FILTERS: { value: StatusFilter }[] = [
+  { value: "todos" },
+  { value: "pendente" },
+  { value: "agendado" },
+  { value: "descontado" },
 ];
 
 const STATUS_STYLES: Record<LedgerStatusKind, string> = {
@@ -49,6 +53,15 @@ const emptyForm = {
 };
 
 export default function LedgerPanel({ modelId }: LedgerPanelProps) {
+  const t = useTranslations("admin.ledger");
+  const tCommon = useTranslations("common.actions");
+  const tState = useTranslations("common.states");
+  const tType = useTranslations("enums.ledgerEntryType");
+  const tProvider = useTranslations("enums.ledgerProvider");
+  const tStatus = useTranslations("enums.deductionStatus");
+  const money = useMoney();
+  const locale = toLocale(useLocale());
+
   const [entries, setEntries] = useState<LedgerEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -78,7 +91,7 @@ export default function LedgerPanel({ modelId }: LedgerPanelProps) {
 
       if (!response.ok) {
         throw new Error(
-          data.error ?? "Não foi possível carregar os lançamentos.",
+          data.error ?? t("loadFailed"),
         );
       }
 
@@ -87,7 +100,7 @@ export default function LedgerPanel({ modelId }: LedgerPanelProps) {
       setErrorMessage(
         error instanceof Error
           ? error.message
-          : "Não foi possível carregar os lançamentos.",
+          : t("loadFailed"),
       );
     } finally {
       setLoading(false);
@@ -147,11 +160,11 @@ export default function LedgerPanel({ modelId }: LedgerPanelProps) {
       };
 
       if (!response.ok) {
-        throw new Error(data.error ?? "Não foi possível salvar o lançamento.");
+        throw new Error(data.error ?? t("saveFailed"));
       }
 
       setSuccessMessage(
-        editingId ? "Lançamento atualizado." : "Lançamento registrado.",
+        editingId ? t("updated") : t("created"),
       );
 
       setForm(emptyForm);
@@ -162,7 +175,7 @@ export default function LedgerPanel({ modelId }: LedgerPanelProps) {
       setErrorMessage(
         error instanceof Error
           ? error.message
-          : "Não foi possível salvar o lançamento.",
+          : t("saveFailed"),
       );
     } finally {
       setSaving(false);
@@ -185,7 +198,7 @@ export default function LedgerPanel({ modelId }: LedgerPanelProps) {
 
     if (!response.ok) {
       setErrorMessage(
-        data.error ?? "Não foi possível alterar a data de desconto.",
+        data.error ?? t("deductDateFailed"),
       );
 
       return;
@@ -207,7 +220,7 @@ export default function LedgerPanel({ modelId }: LedgerPanelProps) {
     const data = (await response.json()) as { error?: string };
 
     if (!response.ok) {
-      setErrorMessage(data.error ?? "Não foi possível excluir o lançamento.");
+      setErrorMessage(data.error ?? t("deleteFailed"));
       return;
     }
 
@@ -232,17 +245,15 @@ export default function LedgerPanel({ modelId }: LedgerPanelProps) {
   return (
     <section className="rounded-2xl border border-white/10 bg-[#111115] p-6">
       <div>
-        <h3 className="text-xl font-bold">Lançamentos</h3>
+        <h3 className="text-xl font-bold">{t("title")}</h3>
 
         <p className="mt-1 text-sm text-white/45">
-          Despesas e empréstimos em reais. A data em que o gasto ocorreu é só
-          registro: o mês em que a data de desconto cai é o mês em que o valor
-          sai dos ganhos.
+          {t("subtitle")}
         </p>
       </div>
 
       <form onSubmit={handleSubmit} className="mt-6 grid gap-4 md:grid-cols-2">
-        <Field label="Tipo">
+        <Field label={t("type")}>
           <select
             value={form.entryType}
             onChange={(event) =>
@@ -256,14 +267,14 @@ export default function LedgerPanel({ modelId }: LedgerPanelProps) {
           >
             {LEDGER_ENTRY_TYPES.map((type) => (
               <option key={type} value={type}>
-                {LEDGER_TYPE_LABELS[type]}
+                {tType(type)}
               </option>
             ))}
           </select>
         </Field>
 
         {form.entryType === "transporte" && (
-          <Field label="Aplicativo">
+          <Field label={t("provider")}>
             <select
               value={form.provider}
               onChange={(event) =>
@@ -276,7 +287,7 @@ export default function LedgerPanel({ modelId }: LedgerPanelProps) {
             >
               {LEDGER_PROVIDERS.map((provider) => (
                 <option key={provider} value={provider}>
-                  {LEDGER_PROVIDER_LABELS[provider]}
+                  {tProvider(provider)}
                 </option>
               ))}
             </select>
@@ -284,7 +295,7 @@ export default function LedgerPanel({ modelId }: LedgerPanelProps) {
         )}
 
         {form.entryType === "hotel" && (
-          <Field label="Nome do hotel">
+          <Field label={t("hotelName")}>
             <input
               type="text"
               value={form.hotelName}
@@ -294,14 +305,14 @@ export default function LedgerPanel({ modelId }: LedgerPanelProps) {
                   hotelName: event.target.value,
                 }))
               }
-              placeholder="Ibis Centro"
+              placeholder={t("hotelPlaceholder")}
               required
               className="w-full rounded-xl border border-white/15 bg-black/30 px-4 py-2.5 text-sm text-white outline-none focus:border-pink-300"
             />
           </Field>
         )}
 
-        <Field label="Valor (R$)">
+        <Field label={t("amount")}>
           <input
             type="text"
             inputMode="decimal"
@@ -312,7 +323,7 @@ export default function LedgerPanel({ modelId }: LedgerPanelProps) {
                 amountBrl: event.target.value,
               }))
             }
-            placeholder="45,00"
+            placeholder={t("amountPlaceholder")}
             required
             className="w-full rounded-xl border border-white/15 bg-black/30 px-4 py-2.5 text-sm text-white outline-none focus:border-pink-300"
           />
@@ -321,8 +332,8 @@ export default function LedgerPanel({ modelId }: LedgerPanelProps) {
         <Field
           label={
             form.entryType === "emprestimo"
-              ? "Data"
-              : "Data em que ocorreu"
+              ? t("date")
+              : t("incurredOn")
           }
         >
           <input
@@ -339,7 +350,7 @@ export default function LedgerPanel({ modelId }: LedgerPanelProps) {
           />
         </Field>
 
-        <Field label="Data de desconto (opcional)">
+        <Field label={t("deductOn")}>
           <input
             type="date"
             value={form.deductOn}
@@ -364,10 +375,10 @@ export default function LedgerPanel({ modelId }: LedgerPanelProps) {
             className="rounded-xl bg-pink-300 px-5 py-3 text-xs font-black uppercase tracking-[0.12em] text-[#321725] transition hover:bg-pink-200 disabled:opacity-50"
           >
             {saving
-              ? "Salvando..."
+              ? tCommon("saving")
               : editingId
-                ? "Salvar alterações"
-                : "Registrar lançamento"}
+                ? tCommon("save")
+                : t("register")}
           </button>
 
           {editingId && (
@@ -379,7 +390,7 @@ export default function LedgerPanel({ modelId }: LedgerPanelProps) {
               }}
               className="rounded-xl border border-white/15 px-5 py-3 text-xs font-black uppercase tracking-[0.12em] text-white/70 transition hover:bg-white/5"
             >
-              Cancelar
+              {tCommon("cancel")}
             </button>
           )}
         </div>
@@ -403,11 +414,11 @@ export default function LedgerPanel({ modelId }: LedgerPanelProps) {
           onChange={(event) => setTypeFilter(event.target.value as TypeFilter)}
           className="rounded-xl border border-white/15 bg-black/30 px-4 py-2 text-xs font-semibold text-white/80"
         >
-          <option value="todos">Todos os tipos</option>
+          <option value="todos">{t("allTypes")}</option>
 
           {LEDGER_ENTRY_TYPES.map((type) => (
             <option key={type} value={type}>
-              {LEDGER_TYPE_LABELS[type]}
+              {tType(type)}
             </option>
           ))}
         </select>
@@ -421,7 +432,9 @@ export default function LedgerPanel({ modelId }: LedgerPanelProps) {
         >
           {STATUS_FILTERS.map((filter) => (
             <option key={filter.value} value={filter.value}>
-              {filter.label}
+              {filter.value === "todos"
+                ? tState("all")
+                : tStatus(filter.value)}
             </option>
           ))}
         </select>
@@ -429,19 +442,19 @@ export default function LedgerPanel({ modelId }: LedgerPanelProps) {
 
       <div className="mt-4 overflow-x-auto">
         {loading ? (
-          <p className="text-sm text-white/45">Carregando...</p>
+          <p className="text-sm text-white/45">{tState("loading")}</p>
         ) : visibleEntries.length === 0 ? (
-          <p className="text-sm text-white/45">Nenhum lançamento encontrado.</p>
+          <p className="text-sm text-white/45">{t("empty")}</p>
         ) : (
           <table className="w-full min-w-[860px] border-collapse text-sm">
             <thead>
               <tr className="text-left text-[11px] uppercase tracking-[0.12em] text-white/40">
-                <th className="pb-3 pr-4 font-bold">Tipo</th>
-                <th className="pb-3 pr-4 font-bold">Ocorrido em</th>
-                <th className="pb-3 pr-4 font-bold">Valor</th>
-                <th className="pb-3 pr-4 font-bold">Status</th>
-                <th className="pb-3 pr-4 font-bold">Data de desconto</th>
-                <th className="pb-3 font-bold">Ações</th>
+                <th className="pb-3 pr-4 font-bold">{t("type")}</th>
+                <th className="pb-3 pr-4 font-bold">{t("incurredOn")}</th>
+                <th className="pb-3 pr-4 font-bold">{t("amountShort")}</th>
+                <th className="pb-3 pr-4 font-bold">{t("status")}</th>
+                <th className="pb-3 pr-4 font-bold">{t("deductDate")}</th>
+                <th className="pb-3 font-bold">{t("actions")}</th>
               </tr>
             </thead>
 
@@ -453,28 +466,28 @@ export default function LedgerPanel({ modelId }: LedgerPanelProps) {
                 >
                   <td className="py-3 pr-4">
                     <p className="font-semibold">
-                      {LEDGER_TYPE_LABELS[entry.entryType]}
+                      {tType(entry.entryType)}
                     </p>
 
                     <p className="text-xs text-white/45">
                       {entry.entryType === "transporte" && entry.provider
-                        ? LEDGER_PROVIDER_LABELS[entry.provider]
+                        ? tProvider(entry.provider)
                         : entry.hotelName || "—"}
                     </p>
                   </td>
 
                   <td className="py-3 pr-4 text-white/70">
-                    {formatDatePtBr(entry.incurredOn)}
+                    {formatCalendarDate(entry.incurredOn, locale)}
                   </td>
 
                   <td className="py-3 pr-4">
                     <p className="font-semibold">
-                      {formatMoney(entry.amountBrl, BRL)}
+                      {money.format(entry.amountBrl, BRL)}
                     </p>
 
                     {entry.deductionAmountUsd !== null && (
                       <p className="text-xs text-white/45">
-                        {formatMoney(entry.deductionAmountUsd, USD, {
+                        {money.format(entry.deductionAmountUsd, USD, {
                           withCode: true,
                         })}
                       </p>
@@ -487,7 +500,15 @@ export default function LedgerPanel({ modelId }: LedgerPanelProps) {
                         STATUS_STYLES[entry.status.kind]
                       }`}
                     >
-                      {entry.status.label}
+                      {entry.status.kind === "descontado" && entry.deductOn
+                        ? tStatus("deductedIn", {
+                            month: formatMonthYear(entry.deductOn, locale),
+                          })
+                        : entry.status.kind === "agendado" && entry.deductOn
+                          ? tStatus("scheduledFor", {
+                              date: formatCalendarDate(entry.deductOn, locale),
+                            })
+                          : tStatus(entry.status.kind)}
                     </span>
                   </td>
 
@@ -509,7 +530,7 @@ export default function LedgerPanel({ modelId }: LedgerPanelProps) {
                         onClick={() => startEditing(entry)}
                         className="rounded-lg border border-white/15 px-3 py-1.5 text-xs font-bold text-white/70 transition hover:bg-white/5"
                       >
-                        Editar
+                        {tCommon("edit")}
                       </button>
 
                       <button
@@ -517,7 +538,7 @@ export default function LedgerPanel({ modelId }: LedgerPanelProps) {
                         onClick={() => setDeletingEntry(entry)}
                         className="rounded-lg border border-red-400/30 px-3 py-1.5 text-xs font-bold text-red-200 transition hover:bg-red-500/10"
                       >
-                        Excluir
+                        {tCommon("delete")}
                       </button>
                     </div>
                   </td>
@@ -530,23 +551,22 @@ export default function LedgerPanel({ modelId }: LedgerPanelProps) {
 
       <ConfirmDialog
         open={deletingEntry !== null}
-        title="Excluir este lançamento?"
+        title={t("deleteTitle")}
         description={
           <p>
-            Ele sai da área da modelo e deixa de ser descontado do mês. O
-            registro e o histórico são mantidos.
+            {t("deleteBody")}
           </p>
         }
         detail={
           deletingEntry
-            ? `${LEDGER_TYPE_LABELS[deletingEntry.entryType]} · ${formatMoney(
+            ? `${tType(deletingEntry.entryType)} · ${money.format(
                 deletingEntry.amountBrl,
                 BRL,
-              )} · ${formatDatePtBr(deletingEntry.incurredOn)}`
+              )} · ${formatCalendarDate(deletingEntry.incurredOn, locale)}`
             : null
         }
-        confirmLabel="Excluir lançamento"
-        busyLabel="Excluindo..."
+        confirmLabel={t("deleteConfirm")}
+        busyLabel={tCommon("deleting")}
         onCancel={() => setDeletingEntry(null)}
         onConfirm={() => {
           if (deletingEntry) {

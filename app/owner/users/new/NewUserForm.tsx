@@ -33,6 +33,7 @@ export default function NewUserForm({
   representatives,
 }: NewUserFormProps) {
   const t = useTranslations("owner.newUser");
+  const tRole = useTranslations("enums.role");
 
   const [state, formAction, pending] = useActionState(
     createUserAction,
@@ -125,11 +126,11 @@ export default function NewUserForm({
             {representatives.map((rep) => (
               <option key={rep.id} value={rep.id}>
                 {rep.fullName}
-                {rep.role === "owner"
-                  ? " (Proprietário)"
-                  : rep.role === "administrator"
-                    ? " (Administrador)"
-                    : " (Representante)"}
+                {rep.role === "owner" ||
+                rep.role === "administrator" ||
+                rep.role === "representative"
+                  ? ` (${tRole(rep.role)})`
+                  : ""}
               </option>
             ))}
           </select>
