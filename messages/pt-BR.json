@@ -199,7 +199,85 @@
     "email": "E-mail",
     "password": "Senha",
     "forgotPassword": "Esqueci minha senha",
-    "changePassword": "Alterar senha"
+    "changePassword": "Alterar senha",
+    "login": {
+      "title": "Portal de Acesso",
+      "titleAmplia": "Portal da Amplia",
+      "subtitle": "Entre com seu email ou usuário e sua senha para acessar sua área.",
+      "subtitleAmplia": "Entre com seu email e senha para acessar o painel da Amplia.",
+      "sessionExpired": "Sua sessão expirou após 8 minutos de inatividade. Entre novamente.",
+      "identifierLabel": "Email ou usuário",
+      "identifierPlaceholder": "seuemail@exemplo.com ou seu usuário",
+      "passwordLabel": "Senha",
+      "passwordPlaceholder": "Digite sua senha",
+      "submit": "Entrar",
+      "submitting": "Entrando...",
+      "backToSite": "← Voltar para o site"
+    }
+  },
+
+  "enums": {
+    "modelStatus": {
+      "active": "Ativa",
+      "inactive": "Inativa",
+      "candidate": "Candidata",
+      "denied": "Negada"
+    },
+    "modelStatusPlural": {
+      "active": "Ativas",
+      "inactive": "Inativas",
+      "candidate": "Candidatas",
+      "denied": "Negadas"
+    },
+    "role": {
+      "owner": "Proprietário",
+      "administrator": "Administrador",
+      "brand_manager": "Gerente de marca",
+      "content_manager": "Gerente de conteúdo",
+      "analyst": "Analista",
+      "reviewer": "Revisor",
+      "representative": "Representante",
+      "model": "Modelo"
+    },
+    "representativeStatus": {
+      "ativa": "Ativa",
+      "inativa": "Inativa"
+    },
+    "ledgerEntryType": {
+      "transporte": "Transporte",
+      "hotel": "Hotel",
+      "emprestimo": "Empréstimo"
+    },
+    "ledgerProvider": {
+      "uber": "Uber",
+      "99": "99",
+      "indrive": "inDrive"
+    },
+    "deductionStatus": {
+      "pendente": "Pendente",
+      "agendado": "Agendado",
+      "descontado": "Descontado",
+      "scheduledFor": "Agendado para {date}",
+      "deductedIn": "Descontado em {month}"
+    },
+    "paymentStatus": {
+      "pending": "Pendente",
+      "paid": "Pago",
+      "cancelled": "Cancelado",
+      "processing": "Em processamento"
+    },
+    "checklistStatus": {
+      "not_started": "Não iniciado",
+      "planned": "Planejado",
+      "in_progress": "Em andamento",
+      "completed": "Concluído",
+      "missing": "Faltando",
+      "inactive": "Inativo",
+      "duplicate": "Duplicado",
+      "blocked": "Bloqueado",
+      "pending": "Pendente",
+      "skipped": "Ignorado"
+    }
   },
 
   "dashboard": {},
@@ -214,7 +292,34 @@
 
   "settings": {},
 
-  "errors": {},
+  "errors": {
+    "login": {
+      "invalid_identifier": "Email, usuário ou senha incorretos.",
+      "invalid_credentials": "Email, usuário ou senha incorretos.",
+      "network": "Não foi possível conectar. Verifique sua internet e tente novamente.",
+      "no_profile": "Seu acesso ao portal ainda não foi liberado. Fale com a agência.",
+      "account_disabled": "Esta conta está desativada. Fale com a agência para reativar seu acesso.",
+      "no_model_record": "Sua conta ainda não está vinculada a uma ficha de modelo. Fale com a agência.",
+      "unknown": "Não foi possível acessar esta conta."
+    },
+    "notFound": {
+      "title": "Página não encontrada",
+      "description": "O endereço que você abriu não existe ou foi movido.",
+      "action": "Voltar para o início"
+    },
+    "serverError": {
+      "title": "Algo deu errado",
+      "description": "Não foi possível carregar esta página. Tente novamente em instantes.",
+      "action": "Tentar novamente",
+      "home": "Voltar para o início"
+    },
+    "generic": "Algo deu errado. Tente novamente.",
+    "network": "Não foi possível conectar. Verifique sua internet e tente novamente.",
+    "unauthorized": "Você não tem permissão para fazer isso.",
+    "notFoundResource": "O item solicitado não foi encontrado.",
+    "saveFailed": "Não foi possível salvar. Tente novamente.",
+    "loadFailed": "Não foi possível carregar os dados."
+  },
 
   "validation": {},
 

@@ -3,11 +3,12 @@
 import { FormEvent, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import { resolveLoginIdentifier } from "@/lib/auth/loginIdentifier";
 import {
   classifyAuthError,
-  loginFailureMessage,
+  type LoginFailureReason,
 } from "@/lib/auth/loginErrors";
 
 type ProfileRole =
@@ -17,18 +18,23 @@ type ProfileRole =
   | "model";
 
 export default function LoginForm({ returnTo, expired }: { returnTo?: string; expired?: boolean }) {
+  const t = useTranslations("auth.login");
+  const tErrors = useTranslations("errors.login");
   const supabase = createClient();
 
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
-  const [errorMessage, setErrorMessage] = useState("");
+  // The REASON is held in state, not the sentence. Holding the sentence would
+  // freeze it in whichever language was active when the attempt failed, so a
+  // switch afterwards would leave a stale message on screen.
+  const [failure, setFailure] = useState<LoginFailureReason | null>(null);
   const [loading, setLoading] = useState(false);
 
   async function handleLogin(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
     setLoading(true);
-    setErrorMessage("");
+    setFailure(null);
 
     try {
       // Models may be given a plain username instead of an e-mail. Supabase
@@ -37,7 +43,8 @@ export default function LoginForm({ returnTo, expired }: { returnTo?: string; ex
       const resolved = resolveLoginIdentifier(identifier);
 
       if (!resolved.ok) {
-        throw new Error(loginFailureMessage("invalid_identifier"));
+        setFailure("invalid_identifier");
+        return;
       }
 
       const { data: loginData, error: loginError } =
@@ -50,18 +57,20 @@ export default function LoginForm({ returnTo, expired }: { returnTo?: string; ex
         // A request that never reached the auth server is not a wrong
         // password, and saying so sends her to reset a password that was
         // never the problem.
-        throw new Error(loginFailureMessage(classifyAuthError(loginError)));
+        setFailure(classifyAuthError(loginError));
+        return;
       }
 
       const user = loginData.user;
 
       if (!user) {
-        throw new Error(loginFailureMessage("unknown"));
+        setFailure("unknown");
+        return;
       }
 
       // Everything below this line runs AFTER the password was accepted, so
       // these messages must never read like a credential problem. They used to
-      // all collapse into "Esta conta está desativada.", which sent an admin
+      // all collapse into one "account disabled" line, which sent an admin
       // hunting through the auth records of an account that had authenticated
       // perfectly well.
       const { data: profile, error: profileError } = await supabase
@@ -72,12 +81,14 @@ export default function LoginForm({ returnTo, expired }: { returnTo?: string; ex
 
       if (profileError || !profile) {
         await supabase.auth.signOut();
-        throw new Error(loginFailureMessage("no_profile"));
+        setFailure("no_profile");
+        return;
       }
 
       if (!profile.active) {
         await supabase.auth.signOut();
-        throw new Error(loginFailureMessage("account_disabled"));
+        setFailure("account_disabled");
+        return;
       }
 
       if (profile.must_change_password) {
@@ -89,7 +100,7 @@ export default function LoginForm({ returnTo, expired }: { returnTo?: string; ex
 
       // A login can exist without ever having been attached to a model record.
       // She would otherwise reach /area-da-modelo and meet a bare
-      // "Perfil não encontrado" with no idea what to do about it.
+      // "profile not found" with no idea what to do about it.
       if (role === "model") {
         const { data: linkedModel } = await supabase
           .from("models")
@@ -99,29 +110,27 @@ export default function LoginForm({ returnTo, expired }: { returnTo?: string; ex
 
         if (!linkedModel) {
           await supabase.auth.signOut();
-          throw new Error(loginFailureMessage("no_model_record"));
+          setFailure("no_model_record");
+          return;
         }
       }
 
-      // "Último acesso" on the admin screens comes from here. Failing to
-      // record it must never stand between somebody and their dashboard, so
-      // the call is fire-and-forget.
+      // "Last access" on the admin screens comes from here. Failing to record
+      // it must never stand between somebody and their dashboard, so the call
+      // is fire-and-forget.
       void fetch("/api/auth/record-login", { method: "POST" }).catch(() => {});
 
       const redirectPath = resolveRedirectPath(role, returnTo ?? null);
       window.location.replace(redirectPath);
       return;
-    } catch (error) {
-      const message =
-        error instanceof Error
-          ? error.message
-          : loginFailureMessage("unknown");
-
-      setErrorMessage(message);
+    } catch {
+      setFailure("unknown");
     } finally {
       setLoading(false);
     }
   }
+
+  const isAmplia = isSocialMediaPortal(returnTo);
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center bg-[#f7f1ec] px-6 py-12">
@@ -143,19 +152,17 @@ export default function LoginForm({ returnTo, expired }: { returnTo?: string; ex
           </p>
 
           <h1 className="mt-3 text-3xl font-bold text-[#4b2438]">
-            {isSocialMediaPortal(returnTo) ? "Portal da Amplia" : "Portal de Acesso"}
+            {isAmplia ? t("titleAmplia") : t("title")}
           </h1>
 
           <p className="mt-3 text-sm leading-6 text-[#765c68]">
-            {isSocialMediaPortal(returnTo)
-              ? "Entre com seu email e senha para acessar o painel da Amplia."
-              : "Entre com seu email ou usuário e sua senha para acessar sua área."}
+            {isAmplia ? t("subtitleAmplia") : t("subtitle")}
           </p>
         </div>
 
         {expired && (
           <div className="mb-6 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-800">
-            Your session expired after 8 minutes of inactivity. Please sign in again.
+            {t("sessionExpired")}
           </div>
         )}
 
@@ -165,7 +172,7 @@ export default function LoginForm({ returnTo, expired }: { returnTo?: string; ex
               htmlFor="identifier"
               className="mb-2 block text-sm font-semibold text-[#4b2438]"
             >
-              Email ou usuário
+              {t("identifierLabel")}
             </label>
 
             <input
@@ -176,7 +183,7 @@ export default function LoginForm({ returnTo, expired }: { returnTo?: string; ex
               spellCheck={false}
               value={identifier}
               onChange={(event) => setIdentifier(event.target.value)}
-              placeholder="seuemail@exemplo.com ou seu usuário"
+              placeholder={t("identifierPlaceholder")}
               required
               className="w-full rounded-2xl border border-[#d8c7cf] bg-[#fffaf6] px-4 py-3 text-[#321725] outline-none transition focus:border-[#b06a87] focus:ring-4 focus:ring-[#b06a87]/15"
             />
@@ -187,7 +194,7 @@ export default function LoginForm({ returnTo, expired }: { returnTo?: string; ex
               htmlFor="password"
               className="mb-2 block text-sm font-semibold text-[#4b2438]"
             >
-              Senha
+              {t("passwordLabel")}
             </label>
 
             <input
@@ -196,15 +203,18 @@ export default function LoginForm({ returnTo, expired }: { returnTo?: string; ex
               autoComplete="current-password"
               value={password}
               onChange={(event) => setPassword(event.target.value)}
-              placeholder="Digite sua senha"
+              placeholder={t("passwordPlaceholder")}
               required
               className="w-full rounded-2xl border border-[#d8c7cf] bg-[#fffaf6] px-4 py-3 text-[#321725] outline-none transition focus:border-[#b06a87] focus:ring-4 focus:ring-[#b06a87]/15"
             />
           </div>
 
-          {errorMessage && (
-            <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
-              {errorMessage}
+          {failure && (
+            <div
+              role="alert"
+              className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700"
+            >
+              {tErrors(failure)}
             </div>
           )}
 
@@ -213,7 +223,7 @@ export default function LoginForm({ returnTo, expired }: { returnTo?: string; ex
             disabled={loading}
             className="w-full rounded-2xl bg-[#4b2438] px-5 py-3.5 text-sm font-bold uppercase tracking-[0.16em] text-white transition hover:bg-[#321725] disabled:cursor-not-allowed disabled:opacity-60"
           >
-            {loading ? "Entrando..." : "Entrar"}
+            {loading ? t("submitting") : t("submit")}
           </button>
         </form>
       </section>
@@ -222,7 +232,7 @@ export default function LoginForm({ returnTo, expired }: { returnTo?: string; ex
         href="/"
         className="mt-6 text-sm font-semibold text-[#8a6c78] transition hover:text-[#4b2438]"
       >
-        ← Voltar para o site
+        {t("backToSite")}
       </Link>
     </main>
   );

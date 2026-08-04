@@ -26,22 +26,17 @@ export type LoginFailureReason =
   | "no_model_record"
   | "unknown";
 
-const MESSAGES: Record<LoginFailureReason, string> = {
-  invalid_identifier: "Email, usuário ou senha incorretos.",
-  invalid_credentials: "Email, usuário ou senha incorretos.",
-  network:
-    "Não foi possível conectar. Verifique sua internet e tente novamente.",
-  no_profile:
-    "Seu acesso ao portal ainda não foi liberado. Fale com a agência.",
-  account_disabled:
-    "Esta conta está desativada. Fale com a agência para reativar seu acesso.",
-  no_model_record:
-    "Sua conta ainda não está vinculada a uma ficha de modelo. Fale com a agência.",
-  unknown: "Não foi possível acessar esta conta.",
-};
-
-export function loginFailureMessage(reason: LoginFailureReason): string {
-  return MESSAGES[reason];
+/**
+ * The catalog key each reason is written up as.
+ *
+ * The sentences themselves moved to `errors.login.*` in messages/*.json when
+ * the portal became bilingual — a reason is a fact about what happened, and a
+ * fact does not have a language. The distinctions the messages have to preserve
+ * are asserted against the catalogs in tests/login-errors.test.ts, so the
+ * regression that started all this still cannot come back in either language.
+ */
+export function loginFailureKey(reason: LoginFailureReason): string {
+  return `errors.login.${reason}`;
 }
 
 /**

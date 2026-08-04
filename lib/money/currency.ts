@@ -1,8 +1,19 @@
-// Currency + pt-BR money formatting shared by the model portal and the admin
-// panels. Nothing here hardcodes BRL: a Brazilian model is only the common
-// case, so every amount is rendered from the model's own ISO 4217 code.
+// Currency + money formatting shared by the model portal and the admin panels.
+//
+// Two things this deliberately does NOT do:
+//   - hardcode BRL. A Brazilian model is only the common case, so every amount
+//     is rendered from the model's own ISO 4217 code.
+//   - hardcode a locale. The same USD figure reads "US$ 1.234,56" to a
+//     Portuguese reader and "$1,234.56" to an English one. The currency is a
+//     property of the money; the grouping, the decimal mark and the placement
+//     of the symbol are properties of the reader.
+//
+// The locale argument therefore threads through every function here. It
+// defaults to pt-BR so that a caller outside a request context — a script, a
+// test, a server job — still gets the product's first language rather than
+// whatever ICU decides.
 
-const LOCALE = "pt-BR";
+import { DEFAULT_LOCALE, type Locale } from "@/lib/i18n/config";
 
 export const USD = "USD";
 export const BRL = "BRL";
@@ -56,7 +67,10 @@ export function normalizeCurrencyCode(
   }
 
   try {
-    new Intl.NumberFormat(LOCALE, { style: "currency", currency: normalized });
+    new Intl.NumberFormat(DEFAULT_LOCALE, {
+      style: "currency",
+      currency: normalized,
+    });
   } catch {
     return null;
   }
@@ -71,54 +85,62 @@ export function resolveCurrency(value: string | null | undefined): string {
 const symbolCache = new Map<string, string>();
 
 /**
- * The narrow symbol as pt-BR writes it: `$` for USD, `R$` for BRL, `€` for
- * EUR. Derived from Intl so no symbol table has to be maintained by hand.
+ * The symbol as the READER's locale writes it. A Portuguese reader sees `US$`
+ * for dollars, because in Brazil a bare `$` is ambiguous with the real; an
+ * English reader sees `$`, because there it is not.
+ *
+ * Used for input adornments, where a symbol has to stand alone next to a field.
+ * Formatted amounts should go through `formatMoney` instead.
  */
-export function currencySymbol(currency: string): string {
+export function currencySymbol(
+  currency: string,
+  locale: Locale = DEFAULT_LOCALE,
+): string {
   const code = resolveCurrency(currency);
-  const cached = symbolCache.get(code);
+  const cacheKey = `${locale}:${code}`;
+  const cached = symbolCache.get(cacheKey);
 
   if (cached) {
     return cached;
   }
 
-  const parts = new Intl.NumberFormat(LOCALE, {
+  const parts = new Intl.NumberFormat(locale, {
     style: "currency",
     currency: code,
-    currencyDisplay: "narrowSymbol",
   }).formatToParts(0);
 
-  const symbol =
-    parts.find((part) => part.type === "currency")?.value ?? code;
+  const symbol = parts.find((part) => part.type === "currency")?.value ?? code;
 
-  symbolCache.set(code, symbol);
+  symbolCache.set(cacheKey, symbol);
 
   return symbol;
 }
 
-/**
- * pt-BR writes a one-character symbol tight against the number ($1.200,00) and
- * a longer one with a space (R$ 6.504,00).
- */
-function joinSymbol(symbol: string, digits: string): string {
-  return symbol.length > 1 ? `${symbol} ${digits}` : `${symbol}${digits}`;
-}
-
 export type FormatMoneyOptions = {
-  /** Append the ISO code, as the earnings card does: `$1.200,00 USD`. */
+  /** Append the ISO code, as the earnings card does: `US$ 1.200,00 USD`. */
   withCode?: boolean;
   /** Render `−` in front of the amount (deduction lines). */
   negative?: boolean;
+  /** The reader's language. Defaults to the product's first language. */
+  locale?: Locale;
 };
 
+/**
+ * Two fraction digits always, even for currencies ICU would round to whole
+ * units (COP, JPY). Amounts are stored to the cent and the ledger reconciles to
+ * the cent, so hiding them would make a total stop adding up on screen.
+ */
 export function formatMoney(
   amount: number,
   currency: string,
   options: FormatMoneyOptions = {},
 ): string {
+  const locale = options.locale ?? DEFAULT_LOCALE;
   const code = resolveCurrency(currency);
 
-  const digits = new Intl.NumberFormat(LOCALE, {
+  const formatted = new Intl.NumberFormat(locale, {
+    style: "currency",
+    currency: code,
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   }).format(Math.abs(amount) || 0);
@@ -126,7 +148,7 @@ export function formatMoney(
   const sign = options.negative ? "−" : "";
   const suffix = options.withCode ? ` ${code}` : "";
 
-  return `${sign}${joinSymbol(currencySymbol(code), digits)}${suffix}`;
+  return `${sign}${formatted}${suffix}`;
 }
 
 /**
@@ -138,16 +160,16 @@ export function formatFxRate(
   rate: number,
   baseCurrency: string,
   quoteCurrency: string,
+  locale: Locale = DEFAULT_LOCALE,
 ): string {
   const quote = resolveCurrency(quoteCurrency);
 
-  const digits = new Intl.NumberFormat(LOCALE, {
+  const formatted = new Intl.NumberFormat(locale, {
+    style: "currency",
+    currency: quote,
     minimumFractionDigits: 2,
     maximumFractionDigits: rate >= 100 ? 2 : 4,
   }).format(rate);
 
-  return `1 ${resolveCurrency(baseCurrency)} = ${joinSymbol(
-    currencySymbol(quote),
-    digits,
-  )}`;
+  return `1 ${resolveCurrency(baseCurrency)} = ${formatted}`;
 }

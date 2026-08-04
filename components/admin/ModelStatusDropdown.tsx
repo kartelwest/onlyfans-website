@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 
 import type { ModelStatus } from "@/types/model";
 
@@ -10,34 +11,26 @@ type ModelStatusDropdownProps = {
     status: ModelStatus;
 };
 
-const statusConfig: Record<
-    ModelStatus,
-    { label: string; className: string }
-> = {
-    active: {
-        label: "Ativo",
-        className:
-            "border-emerald-400/40 bg-emerald-500/15 text-emerald-300",
-    },
-    inactive: {
-        label: "Inativo",
-        className: "border-white/15 bg-white/5 text-white/60",
-    },
-    candidate: {
-        label: "Candidata",
-        className:
-            "border-yellow-400/40 bg-yellow-500/15 text-yellow-300",
-    },
-    denied: {
-        label: "Negada",
-        className: "border-red-400/40 bg-red-500/15 text-red-300",
-    },
+/**
+ * Colour only. The words come from `enums.modelStatus`, which is also what the
+ * filters, the pageview badges and the representative screens read — one status
+ * must not be "Ativa" in one table and "Ativo" in the next.
+ */
+const STATUS_CLASS: Record<ModelStatus, string> = {
+    active: "border-emerald-400/40 bg-emerald-500/15 text-emerald-300",
+    inactive: "border-white/15 bg-white/5 text-white/60",
+    candidate: "border-yellow-400/40 bg-yellow-500/15 text-yellow-300",
+    denied: "border-red-400/40 bg-red-500/15 text-red-300",
 };
+
+const STATUS_ORDER: ModelStatus[] = ["active", "inactive", "candidate", "denied"];
 
 export default function ModelStatusDropdown({
     modelId,
     status,
 }: ModelStatusDropdownProps) {
+    const t = useTranslations("enums.modelStatus");
+    const tErrors = useTranslations("errors");
     const router = useRouter();
     const [currentStatus, setCurrentStatus] = useState<ModelStatus>(status);
     const [isSaving, setIsSaving] = useState(false);
@@ -68,9 +61,7 @@ export default function ModelStatusDropdown({
             const result = await response.json();
 
             if (!response.ok) {
-                throw new Error(
-                    result.error || "Não foi possível alterar o status.",
-                );
+                throw new Error(result.error || tErrors("saveFailed"));
             }
 
             // Activating a model who has no portal login still succeeds — it
@@ -84,16 +75,14 @@ export default function ModelStatusDropdown({
         } catch (err) {
             setCurrentStatus(previousStatus);
             setError(
-                err instanceof Error
-                    ? err.message
-                    : "Ocorreu um erro inesperado.",
+                err instanceof Error ? err.message : tErrors("generic"),
             );
         } finally {
             setIsSaving(false);
         }
     }
 
-    const config = statusConfig[currentStatus];
+    const statusClass = STATUS_CLASS[currentStatus];
 
     return (
         <div className="flex flex-col gap-1">
@@ -103,15 +92,15 @@ export default function ModelStatusDropdown({
                 onChange={(event) =>
                     void handleChange(event.target.value as ModelStatus)
                 }
-                className={`rounded-full border px-3 py-1.5 text-xs font-bold outline-none transition disabled:opacity-50 ${config.className}`}
+                className={`rounded-full border px-3 py-1.5 text-xs font-bold outline-none transition disabled:opacity-50 ${statusClass}`}
             >
-                {Object.entries(statusConfig).map(([value, cfg]) => (
+                {STATUS_ORDER.map((value) => (
                     <option
                         key={value}
                         value={value}
                         className="bg-[#111115] text-white"
                     >
-                        {cfg.label}
+                        {t(value)}
                     </option>
                 ))}
             </select>

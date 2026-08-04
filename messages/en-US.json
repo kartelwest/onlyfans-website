@@ -199,7 +199,85 @@
     "email": "Email",
     "password": "Password",
     "forgotPassword": "Forgot my password",
-    "changePassword": "Change password"
+    "changePassword": "Change password",
+    "login": {
+      "title": "Sign In",
+      "titleAmplia": "Amplia Portal",
+      "subtitle": "Enter your email or username and your password to reach your area.",
+      "subtitleAmplia": "Enter your email and password to reach the Amplia dashboard.",
+      "sessionExpired": "Your session expired after 8 minutes of inactivity. Please sign in again.",
+      "identifierLabel": "Email or username",
+      "identifierPlaceholder": "you@example.com or your username",
+      "passwordLabel": "Password",
+      "passwordPlaceholder": "Enter your password",
+      "submit": "Sign in",
+      "submitting": "Signing in...",
+      "backToSite": "← Back to the site"
+    }
+  },
+
+  "enums": {
+    "modelStatus": {
+      "active": "Active",
+      "inactive": "Inactive",
+      "candidate": "Candidate",
+      "denied": "Denied"
+    },
+    "modelStatusPlural": {
+      "active": "Active",
+      "inactive": "Inactive",
+      "candidate": "Candidates",
+      "denied": "Denied"
+    },
+    "role": {
+      "owner": "Owner",
+      "administrator": "Administrator",
+      "brand_manager": "Brand manager",
+      "content_manager": "Content manager",
+      "analyst": "Analyst",
+      "reviewer": "Reviewer",
+      "representative": "Representative",
+      "model": "Model"
+    },
+    "representativeStatus": {
+      "ativa": "Active",
+      "inativa": "Inactive"
+    },
+    "ledgerEntryType": {
+      "transporte": "Transport",
+      "hotel": "Hotel",
+      "emprestimo": "Loan"
+    },
+    "ledgerProvider": {
+      "uber": "Uber",
+      "99": "99",
+      "indrive": "inDrive"
+    },
+    "deductionStatus": {
+      "pendente": "Pending",
+      "agendado": "Scheduled",
+      "descontado": "Deducted",
+      "scheduledFor": "Scheduled for {date}",
+      "deductedIn": "Deducted in {month}"
+    },
+    "paymentStatus": {
+      "pending": "Pending",
+      "paid": "Paid",
+      "cancelled": "Cancelled",
+      "processing": "Processing"
+    },
+    "checklistStatus": {
+      "not_started": "Not started",
+      "planned": "Planned",
+      "in_progress": "In progress",
+      "completed": "Completed",
+      "missing": "Missing",
+      "inactive": "Inactive",
+      "duplicate": "Duplicate",
+      "blocked": "Blocked",
+      "pending": "Pending",
+      "skipped": "Skipped"
+    }
   },
 
   "dashboard": {},
@@ -214,7 +292,34 @@
 
   "settings": {},
 
-  "errors": {},
+  "errors": {
+    "login": {
+      "invalid_identifier": "Incorrect email, username or password.",
+      "invalid_credentials": "Incorrect email, username or password.",
+      "network": "We couldn't connect. Check your internet and try again.",
+      "no_profile": "Your portal access hasn't been enabled yet. Please contact the agency.",
+      "account_disabled": "This account is disabled. Contact the agency to restore your access.",
+      "no_model_record": "Your account isn't linked to a model record yet. Please contact the agency.",
+      "unknown": "We couldn't sign you in to this account."
+    },
+    "notFound": {
+      "title": "Page not found",
+      "description": "The address you opened doesn't exist or has moved.",
+      "action": "Back to home"
+    },
+    "serverError": {
+      "title": "Something went wrong",
+      "description": "We couldn't load this page. Please try again in a moment.",
+      "action": "Try again",
+      "home": "Back to home"
+    },
+    "generic": "Something went wrong. Please try again.",
+    "network": "We couldn't connect. Check your internet and try again.",
+    "unauthorized": "You don't have permission to do that.",
+    "notFoundResource": "The requested item was not found.",
+    "saveFailed": "We couldn't save your changes. Please try again.",
+    "loadFailed": "We couldn't load the data."
+  },
 
   "validation": {},
 
