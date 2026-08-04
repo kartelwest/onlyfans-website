@@ -1685,6 +1685,26 @@
       "viewModelScreen": "Ver a tela da modelo",
       "repScreen": "Tela do rep.",
       "adminPanel": "Painel admin"
+    },
+    "monthlyEarnings": {
+      "title": "Ganhos mensais",
+      "subtitle": "Valor bruto em dólares por mês, com a captura de tela do relatório como comprovante. A captura fica em um bucket privado e nunca é exibida para a modelo ou para o representante.",
+      "periodMonth": "Mês de referência",
+      "grossUsd": "Valor bruto (USD)",
+      "screenshot": "Captura de tela",
+      "visibility": "Visibilidade",
+      "publishToModel": "Publicar para a modelo",
+      "doNotPublish": "Não publicar",
+      "saveMonth": "Salvar mês",
+      "previousMonths": "Meses anteriores",
+      "noMonths": "Nenhum mês registrado ainda.",
+      "published": "Publicado",
+      "notPublished": "Não publicado",
+      "publish": "Publicar",
+      "unpublish": "Despublicar",
+      "reportFor": "Relatório de {month}",
+      "loadFailed": "Não foi possível carregar os ganhos.",
+      "publishFailed": "Não foi possível alterar a publicação."
     }
   },
   "owner": {

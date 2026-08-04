@@ -1685,6 +1685,26 @@
       "viewModelScreen": "View the model's screen",
       "repScreen": "Rep's screen",
       "adminPanel": "Admin panel"
+    },
+    "monthlyEarnings": {
+      "title": "Monthly earnings",
+      "subtitle": "Gross amount in dollars per month, with the report screenshot as proof. The screenshot lives in a private bucket and is never shown to the model or the representative.",
+      "periodMonth": "Reference month",
+      "grossUsd": "Gross amount (USD)",
+      "screenshot": "Screenshot",
+      "visibility": "Visibility",
+      "publishToModel": "Publish to the model",
+      "doNotPublish": "Don't publish",
+      "saveMonth": "Save month",
+      "previousMonths": "Previous months",
+      "noMonths": "No months recorded yet.",
+      "published": "Published",
+      "notPublished": "Not published",
+      "publish": "Publish",
+      "unpublish": "Unpublish",
+      "reportFor": "Report for {month}",
+      "loadFailed": "We couldn't load the earnings.",
+      "publishFailed": "We couldn't change the publication state."
     }
   },
   "owner": {

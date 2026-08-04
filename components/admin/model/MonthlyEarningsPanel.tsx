@@ -1,9 +1,14 @@
 "use client";
 
+import { useLocale, useTranslations } from "next-intl";
+
+import { toLocale } from "@/lib/i18n/config";
+import { useMoney } from "@/lib/i18n/money";
+
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import { formatMonthYearPtBr } from "@/lib/earnings/period";
-import { USD, formatMoney } from "@/lib/money/currency";
+import { formatMonthYear } from "@/lib/earnings/period";
+import { USD } from "@/lib/money/currency";
 
 type MonthlyEarning = {
   id: string;
@@ -41,6 +46,13 @@ function currentPeriodInput() {
 export default function MonthlyEarningsPanel({
   modelId,
 }: MonthlyEarningsPanelProps) {
+  const t = useTranslations("admin.monthlyEarnings");
+  const tCommon = useTranslations("common.actions");
+  const tState = useTranslations("common.states");
+  const tErrors = useTranslations("errors");
+  const money = useMoney();
+  const locale = toLocale(useLocale());
+
   const [months, setMonths] = useState<MonthlyEarning[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -69,7 +81,7 @@ export default function MonthlyEarningsPanel({
       };
 
       if (!response.ok) {
-        throw new Error(data.error ?? "Não foi possível carregar os ganhos.");
+        throw new Error(data.error ?? t("loadFailed"));
       }
 
       setMonths(data.months ?? []);
@@ -77,7 +89,7 @@ export default function MonthlyEarningsPanel({
       setErrorMessage(
         error instanceof Error
           ? error.message
-          : "Não foi possível carregar os ganhos.",
+          : t("loadFailed"),
       );
     } finally {
       setLoading(false);
@@ -117,7 +129,7 @@ export default function MonthlyEarningsPanel({
       };
 
       if (!response.ok || !data.success) {
-        throw new Error(data.error ?? "Não foi possível salvar.");
+        throw new Error(data.error ?? tErrors("saveFailed"));
       }
 
       setSuccessMessage(`Ganhos de ${period} salvos.`);
@@ -131,7 +143,7 @@ export default function MonthlyEarningsPanel({
       await load();
     } catch (error) {
       setErrorMessage(
-        error instanceof Error ? error.message : "Não foi possível salvar.",
+        error instanceof Error ? error.message : tErrors("saveFailed"),
       );
     } finally {
       setSaving(false);
@@ -153,7 +165,7 @@ export default function MonthlyEarningsPanel({
     };
 
     if (!response.ok || !data.success) {
-      setErrorMessage(data.error ?? "Não foi possível alterar a publicação.");
+      setErrorMessage(data.error ?? t("publishFailed"));
       return;
     }
 
@@ -171,17 +183,15 @@ export default function MonthlyEarningsPanel({
   return (
     <section className="rounded-2xl border border-white/10 bg-[#111115] p-6">
       <div>
-        <h3 className="text-xl font-bold">Ganhos mensais</h3>
+        <h3 className="text-xl font-bold">{t("title")}</h3>
 
         <p className="mt-1 text-sm text-white/45">
-          Valor bruto em dólares por mês, com a captura de tela do relatório
-          como comprovante. A captura fica em um bucket privado e nunca é
-          exibida para a modelo ou para o representante.
+          {t("subtitle")}
         </p>
       </div>
 
       <form onSubmit={handleSubmit} className="mt-6 grid gap-4 md:grid-cols-2">
-        <Field label="Mês de referência">
+        <Field label={t("periodMonth")}>
           <input
             type="month"
             value={period}
@@ -191,7 +201,7 @@ export default function MonthlyEarningsPanel({
           />
         </Field>
 
-        <Field label="Valor bruto (USD)">
+        <Field label={t("grossUsd")}>
           <input
             type="text"
             inputMode="decimal"
@@ -203,7 +213,7 @@ export default function MonthlyEarningsPanel({
           />
         </Field>
 
-        <Field label="Captura de tela">
+        <Field label={t("screenshot")}>
           <input
             ref={fileInputRef}
             type="file"
@@ -217,7 +227,7 @@ export default function MonthlyEarningsPanel({
           </p>
         </Field>
 
-        <Field label="Visibilidade">
+        <Field label={t("visibility")}>
           <label className="flex items-center gap-3 rounded-xl border border-white/15 bg-black/30 px-4 py-2.5 text-sm">
             <input
               type="checkbox"
@@ -226,7 +236,7 @@ export default function MonthlyEarningsPanel({
               className="h-4 w-4 accent-pink-400"
             />
 
-            <span>{published ? "Publicar para a modelo" : "Não publicar"}</span>
+            <span>{published ? t("publishToModel") : t("doNotPublish")}</span>
           </label>
         </Field>
 
@@ -236,7 +246,7 @@ export default function MonthlyEarningsPanel({
             disabled={saving}
             className="rounded-xl bg-pink-300 px-5 py-3 text-xs font-black uppercase tracking-[0.12em] text-[#321725] transition hover:bg-pink-200 disabled:opacity-50"
           >
-            {saving ? "Salvando..." : "Salvar mês"}
+            {saving ? tCommon("saving") : t("saveMonth")}
           </button>
         </div>
       </form>
@@ -255,14 +265,14 @@ export default function MonthlyEarningsPanel({
 
       <div className="mt-8">
         <h4 className="text-sm font-bold uppercase tracking-[0.14em] text-white/45">
-          Meses anteriores
+          {t("previousMonths")}
         </h4>
 
         {loading ? (
-          <p className="mt-4 text-sm text-white/45">Carregando...</p>
+          <p className="mt-4 text-sm text-white/45">{tState("loading")}</p>
         ) : months.length === 0 ? (
           <p className="mt-4 text-sm text-white/45">
-            Nenhum mês registrado ainda.
+            {t("noMonths")}
           </p>
         ) : (
           <ul className="mt-4 space-y-3">
@@ -281,7 +291,7 @@ export default function MonthlyEarningsPanel({
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={month.screenshotUrl}
-                      alt={`Relatório de ${month.periodMonth}`}
+                      alt={t("reportFor", { month: month.periodMonth })}
                       className="h-14 w-20 rounded-lg border border-white/10 object-cover"
                     />
                   </a>
@@ -291,11 +301,11 @@ export default function MonthlyEarningsPanel({
 
                 <div className="min-w-[140px] flex-1">
                   <p className="text-sm font-bold">
-                    {formatMonthYearPtBr(month.periodMonth)}
+                    {formatMonthYear(month.periodMonth, locale)}
                   </p>
 
                   <p className="mt-0.5 text-sm text-white/70">
-                    {formatMoney(month.grossUsd, USD, { withCode: true })}
+                    {money.format(month.grossUsd, USD, { withCode: true })}
                   </p>
                 </div>
 
@@ -306,7 +316,7 @@ export default function MonthlyEarningsPanel({
                       : "border-white/15 bg-white/5 text-white/55"
                   }`}
                 >
-                  {month.published ? "Publicado" : "Não publicado"}
+                  {month.published ? t("published") : t("notPublished")}
                 </span>
 
                 <div className="flex gap-2">
@@ -323,7 +333,7 @@ export default function MonthlyEarningsPanel({
                     onClick={() => void togglePublished(month)}
                     className="rounded-xl border border-white/15 px-4 py-2 text-xs font-bold text-white/70 transition hover:bg-white/5"
                   >
-                    {month.published ? "Despublicar" : "Publicar"}
+                    {month.published ? t("unpublish") : t("publish")}
                   </button>
                 </div>
               </li>
