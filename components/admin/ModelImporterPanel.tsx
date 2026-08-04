@@ -370,7 +370,7 @@ export default function ModelImporterPanel({
       {clarification && (
         <div className="rounded-2xl border border-yellow-400/30 bg-yellow-500/10 p-6">
           <p className="text-sm font-bold text-yellow-200">
-            O assistente precisa de esclarecimento
+            {t("clarificationNeeded")}
           </p>
           <p className="mt-2 text-sm leading-6 text-yellow-100/80">
             {clarification}
@@ -587,7 +587,7 @@ export default function ModelImporterPanel({
               onClick={addBlankApplicant}
               className="rounded-xl border border-white/10 bg-white/5 px-5 py-3 text-sm font-semibold text-white/80 transition hover:bg-white/10"
             >
-              + Adicionar candidata em branco
+              {t("addBlankApplicant")}
             </button>
 
             <button

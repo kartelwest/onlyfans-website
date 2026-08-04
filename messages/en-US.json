@@ -1984,7 +1984,8 @@
       "unpublish": "Unpublish",
       "reportFor": "Report for {month}",
       "loadFailed": "We couldn't load the earnings.",
-      "publishFailed": "We couldn't change the publication state."
+      "publishFailed": "We couldn't change the publication state.",
+      "requiredOnFirstUpload": "Required on the month's first upload."
     },
     "ledger": {
       "title": "Ledger entries",
@@ -2014,10 +2015,11 @@
       "deleteTitle": "Delete this entry?",
       "deleteBody": "It disappears from the model's area and stops being deducted from the month. The record and its history are kept.",
       "deleteConfirm": "Delete entry",
-      "disabledHint": "Expenses and loans are turned off for this model. Turn them on under Overview → Financial settings to record spending in reais and deduct it from her earnings."
+      "disabledHint": "Expenses and loans are turned off for this model. Turn them on under Overview → Financial settings to record spending in reais and deduct it from her earnings.",
+      "blankDateHint": "Left blank: stays pending and affects no month."
     },
     "platforms": {
-      "title": "Registered platforms",
+      "title": "Model platforms",
       "platform": "Platform",
       "openPlatform": "Open platform",
       "registered": "On file",
@@ -2048,7 +2050,9 @@
           "placeholder": "username or https://facebook.com/username",
           "description": "Account or page used by the operation."
         }
-      }
+      },
+      "eyebrow": "Social networks",
+      "intro": "Register, change and open the accounts used for promotion, growth and subscriber acquisition."
     },
     "documents": {
       "title": "Uploaded files",
@@ -2068,7 +2072,12 @@
       "uploadFailed": "We couldn't upload the file.",
       "uploadSuccess": "File uploaded successfully.",
       "descriptionRequired": "Write a description for the file.",
-      "fileRequired": "Choose a file."
+      "fileRequired": "Choose a file.",
+      "eyebrow": "Model files",
+      "intro": "PDFs, identity documents, profile photos and other attachments.",
+      "file": "File",
+      "limitReached": "The limit of 10 files has been reached.",
+      "downloadUnavailable": "Download link unavailable."
     },
     "credentials": {
       "resetAccess": "Reset access",
@@ -2113,7 +2122,8 @@
         "loginRequired": "Enter an email or a username to create this model's access.",
         "nothingToChange": "Enter a new password or a new login."
       },
-      "currentLoginLabel": "Current login:"
+      "currentLoginLabel": "Current login:",
+      "loginLabel": "Login (e-mail or username)"
     },
     "repCredentials": {
       "temporaryPassword": "Temporary password",
@@ -2236,7 +2246,8 @@
         "whatsapp": "+55...",
         "frequency": "Daily, weekly...",
         "referral": "How she heard about the agency"
-      }
+      },
+      "title": "Overview"
     },
     "onboardingPanel": {
       "defaultTitle": "OnlyFans onboarding",
@@ -2305,7 +2316,9 @@
       "showFace": "Comfortable showing her face",
       "title": "Import model (PDF/image)",
       "intro": "Upload 1 to 6 PDFs or images with a model's details and let Claude pull the information out for you.",
-      "backToModels": "← Back to models"
+      "backToModels": "← Back to models",
+      "clarificationNeeded": "The assistant needs clarification",
+      "addBlankApplicant": "+ Add a blank applicant"
     },
     "newUser": {
       "roleWord": {
@@ -2412,7 +2425,8 @@
       "fanslyNotPermitted": "You don't have permission to record Fansly earnings.",
       "selectImageFormat": "Select a JPG, PNG or WEBP image.",
       "selectScreenshot": "Select the earnings screenshot.",
-      "uploadHint": "JPG, PNG or WEBP. 10 MB maximum. One image per entry."
+      "uploadHint": "JPG, PNG or WEBP. 10 MB maximum. One image per entry.",
+      "date": "Date"
     },
     "notes": {
       "internalNotes": "Internal notes",
@@ -2514,6 +2528,18 @@
       "noModels": "No models assigned",
       "modelCount": "{count, plural, one {# model} other {# models}}",
       "openRepresentativeScreen": "Open the representative's screen"
+    },
+    "newUserPage": {
+      "title": {
+        "model": "Add model",
+        "representative": "Add representative",
+        "administrator": "Add administrator"
+      },
+      "intro": "Register a new login for the system.",
+      "backToModels": "Back to models",
+      "roleModel": "Model",
+      "roleRepresentative": "Representative",
+      "roleAdministrator": "Administrator"
     }
   },
   "owner": {
@@ -2625,7 +2651,14 @@
       "welcome": "Welcome, {name}.",
       "assignedCount": "{count, plural, one {# model assigned} other {# models assigned}}",
       "noModels": "No models assigned yet.",
-      "onboarding": "Onboarding"
+      "onboarding": "Onboarding",
+      "loadFailed": "Could not load the models."
+    },
+    "onboardingPage": {
+      "backToModel": "← Back to the model",
+      "onboarding": "Onboarding",
+      "stageName": "Stage name: {name}",
+      "viewAsNotice": "This is the screen the representative opens. Changes made here are recorded as the signed-in administrator's changes, with your name in the model's history."
     }
   }
 }

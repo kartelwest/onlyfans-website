@@ -1,3 +1,4 @@
+import { getTranslations } from "next-intl/server";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
@@ -14,6 +15,7 @@ export default async function RepresentativeOnboardingPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
+  const t = await getTranslations("representative.onboardingPage");
   const { id } = await params;
   const supabase = await createClient();
 
@@ -79,12 +81,12 @@ export default async function RepresentativeOnboardingPage({
           href={`/representative/models/${model.id}`}
           className="text-sm font-semibold text-pink-300 transition hover:text-pink-200"
         >
-          ← Voltar para a modelo
+          {t("backToModel")}
         </Link>
 
         <header className="mt-6 rounded-2xl border border-white/10 bg-[#111115] p-6">
           <p className="text-xs font-semibold uppercase tracking-[0.25em] text-pink-200">
-            Onboarding
+            {t("onboarding")}
           </p>
 
           <h1 className="mt-2 text-3xl font-bold">{model.display_name}</h1>

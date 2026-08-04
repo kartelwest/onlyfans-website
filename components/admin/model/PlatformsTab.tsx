@@ -141,17 +141,15 @@ export default function PlatformsTab({
       <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
         <div>
           <p className="text-xs font-bold uppercase tracking-[0.18em] text-pink-300">
-            Redes sociais
+            {t("eyebrow")}
           </p>
 
           <h2 className="mt-2 text-xl font-bold">
-            Plataformas da modelo
+            {t("title")}
           </h2>
 
           <p className="mt-2 max-w-2xl text-sm leading-6 text-white/50">
-            Cadastre, altere e acesse as contas
-            utilizadas para divulgação, crescimento e
-            aquisição de assinantes.
+            {t("intro")}
           </p>
         </div>
 
@@ -276,7 +274,7 @@ export default function PlatformsTab({
                     }
                     className="rounded-xl border border-white/15 px-4 py-2.5 text-xs font-bold uppercase tracking-[0.1em] text-white/65 transition hover:bg-white/5"
                   >
-                    Copiar
+                    {tCommon("copy")}
                   </button>
                 </div>
               )}

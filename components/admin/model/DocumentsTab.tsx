@@ -233,16 +233,15 @@ export default function DocumentsTab({
         <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <p className="text-xs font-bold uppercase tracking-[0.2em] text-pink-300">
-              Arquivos da modelo
+              {t("eyebrow")}
             </p>
 
             <h2 className="mt-2 text-2xl font-bold text-white">
-              Documentos
+              {t("title")}
             </h2>
 
             <p className="mt-2 text-sm leading-6 text-white/55">
-              PDFs, documentos de identidade,
-              fotos de perfil e outros anexos.
+              {t("intro")}
             </p>
           </div>
 
@@ -313,7 +312,7 @@ export default function DocumentsTab({
 
             <label className="block">
               <span className="text-xs font-bold uppercase tracking-[0.14em] text-white/45">
-                Arquivo
+                {t("file")}
               </span>
 
               <input
@@ -342,8 +341,7 @@ export default function DocumentsTab({
 
           {!canUpload && (
             <p className="mt-4 text-sm text-yellow-200">
-              O limite de 10 arquivos foi
-              atingido.
+              {t("limitReached")}
             </p>
           )}
         </form>
@@ -431,7 +429,7 @@ export default function DocumentsTab({
                 </a>
               ) : (
                 <p className="mt-5 text-sm text-red-300">
-                  Link de download indisponível.
+                  {t("downloadUnavailable")}
                 </p>
               )}
             </article>

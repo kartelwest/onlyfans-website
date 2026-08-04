@@ -1,3 +1,4 @@
+import { getTranslations } from "next-intl/server";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
@@ -24,6 +25,7 @@ export default async function ViewAsRepresentativeOnboardingPage({
 }: {
   params: Promise<{ modelId: string }>;
 }) {
+  const t = await getTranslations("representative.onboardingPage");
   const { modelId } = await params;
 
   const supabase = await createClient();
@@ -95,26 +97,24 @@ export default async function ViewAsRepresentativeOnboardingPage({
             href={`/admin/view-as/model/${model.id}/representative`}
             className="text-sm font-semibold text-pink-300 transition hover:text-pink-200"
           >
-            ← Voltar para a modelo
+            {t("backToModel")}
           </Link>
 
           <header className="mt-6 rounded-2xl border border-white/10 bg-[#111115] p-6">
             <p className="text-xs font-semibold uppercase tracking-[0.25em] text-pink-200">
-              Onboarding
+              {t("onboarding")}
             </p>
 
             <h1 className="mt-2 text-3xl font-bold">{model.display_name}</h1>
 
             {model.stage_name && (
               <p className="mt-2 text-sm text-white/55">
-                Nome artístico: {model.stage_name}
+                {t("stageName", { name: model.stage_name })}
               </p>
             )}
 
             <p className="mt-4 rounded-xl border border-dashed border-white/15 bg-black/20 px-4 py-3 text-xs leading-6 text-white/55">
-              Esta é a tela que o representante abre. As alterações feitas aqui
-              são gravadas como alterações do administrador conectado, com o
-              seu nome no histórico da modelo.
+              {t("viewAsNotice")}
             </p>
           </header>
 

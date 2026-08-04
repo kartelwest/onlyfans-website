@@ -331,7 +331,7 @@ export default function ModelCredentialsReset({
 
                 <section className="mt-6 border-t border-white/10 pt-6">
                   <h4 className="text-xs font-bold uppercase tracking-[0.2em] text-pink-200">
-                    Login (e-mail ou nome de usuário)
+                    {t("loginLabel")}
                   </h4>
 
                   <p className="mt-2 text-xs text-white/45">

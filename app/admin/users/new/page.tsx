@@ -1,5 +1,6 @@
 
 
+import { getTranslations } from "next-intl/server";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
@@ -40,6 +41,7 @@ type RepresentativeOption = {
 export default async function NewUserPage({
   searchParams,
 }: NewUserPageProps) {
+  const t = await getTranslations("admin.newUserPage");
   const supabase = await createClient();
 
   const {
@@ -140,11 +142,11 @@ export default async function NewUserPage({
             </p>
 
             <h1 className="mt-2 text-3xl font-bold sm:text-4xl">
-              {getPageTitle(role)}
+              {getPageTitle(role, t)}
             </h1>
 
             <p className="mt-2 text-sm text-white/55">
-              Cadastre um novo acesso no sistema.
+              {t("intro")}
             </p>
           </div>
 
@@ -152,7 +154,7 @@ export default async function NewUserPage({
             href="/admin/models"
             className="w-fit rounded-xl border border-white/10 bg-white/5 px-5 py-3 text-sm font-semibold text-white/80 transition hover:bg-white/10"
           >
-            Voltar para modelos
+            {t("backToModels")}
           </Link>
         </div>
 
@@ -161,14 +163,14 @@ export default async function NewUserPage({
             href="/admin/users/new?role=model"
             active={role === "model"}
           >
-            Modelo
+            {t("roleModel")}
           </RoleLink>
 
           <RoleLink
             href="/admin/users/new?role=representative"
             active={role === "representative"}
           >
-            Representante
+            {t("roleRepresentative")}
           </RoleLink>
 
           {profile.role === "owner" && (
@@ -176,7 +178,7 @@ export default async function NewUserPage({
               href="/admin/users/new?role=administrator"
               active={role === "administrator"}
             >
-              Administrador
+              {t("roleAdministrator")}
             </RoleLink>
           )}
         </div>
@@ -216,14 +218,6 @@ function RoleLink({
   );
 }
 
-function getPageTitle(role: NewUserRole) {
-  if (role === "representative") {
-    return "Adicionar representante";
-  }
-
-  if (role === "administrator") {
-    return "Adicionar administrador";
-  }
-
-  return "Adicionar modelo";
+function getPageTitle(role: NewUserRole, t: (key: string) => string) {
+  return t(`title.${role}`);
 }

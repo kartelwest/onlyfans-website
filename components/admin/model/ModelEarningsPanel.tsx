@@ -696,7 +696,7 @@ export default function ModelEarningsPanel({
 
               <label>
                 <span className="text-xs font-semibold uppercase tracking-wider text-zinc-500">
-                  Data
+                  {t("date")}
                 </span>
 
                 <input

@@ -364,7 +364,7 @@ export default function LedgerPanel({ modelId }: LedgerPanelProps) {
           />
 
           <p className="mt-1 text-[11px] text-white/35">
-            Em branco: fica pendente e não afeta nenhum mês.
+            {t("blankDateHint")}
           </p>
         </Field>
 

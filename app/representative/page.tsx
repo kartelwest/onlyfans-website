@@ -1,3 +1,4 @@
+import { getTranslations } from "next-intl/server";
 import { redirect } from "next/navigation";
 
 import RepresentativeDashboardView, {
@@ -12,6 +13,7 @@ import type { ManagementRole } from "@/types/model";
 export const dynamic = "force-dynamic";
 
 export default async function RepresentativePage() {
+  const t = await getTranslations("representative.dashboard");
   const supabase = await createClient();
 
   const {
@@ -77,10 +79,10 @@ export default async function RepresentativePage() {
           </p>
 
           <h1 className="mt-3 text-4xl font-bold text-[#4b2438]">
-            Área do Representante
+            {t("title")}
           </h1>
 
-          <p className="mt-3 text-red-600">Erro ao carregar modelos.</p>
+          <p className="mt-3 text-red-600">{t("loadFailed")}</p>
         </div>
       </main>
     );

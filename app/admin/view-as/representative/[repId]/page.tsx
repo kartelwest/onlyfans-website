@@ -1,3 +1,4 @@
+import { getTranslations } from "next-intl/server";
 import { notFound, redirect } from "next/navigation";
 
 import ViewAsRepresentativeBanner from "@/components/admin/ViewAsRepresentativeBanner";
@@ -27,6 +28,7 @@ export default async function ViewAsRepresentativePage({
 }: {
   params: Promise<{ repId: string }>;
 }) {
+  const t = await getTranslations("representative.dashboard");
   const { repId } = await params;
 
   const supabase = await createClient();
@@ -103,10 +105,10 @@ export default async function ViewAsRepresentativePage({
         <main className="min-h-screen bg-[#f7f1ec] px-6 py-12">
           <div className="mx-auto max-w-6xl">
             <h1 className="text-4xl font-bold text-[#4b2438]">
-              Área do Representante
+              {t("title")}
             </h1>
 
-            <p className="mt-3 text-red-600">Erro ao carregar modelos.</p>
+            <p className="mt-3 text-red-600">{t("loadFailed")}</p>
           </div>
         </main>
       </>

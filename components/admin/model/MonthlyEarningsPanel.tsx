@@ -223,7 +223,7 @@ export default function MonthlyEarningsPanel({
           />
 
           <p className="mt-1 text-[11px] text-white/35">
-            Obrigatória no primeiro envio do mês.
+            {t("requiredOnFirstUpload")}
           </p>
         </Field>
 
@@ -325,7 +325,7 @@ export default function MonthlyEarningsPanel({
                     onClick={() => editMonth(month)}
                     className="rounded-xl border border-white/15 px-4 py-2 text-xs font-bold text-white/70 transition hover:bg-white/5"
                   >
-                    Editar
+                    {tCommon("edit")}
                   </button>
 
                   <button

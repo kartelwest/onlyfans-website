@@ -134,7 +134,7 @@ export default function OverviewTab({
     <div className="space-y-8">
       <section className="rounded-2xl border border-white/10 bg-[#111115] p-6">
         <p className="text-xs font-bold uppercase tracking-[0.22em] text-pink-300">
-          Resumo
+          {t("title")}
         </p>
 
         <h2 className="mt-2 text-3xl font-bold">
@@ -458,6 +458,8 @@ function BooleanToggle({
   value: boolean;
   onChange: (value: boolean) => void;
 }) {
+  const tState = useTranslations("common.states");
+
   return (
     <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
       <p className="text-xs font-bold uppercase tracking-[0.14em] text-white/45">
@@ -474,7 +476,7 @@ function BooleanToggle({
               : "border border-white/15 text-white/60 hover:bg-white/5"
           }`}
         >
-          Sim
+          {tState("yes")}
         </button>
 
         <button
@@ -486,7 +488,7 @@ function BooleanToggle({
               : "border border-white/15 text-white/60 hover:bg-white/5"
           }`}
         >
-          Não
+          {tState("no")}
         </button>
       </div>
     </div>

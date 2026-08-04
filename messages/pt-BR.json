@@ -1984,7 +1984,8 @@
       "unpublish": "Despublicar",
       "reportFor": "Relatório de {month}",
       "loadFailed": "Não foi possível carregar os ganhos.",
-      "publishFailed": "Não foi possível alterar a publicação."
+      "publishFailed": "Não foi possível alterar a publicação.",
+      "requiredOnFirstUpload": "Obrigatória no primeiro envio do mês."
     },
     "ledger": {
       "title": "Lançamentos",
@@ -2014,10 +2015,11 @@
       "deleteTitle": "Excluir este lançamento?",
       "deleteBody": "Ele sai da área da modelo e deixa de ser descontado do mês. O registro e o histórico são mantidos.",
       "deleteConfirm": "Excluir lançamento",
-      "disabledHint": "Despesas e empréstimos estão desativados para esta modelo. Ative em Resumo → Configurações financeiras para registrar gastos em reais e descontá-los dos ganhos."
+      "disabledHint": "Despesas e empréstimos estão desativados para esta modelo. Ative em Resumo → Configurações financeiras para registrar gastos em reais e descontá-los dos ganhos.",
+      "blankDateHint": "Em branco: fica pendente e não afeta nenhum mês."
     },
     "platforms": {
-      "title": "Plataformas cadastradas",
+      "title": "Plataformas da modelo",
       "platform": "Plataforma",
       "openPlatform": "Abrir plataforma",
       "registered": "Cadastrada",
@@ -2048,7 +2050,9 @@
           "placeholder": "usuario ou https://facebook.com/usuario",
           "description": "Conta ou página utilizada pela operação."
         }
-      }
+      },
+      "eyebrow": "Redes sociais",
+      "intro": "Cadastre, altere e acesse as contas utilizadas para divulgação, crescimento e aquisição de assinantes."
     },
     "documents": {
       "title": "Arquivos enviados",
@@ -2068,7 +2072,12 @@
       "uploadFailed": "Não foi possível enviar o arquivo.",
       "uploadSuccess": "Arquivo enviado com sucesso.",
       "descriptionRequired": "Escreva uma descrição para o arquivo.",
-      "fileRequired": "Selecione um arquivo."
+      "fileRequired": "Selecione um arquivo.",
+      "eyebrow": "Arquivos da modelo",
+      "intro": "PDFs, documentos de identidade, fotos de perfil e outros anexos.",
+      "file": "Arquivo",
+      "limitReached": "O limite de 10 arquivos foi atingido.",
+      "downloadUnavailable": "Link de download indisponível."
     },
     "credentials": {
       "resetAccess": "Redefinir acesso",
@@ -2113,7 +2122,8 @@
         "loginRequired": "Informe um e-mail ou um nome de usuário para criar o acesso desta modelo.",
         "nothingToChange": "Informe uma nova senha ou um novo login."
       },
-      "currentLoginLabel": "Login atual:"
+      "currentLoginLabel": "Login atual:",
+      "loginLabel": "Login (e-mail ou nome de usuário)"
     },
     "repCredentials": {
       "temporaryPassword": "Senha temporária",
@@ -2236,7 +2246,8 @@
         "whatsapp": "+55...",
         "frequency": "Diária, semanal...",
         "referral": "Como conheceu a agência"
-      }
+      },
+      "title": "Resumo"
     },
     "onboardingPanel": {
       "defaultTitle": "Onboarding OnlyFans",
@@ -2305,7 +2316,9 @@
       "showFace": "Confortável em mostrar o rosto",
       "title": "Importar modelo (PDF/imagem)",
       "intro": "Envie de 1 a 6 PDFs ou imagens com os dados de uma modelo e deixe o Claude extrair as informações para você.",
-      "backToModels": "← Voltar para modelos"
+      "backToModels": "← Voltar para modelos",
+      "clarificationNeeded": "O assistente precisa de esclarecimento",
+      "addBlankApplicant": "+ Adicionar candidata em branco"
     },
     "newUser": {
       "roleWord": {
@@ -2412,7 +2425,8 @@
       "fanslyNotPermitted": "Você não tem permissão para registrar ganhos da Fansly.",
       "selectImageFormat": "Selecione uma imagem JPG, PNG ou WEBP.",
       "selectScreenshot": "Selecione a captura de tela dos ganhos.",
-      "uploadHint": "JPG, PNG ou WEBP. Máximo de 10 MB. Uma imagem por lançamento."
+      "uploadHint": "JPG, PNG ou WEBP. Máximo de 10 MB. Uma imagem por lançamento.",
+      "date": "Data"
     },
     "notes": {
       "internalNotes": "Observações internas",
@@ -2514,6 +2528,18 @@
       "noModels": "Nenhuma modelo atribuída",
       "modelCount": "{count, plural, one {# modelo} other {# modelos}}",
       "openRepresentativeScreen": "Abrir a tela do representante"
+    },
+    "newUserPage": {
+      "title": {
+        "model": "Adicionar modelo",
+        "representative": "Adicionar representante",
+        "administrator": "Adicionar administrador"
+      },
+      "intro": "Cadastre um novo acesso no sistema.",
+      "backToModels": "Voltar para modelos",
+      "roleModel": "Modelo",
+      "roleRepresentative": "Representante",
+      "roleAdministrator": "Administrador"
     }
   },
   "owner": {
@@ -2625,7 +2651,14 @@
       "welcome": "Bem-vindo, {name}.",
       "assignedCount": "{count, plural, one {# modelo atribuída} other {# modelos atribuídas}}",
       "noModels": "Nenhuma modelo atribuída ainda.",
-      "onboarding": "Onboarding"
+      "onboarding": "Onboarding",
+      "loadFailed": "Erro ao carregar modelos."
+    },
+    "onboardingPage": {
+      "backToModel": "← Voltar para a modelo",
+      "onboarding": "Onboarding",
+      "stageName": "Nome artístico: {name}",
+      "viewAsNotice": "Esta é a tela que o representante abre. As alterações feitas aqui são gravadas como alterações do administrador conectado, com o seu nome no histórico da modelo."
     }
   }
 }
