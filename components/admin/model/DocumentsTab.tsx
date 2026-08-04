@@ -1,5 +1,10 @@
 "use client";
 
+import { useLocale, useTranslations } from "next-intl";
+
+import { toLocale, type Locale } from "@/lib/i18n/config";
+import { formatDateTime as formatLocalizedDateTime } from "@/lib/models/formatDateTime";
+
 import {
   ChangeEvent,
   FormEvent,
@@ -41,6 +46,12 @@ export default function DocumentsTab({
   model,
   currentUserRole,
 }: DocumentsTabProps) {
+  const t = useTranslations("admin.documents");
+  const tSocial = useTranslations("admin.social");
+  const tCommon = useTranslations("common.actions");
+  const tState = useTranslations("common.states");
+  const locale = toLocale(useLocale());
+
   const [documents, setDocuments] = useState<
     ModelDocument[]
   >([]);
@@ -95,7 +106,7 @@ export default function DocumentsTab({
         if (!response.ok) {
           throw new Error(
             result.error ??
-              "Não foi possível carregar os documentos.",
+              t("loadFailed"),
           );
         }
 
@@ -104,7 +115,7 @@ export default function DocumentsTab({
         setErrorMessage(
           error instanceof Error
             ? error.message
-            : "Não foi possível carregar os documentos.",
+            : t("loadFailed"),
         );
       } finally {
         setIsLoading(false);
@@ -139,14 +150,14 @@ export default function DocumentsTab({
 
     if (!description.trim()) {
       setErrorMessage(
-        "Escreva uma descrição para o arquivo.",
+        t("descriptionRequired"),
       );
       return;
     }
 
     if (!selectedFile) {
       setErrorMessage(
-        "Selecione um arquivo.",
+        t("fileRequired"),
       );
       return;
     }
@@ -182,7 +193,7 @@ export default function DocumentsTab({
       if (!response.ok || !result.document) {
         throw new Error(
           result.error ??
-            "Não foi possível enviar o arquivo.",
+            t("uploadFailed"),
         );
       }
 
@@ -194,7 +205,7 @@ export default function DocumentsTab({
       setDescription("");
       setSelectedFile(null);
       setSuccessMessage(
-        "Arquivo enviado com sucesso.",
+        t("uploadSuccess"),
       );
 
       const fileInput =
@@ -209,7 +220,7 @@ export default function DocumentsTab({
       setErrorMessage(
         error instanceof Error
           ? error.message
-          : "Não foi possível enviar o arquivo.",
+          : t("uploadFailed"),
       );
     } finally {
       setIsUploading(false);
@@ -238,7 +249,7 @@ export default function DocumentsTab({
           <div className="flex flex-col items-stretch gap-3 sm:items-end">
             <div className="rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3">
               <p className="text-xs font-bold uppercase tracking-[0.12em] text-white/40">
-                Arquivos enviados
+                {t("title")}
               </p>
 
               <p className="mt-1 text-xl font-bold text-pink-300">
@@ -261,8 +272,8 @@ export default function DocumentsTab({
                 }
               >
                 {isEditing
-                  ? "Concluir edição"
-                  : "Editar"}
+                  ? tSocial("finishEditing")
+                  : tCommon("edit")}
               </button>
             )}
           </div>
@@ -275,13 +286,13 @@ export default function DocumentsTab({
           className="rounded-2xl border border-pink-400/20 bg-pink-500/5 p-5 sm:p-6"
         >
           <h3 className="text-lg font-bold text-white">
-            Adicionar arquivo
+            {t("addFile")}
           </h3>
 
           <div className="mt-5 grid gap-5 lg:grid-cols-2">
             <label className="block">
               <span className="text-xs font-bold uppercase tracking-[0.14em] text-white/45">
-                Descrição do anexo
+                {t("description")}
               </span>
 
               <input
@@ -290,7 +301,7 @@ export default function DocumentsTab({
                 disabled={
                   isUploading || !canUpload
                 }
-                placeholder="Ex.: Passaporte, RG frente, contrato..."
+                placeholder={t("descriptionPlaceholder")}
                 onChange={(event) =>
                   setDescription(
                     event.target.value,
@@ -325,8 +336,8 @@ export default function DocumentsTab({
             className="mt-5 rounded-xl bg-pink-300 px-5 py-3 text-xs font-black uppercase tracking-[0.12em] text-[#321725] transition hover:bg-pink-200 disabled:cursor-not-allowed disabled:opacity-40"
           >
             {isUploading
-              ? "Enviando..."
-              : "Enviar arquivo"}
+              ? tCommon("sending")
+              : t("uploadFile")}
           </button>
 
           {!canUpload && (
@@ -352,12 +363,12 @@ export default function DocumentsTab({
 
       {isLoading ? (
         <div className="rounded-2xl border border-white/10 bg-black/20 p-8 text-center text-sm text-white/50">
-          Carregando documentos...
+          {t("loading")}
         </div>
       ) : documents.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-white/15 bg-black/20 p-8 text-center">
           <p className="text-sm text-white/55">
-            Nenhum documento enviado.
+            {t("empty")}
           </p>
         </div>
       ) : (
@@ -370,7 +381,7 @@ export default function DocumentsTab({
               <div className="flex items-start justify-between gap-4">
                 <div>
                   <p className="text-xs font-bold uppercase tracking-[0.14em] text-pink-300">
-                    Anexo {index + 1}
+                    {t("attachment", { index: index + 1 })}
                   </p>
 
                   <h3 className="mt-2 break-words text-lg font-bold text-white">
@@ -379,36 +390,35 @@ export default function DocumentsTab({
                 </div>
 
                 <span className="rounded-full border border-emerald-400/30 bg-emerald-500/10 px-3 py-1 text-xs font-bold uppercase tracking-[0.1em] text-emerald-300">
-                  Enviado
+                  {t("uploaded")}
                 </span>
               </div>
 
               <div className="mt-5 space-y-3">
                 <DocumentInfo
-                  label="Nome do arquivo"
+                  label={t("fileName")}
                   value={item.file_name}
                 />
 
                 <DocumentInfo
-                  label="Tipo"
+                  label={t("fileType")}
                   value={
                     item.mime_type ??
-                    "Não informado"
+                    tState("notInformed")
                   }
                 />
 
                 <DocumentInfo
-                  label="Tamanho"
+                  label={t("fileSize")}
                   value={formatFileSize(
                     item.file_size,
+                    tState("notInformed"),
                   )}
                 />
 
                 <DocumentInfo
-                  label="Enviado em"
-                  value={formatDateTime(
-                    item.created_at,
-                  )}
+                  label={t("uploadedAt")}
+                  value={formatDateTime(item.created_at, locale)}
                 />
               </div>
 
@@ -417,7 +427,7 @@ export default function DocumentsTab({
                   href={item.downloadUrl}
                   className="mt-5 inline-flex rounded-xl border border-emerald-400/30 bg-emerald-500/10 px-4 py-2.5 text-xs font-bold uppercase tracking-[0.1em] text-emerald-200 transition hover:bg-emerald-500/20"
                 >
-                  Baixar arquivo
+                  {tCommon("download")}
                 </a>
               ) : (
                 <p className="mt-5 text-sm text-red-300">
@@ -454,12 +464,13 @@ function DocumentInfo({
 
 function formatFileSize(
   size: number | null,
+  fallback: string,
 ) {
   if (
     size === null ||
     !Number.isFinite(size)
   ) {
-    return "Não informado";
+    return fallback;
   }
 
   if (size < 1024) {
@@ -478,23 +489,12 @@ function formatFileSize(
   ).toFixed(1)} MB`;
 }
 
-function formatDateTime(
-  value: string,
-) {
+function formatDateTime(value: string, locale: Locale) {
   const date = new Date(value);
 
   if (Number.isNaN(date.getTime())) {
     return value;
   }
 
-  return new Intl.DateTimeFormat(
-    "pt-BR",
-    {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    },
-  ).format(date);
+  return formatLocalizedDateTime(date, locale);
 }

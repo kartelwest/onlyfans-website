@@ -1768,6 +1768,26 @@
           "description": "Account or page used by the operation."
         }
       }
+    },
+    "documents": {
+      "title": "Uploaded files",
+      "addFile": "Add a file",
+      "description": "Attachment description",
+      "descriptionPlaceholder": "e.g. Passport, ID front, contract...",
+      "uploadFile": "Upload file",
+      "loading": "Loading documents...",
+      "empty": "No documents uploaded.",
+      "attachment": "Attachment {index}",
+      "uploaded": "Uploaded",
+      "fileName": "File name",
+      "fileType": "Type",
+      "fileSize": "Size",
+      "uploadedAt": "Uploaded on",
+      "loadFailed": "We couldn't load the documents.",
+      "uploadFailed": "We couldn't upload the file.",
+      "uploadSuccess": "File uploaded successfully.",
+      "descriptionRequired": "Write a description for the file.",
+      "fileRequired": "Choose a file."
     }
   },
   "owner": {

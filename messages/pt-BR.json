@@ -1768,6 +1768,26 @@
           "description": "Conta ou página utilizada pela operação."
         }
       }
+    },
+    "documents": {
+      "title": "Arquivos enviados",
+      "addFile": "Adicionar arquivo",
+      "description": "Descrição do anexo",
+      "descriptionPlaceholder": "Ex.: Passaporte, RG frente, contrato...",
+      "uploadFile": "Enviar arquivo",
+      "loading": "Carregando documentos...",
+      "empty": "Nenhum documento enviado.",
+      "attachment": "Anexo {index}",
+      "uploaded": "Enviado",
+      "fileName": "Nome do arquivo",
+      "fileType": "Tipo",
+      "fileSize": "Tamanho",
+      "uploadedAt": "Enviado em",
+      "loadFailed": "Não foi possível carregar os documentos.",
+      "uploadFailed": "Não foi possível enviar o arquivo.",
+      "uploadSuccess": "Arquivo enviado com sucesso.",
+      "descriptionRequired": "Escreva uma descrição para o arquivo.",
+      "fileRequired": "Selecione um arquivo."
     }
   },
   "owner": {
