@@ -5,10 +5,12 @@ import ModelImporterPanel from "@/components/admin/ModelImporterPanel";
 import { createClient } from "@/lib/supabase/server";
 import { getModelImporterAutoSave } from "@/lib/adminSettings";
 import type { ManagementRole } from "@/types/model";
+import { getTranslations } from "next-intl/server";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminImportPage() {
+  const t = await getTranslations("admin.importer");
   const supabase = await createClient();
 
   const {
@@ -47,12 +49,11 @@ export default async function AdminImportPage() {
             </p>
 
             <h1 className="mt-2 text-3xl font-bold sm:text-4xl">
-              Importar modelo (PDF/imagem)
+              {t("title")}
             </h1>
 
             <p className="mt-2 text-sm text-white/55">
-              Envie de 1 a 6 PDFs ou imagens com os dados de uma modelo e
-              deixe o Claude extrair as informações para você.
+              {t("intro")}
             </p>
           </div>
 
@@ -60,7 +61,7 @@ export default async function AdminImportPage() {
             href="/admin/models"
             className="rounded-xl border border-white/10 bg-white/5 px-5 py-3 text-sm font-semibold text-white/80 transition hover:bg-white/10"
           >
-            ← Voltar para modelos
+            {t("backToModels")}
           </Link>
         </header>
 

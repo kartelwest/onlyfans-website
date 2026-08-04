@@ -1491,6 +1491,12 @@
         "authDeleteFailed": "We couldn't delete the authentication account.",
         "profileDeleteFailed": "We couldn't remove the representative's profile.",
         "deleted": "Representative {name} permanently deleted."
+      },
+      "page": {
+        "eyebrow": "Team management",
+        "title": "Representatives",
+        "intro": "Activate, deactivate, archive or delete representatives. Administrators oversee every representative; only the owner can delete permanently.",
+        "add": "Add representative"
       }
     },
     "reassign": {
@@ -1535,7 +1541,10 @@
         "addModel": "Created a model",
         "updateModel": "Updated a model",
         "setModelStatus": "Changed a model's status"
-      }
+      },
+      "title": "Claude Assistant",
+      "intro": "Ask it to add, update or look up models in plain language.",
+      "backToModels": "← Back to models"
     },
     "proxy": {
       "title": "Infrastructure",
@@ -2124,7 +2133,7 @@
       "notesCount": "Notes written by this representative ({count})",
       "noNotes": "No notes recorded by this account.",
       "historyHeading": "Account history",
-      "noHistory": "No records yet. Status changes, detail edits and",
+      "noHistory": "Nothing recorded yet. Status changes, data edits and view-as sessions for this representative show up here.",
       "thisRepresentative": "this representative",
       "model": "Model",
       "system": "System",
@@ -2136,7 +2145,10 @@
         "viewAsEnter": "Entered preview as the representative",
         "viewAsExit": "Exited preview"
       },
-      "deleted": "deleted"
+      "deleted": "deleted",
+      "viewAsInactiveNote": "Viewing as the representative is only available for active accounts.",
+      "detailsNote": "The name shows on every note and every history entry this account creates, and only staff can change it.",
+      "accessNote": "The login and password live only in the authentication service — no password is stored in this system and none appears in the history. A password set here is temporary: the representative must change it at their next sign-in."
     },
     "ampliaDetail": {
       "brandGrowthClient": "Brand Growth Client",
@@ -2262,7 +2274,10 @@
       "readFailed": "We couldn't read the files.",
       "saveApplicantsFailed": "We couldn't save the applicants.",
       "ownerOnlySetting": "Only the owner can change this.",
-      "showFace": "Comfortable showing her face"
+      "showFace": "Comfortable showing her face",
+      "title": "Import model (PDF/image)",
+      "intro": "Upload 1 to 6 PDFs or images with a model's details and let Claude pull the information out for you.",
+      "backToModels": "← Back to models"
     },
     "newUser": {
       "roleWord": {

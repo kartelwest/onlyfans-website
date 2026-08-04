@@ -1491,6 +1491,12 @@
         "authDeleteFailed": "Não foi possível excluir a conta de autenticação.",
         "profileDeleteFailed": "Não foi possível remover o perfil do representante.",
         "deleted": "Representante {name} excluído permanentemente."
+      },
+      "page": {
+        "eyebrow": "Gestão de equipe",
+        "title": "Representantes",
+        "intro": "Ative, inative, arquive ou exclua representantes. Administradores supervisionam todos os representantes; apenas o proprietário pode excluir permanentemente.",
+        "add": "Adicionar representante"
       }
     },
     "reassign": {
@@ -1535,7 +1541,10 @@
         "addModel": "Criou uma modelo",
         "updateModel": "Atualizou uma modelo",
         "setModelStatus": "Alterou o status de uma modelo"
-      }
+      },
+      "title": "Assistente Claude",
+      "intro": "Peça para adicionar, atualizar ou consultar modelos usando linguagem natural.",
+      "backToModels": "← Voltar para modelos"
     },
     "proxy": {
       "title": "Infraestrutura",
@@ -2124,7 +2133,7 @@
       "notesCount": "Notas escritas por este representante ({count})",
       "noNotes": "Nenhuma nota registrada por esta conta.",
       "historyHeading": "Histórico da conta",
-      "noHistory": "Nenhum registro ainda. Mudanças de status, edições de dados e",
+      "noHistory": "Nenhum registro ainda. Mudanças de status, edições de dados e visualizações como este representante aparecem aqui.",
       "thisRepresentative": "este representante",
       "model": "Modelo",
       "system": "Sistema",
@@ -2136,7 +2145,10 @@
         "viewAsEnter": "Entrou na visualização como o representante",
         "viewAsExit": "Saiu da visualização"
       },
-      "deleted": "excluída"
+      "deleted": "excluída",
+      "viewAsInactiveNote": "A visualização como o representante fica disponível apenas para contas ativas.",
+      "detailsNote": "O nome aparece em cada nota e em cada registro de histórico que esta conta cria, e só a equipe pode alterá-lo.",
+      "accessNote": "O login e a senha ficam apenas no serviço de autenticação — não há senha guardada neste sistema e nenhuma senha aparece no histórico. Uma senha definida aqui é temporária: o representante terá de trocá-la no próximo acesso."
     },
     "ampliaDetail": {
       "brandGrowthClient": "Cliente Brand Growth",
@@ -2262,7 +2274,10 @@
       "readFailed": "Não foi possível ler os arquivos.",
       "saveApplicantsFailed": "Não foi possível salvar as candidatas.",
       "ownerOnlySetting": "Apenas o proprietário pode alterar isso.",
-      "showFace": "Confortável em mostrar o rosto"
+      "showFace": "Confortável em mostrar o rosto",
+      "title": "Importar modelo (PDF/imagem)",
+      "intro": "Envie de 1 a 6 PDFs ou imagens com os dados de uma modelo e deixe o Claude extrair as informações para você.",
+      "backToModels": "← Voltar para modelos"
     },
     "newUser": {
       "roleWord": {

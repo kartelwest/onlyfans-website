@@ -161,6 +161,7 @@ export default async function RepresentativeProfilePage({
   const t = await getTranslations("admin.representativeDetail");
   const tState = await getTranslations("common.states");
   const tStatus = await getTranslations("enums.representativeStatus");
+  const tModelStatus = await getTranslations("enums.modelStatus");
   const locale = toLocale(await getLocale());
 
   return (
@@ -229,8 +230,7 @@ export default async function RepresentativeProfilePage({
               </Link>
             ) : (
               <p className="rounded-xl border border-dashed border-white/15 px-4 py-3 text-center text-xs leading-5 text-white/40">
-                A visualização como o representante fica disponível apenas para
-                contas ativas.
+                {t("viewAsInactiveNote")}
               </p>
             )}
 
@@ -255,8 +255,7 @@ export default async function RepresentativeProfilePage({
           </h2>
 
           <p className="mt-2 text-xs leading-5 text-white/45">
-            O nome aparece em cada nota e em cada registro de histórico que esta
-            conta cria, e só a equipe pode alterá-lo.
+            {t("detailsNote")}
           </p>
 
           <div className="mt-5 max-w-xl">
@@ -275,10 +274,7 @@ export default async function RepresentativeProfilePage({
           </h2>
 
           <p className="mt-2 text-xs leading-5 text-white/45">
-            O login e a senha ficam apenas no serviço de autenticação — não há
-            senha guardada neste sistema e nenhuma senha aparece no histórico.
-            {t("temporaryPasswordNote")}
-            no próximo acesso.
+            {t("accessNote")}
           </p>
 
           <div className="mt-5 max-w-xl">
@@ -310,9 +306,9 @@ export default async function RepresentativeProfilePage({
                     <p className="truncate font-bold">{model.display_name}</p>
 
                     <p className="mt-1 text-xs text-white/45">
-                      {STATUS_TEXT[
-                        normalizeModelStatus(model.status, model.active)
-                      ] ?? "—"}{" "}
+                      {tModelStatus(
+                        normalizeModelStatus(model.status, model.active),
+                      )}{" "}
                       · {t("onboardingPct", { pct: model.onboarding_percentage ?? 0 })}
                     </p>
                   </div>
@@ -392,7 +388,6 @@ export default async function RepresentativeProfilePage({
           {activity.length === 0 ? (
             <p className="px-6 py-10 text-center text-sm text-white/50">
               {t("noHistory")}
-              visualizações como este representante aparecem aqui.
             </p>
           ) : (
             <ul className="divide-y divide-white/10">
@@ -423,13 +418,6 @@ export default async function RepresentativeProfilePage({
     </main>
   );
 }
-
-const STATUS_TEXT: Record<string, string> = {
-  active: "Ativa",
-  inactive: "Inativa",
-  candidate: "Candidata",
-  denied: "Negada",
-};
 
 function Info({ label, value }: { label: string; value: string }) {
   return (

@@ -5,6 +5,7 @@ import { type RepresentativeModel } from "@/components/admin/RepresentativeModel
 
 import { createClient } from "@/lib/supabase/server";
 import RepresentativesClient from "./RepresentativesClient";
+import { getTranslations } from "next-intl/server";
 
 export const dynamic = "force-dynamic";
 
@@ -33,6 +34,7 @@ export default async function RepresentativesPage({
 }: {
   searchParams: Promise<{ status?: string }>;
 }) {
+  const t = await getTranslations("admin.representatives.page");
   const { status: statusParam } = await searchParams;
 
   const statusFilter = STATUS_OPTIONS.some((option) => option.value === statusParam)
@@ -116,15 +118,13 @@ export default async function RepresentativesPage({
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <p className="text-xs font-bold uppercase tracking-[0.2em] text-pink-300">
-              Gestão de equipe
+              {t("eyebrow")}
             </p>
 
-            <h1 className="mt-2 text-3xl font-bold">Representantes</h1>
+            <h1 className="mt-2 text-3xl font-bold">{t("title")}</h1>
 
             <p className="mt-2 max-w-2xl text-sm text-white/50">
-              Ative, inative, arquive ou exclua representantes. Administradores
-              supervisionam todos os representantes; apenas o proprietário pode
-              excluir permanentemente.
+              {t("intro")}
             </p>
           </div>
 
@@ -132,7 +132,7 @@ export default async function RepresentativesPage({
             href="/admin/users/new?role=representative"
             className="rounded-xl bg-pink-500 px-5 py-3 text-center text-sm font-bold text-white transition hover:bg-pink-400"
           >
-            Adicionar representante
+            {t("add")}
           </Link>
         </div>
 

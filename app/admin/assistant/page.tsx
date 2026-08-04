@@ -4,10 +4,12 @@ import { redirect } from "next/navigation";
 import ChatAssistant from "@/components/admin/ChatAssistant";
 import { createClient } from "@/lib/supabase/server";
 import type { ManagementRole } from "@/types/model";
+import { getTranslations } from "next-intl/server";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminAssistantPage() {
+  const t = await getTranslations("admin.assistant");
   const supabase = await createClient();
 
   const {
@@ -44,12 +46,11 @@ export default async function AdminAssistantPage() {
             </p>
 
             <h1 className="mt-2 text-3xl font-bold sm:text-4xl">
-              Assistente Claude
+              {t("title")}
             </h1>
 
             <p className="mt-2 text-sm text-white/55">
-              Peça para adicionar, atualizar ou consultar modelos usando
-              linguagem natural.
+              {t("intro")}
             </p>
           </div>
 
@@ -57,7 +58,7 @@ export default async function AdminAssistantPage() {
             href="/admin/models"
             className="rounded-xl border border-white/10 bg-white/5 px-5 py-3 text-sm font-semibold text-white/80 transition hover:bg-white/10"
           >
-            ← Voltar para modelos
+            {t("backToModels")}
           </Link>
         </header>
 
