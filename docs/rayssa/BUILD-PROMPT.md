@@ -247,6 +247,20 @@ trigger source stays swappable.
 RAYSSA lives **in the karaymodels repository**, as a sibling application with its own
 dependency tree and its own build. It is not a route inside the existing app.
 
+**The reason is the database, not the convenience.** Section 3.3 puts RAYSSA and KARAY on
+one Supabase project. A Postgres database has exactly one schema history, and
+`supabase/migrations/` is the file that records it. Split across two repositories, two
+migration directories apply to one database and neither knows what the other has run:
+timestamps interleave in ways no checkout reflects, `supabase migration list` disagrees with
+reality, drift detection is meaningless, and rolling back means reconstructing the true
+order by hand from two histories. That is not a process problem to be managed carefully —
+it is a structurally broken setup, and the failure surfaces as a production migration that
+half-applies.
+
+One repository makes `supabase/migrations/` a single ordered timeline for the one database
+that exists. The code-reuse benefits below are real but secondary; this is the load-bearing
+argument.
+
 ```
 karaymodels/                 ← repository root
 ├── app/                     ← the existing marketing site + admin. UNCHANGED.
@@ -299,6 +313,19 @@ layout exists to prevent:
 Make these three edits in their own commit, before any RAYSSA code is written, and confirm
 `npm run typecheck && npm run lint && npm test && npm run build` still passes at the root.
 **Nothing else in the existing application may be modified at any point in this build.**
+
+**Migrations are the one exception to the `rayssa/` boundary.** RAYSSA's migrations go in the
+**root** `supabase/migrations/` directory alongside KARAY's — that is the whole point of the
+single timeline above. There is no `rayssa/supabase/` directory. Two rules make this safe:
+
+- **Only ever add new timestamped files.** Appending a migration cannot affect KARAY.
+- **Never edit, reorder, or delete an existing migration.** Those have already run against
+  production; changing one silently desynchronises the recorded history from the real schema.
+
+Name RAYSSA's migrations so the boundary is legible at a glance —
+`20260812000000_rayssa_users.sql`, `20260813000000_rayssa_assets.sql` — and keep every object
+they create inside the `rayssa` schema, except the one `security definer` checklist function
+described in 3.3.
 
 **Do not import across the boundary.** RAYSSA must never `import` from `../lib/...`. The two
 applications have separate dependency trees and separate builds; a cross-boundary import

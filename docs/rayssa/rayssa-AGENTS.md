@@ -23,9 +23,21 @@ Not to fix a type error. Not to update a dependency. Not to correct something th
 genuinely wrong. If a change outside `rayssa/` appears necessary, stop and ask — do not make
 it and mention it afterwards.
 
-The three exceptions are the one-time build-isolation commit described in spec section 3.6
+**One standing exception: `supabase/migrations/` at the repository root.** RAYSSA and KARAY
+share a single database, so they share a single migration timeline — there is no
+`rayssa/supabase/` directory. You may **add** new timestamped migration files there, named
+`<timestamp>_rayssa_<thing>.sql`. You may **never** edit, reorder, or delete an existing
+migration: those have already run against production, and changing one desynchronises the
+recorded history from the real schema. Every object you create belongs to the `rayssa`
+schema, with the single `security definer` checklist function from spec 3.3 as the only
+exception.
+
+The other exception is one-time and not yours: the build-isolation commit in spec 3.6
 (`tsconfig.json` exclude, `eslint.config.mjs` ignore, `.gitignore`), which the owner applies
-before your first session. After that commit, `rayssa/` is your entire writable surface.
+before your first session.
+
+So your writable surface is: everything under `rayssa/`, plus new files in
+`supabase/migrations/`. Nothing else, ever.
 
 **Never import across the boundary.** No `import … from "../lib/..."`. The two applications
 have separate dependency trees and separate builds. Port the code you need into `rayssa/`

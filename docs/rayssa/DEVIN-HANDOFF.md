@@ -72,10 +72,16 @@ Three controls, all of which you set up once:
 - [ ] **`rayssa/AGENTS.md` rule zero** — read-anywhere, write-only-inside-`rayssa/`. It is
       the first thing in the file for a reason.
 - [ ] **Check the file list on every pull request before reading the diff.** `git diff
-      --name-only` should show `rayssa/` paths and nothing else. One glance. If anything
-      outside appears, reject it without evaluating whether the change was good — a correct
-      edit made outside its scope is still a scope failure, and accepting one teaches the
-      pattern.
+      --name-only` should show `rayssa/` paths, plus **new** files in `supabase/migrations/`,
+      and nothing else. One glance. If anything else appears, reject it without evaluating
+      whether the change was good — a correct edit made outside its scope is still a scope
+      failure, and accepting one teaches the pattern.
+- [ ] **On migrations specifically: confirm the file is new, not an edit.** RAYSSA and KARAY
+      share one migration timeline (spec 3.6). A *new* timestamped file cannot hurt KARAY. A
+      *modified* existing migration desynchronises the recorded schema history from what
+      actually ran against production, and you will not find out until the next restore or
+      the next environment rebuild. In the PR's file list these look nearly identical —
+      check for `M` versus `A`.
 
 The exception is the one-time build-isolation commit from spec section 3.6 — the
 `tsconfig.json` exclude, the `eslint.config.mjs` ignore, and the `.gitignore` lines. **You
