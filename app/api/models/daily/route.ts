@@ -13,6 +13,7 @@ import {
   resolveDailyAccess,
   syncDailyItems,
 } from "@/lib/daily/server";
+import { resetDailyChecklistIfDue } from "@/lib/daily/reset";
 
 import type { ManagementRole } from "@/types/model";
 
@@ -101,7 +102,16 @@ export async function GET(request: Request) {
       return fail(tRoute("noViewPermission"), 403);
     }
 
-    await syncDailyItems({ admin: createAdminClient(), modelId });
+    const admin = createAdminClient();
+
+    await syncDailyItems({ admin, modelId });
+
+    // Close any day this model is still carrying before showing her list. The
+    // nightly cron normally does this; running it here too means the checklist
+    // still starts each day empty if that cron has not fired — a missing
+    // CRON_SECRET should cost the "NÃO FOI TRABALHADO" notes for models nobody
+    // opens, not the reset itself.
+    await resetDailyChecklistIfDue(admin, modelId);
 
     const { sections, summary } = await loadDaily({
       supabase: auth.supabase,

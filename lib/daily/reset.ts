@@ -105,6 +105,54 @@ export async function resetDailyChecklists(
   return result;
 }
 
+/**
+ * The same rollover, for one model, run on read.
+ *
+ * The nightly cron is the tidy way to close a day, but it is not the only way
+ * this may happen: it needs CRON_SECRET configured, and a checklist that
+ * silently keeps yesterday's ticks because an environment variable is missing
+ * is worse than one that closes its own day slightly late. So opening a
+ * model's Daily tab also closes any day she is still carrying — exactly what
+ * snapshotDueLedgerEntries does for the ledger.
+ *
+ * Costs nothing on the common path: `daily_reset_on` already holds today, so
+ * this is one indexed lookup and a return.
+ */
+export async function resetDailyChecklistIfDue(
+  admin: SupabaseClient,
+  modelId: string,
+  now: Date = new Date(),
+): Promise<boolean> {
+  const day = agencyToday(now);
+
+  const { data: model, error } = await admin
+    .from("models")
+    .select("id, display_name, active, daily_reset_on")
+    .eq("id", modelId)
+    .maybeSingle<ModelRow & { active: boolean | null; daily_reset_on: string | null }>();
+
+  if (error || !model) {
+    return false;
+  }
+
+  // Already closed today, or a model the nightly job would skip anyway.
+  if (model.daily_reset_on === day || model.active !== true) {
+    return false;
+  }
+
+  const result: DailyResetResult = {
+    day,
+    modelsProcessed: 0,
+    modelsNotWorked: 0,
+    itemsCleared: 0,
+    errors: [],
+  };
+
+  await resetOneModel(admin, model, day, result);
+
+  return true;
+}
+
 async function resetOneModel(
   admin: SupabaseClient,
   model: ModelRow,
