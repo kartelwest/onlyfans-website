@@ -8,7 +8,6 @@ import {
   DAILY_NOTE_MAX_LENGTH,
   findDailyItem,
 } from "@/lib/daily/definition";
-import { DEFAULT_LOCALE } from "@/lib/i18n/config";
 import {
   loadDaily,
   resolveDailyAccess,
@@ -125,15 +124,12 @@ export async function GET(request: Request) {
 export async function PATCH(request: Request) {
   const t = await getTranslations("errors.api");
   const tRoute = await getTranslations("errors.dailyApi");
-  // Pinned to the product's first language, not the writer's. What gets stored
-  // is the raw record; the History tab renders daily rows in the reader's
-  // language from the item key and the tokens below, so a summary written in
-  // whoever-happened-to-be-logged-in's language would only make the stored
-  // trail inconsistent with itself.
-  const tDaily = await getTranslations({
-    locale: DEFAULT_LOCALE,
-    namespace: "daily",
-  });
+  // The writer's language, deliberately. A history entry records what someone
+  // did, in the words they did it in: it is written once and never re-rendered,
+  // so an English admin's entry stays English and a Portuguese admin's stays
+  // Portuguese, whoever reads it later.
+  const tDaily = await getTranslations("daily");
+  const tAudit = await getTranslations("daily.audit");
 
   try {
     const auth = await getAuthenticatedProfile();
@@ -247,23 +243,17 @@ export async function PATCH(request: Request) {
     // Every tick and every note lands in the model's history. Two separate
     // rows when both moved at once, so each reads on its own.
     if (togglingBox) {
-      // previous/new are machine tokens, not words, and the summary is written
-      // in the product's first language like every other route. Neither is what
-      // the History tab shows for a daily row: it rebuilds the sentence from
-      // the item key and these tokens, in the reader's language. Storing the
-      // writer's language here instead would make the history read half in
-      // Portuguese and half in English depending on who clicked.
       await logAuditEntry(auth.supabase, {
         modelId,
         action: DAILY_ACTION,
         fieldName: itemKey,
-        previousValue: existing.completed ? "completed" : "pending",
-        newValue: body.completed ? "completed" : "pending",
+        previousValue: existing.completed
+          ? tAudit("done")
+          : tAudit("pending"),
+        newValue: body.completed ? tAudit("done") : tAudit("pending"),
         actor,
         source: "api:/api/models/daily",
-        summary: `Daily — "${title}" ${
-          body.completed ? "marcada como concluída" : "reaberta"
-        }`,
+        summary: tAudit(body.completed ? "checked" : "unchecked", { title }),
       });
     }
 
@@ -278,8 +268,8 @@ export async function PATCH(request: Request) {
         source: "api:/api/models/daily",
         summary:
           nextNotes === ""
-            ? `Daily — nota removida de "${title}"`
-            : `Daily — nota em "${title}": ${excerpt(nextNotes ?? "")}`,
+            ? tAudit("noteCleared", { title })
+            : tAudit("noteSaved", { title, note: excerpt(nextNotes ?? "") }),
       });
     }
 

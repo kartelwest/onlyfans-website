@@ -142,73 +142,11 @@ export default function HistoryTab({
 }: HistoryTabProps) {
   const t = useTranslations("admin.history");
   const tRole = useTranslations("enums.role");
-  const tDaily = useTranslations("daily");
   const locale = toLocale(useLocale());
 
   /** Falls back to the raw action when the catalog has no entry for it. */
   const actionLabel = (action: string) =>
     ACTION_KEYS[action] ? t(`actions.${ACTION_KEYS[action]}`) : action;
-
-  /**
-   * A daily row, rebuilt in the reader's language.
-   *
-   * Every other action stores its sentence and the tab prints it, which means
-   * whoever wrote it decided what language the reader gets. The daily rows
-   * store the facts instead — the item key in `fieldName`, and "completed" /
-   * "pending" tokens in the values — so the sentence can be assembled here,
-   * in Portuguese for a Portuguese reader and English for an English one.
-   *
-   * Returns null for anything it cannot rebuild (an older row, an item key
-   * that has since left the checklist), and the caller prints what was stored.
-   */
-  const dailySummary = (entry: AuditEntry): string | null => {
-    if (entry.action !== "daily_update" || !entry.fieldName) {
-      return null;
-    }
-
-    const isNote = entry.fieldName.endsWith(".notes");
-
-    const [sectionKey, itemKey] = (
-      isNote ? entry.fieldName.slice(0, -".notes".length) : entry.fieldName
-    ).split(".");
-
-    if (!sectionKey || !itemKey) {
-      return null;
-    }
-
-    const titleKey = `items.${sectionKey}.${itemKey}.title`;
-
-    if (!tDaily.has(titleKey)) {
-      return null;
-    }
-
-    const title = tDaily(titleKey);
-
-    if (isNote) {
-      const note = (entry.newValue ?? "").trim();
-
-      return note === ""
-        ? tDaily("audit.noteCleared", { title })
-        : tDaily("audit.noteSaved", { title, note });
-    }
-
-    return tDaily(
-      entry.newValue === "completed" ? "audit.checked" : "audit.unchecked",
-      { title },
-    );
-  };
-
-  /** The stored "completed"/"pending" tokens, in the reader's language. */
-  const dailyValue = (entry: AuditEntry, value: string): string => {
-    if (entry.action !== "daily_update" || entry.fieldName?.endsWith(".notes")) {
-      return value;
-    }
-
-    if (value === "completed") return tDaily("audit.done");
-    if (value === "pending") return tDaily("audit.pending");
-
-    return value;
-  };
 
   const roleLabel = (role: string) =>
     role === "owner" ||
@@ -337,8 +275,14 @@ export default function HistoryTab({
                       )}
                     </div>
 
+                    {/*
+                      Printed exactly as it was recorded. An entry is a record
+                      of something someone did, in the words they did it in —
+                      re-rendering it in the reader's language would rewrite
+                      history every time the switcher moved.
+                    */}
                     <p className="mt-1 text-sm text-zinc-200">
-                      {dailySummary(entry) ?? entry.summary}
+                      {entry.summary}
                     </p>
 
                     {entry.previousValue !== null &&
@@ -347,13 +291,13 @@ export default function HistoryTab({
                           <span className="text-zinc-500">
                             {t("before")}{" "}
                             <span className="text-zinc-300">
-                              {dailyValue(entry, entry.previousValue)}
+                              {entry.previousValue}
                             </span>
                           </span>
                           <span className="text-zinc-500">
                             {t("after")}{" "}
                             <span className="text-zinc-300">
-                              {dailyValue(entry, entry.newValue)}
+                              {entry.newValue}
                             </span>
                           </span>
                         </div>
