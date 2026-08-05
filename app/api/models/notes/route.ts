@@ -3,6 +3,7 @@ import { getTranslations } from "next-intl/server";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 import { createClient } from "@/lib/supabase/server";
+import { logAuditEntry } from "@/lib/audit/auditLogger";
 
 type ManagementRole =
     | "owner"
@@ -23,6 +24,7 @@ type NotesRequestBody = {
     priority?: unknown;
     pinned?: unknown;
     archived?: unknown;
+    repVisible?: unknown;
 };
 
 type AuthenticatedProfile = {
@@ -31,9 +33,10 @@ type AuthenticatedProfile = {
     role: ManagementRole;
 };
 
-// Notes are internal agency records: owner, administrator, and the model's
-// assigned representative (who may read only their own notes). RLS enforces
-// the rep boundary, so the API lets them in and trusts the database filter.
+// Notes are internal agency records. Owner and administrator read all of them;
+// the model's assigned representative reads the ones she wrote plus any an
+// administrator has shared with her (model_notes.rep_visible). RLS enforces
+// that boundary, so the API lets her in and trusts the database filter.
 const allowedRoles: ManagementRole[] = [
     "owner",
     "administrator",
@@ -57,6 +60,7 @@ const NOTE_COLUMNS = `
     deleted_by,
     deleted_by_name,
     created_context,
+    rep_visible,
     source,
     ledger_entry_id,
     created_by,
@@ -626,6 +630,16 @@ export async function PATCH(
             });
         }
 
+        if (action === "rep-visible") {
+            return toggleRepVisible({
+                supabase,
+                profile,
+                existingNote,
+                modelId,
+                requestBody,
+            });
+        }
+
         if (action === "soft-delete") {
             return softDeleteNote({
                 supabase,
@@ -1121,6 +1135,126 @@ async function togglePin({
             },
         );
     }
+
+    return NextResponse.json({
+        note: mapNote(
+            updatedNote,
+            tRoute("unknownUser"),
+        ),
+    });
+}
+
+/**
+ * Share a note with the model's representative, or stop sharing it.
+ *
+ * Staff-only, and the database says so too: guard_note_rep_visible refuses the
+ * column to anyone who is not is_staff(), so a representative cannot widen the
+ * audience of her own note by calling this route with a forged body.
+ */
+async function toggleRepVisible({
+    supabase,
+    profile,
+    existingNote,
+    modelId,
+    requestBody,
+}: {
+    supabase: SupabaseClient;
+    profile: AuthenticatedProfile;
+    existingNote: Record<
+        string,
+        unknown
+    >;
+    modelId: string;
+    requestBody: NotesRequestBody;
+}) {
+    const tRoute = await getTranslations(
+        "errors.notesApi",
+    );
+
+    if (
+        profile.role !== "owner" &&
+        profile.role !==
+            "administrator"
+    ) {
+        return NextResponse.json(
+            {
+                error:
+                    tRoute("noSharePermission"),
+            },
+            {
+                status: 403,
+            },
+        );
+    }
+
+    const repVisible =
+        typeof requestBody.repVisible ===
+        "boolean"
+            ? requestBody.repVisible
+            : !Boolean(
+                  existingNote.rep_visible,
+              );
+
+    const {
+        data: updatedNote,
+        error: updateError,
+    } = await supabase
+        .from("model_notes")
+        .update({
+            rep_visible: repVisible,
+            updated_by: profile.id,
+            updated_by_name:
+                profile.fullName,
+            updated_by_role:
+                profile.role,
+            updated_at:
+                new Date().toISOString(),
+        })
+        .eq("id", existingNote.id)
+        .eq("model_id", modelId)
+        .select(NOTE_COLUMNS)
+        .single();
+
+    if (updateError || !updatedNote) {
+        console.error(
+            "Erro ao compartilhar nota com o representante:",
+            updateError,
+        );
+
+        return NextResponse.json(
+            {
+                error:
+                    tRoute("shareFailed"),
+            },
+            {
+                status: 500,
+            },
+        );
+    }
+
+    // Deliberately not written to model_note_history: that table records
+    // changes to the note's TEXT, and its rows carry the body twice. Who may
+    // read a note is an access change, so it belongs in the audit trail.
+    await logAuditEntry(supabase, {
+        modelId,
+        action: "note_visibility_changed",
+        fieldName: "rep_visible",
+        previousValue: Boolean(existingNote.rep_visible)
+            ? "visível ao representante"
+            : "interna",
+        newValue: repVisible
+            ? "visível ao representante"
+            : "interna",
+        actor: {
+            id: profile.id,
+            fullName: profile.fullName,
+            role: profile.role,
+        },
+        source: "api:/api/models/notes",
+        summary: repVisible
+            ? "Nota compartilhada com o representante"
+            : "Nota deixou de ser visível ao representante",
+    });
 
     return NextResponse.json({
         note: mapNote(
@@ -1697,6 +1831,7 @@ function createPermissions(
 
     return {
         canCreate: isStaff || isRep,
+        canShareWithRep: isStaff,
         // A representative may correct what she wrote — and only what she
         // wrote. RLS shows her nothing but her own notes, so this flag needs no
         // per-note qualifier on her side; the API and a database trigger check
@@ -1735,6 +1870,9 @@ function mapNote(
         ),
         archived: Boolean(
             note.archived,
+        ),
+        repVisible: Boolean(
+            note.rep_visible,
         ),
         // 'ledger' notes are the model-facing face of an expense or loan:
         // deleting one also removes the entry, so the UI has to say so.

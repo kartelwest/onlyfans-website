@@ -1376,7 +1376,9 @@
       "unexpectedLoad": "Something went wrong while loading the notes.",
       "unexpectedAdd": "Something went wrong while adding the note.",
       "unexpectedUpdate": "Something went wrong while updating the note.",
-      "unexpectedDelete": "Something went wrong while deleting the note."
+      "unexpectedDelete": "Something went wrong while deleting the note.",
+      "noSharePermission": "You do not have permission to share notes with the representative.",
+      "shareFailed": "Could not change who can read this note."
     },
     "parseClaude": {
       "noPermission": "You do not have permission to use this feature.",
@@ -1697,7 +1699,8 @@
         "note_pinned": "Note pinned",
         "note_unpinned": "Note unpinned",
         "note_archived": "Note archived",
-        "note_restored": "Note restored"
+        "note_restored": "Note restored",
+        "note_visibility_changed": "Note visibility changed"
       }
     },
     "photoUpload": {
@@ -2631,7 +2634,10 @@
       "emptyActiveTitle": "No active notes",
       "updateFailed": "Could not update the note.",
       "hardDeleteTitle": "Delete this note for good?",
-      "softDeleteTitle": "Delete this note?"
+      "softDeleteTitle": "Delete this note?",
+      "readableByRep": "Readable by the representative",
+      "shareFailed": "Could not change who can read this note.",
+      "createdBy": "Created by"
     },
     "brandGrowth": {
       "enrollFailed": "Could not enrol the model.",

@@ -4,6 +4,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import ModelDashboardView from "@/components/model-dashboard/ModelDashboardView";
 import NotesTab from "@/components/admin/model/NotesTab";
+import HistoryTab from "@/components/admin/model/HistoryTab";
 import { isStaffRole } from "@/lib/auth/roles";
 import { loadProfileWithStatus } from "@/lib/staff/profileLifecycle";
 import {
@@ -84,6 +85,20 @@ export default async function RepresentativeModelDashboardPage({
     >
       <div className="mt-6">
         <NotesTab
+          modelId={id}
+          currentUserRole="representative"
+        />
+      </div>
+
+      {/*
+        The onboarding trail, under everything else. A representative sees the
+        checklist half of the audit history and nothing else — the allowlist is
+        public.rep_visible_audit_action() in the database, mirrored by
+        /api/models/history. Credential changes, proxy details, the financial
+        trail and the view-as records stay staff-only.
+      */}
+      <div className="mt-6">
+        <HistoryTab
           modelId={id}
           currentUserRole="representative"
         />
