@@ -30,6 +30,8 @@ const NOTE_ACTION_PREFIX = "note_";
 const REP_VISIBLE_AUDIT_ACTIONS = [
   "onboarding_update",
   "checklist_update",
+  "daily_update",
+  "daily_reset",
 ];
 
 /** Catalogue keys under `admin.notes.actions`, keyed by the stored action. */

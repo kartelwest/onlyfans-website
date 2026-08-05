@@ -1016,8 +1016,8 @@
       "emprestimo": "Empréstimo"
     },
     "ledgerProvider": {
-      "uber": "Uber",
       "99": "99",
+      "uber": "Uber",
       "indrive": "inDrive"
     },
     "deductionStatus": {
@@ -1422,7 +1422,8 @@
     },
     "cron": {
       "notConfigured": "Cron não configurado.",
-      "unauthorized": "Não autorizado."
+      "unauthorized": "Não autorizado.",
+      "failed": "Falha ao executar a rotina."
     },
     "brand": {
       "clientNotFound": "Cliente não encontrado.",
@@ -1467,6 +1468,16 @@
       "authorizationExpired": "A autorização do Instagram expirou. Reconecte a conta.",
       "restricted": "A conta foi restrita. Reveja antes de publicar.",
       "suspended": "A conta está suspensa. Não publique até a recuperação."
+    },
+    "dailyApi": {
+      "noViewPermission": "Sem permissão para ver este checklist diário.",
+      "noEditPermission": "Você não tem permissão para editar este checklist diário.",
+      "unknownStep": "Item do checklist diário desconhecido.",
+      "stepNotFound": "Item do checklist diário não encontrado.",
+      "stepLookupFailed": "Erro interno ao buscar o item.",
+      "stepUpdateFailed": "Não foi possível atualizar este item.",
+      "loadFailed": "Erro interno ao carregar o checklist diário.",
+      "unexpected": "Erro interno ao atualizar o checklist diário."
     }
   },
   "validation": {
@@ -1700,7 +1711,9 @@
         "note_unpinned": "Nota desafixada",
         "note_archived": "Nota arquivada",
         "note_restored": "Nota restaurada",
-        "note_visibility_changed": "Visibilidade da nota alterada"
+        "note_visibility_changed": "Visibilidade da nota alterada",
+        "daily_update": "Daily atualizado",
+        "daily_reset": "Daily reiniciado (novo dia)"
       }
     },
     "photoUpload": {
@@ -1763,8 +1776,7 @@
         "model": "Modelo",
         "status": "Status",
         "onboarding": "Onboarding",
-        "website": "Website",
-        "drive": "Google Drive",
+        "daily": "Daily",
         "onlyfans": "OnlyFans",
         "fansly": "Fansly",
         "notes": "Notas",
@@ -1807,16 +1819,17 @@
       "operationalLimit": "Limite operacional: 30 modelos",
       "representativeView": "Visão do representante",
       "modelView": "Visão da modelo",
-      "progress": "Progresso"
+      "progress": "Progresso",
+      "dailyHint": "Checklist diário — abra o perfil e vá até a aba Daily para marcar."
     },
     "modelPage": {
       "tabs": {
         "summary": "Resumo",
+        "daily": "Daily",
         "checklist": "Status",
         "platforms": "Plataformas",
         "onlyfans": "OnlyFans",
         "fansly": "Fansly",
-        "drive": "Google Drive",
         "documents": "Documentos",
         "earnings": "Ganhos e lançamentos",
         "payments": "Pagamentos",
@@ -1857,7 +1870,6 @@
       "onboardingComplete": "Onboarding concluído",
       "onboardingIncomplete": "Onboarding ainda não concluído",
       "fanslyDescription": "Informações completas da conta Fansly administrada pela agência.",
-      "driveDescription": "Pastas, links, acesso e envio de conteúdo.",
       "checklistItems": {
         "onlyfans": {
           "title": "OnlyFans",
@@ -2684,6 +2696,43 @@
       "open": "Abrir",
       "newClientTitle": "Novo cliente Amplia",
       "newClientIntro": "Criar um cliente sem vinculação ao /admin/models."
+    },
+    "dailyPanel": {
+      "eyebrow": "Rotina diária",
+      "title": "Checklist diário de marketing",
+      "intro": "Todo o trabalho de divulgação do dia, plataforma por plataforma. Marque cada item conforme for concluído e use a nota para registrar o que foi feito. As caixas são zeradas todo dia à meia-noite (horário de Brasília).",
+      "loading": "Carregando o checklist diário…",
+      "loadFailed": "Não foi possível carregar o checklist diário.",
+      "progress": "Progresso",
+      "total": "Total",
+      "completed": "Concluídos",
+      "withNotes": "Com nota",
+      "stepsCompleted": "{done} de {total} itens concluídos hoje",
+      "block": "Bloco {order}",
+      "sectionProgress": "{done} de {total} concluídos",
+      "readOnly": "Visualização somente — você não pode marcar itens desta modelo.",
+      "noMatches": "Nenhum item corresponde ao filtro selecionado.",
+      "markComplete": "Marcar como concluído",
+      "markPending": "Marcar como pendente",
+      "completedOn": "Concluído em {when}",
+      "showNote": "Nota",
+      "hideNote": "Fechar nota",
+      "noteLabel": "Nota",
+      "noteOptional": "opcional",
+      "notePlaceholder": "O que foi feito, o que funcionou, o que ficou para amanhã…",
+      "saving": "salvando…",
+      "saved": "salvo",
+      "bandLegend": "Até 60% vermelho · de 61% a 85% amarelo · 86% ou mais verde.",
+      "bands": {
+        "red": "Abaixo do esperado",
+        "yellow": "Quase lá",
+        "green": "Dia cumprido"
+      },
+      "filters": {
+        "pending": "Pendentes",
+        "done": "Concluídos",
+        "notes": "Com nota"
+      }
     }
   },
   "owner": {
@@ -3187,6 +3236,347 @@
         "label": "Nome completo (nome da atriz)",
         "location": "Resumo"
       }
+    }
+  },
+  "daily": {
+    "sections": {
+      "war_plan": {
+        "title": "Plano de guerra diário (60–90 min)"
+      },
+      "onlyfans_page": {
+        "title": "OnlyFans — página e conteúdo"
+      },
+      "onlyfans_chat": {
+        "title": "OnlyFans — chat e vendas"
+      },
+      "retention": {
+        "title": "Retenção e renovação"
+      },
+      "twitter": {
+        "title": "X / Twitter"
+      },
+      "reddit": {
+        "title": "Reddit"
+      },
+      "instagram": {
+        "title": "Instagram"
+      },
+      "tiktok": {
+        "title": "TikTok"
+      },
+      "youtube_facebook": {
+        "title": "YouTube e Facebook"
+      },
+      "collabs_growth": {
+        "title": "Colaborações e crescimento"
+      },
+      "safety": {
+        "title": "Segurança e backup"
+      }
+    },
+    "items": {
+      "war_plan": {
+        "x_posts": {
+          "title": "X: 3 posts (15 min)",
+          "description": "Três publicações no X/Twitter: um gancho, uma prévia e uma chamada para ação."
+        },
+        "reddit_rounds": {
+          "title": "Reddit: 5 subreddits (25 min)",
+          "description": "Publicar em cinco subreddits diferentes, respeitando as regras de cada um."
+        },
+        "short_video": {
+          "title": "Instagram/TikTok: 1 reel (15 min)",
+          "description": "Um vídeo curto de 7 a 12 segundos, com gancho visual nos dois primeiros segundos."
+        },
+        "collab_outreach": {
+          "title": "Prospecção: 10 DMs (10 min)",
+          "description": "Dez mensagens para criadoras do mesmo nicho propondo divulgação mútua."
+        },
+        "onlyfans_post_and_dms": {
+          "title": "OnlyFans: 1 post + responder DMs (10–20 min)",
+          "description": "Uma publicação no feed e resposta a todas as mensagens do dia."
+        }
+      },
+      "onlyfans_page": {
+        "feed_post": {
+          "title": "Publicar no feed",
+          "description": "Pelo menos uma publicação nova por dia — é o que sustenta a assinatura."
+        },
+        "pinned_and_menu": {
+          "title": "Conferir posts fixados e menu",
+          "description": "Melhor conjunto de fotos, melhor prévia em vídeo e o menu de preços no topo do perfil."
+        },
+        "active_offer": {
+          "title": "Manter uma oferta ativa",
+          "description": "Desconto por tempo limitado, trial gratuito ou bundle — a página nunca fica sem motivo para assinar hoje."
+        },
+        "welcome_ppv": {
+          "title": "Boas-vindas + PPV de entrada",
+          "description": "A mensagem automática e um PPV barato nas primeiras 24 horas: é a hora em que o novo assinante mais compra."
+        },
+        "check_analytics": {
+          "title": "Conferir as métricas do dia",
+          "description": "Novos assinantes, cancelamentos, o que mais vendeu e de onde veio o tráfego."
+        }
+      },
+      "onlyfans_chat": {
+        "read_handoff": {
+          "title": "Ler a passagem do turno anterior",
+          "description": "Começar sabendo o que já foi conversado, prometido e vendido."
+        },
+        "answer_all_dms": {
+          "title": "Responder todas as DMs",
+          "description": "Nenhuma mensagem fica sem resposta no fim do turno. Resposta rápida é o que converte."
+        },
+        "proactive_outreach": {
+          "title": "Mensagem individual para quem já gastou",
+          "description": "Falar com os maiores gastadores e os fãs quentes citando o que cada um comprou ou pediu — nada de mensagem genérica."
+        },
+        "mass_message": {
+          "title": "Mensagem em massa (no máximo 2 a 3 por semana)",
+          "description": "Texto que soa pessoal e é enviado por lista. Mais do que isso queima a base."
+        },
+        "ppv_drop": {
+          "title": "Enviar o PPV do dia",
+          "description": "Conteúdo pago com prévia e preço definidos antes do envio."
+        },
+        "unsend_expired": {
+          "title": "Retirar PPV não comprado",
+          "description": "Cancelar o envio depois de 2 a 4 dias, para a oferta velha não ficar pendurada na caixa do fã."
+        },
+        "write_handoff": {
+          "title": "Escrever a passagem de turno",
+          "description": "Quem comprou, quem está quente e o que ficou prometido para o próximo turno."
+        }
+      },
+      "retention": {
+        "pre_renewal_touch": {
+          "title": "Contato antes da renovação",
+          "description": "De 3 a 5 dias antes de renovar, lembrar o assinante do porquê ele assinou e do que vem a seguir."
+        },
+        "winback_first_touch": {
+          "title": "1º contato de recuperação (dia 1)",
+          "description": "Quem acabou de cancelar recebe uma prévia do que está perdendo — sem desespero e sem desconto ainda."
+        },
+        "winback_discount": {
+          "title": "2º contato de recuperação (dias 5 a 7)",
+          "description": "Agora sim com incentivo real: renovação com desconto por um mês."
+        },
+        "thank_spenders": {
+          "title": "Agradecer gorjetas e compras",
+          "description": "Uma mensagem pessoal para cada compra do dia. É o que faz o fã comprar de novo."
+        },
+        "track_rebill": {
+          "title": "Acompanhar a taxa de renovação",
+          "description": "Anotar quantos renovaram e quantos cancelaram, para saber se a retenção está subindo ou caindo."
+        }
+      },
+      "twitter": {
+        "daily_posts": {
+          "title": "Publicar de 3 a 6 vezes",
+          "description": "Misturar mídia e personalidade ao longo do dia, não tudo de uma vez."
+        },
+        "post_formula": {
+          "title": "Seguir a fórmula gancho / prévia / CTA",
+          "description": "Cada bloco do dia tem um post de gancho, uma prévia curta e um post de conversão."
+        },
+        "peak_hours": {
+          "title": "Publicar no horário de pico",
+          "description": "Concentrar os posts principais no fim da noite, quando o público adulto está online."
+        },
+        "hashtags": {
+          "title": "Usar de 3 a 5 hashtags fortes",
+          "description": "Hashtags do nicho, sem tags banidas ou fantasmas."
+        },
+        "reply_big_accounts": {
+          "title": "Responder cedo em contas grandes",
+          "description": "Achar 10 contas grandes do nicho e responder nos primeiros 10 a 20 minutos do post."
+        },
+        "like_and_follow": {
+          "title": "Curtir 20 posts e seguir 10 contas",
+          "description": "Movimento diário de rede — é o que faz o perfil aparecer."
+        },
+        "dm_engagers": {
+          "title": "Enviar DM a 10 pessoas que interagiram",
+          "description": "Usar o script de mensagem para quem curtiu ou comentou."
+        },
+        "pinned_tweet": {
+          "title": "Conferir o tweet fixado",
+          "description": "O post fixado leva ao link e continua atual."
+        },
+        "sfs_retweets": {
+          "title": "SFS e retweets de contas promo",
+          "description": "Divulgação cruzada com criadoras e páginas de promoção."
+        }
+      },
+      "reddit": {
+        "post_subreddits": {
+          "title": "Publicar em 5 a 10 subreddits",
+          "description": "Subreddits diferentes, do nicho e do tipo físico da modelo."
+        },
+        "check_rules": {
+          "title": "Ler as regras antes de publicar",
+          "description": "Cada sub tem limite de postagem, exigência de verificação e regra de link própria."
+        },
+        "verification_and_karma": {
+          "title": "Manter karma e verificações em dia",
+          "description": "Os subs grandes pedem conta com mais de 30 dias, karma acumulado e foto de verificação com o nome do sub escrito à mão."
+        },
+        "native_upload": {
+          "title": "Subir mídia nativa, sem link direto",
+          "description": "Imagem ou vídeo enviados ao próprio Reddit; se link for proibido, dizer que está no perfil."
+        },
+        "hook_titles": {
+          "title": "Título com gancho",
+          "description": "Uma pergunta ou provocação curta, não a descrição do que aparece na foto."
+        },
+        "post_timing": {
+          "title": "Publicar no horário do público",
+          "description": "Os primeiros votos definem a posição do post: publicar de madrugada enterra o que às 20h subiria."
+        },
+        "reply_comments": {
+          "title": "Responder comentários por 30 minutos",
+          "description": "A interação logo após o post é o que faz ele subir no sub."
+        },
+        "track_results": {
+          "title": "Anotar quais subs deram resultado",
+          "description": "Registrar de onde vieram os cliques no perfil para repetir amanhã."
+        }
+      },
+      "instagram": {
+        "stories": {
+          "title": "Publicar de 3 a 5 Stories",
+          "description": "Bastidores, rotina e provocações leves — nada explícito."
+        },
+        "feed_or_reel": {
+          "title": "1 post no feed ou 1 Reel",
+          "description": "Conteúdo novo no perfil, com áudio em alta quando fizer sentido."
+        },
+        "engage_niche": {
+          "title": "Curtir e comentar em perfis do nicho",
+          "description": "Interação diária com contas parecidas para aparecer no explorar."
+        },
+        "fast_dm_reply": {
+          "title": "Responder DMs em menos de 1 hora",
+          "description": "Responder na hora converte muito mais do que responder no fim do dia — a demora esfria o interessado."
+        },
+        "comment_to_dm": {
+          "title": "Puxar comentários para a DM",
+          "description": "Quem comentou pedindo o link recebe a mensagem direta com o caminho até a página."
+        },
+        "story_interaction": {
+          "title": "Enquete ou caixa de perguntas",
+          "description": "Um recurso de interação por dia nos Stories."
+        },
+        "welcome_dm": {
+          "title": "Mensagem de boas-vindas a novos seguidores",
+          "description": "Uma DM curta e simpática para quem começou a seguir hoje."
+        },
+        "check_bio_link": {
+          "title": "Conferir o link da bio",
+          "description": "O Linktree ou a landing page está no ar e apontando para o lugar certo."
+        }
+      },
+      "tiktok": {
+        "videos": {
+          "title": "Publicar de 1 a 3 vídeos",
+          "description": "Volume é o que faz o alcance no TikTok."
+        },
+        "trending_audio": {
+          "title": "Usar áudio e formato em alta",
+          "description": "Aproveitar a trend do dia sem fugir do nicho."
+        },
+        "hook_and_watermark": {
+          "title": "Gancho nos 2 primeiros segundos e marca d'água",
+          "description": "Prender o olhar de imediato e deixar o nome de usuário visível no vídeo."
+        },
+        "hashtags": {
+          "title": "Usar de 3 a 6 hashtags relevantes",
+          "description": "Nada de termos banidos como #OnlyFans."
+        },
+        "reply_comments": {
+          "title": "Responder comentários",
+          "description": "Responder por texto e, quando render, gravar um vídeo de resposta."
+        },
+        "pinned_comment_funnel": {
+          "title": "Comentário fixado apontando o funil",
+          "description": "Um comentário próprio direcionando para a bio do Instagram."
+        },
+        "peak_hours": {
+          "title": "Publicar nos horários de pico",
+          "description": "Testar e repetir os horários que trouxeram mais visualizações."
+        }
+      },
+      "youtube_facebook": {
+        "youtube_short": {
+          "title": "Publicar 1 Short",
+          "description": "Reaproveitar o TikTok ou o Reel do dia, sem a marca d'água da outra rede."
+        },
+        "youtube_comments": {
+          "title": "Responder comentários no YouTube",
+          "description": "Interagir e lembrar do link na descrição e na seção Sobre."
+        },
+        "facebook_post": {
+          "title": "1 publicação no Facebook",
+          "description": "Conteúdo PG-13, misturando vida pessoal e provocação leve."
+        },
+        "facebook_groups": {
+          "title": "Participar de grupos",
+          "description": "Postar e comentar em grupos de divulgação, sem spam e dentro das regras."
+        },
+        "facebook_dms": {
+          "title": "Responder reações e DMs",
+          "description": "Falar com quem reagiu às publicações e conduzir a conversa ao link."
+        }
+      },
+      "collabs_growth": {
+        "find_creators": {
+          "title": "Encontrar criadoras do mesmo nicho",
+          "description": "Perfis com público parecido em tamanho e em estilo."
+        },
+        "send_sfs_dms": {
+          "title": "Propor SFS por DM",
+          "description": "Mensagem de proposta de divulgação mútua para as escolhidas do dia."
+        },
+        "deliver_agreed_posts": {
+          "title": "Cumprir as divulgações combinadas",
+          "description": "Publicar no horário acordado o que foi prometido a cada parceira."
+        },
+        "track_collab_results": {
+          "title": "Registrar o resultado das parcerias",
+          "description": "Novos seguidores e novos assinantes por parceira, para manter as cinco melhores."
+        },
+        "tracked_links": {
+          "title": "Medir cliques por origem",
+          "description": "Um link rastreado por plataforma. Sem isso não dá para saber qual rede está pagando o dia."
+        }
+      },
+      "safety": {
+        "backup_content": {
+          "title": "Salvar o conteúdo do dia fora da rede",
+          "description": "Guardar os arquivos publicados onde nenhuma plataforma possa apagá-los."
+        },
+        "proxy_check": {
+          "title": "Conferir o proxy ou VPN da modelo",
+          "description": "Cada conta acessada pelo IP correto — é o que evita bloqueio."
+        },
+        "avoid_banned_words": {
+          "title": "Evitar termos proibidos",
+          "description": "Não escrever “OnlyFans” onde a plataforma pune; usar “minha página” ou “meu link”."
+        },
+        "screenshot_posts": {
+          "title": "Printar as publicações importantes",
+          "description": "Registro do que foi publicado, caso a plataforma remova."
+        }
+      }
+    },
+    "audit": {
+      "done": "concluído",
+      "pending": "pendente",
+      "checked": "Daily — \"{title}\" marcada como concluída",
+      "unchecked": "Daily — \"{title}\" reaberta",
+      "noteSaved": "Daily — nota em \"{title}\": {note}",
+      "noteCleared": "Daily — nota removida de \"{title}\""
     }
   }
 }

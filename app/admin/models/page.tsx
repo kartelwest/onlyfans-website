@@ -13,6 +13,7 @@ import {
   STAFF_STATUS_BADGE,
   type StaffProfileRow,
 } from "@/lib/staff/representatives";
+import { dailyBand, type DailyBand } from "@/lib/daily/definition";
 import {
   normalizeModelStatus,
   sortByModelStatus,
@@ -44,8 +45,6 @@ type ChecklistRow = {
   onboarding_percentage: number | null;
   onlyfans_status: string | null;
   fansly_status: string | null;
-  google_drive_status: string | null;
-  website_login_status: string | null;
 };
 
 type ModelRow = {
@@ -56,7 +55,6 @@ type ModelRow = {
   stage_name: string | null;
   status: string | null;
   active: boolean | null;
-  website_login_enabled: boolean | null;
   representative_id: string | null;
   /**
    * Trigger-maintained projection of the onboarding checklist items — the
@@ -64,6 +62,11 @@ type ModelRow = {
    * model_checklist is legacy and no longer written.
    */
   onboarding_percentage: number | null;
+  /**
+   * Trigger-maintained projection of the daily marketing checklist. Cleared to
+   * 0 every midnight in São Paulo by the nightly job.
+   */
+  daily_percentage: number | null;
   profile: { full_name: string | null } | null;
 };
 
@@ -143,8 +146,8 @@ export default async function AdminModelsPage({
         stage_name,
         status,
         active,
-        website_login_enabled,
         onboarding_percentage,
+        daily_percentage,
         representative_id,
         profile:profiles!profile_id ( full_name )
       `,
@@ -195,9 +198,7 @@ export default async function AdminModelsPage({
           model_id,
           onboarding_percentage,
           onlyfans_status,
-          fansly_status,
-          google_drive_status,
-          website_login_status
+          fansly_status
         `,
       );
 
@@ -484,8 +485,7 @@ export default async function AdminModelsPage({
                   <TableHeading>{t("columns.model")}</TableHeading>
                   <TableHeading>{t("columns.status")}</TableHeading>
                   <TableHeading>{t("columns.onboarding")}</TableHeading>
-                  <TableHeading>{t("columns.website")}</TableHeading>
-                  <TableHeading>{t("columns.drive")}</TableHeading>
+                  <TableHeading>{t("columns.daily")}</TableHeading>
                   <TableHeading>{t("columns.onlyfans")}</TableHeading>
                   <TableHeading>{t("columns.fansly")}</TableHeading>
                   <TableHeading>{t("columns.notes")}</TableHeading>
@@ -497,7 +497,7 @@ export default async function AdminModelsPage({
                 {filteredModels.length === 0 ? (
                   <tr>
                     <td
-                      colSpan={10}
+                      colSpan={9}
                       className="px-6 py-16 text-center"
                     >
                       <p className="text-lg font-bold">
@@ -574,24 +574,11 @@ export default async function AdminModelsPage({
                         </TableCell>
 
                         <TableCell>
-                          <StatusBadge
-                            status={
-                              model.checklist
-                                ?.website_login_status ??
-                              (model.website_login_enabled
-                                ? "completed"
-                                : "not_started")
+                          <DailyBadge
+                            percentage={
+                              model.daily_percentage ?? 0
                             }
-                          />
-                        </TableCell>
-
-                        <TableCell>
-                          <StatusBadge
-                            status={
-                              model.checklist
-                                ?.google_drive_status ??
-                              "not_started"
-                            }
+                            href={`/admin/models/${model.slug}`}
                           />
                         </TableCell>
 
@@ -1087,6 +1074,66 @@ function OnboardingProgress({
         />
       </div>
     </div>
+  );
+}
+
+/**
+ * The DAILY column: how much of today's marketing checklist is done, painted
+ * in one of three colours. `dailyBand` owns where the thresholds fall — red at
+ * 60% or less, yellow through 85%, green from 86% — so this screen and the
+ * Daily tab can never disagree about what a number means.
+ *
+ * It is a link, because a number here is not the point: the work is ticked off
+ * inside the model's profile, under the Daily tab.
+ */
+function DailyBadge({
+  percentage,
+  href,
+}: {
+  percentage: number;
+  href: string;
+}) {
+  const t = useTranslations("admin.modelsPage");
+
+  const safePercentage = Math.min(Math.max(percentage, 0), 100);
+  const band = dailyBand(safePercentage);
+
+  const styles: Record<DailyBand, { badge: string; bar: string }> = {
+    red: {
+      badge: "border-red-400/40 bg-red-500/15 text-red-200",
+      bar: "bg-red-500",
+    },
+    yellow: {
+      badge: "border-yellow-400/40 bg-yellow-500/15 text-yellow-200",
+      bar: "bg-yellow-400",
+    },
+    green: {
+      badge: "border-emerald-400/40 bg-emerald-500/15 text-emerald-200",
+      bar: "bg-emerald-500",
+    },
+  };
+
+  return (
+    <Link
+      href={href}
+      title={t("dailyHint")}
+      className="block min-w-[140px] transition hover:opacity-80"
+    >
+      <span
+        className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-black uppercase tracking-[0.08em] ${styles[band].badge}`}
+      >
+        {t("columns.daily")}
+
+        <span className="font-bold">{safePercentage}%</span>
+      </span>
+
+      <span className="mt-2 block h-2 overflow-hidden rounded-full bg-white/10">
+        <span
+          className={`block h-full rounded-full ${styles[band].bar}`}
+          style={{ width: `${safePercentage}%` }}
+        />
+      </span>
+    </Link>
   );
 }
 

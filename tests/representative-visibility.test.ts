@@ -1,6 +1,6 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 
 /**
@@ -13,10 +13,40 @@ import { join } from "node:path";
  */
 const ROOT = join(import.meta.dirname, "..");
 
+const MIGRATIONS_DIR = join(ROOT, "supabase/migrations");
+
+const FUNCTION_HEADER =
+  "create or replace function public.rep_visible_audit_action";
+
+/**
+ * The migration that defines the function LAST wins in the database, so that
+ * is the one the audit-action tests read. Pinning a filename here would
+ * quietly start testing a superseded definition the first time the list
+ * changes — which is exactly what the daily checklist did to it.
+ */
+const AUDIT_ACTION_MIGRATION = (() => {
+  const defining = readdirSync(MIGRATIONS_DIR)
+    .filter((name) => name.endsWith(".sql"))
+    .sort()
+    .map((name) => readFileSync(join(MIGRATIONS_DIR, name), "utf8"))
+    .filter((body) => body.includes(FUNCTION_HEADER));
+
+  assert.ok(
+    defining.length > 0,
+    "no migration defines rep_visible_audit_action",
+  );
+
+  return defining[defining.length - 1];
+})();
+
+/**
+ * Note sharing, on the other hand, was introduced once and never redefined:
+ * these tests are about what that migration did, so they stay pinned to it.
+ */
 const MIGRATION = readFileSync(
   join(
-    ROOT,
-    "supabase/migrations/20260804020000_representative_note_visibility.sql",
+    MIGRATIONS_DIR,
+    "20260804020000_representative_note_visibility.sql",
   ),
   "utf8",
 );
@@ -28,9 +58,7 @@ const HISTORY_ROUTE = readFileSync(
 
 /** The actions inside `select p_action in ( … );`. */
 function actionsAllowedBySql(): string[] {
-  const body = MIGRATION.split(
-    "create or replace function public.rep_visible_audit_action",
-  )[1];
+  const body = AUDIT_ACTION_MIGRATION.split(FUNCTION_HEADER)[1];
 
   assert.ok(body, "rep_visible_audit_action is missing from the migration");
 
@@ -58,9 +86,13 @@ describe("representative audit visibility", () => {
     assert.deepEqual(actionsAllowedByRoute(), actionsAllowedBySql());
   });
 
-  it("shows the onboarding checklist and nothing else", () => {
+  // A representative sees the work she does — onboarding and the daily
+  // marketing checklist — and nothing else.
+  it("shows the two checklists and nothing else", () => {
     assert.deepEqual(actionsAllowedBySql(), [
       "checklist_update",
+      "daily_reset",
+      "daily_update",
       "onboarding_update",
     ]);
   });
