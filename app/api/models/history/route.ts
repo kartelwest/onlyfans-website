@@ -221,11 +221,14 @@ export async function GET(request: NextRequest) {
           if (action) {
             query = query.eq("action", action);
           } else if (!includeDaily) {
-            query = query.not(
-              "action",
-              "in",
-              `(${DAILY_ACTIONS.join(",")})`,
-            );
+            // One plain `not.eq` per action rather than a bracketed `not.in`
+            // list. Repeated filters on a column are ANDed by PostgREST and
+            // there is no list for it to parse, so there is no quoting rule to
+            // get wrong — and getting it wrong here would not show a smaller
+            // list, it would fail the whole request.
+            for (const daily of DAILY_ACTIONS) {
+              query = query.not("action", "eq", daily);
+            }
           }
 
           if (fieldName) {
