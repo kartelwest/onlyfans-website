@@ -94,6 +94,7 @@ create policy notes_update on public.model_notes
     or (
       created_by = auth.uid()
       and public.is_assigned_representative(model_id)
+      and deleted_at is null
     )
   )
   with check (
@@ -101,6 +102,7 @@ create policy notes_update on public.model_notes
     or (
       created_by = auth.uid()
       and public.is_assigned_representative(model_id)
+      and deleted_at is null
     )
   );
 
@@ -217,15 +219,24 @@ begin
   end if;
 end $$;
 
+-- The migration issues UPDATE/DELETE against model_onboarding_items, but the
+-- guard_onboarding_lock trigger rejects any write on completed models when
+-- auth.uid() is null. The sync trigger would also flip models to complete
+-- mid-DELETE. We disable triggers for the migration window and recompute
+-- percentages manually at the end.
+alter table public.model_onboarding_items disable trigger all;
+
 -- ----- 4. Migrate the old "Segundo Instagram" onboarding value to the shared
 -- marketing column so Status and Summary read the same field forever.
+-- The onboarding JSON value wins if it is non-empty: that is the value the
+-- admin/rep most recently saved in the Status tab.
 update public.models m
    set instagram_marketing = coalesce(nullif(btrim(i.field_values ->> 'instagram_second'), ''), m.instagram_marketing)
   from public.model_onboarding_items i
  where i.model_id = m.id
    and i.platform = 'onlyfans'
    and i.item_key = 'model_information.social_media_links'
-   and m.instagram_marketing is null;
+   and i.field_values ? 'instagram_second';
 
 -- Remove the now-duplicate value from the onboarding JSON so future loads
 -- never resurrect a stale copy.
@@ -381,6 +392,9 @@ update public.models m
  where m.id = computed.id
    and (m.onboarding_percentage is distinct from computed.pct
         or m.onboarding_complete is distinct from computed.is_done);
+
+-- Re-enable triggers now that the migration is done.
+alter table public.model_onboarding_items enable trigger all;
 
 -- ----- 8. Refresh get_model_marketing grants ----------------------------------
 -- The onboarding loader now reads instagram_marketing / twitter_marketing

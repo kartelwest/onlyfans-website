@@ -58,7 +58,8 @@ export default function PostBoardingTab({
   const [sections, setSections] = useState<Section[]>([]);
   const [canEdit, setCanEdit] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   const [newNotes, setNewNotes] = useState<Record<string, string>>({});
   const [editing, setEditing] = useState<Record<string, string>>({});
@@ -66,7 +67,7 @@ export default function PostBoardingTab({
 
   const fetchPostBoarding = useCallback(async () => {
     setIsLoading(true);
-    setError(null);
+    setLoadError(null);
 
     try {
       const response = await fetch(
@@ -83,7 +84,7 @@ export default function PostBoardingTab({
       setSections(result.sections ?? []);
       setCanEdit(result.canEdit ?? false);
     } catch (err) {
-      setError(err instanceof Error ? err.message : t("loadFailed"));
+      setLoadError(err instanceof Error ? err.message : t("loadFailed"));
     } finally {
       setIsLoading(false);
     }
@@ -98,6 +99,7 @@ export default function PostBoardingTab({
 
     if (!body) return;
 
+    setSaveError(null);
     setIsSaving((prev) => ({ ...prev, [itemKey]: true }));
 
     try {
@@ -116,7 +118,7 @@ export default function PostBoardingTab({
       setNewNotes((prev) => ({ ...prev, [itemKey]: "" }));
       await fetchPostBoarding();
     } catch (err) {
-      setError(err instanceof Error ? err.message : t("saveFailed"));
+      setSaveError(err instanceof Error ? err.message : t("saveFailed"));
     } finally {
       setIsSaving((prev) => ({ ...prev, [itemKey]: false }));
     }
@@ -141,6 +143,7 @@ export default function PostBoardingTab({
 
     if (!body) return;
 
+    setSaveError(null);
     setIsSaving((prev) => ({ ...prev, [noteId]: true }));
 
     try {
@@ -159,7 +162,7 @@ export default function PostBoardingTab({
       cancelEdit(noteId);
       await fetchPostBoarding();
     } catch (err) {
-      setError(err instanceof Error ? err.message : t("saveFailed"));
+      setSaveError(err instanceof Error ? err.message : t("saveFailed"));
     } finally {
       setIsSaving((prev) => ({ ...prev, [noteId]: false }));
     }
@@ -169,15 +172,15 @@ export default function PostBoardingTab({
     return <p className="text-sm text-white/50">{t("loading")}</p>;
   }
 
-  if (error) {
-    return <p className="text-sm text-red-300">{error}</p>;
+  if (loadError) {
+    return <p className="text-sm text-red-300">{loadError}</p>;
   }
 
   return (
     <div className="space-y-6">
-      {error && (
+      {saveError && (
         <div className="rounded-xl border border-red-400/30 bg-red-500/10 p-4 text-sm text-red-200">
-          {error}
+          {saveError}
         </div>
       )}
 

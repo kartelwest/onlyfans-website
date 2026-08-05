@@ -1346,6 +1346,18 @@
       "saveFailed": "Could not save the post boarding note.",
       "unexpected": "Internal error while saving the post boarding note."
     },
+    "postBoarding": {
+      "loading": "Loading post boarding…",
+      "loadFailed": "Could not load post boarding.",
+      "saveFailed": "Could not save the note.",
+      "emptyNotes": "No notes yet.",
+      "placeholder": "Write what was done, observations, marketing updates, improvements, or follow-ups…",
+      "addNote": "Add note",
+      "edit": "Edit",
+      "save": "Save",
+      "cancel": "Cancel",
+      "unknownUser": "User"
+    },
     "modelCredentials": {
       "noPermission": "You do not have permission to change this model's access.",
       "loginRequired": "Enter an e-mail address or a username to create this model's access.",
@@ -2810,18 +2822,6 @@
       "onboarding": "Onboarding",
       "stageName": "Stage name: {name}",
       "viewAsNotice": "This is the screen the representative opens. Changes made here are recorded as the signed-in administrator's changes, with your name in the model's history."
-    },
-    "postBoarding": {
-      "loading": "Loading post boarding…",
-      "loadFailed": "Could not load post boarding.",
-      "saveFailed": "Could not save the note.",
-      "emptyNotes": "No notes yet.",
-      "placeholder": "Write what was done, observations, marketing updates, improvements, or follow-ups…",
-      "addNote": "Add note",
-      "edit": "Edit",
-      "save": "Save",
-      "cancel": "Cancel",
-      "unknownUser": "User"
     }
   },
   "onboarding": {

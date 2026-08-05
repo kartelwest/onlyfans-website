@@ -1346,6 +1346,18 @@
       "saveFailed": "Não foi possível salvar a nota de pós-embarque.",
       "unexpected": "Erro interno ao salvar a nota de pós-embarque."
     },
+    "postBoarding": {
+      "loading": "Carregando pós-embarque…",
+      "loadFailed": "Não foi possível carregar o pós-embarque.",
+      "saveFailed": "Não foi possível salvar a nota.",
+      "emptyNotes": "Nenhuma anotação ainda.",
+      "placeholder": "Escreva o que foi feito, observações, atualizações de marketing, melhorias ou follow-ups…",
+      "addNote": "Adicionar anotação",
+      "edit": "Editar",
+      "save": "Salvar",
+      "cancel": "Cancelar",
+      "unknownUser": "Usuário"
+    },
     "modelCredentials": {
       "noPermission": "Você não tem permissão para alterar o acesso desta modelo.",
       "loginRequired": "Informe um e-mail ou um nome de usuário para criar o acesso desta modelo.",
@@ -2810,18 +2822,6 @@
       "onboarding": "Onboarding",
       "stageName": "Nome artístico: {name}",
       "viewAsNotice": "Esta é a tela que o representante abre. As alterações feitas aqui são gravadas como alterações do administrador conectado, com o seu nome no histórico da modelo."
-    },
-    "postBoarding": {
-      "loading": "Carregando pós-embarque…",
-      "loadFailed": "Não foi possível carregar o pós-embarque.",
-      "saveFailed": "Não foi possível salvar a nota.",
-      "emptyNotes": "Nenhuma anotação ainda.",
-      "placeholder": "Escreva o que foi feito, observações, atualizações de marketing, melhorias ou follow-ups…",
-      "addNote": "Adicionar anotação",
-      "edit": "Editar",
-      "save": "Salvar",
-      "cancel": "Cancelar",
-      "unknownUser": "Usuário"
     }
   },
   "onboarding": {
