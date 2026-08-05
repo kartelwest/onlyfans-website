@@ -549,9 +549,12 @@ export default async function AdminModelsPage({
                     const onboarding =
                       model.onboarding_percentage ?? 0;
 
-                    const canManage =
-                      role === "owner" ||
-                      role === "administrator";
+                    // Permanent deletion only. An administrator manages every
+                    // other part of a model; the row that cascades away her
+                    // earnings, payments, notes and audit history is the
+                    // owner's alone, matching both `models_delete` in RLS and
+                    // the guard in /api/models/delete.
+                    const canManage = role === "owner";
 
                     const displayName =
                       model.profile?.full_name?.trim() ||
