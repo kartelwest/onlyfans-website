@@ -219,12 +219,12 @@ begin
   end if;
 end $$;
 
--- The migration issues UPDATE/DELETE against model_onboarding_items, but the
+-- The migration issues UPDATE/DELETE against model_onboarding_items. The
 -- guard_onboarding_lock trigger rejects any write on completed models when
--- auth.uid() is null. The sync trigger would also flip models to complete
--- mid-DELETE. We disable triggers for the migration window and recompute
--- percentages manually at the end.
-alter table public.model_onboarding_items disable trigger all;
+-- auth.uid() is null, and Supabase does not let us disable system triggers.
+-- We therefore skip completed models in the cleanup update and let the progress
+-- trigger recompute percentages as rows are removed; the final UPDATE below
+-- corrects any drift.
 
 -- ----- 4. Migrate the old "Segundo Instagram" onboarding value to the shared
 -- marketing column so Status and Summary read the same field forever.
@@ -244,7 +244,13 @@ update public.model_onboarding_items
    set field_values = field_values - 'instagram_second'
  where platform = 'onlyfans'
    and item_key = 'model_information.social_media_links'
-   and field_values ? 'instagram_second';
+   and field_values ? 'instagram_second'
+   -- Completed models are owner-locked; leaving the stale JSON key there is
+   -- harmless because the UI reads the linked column (models.instagram_marketing)
+   -- instead of this JSON value.
+   and model_id not in (
+     select id from public.models where onboarding_complete = true
+   );
 
 -- ----- 5. Migrate moved onboarding items into Post Boarding notes ------------
 -- The keys that no longer belong to onboarding. Existing completion data is
@@ -392,9 +398,6 @@ update public.models m
  where m.id = computed.id
    and (m.onboarding_percentage is distinct from computed.pct
         or m.onboarding_complete is distinct from computed.is_done);
-
--- Re-enable triggers now that the migration is done.
-alter table public.model_onboarding_items enable trigger all;
 
 -- ----- 8. Refresh get_model_marketing grants ----------------------------------
 -- The onboarding loader now reads instagram_marketing / twitter_marketing
