@@ -69,7 +69,7 @@ const BASE_COLUMNS = "id, full_name, email, role, active, created_at";
  */
 export async function loadStaffProfiles(
   supabase: SupabaseClient,
-  role: "representative" | "administrator",
+  role: "owner" | "representative" | "administrator",
 ): Promise<{ profiles: StaffProfileRow[]; lifecycleReady: boolean }> {
   const extended = await supabase
     .from("profiles")

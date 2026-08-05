@@ -2745,6 +2745,35 @@
         "done": "Done",
         "notes": "With a note"
       }
+    },
+    "administrators": {
+      "actions": {
+        "sessionExpired": "Your session expired.",
+        "notPermitted": "You don't have permission.",
+        "ownerOnlyDelete": "Only the owner can delete an administrator.",
+        "invalidConfirmation": "Invalid confirmation.",
+        "cannotDeleteSelf": "You cannot delete your own account.",
+        "notAnAdministrator": "The selected profile is not an administrator.",
+        "stillHasModels": "This administrator still has {count, plural, one {# assigned model} other {# assigned models}}. Reassign them before deleting.",
+        "authDeleteFailed": "We couldn't delete the authentication account.",
+        "profileDeleteFailed": "We couldn't remove the administrator's profile.",
+        "deleted": "Administrator {name} permanently deleted."
+      },
+      "delete": {
+        "button": "Delete admin",
+        "unnamed": "unnamed",
+        "title": "Permanently delete this administrator?",
+        "blockedTitle": "Reassign the models before deleting",
+        "blockedBody": "{name} still has <strong>{count, plural, one {# model assigned} other {# models assigned}}</strong>. Deleting the account now would leave {count, plural, one {that model} other {those models}} with nobody assigned, and nothing on screen would say so.",
+        "blockedAction": "Open the models list, reassign them to someone else, and come back here.",
+        "openModels": "Open the models list →",
+        "bodyPermanent": "The account and its login are erased permanently and this cannot be undone. No models are assigned to this administrator, so nobody is left unmanaged.",
+        "bodyDemote": "Only want to remove their access? Open <strong>Manage account</strong> instead — deactivating keeps every record attached to the account and can be undone.",
+        "bodyAudit": "The deletion is recorded in the system history with the administrator's name, who deleted it, and the date and time.",
+        "understood": "Got it",
+        "confirmButton": "Delete permanently",
+        "confirmPhrase": "DELETE"
+      }
     }
   },
   "owner": {

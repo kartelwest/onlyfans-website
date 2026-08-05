@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
+import DeleteAdministratorButton from "@/components/admin/DeleteAdministratorButton";
 import DeleteRepresentativeButton from "@/components/admin/DeleteRepresentativeButton";
 import ModelRowActions from "@/components/admin/ModelRowActions";
 import ModelStatusDropdown from "@/components/admin/ModelStatusDropdown";
@@ -245,11 +246,42 @@ export default async function AdminModelsPage({
 
   const [
     { profiles: representatives },
-    { profiles: administrators },
+    { profiles: administratorProfiles },
+    { profiles: owners },
   ] = await Promise.all([
     loadStaffProfiles(supabase, "representative"),
     loadStaffProfiles(supabase, "administrator"),
+    loadStaffProfiles(supabase, "owner"),
   ]);
+
+  // The owner sits at the top of this list rather than being absent from it.
+  // An access screen that omits the most privileged account in the business is
+  // not showing you who has access — and the owner looking for themselves and
+  // not finding themselves reasonably concludes something is wrong. Each row
+  // carries its own role badge, so "who is this person" is answered on the row
+  // instead of by which table they happen to be in.
+  const administrators = [...owners, ...administratorProfiles];
+
+  // Models still pointing at each staff profile. models.representative_id is
+  // ON DELETE SET NULL and accepts an administrator or the owner, not only a
+  // representative — in production most models are assigned to one of those
+  // two. Deleting such an account would silently unassign every model it
+  // holds, so the count gates the delete button (and the server action checks
+  // it again).
+  const assignedCountByProfile = new Map<string, number>();
+
+  for (const row of modelRows ?? []) {
+    const repId = (row as unknown as ModelRow).representative_id;
+
+    if (!repId) {
+      continue;
+    }
+
+    assignedCountByProfile.set(
+      repId,
+      (assignedCountByProfile.get(repId) ?? 0) + 1,
+    );
+  }
 
   // Each representative's models, for the dropdown on her row — the way into
   // her model pages is through the screen she sees.
@@ -720,6 +752,9 @@ export default async function AdminModelsPage({
           profiles={administrators}
           emptyMessage={t("noAdministrators")}
           isOwner={role === "owner"}
+          showDeleteAdministrator
+          showRoleBadge
+          assignedCountByProfile={assignedCountByProfile}
         />
 
         <section className="mt-6 grid gap-4 rounded-2xl border border-pink-400/20 bg-[#21121a] p-6 lg:grid-cols-2">
@@ -782,6 +817,9 @@ function ProfileListSection({
   manageAllHref,
   manageAllLabel,
   showDeleteRepresentative = false,
+  showDeleteAdministrator = false,
+  showRoleBadge = false,
+  assignedCountByProfile,
   profileHref,
   viewAsHref,
   modelsByProfile,
@@ -799,12 +837,31 @@ function ProfileListSection({
    * anyone else regardless.
    */
   showDeleteRepresentative?: boolean;
+  /**
+   * The same for administrators. Rows whose role is not `administrator` — the
+   * owner's own — never get the button, which is also what the server action
+   * enforces: it refuses any target that is not an administrator, and that is
+   * what stops an owner deleting themselves out of their own business.
+   */
+  showDeleteAdministrator?: boolean;
+  /**
+   * Puts each row's role beside the name. On a list that mixes the owner in
+   * with the administrators, the row has to say which is which.
+   */
+  showRoleBadge?: boolean;
+  /**
+   * Models still assigned to each profile. Only the count is needed — it
+   * decides whether deletion is offered or blocked — so this stays separate
+   * from `modelsByProfile`, which additionally renders a whole column.
+   */
+  assignedCountByProfile?: Map<string, number>;
   profileHref?: (profileId: string) => string;
   viewAsHref?: (profileId: string) => string;
   modelsByProfile?: Map<string, RepresentativeModel[]>;
 }) {
   const t = useTranslations("admin.modelsPage");
   const tStaff = useTranslations("enums.representativeStatus");
+  const tRole = useTranslations("enums.role");
 
   const showModels = Boolean(modelsByProfile);
 
@@ -872,18 +929,32 @@ function ProfileListSection({
                     }`}
                   >
                     <TableCell>
-                      {profileHref ? (
-                        <Link
-                          href={profileHref(profile.id)}
-                          className="font-bold text-white transition hover:text-pink-300"
-                        >
-                          {profile.full_name || t("noName")}
-                        </Link>
-                      ) : (
-                        <span className="font-bold text-white">
-                          {profile.full_name || t("noName")}
-                        </span>
-                      )}
+                      <div className="flex flex-wrap items-center gap-2">
+                        {profileHref ? (
+                          <Link
+                            href={profileHref(profile.id)}
+                            className="font-bold text-white transition hover:text-pink-300"
+                          >
+                            {profile.full_name || t("noName")}
+                          </Link>
+                        ) : (
+                          <span className="font-bold text-white">
+                            {profile.full_name || t("noName")}
+                          </span>
+                        )}
+
+                        {showRoleBadge && (
+                          <span
+                            className={`inline-flex rounded-full px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-[0.08em] ring-1 ${
+                              profile.role === "owner"
+                                ? "bg-amber-500/10 text-amber-200 ring-amber-500/30"
+                                : "bg-white/5 text-white/70 ring-white/15"
+                            }`}
+                          >
+                            {tRole(profile.role)}
+                          </span>
+                        )}
+                      </div>
                     </TableCell>
 
                     <TableCell>
@@ -941,12 +1012,33 @@ function ProfileListSection({
                                 profileHref={`/admin/representatives/${profile.id}`}
                               />
                             ) : (
-                              <Link
-                                href={`/owner/users/${profile.id}`}
-                                className="rounded-lg border border-white/15 px-4 py-2 text-center text-xs font-bold text-white transition hover:bg-white/10"
-                              >
-                                {t("manageAccount")}
-                              </Link>
+                              <>
+                                <Link
+                                  href={`/owner/users/${profile.id}`}
+                                  className="rounded-lg border border-white/15 px-4 py-2 text-center text-xs font-bold text-white transition hover:bg-white/10"
+                                >
+                                  {t("manageAccount")}
+                                </Link>
+
+                                {/*
+                                  Administrators only. The owner's own row is
+                                  excluded here and refused again by the server
+                                  action, so there is no path — UI or API — by
+                                  which an owner deletes themselves.
+                                */}
+                                {showDeleteAdministrator &&
+                                  profile.role === "administrator" && (
+                                    <DeleteAdministratorButton
+                                      administratorId={profile.id}
+                                      administratorName={profile.full_name ?? ""}
+                                      assignedModelCount={
+                                        assignedCountByProfile?.get(profile.id) ??
+                                        0
+                                      }
+                                      profileHref="/admin/models"
+                                    />
+                                  )}
+                              </>
                             ))}
                         </div>
                       </TableCell>

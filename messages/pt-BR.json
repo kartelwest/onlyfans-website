@@ -2745,6 +2745,35 @@
         "done": "Concluídos",
         "notes": "Com nota"
       }
+    },
+    "administrators": {
+      "actions": {
+        "sessionExpired": "Sua sessão expirou.",
+        "notPermitted": "Você não tem permissão.",
+        "ownerOnlyDelete": "Apenas o proprietário pode excluir um administrador.",
+        "invalidConfirmation": "Confirmação inválida.",
+        "cannotDeleteSelf": "Você não pode excluir a sua própria conta.",
+        "notAnAdministrator": "O perfil selecionado não é um administrador.",
+        "stillHasModels": "Este administrador ainda tem {count, plural, one {# modelo atribuída} other {# modelos atribuídas}}. Reatribua antes de excluir.",
+        "authDeleteFailed": "Não foi possível excluir a conta de acesso.",
+        "profileDeleteFailed": "Não foi possível remover o perfil do administrador.",
+        "deleted": "Administrador {name} excluído permanentemente."
+      },
+      "delete": {
+        "button": "Excluir admin",
+        "unnamed": "sem nome",
+        "title": "Excluir este administrador em definitivo?",
+        "blockedTitle": "Reatribua as modelos antes de excluir",
+        "blockedBody": "{name} ainda tem <strong>{count, plural, one {# modelo atribuída} other {# modelos atribuídas}}</strong>. Excluir a conta agora deixaria {count, plural, one {essa modelo} other {essas modelos}} sem responsável, e nada na tela diria isso.",
+        "blockedAction": "Abra a lista de modelos, reatribua para outra pessoa e volte aqui.",
+        "openModels": "Abrir a lista de modelos →",
+        "bodyPermanent": "A conta e o acesso são apagados em definitivo e isso não pode ser desfeito. Nenhuma modelo está atribuída a este administrador, então ninguém fica sem responsável.",
+        "bodyDemote": "Só quer tirar o acesso? Abra <strong>Gerenciar conta</strong> — desativar mantém todo o histórico ligado à conta e pode ser desfeito.",
+        "bodyAudit": "A exclusão fica registrada no histórico do sistema com o nome do administrador, quem excluiu e a data e hora.",
+        "understood": "Entendi",
+        "confirmButton": "Excluir em definitivo",
+        "confirmPhrase": "EXCLUIR"
+      }
     }
   },
   "owner": {
