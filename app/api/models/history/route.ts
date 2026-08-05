@@ -181,6 +181,7 @@ export async function GET(request: NextRequest) {
               { count: "exact" },
             )
             .eq("model_id", modelId)
+            .or("source.is.null,source.neq.post_boarding")
             .order("created_at", { ascending: false })
             .range(0, upperBound);
 

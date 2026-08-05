@@ -33,6 +33,19 @@ const PAYMENT_LINKED_COLUMNS = new Set<LinkedFieldKey>([
 ]);
 
 /**
+ * Marketing columns are not selectable by the shared `authenticated` role.
+ * They are read through SECURITY DEFINER RPCs that enforce is_management(),
+ * and are editable from onboarding only by staff.
+ */
+const MARKETING_LINKED_COLUMNS = new Set<AnyLinkedFieldKey>([
+  "instagram_marketing",
+]);
+
+function isMarketingLinkedField(key: AnyLinkedFieldKey): boolean {
+  return MARKETING_LINKED_COLUMNS.has(key);
+}
+
+/**
  * Only the columns the CURRENT checklist actually links — not the whole
  * registry. The registry is a vocabulary of what may be linked; selecting all
  * of it meant every load queried columns no step uses, and one bad name broke
@@ -48,7 +61,9 @@ const LINKED_KEYS = Array.from(
 );
 
 const MODEL_LINKED_COLUMNS = LINKED_KEYS.filter(
-  (key) => !PAYMENT_LINKED_COLUMNS.has(key as LinkedFieldKey),
+  (key) =>
+    !PAYMENT_LINKED_COLUMNS.has(key as LinkedFieldKey) &&
+    !isMarketingLinkedField(key),
 );
 
 const USED_PAYMENT_COLUMNS = LINKED_KEYS.filter((key) =>
@@ -334,7 +349,7 @@ async function loadLinkedValues({
   supabase: SupabaseClient;
   modelId: string;
 }): Promise<Record<string, string>> {
-  const [modelResult, paymentsResult] = await Promise.all([
+  const [modelResult, paymentsResult, marketingResult] = await Promise.all([
     MODEL_LINKED_COLUMNS.length > 0
       ? supabase
           .from("models")
@@ -349,10 +364,12 @@ async function loadLinkedValues({
           .eq("model_id", modelId)
           .maybeSingle()
       : Promise.resolve({ data: null, error: null }),
+    supabase.rpc("get_model_marketing", { target_model: modelId }).maybeSingle(),
   ]);
 
   const modelRow = modelResult.data;
   const paymentsRow = paymentsResult.data;
+  const marketingRow = marketingResult.data as Record<string, unknown> | null;
 
   // A misspelled linked column used to fail silently here and render the box
   // empty, which reads exactly like "nobody has filled this in yet". A field
@@ -375,9 +392,15 @@ async function loadLinkedValues({
   const values: Record<string, string> = {};
 
   for (const key of LINKED_KEYS) {
-    const source = (
-      PAYMENT_LINKED_COLUMNS.has(key as LinkedFieldKey) ? paymentsRow : modelRow
-    ) as Record<string, unknown> | null;
+    let source: Record<string, unknown> | null = null;
+
+    if (PAYMENT_LINKED_COLUMNS.has(key as LinkedFieldKey)) {
+      source = paymentsRow as Record<string, unknown> | null;
+    } else if (isMarketingLinkedField(key)) {
+      source = marketingRow ?? null;
+    } else {
+      source = modelRow as Record<string, unknown> | null;
+    }
 
     values[key] = asText(source?.[key]);
   }
@@ -408,6 +431,8 @@ export async function loadOnboarding({
   summary: OnboardingSummary;
 }> {
   const isRep = viewerRole === "representative";
+  const isStaff =
+    viewerRole === "owner" || viewerRole === "administrator";
 
   // Titles, descriptions, labels and placeholders are UI copy. The definition
   // file owns the keys and the structure; the catalogue owns the words, keyed
@@ -475,7 +500,10 @@ export async function loadOnboarding({
             linkedLocation: linked
               ? t(`linkedFields.${linked}.location`)
               : null,
-            readOnly: linked ? isReadOnlyLinkedFieldKey(linked) : false,
+            readOnly: linked
+              ? isReadOnlyLinkedFieldKey(linked) ||
+                (!isStaff && isMarketingLinkedField(linked))
+              : false,
             value: linked
               ? (linkedValues[linked] ?? "")
               : asText(stored[field.key]),

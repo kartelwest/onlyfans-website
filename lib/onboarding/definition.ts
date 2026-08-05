@@ -64,6 +64,7 @@ export const LINKED_FIELDS = {
   onlyfans: { label: "OnlyFans", location: "Aba OnlyFans" },
   fansly: { label: "Fansly", location: "Aba Fansly" },
   instagram: { label: "Instagram", location: "Aba Plataformas" },
+  instagram_marketing: { label: "Instagram (Marketing)", location: "Aba Resumo" },
   twitter: { label: "X / Twitter", location: "Aba Plataformas" },
   reddit: { label: "Reddit", location: "Aba Plataformas" },
   tiktok: { label: "TikTok", location: "Aba Plataformas" },
@@ -327,7 +328,12 @@ export const ONBOARDING_SECTIONS: OnboardingSection[] = [
             type: "text",
             linked: "instagram",
           },
-          { key: "instagram_second", label: "Segundo Instagram", type: "text" },
+          {
+            key: "instagram_second",
+            label: "Segundo Instagram",
+            type: "text",
+            linked: "instagram_marketing",
+          },
           { key: "bumpy", label: "Bumpy", type: "text" },
           {
             key: "twitter",
@@ -489,20 +495,6 @@ export const ONBOARDING_SECTIONS: OnboardingSection[] = [
           "Pesquisar e incorporar hashtags em alta e específicas do nicho para aumentar o alcance.",
         responsibility: "agency",
       },
-      {
-        key: "internal_linking",
-        title: "Links internos entre publicações",
-        description:
-          "Divulgar publicações antigas ligando-as ao conteúdo relacionado nas legendas.",
-        responsibility: "agency",
-      },
-      {
-        key: "subscriber_lists",
-        title: "Listas de assinantes configuradas",
-        description:
-          'Usar o recurso "Lists" para segmentar assinantes por interesse e gasto, e enviar promoções direcionadas.',
-        responsibility: "agency",
-      },
     ],
   },
 
@@ -532,41 +524,6 @@ export const ONBOARDING_SECTIONS: OnboardingSection[] = [
             linked: "content_frequency",
           },
         ],
-      },
-      {
-        key: "quality_assurance",
-        title: "Garantia de qualidade",
-        description:
-          "Investir em iluminação adequada, câmera HD e ferramentas de edição para manter o valor de produção alto.",
-        responsibility: "both",
-      },
-    ],
-  },
-
-  {
-    key: "marketing_promotion",
-    title: "Marketing e divulgação",
-    items: [
-      {
-        key: "social_media_integration",
-        title: "Integração com redes sociais",
-        description:
-          "Divulgar o OnlyFans no Instagram, Twitter, TikTok, Reddit e Telegram, publicando prévias com consistência em todas as plataformas.",
-        responsibility: "agency",
-      },
-      {
-        key: "collaborations",
-        title: "Colaborações",
-        description:
-          "Fechar parcerias com outras criadoras para divulgação mútua, colabs e impulso de engajamento.",
-        responsibility: "agency",
-      },
-      {
-        key: "engagement",
-        title: "Engajamento",
-        description:
-          "Responder mensagens diariamente, fazer Q&As e lives para construir uma comunidade fiel.",
-        responsibility: "both",
       },
     ],
   },
@@ -602,33 +559,6 @@ export const ONBOARDING_SECTIONS: OnboardingSection[] = [
     ],
   },
 
-  {
-    key: "continuous_improvement",
-    title: "Melhoria contínua",
-    items: [
-      {
-        key: "analytics_monitoring",
-        title: "Acompanhamento de métricas",
-        description:
-          "Acompanhar crescimento de assinantes e taxas de engajamento, e conferir quais conteúdos rendem mais.",
-        responsibility: "agency",
-      },
-      {
-        key: "feedback_collection",
-        title: "Coleta de feedback",
-        description:
-          "Perguntar aos assinantes o que querem ver mais e usar isso para refinar o conteúdo.",
-        responsibility: "both",
-      },
-      {
-        key: "professional_development",
-        title: "Desenvolvimento profissional",
-        description:
-          "Manter-se atualizado sobre recursos do OnlyFans e tendências de marketing.",
-        responsibility: "both",
-      },
-    ],
-  },
 ];
 
 // ---------------------------------------------------------------------------

@@ -1334,6 +1334,18 @@
       "stepLookupFailed": "Internal error while looking up the step.",
       "unknownField": "Unknown onboarding field."
     },
+    "postBoardingApi": {
+      "noViewPermission": "You do not have permission to view this model's post boarding.",
+      "noEditPermission": "You do not have permission to edit this model's post boarding.",
+      "invalidNote": "Note, item and model are required.",
+      "noteTooLong": "The note cannot exceed 5000 characters.",
+      "unknownItem": "Unknown post boarding item.",
+      "noteNotFound": "Post boarding note not found.",
+      "editOwnNotesOnly": "Representatives may only edit their own notes.",
+      "loadFailed": "Could not load post boarding.",
+      "saveFailed": "Could not save the post boarding note.",
+      "unexpected": "Internal error while saving the post boarding note."
+    },
     "modelCredentials": {
       "noPermission": "You do not have permission to change this model's access.",
       "loginRequired": "Enter an e-mail address or a username to create this model's access.",
@@ -1819,6 +1831,7 @@
         "payments": "Payments",
         "notes": "Notes",
         "history": "History",
+        "post_boarding": "Post Boarding",
         "brand_growth": "Amplia"
       },
       "fields": {
@@ -2797,6 +2810,18 @@
       "onboarding": "Onboarding",
       "stageName": "Stage name: {name}",
       "viewAsNotice": "This is the screen the representative opens. Changes made here are recorded as the signed-in administrator's changes, with your name in the model's history."
+    },
+    "postBoarding": {
+      "loading": "Loading post boarding…",
+      "loadFailed": "Could not load post boarding.",
+      "saveFailed": "Could not save the note.",
+      "emptyNotes": "No notes yet.",
+      "placeholder": "Write what was done, observations, marketing updates, improvements, or follow-ups…",
+      "addNote": "Add note",
+      "edit": "Edit",
+      "save": "Save",
+      "cancel": "Cancel",
+      "unknownUser": "User"
     }
   },
   "onboarding": {
@@ -3120,6 +3145,10 @@
       "instagram": {
         "label": "Instagram",
         "location": "Platforms tab"
+      },
+      "instagram_marketing": {
+        "label": "Instagram (Marketing)",
+        "location": "Overview tab"
       },
       "twitter": {
         "label": "X / Twitter",
