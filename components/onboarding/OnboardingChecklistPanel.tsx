@@ -138,9 +138,10 @@ export default function OnboardingChecklistPanel({
   const [savingKey, setSavingKey] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [filter, setFilter] = useState<Filter>("all");
-  const [closedSections, setClosedSections] = useState<Record<string, boolean>>(
-    {},
-  );
+  // Collapsed by default, like the daily checklist next door. The state tracks
+  // which sections are OPEN — tracking the closed ones meant an untouched
+  // section counted as open, which is how every block came up expanded.
+  const [openSections, setOpenSections] = useState<Record<string, boolean>>({});
 
   const applyResponse = useCallback((result: OnboardingResponse) => {
     setSections(result.sections ?? []);
@@ -352,7 +353,7 @@ export default function OnboardingChecklistPanel({
       ) : (
         <div className="space-y-5">
           {visibleSections.map((section) => {
-            const isOpen = !closedSections[section.key];
+            const isOpen = openSections[section.key] === true;
 
             return (
               <section
@@ -362,11 +363,12 @@ export default function OnboardingChecklistPanel({
                 <button
                   type="button"
                   onClick={() =>
-                    setClosedSections((current) => ({
+                    setOpenSections((current) => ({
                       ...current,
                       [section.key]: !current[section.key],
                     }))
                   }
+                  aria-expanded={isOpen}
                   className="flex w-full items-center justify-between gap-5 px-5 py-5 text-left transition hover:bg-white/[0.03] sm:px-6"
                 >
                   <div>
