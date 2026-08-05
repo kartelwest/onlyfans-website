@@ -92,10 +92,17 @@ export default function AdminHeader({
                     key={item.href}
                     href={item.href}
                     aria-current={active ? "page" : undefined}
+                    /*
+                      Solid fills and plain white text, the way SIGN OUT is
+                      done. The previous pair — a 20%-opacity pink behind
+                      pink-100, and white/70 on a 5% white — both washed out
+                      against the near-black header, which left the tabs
+                      unreadable on a bright screen.
+                    */
                     className={`rounded-xl border px-4 py-2.5 text-sm font-semibold transition ${
                       active
-                        ? "border-pink-400/60 bg-pink-500/20 text-pink-100"
-                        : "border-white/10 bg-white/5 text-white/70 hover:bg-white/10"
+                        ? "border-pink-300 bg-pink-500 text-white shadow-sm shadow-pink-500/30"
+                        : "border-white/25 bg-white/10 text-white hover:border-white/40 hover:bg-white/20"
                     }`}
                   >
                     {t(`nav.${item.key}`)}

@@ -237,8 +237,9 @@ export default function ModelAdminClient({
                                             setActiveTab(tab.id)
                                         }
                                         className={`whitespace-nowrap rounded-xl border px-4 py-2.5 text-sm font-semibold transition ${selected
-                                            ? "border-pink-400/50 bg-pink-500/20 text-pink-200"
-                                            : "border-white/10 bg-white/5 text-white/55 hover:bg-white/10 hover:text-white"
+                                            /* Same contrast fix as the header tabs. */
+                                            ? "border-pink-300 bg-pink-500 text-white"
+                                            : "border-white/25 bg-white/10 text-white hover:border-white/40 hover:bg-white/20"
                                             }`}
                                     >
                                         {t(`tabs.${tab.id}`)}
