@@ -17,8 +17,8 @@ type ItemView = {
   id: string;
   itemKey: string;
   sectionKey: string;
-  title: string;
-  description: string | null;
+  /** Resolves `daily.items.<sectionKey>.<key>` in the READER's catalogue. */
+  key: string;
   completed: boolean;
   completedAt: string | null;
   notes: string;
@@ -26,7 +26,6 @@ type ItemView = {
 
 type SectionView = {
   key: string;
-  title: string;
   order: number;
   items: ItemView[];
   completed: number;
@@ -120,6 +119,9 @@ export default function DailyTab({
   const t = useTranslations("admin.dailyPanel");
   const tState = useTranslations("common.states");
   const tErrors = useTranslations("errors");
+  // The checklist's own words. Read here rather than on the server so they
+  // always match the language the rest of this page is already in.
+  const tDaily = useTranslations("daily");
 
   const [sections, setSections] = useState<SectionView[]>([]);
   const [summary, setSummary] = useState<Summary>(EMPTY_SUMMARY);
@@ -129,9 +131,10 @@ export default function DailyTab({
   const [savingKey, setSavingKey] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [filter, setFilter] = useState<Filter>("all");
-  const [closedSections, setClosedSections] = useState<Record<string, boolean>>(
-    {},
-  );
+  // Every block starts collapsed. Sixty-eight steps opened at once is a wall of
+  // text; closed, the tab opens on eleven headings and their percentages, and
+  // you open the one you are working through.
+  const [openSections, setOpenSections] = useState<Record<string, boolean>>({});
 
   const applyResponse = useCallback((result: DailyResponse) => {
     setSections(result.sections ?? []);
@@ -312,7 +315,7 @@ export default function DailyTab({
       ) : (
         <div className="space-y-5">
           {visibleSections.map((section) => {
-            const isOpen = !closedSections[section.key];
+            const isOpen = openSections[section.key] === true;
             const sectionBand = dailyBand(section.percentage);
 
             return (
@@ -323,11 +326,12 @@ export default function DailyTab({
                 <button
                   type="button"
                   onClick={() =>
-                    setClosedSections((current) => ({
+                    setOpenSections((current) => ({
                       ...current,
                       [section.key]: !current[section.key],
                     }))
                   }
+                  aria-expanded={isOpen}
                   className="flex w-full items-center justify-between gap-5 px-5 py-5 text-left transition hover:bg-white/[0.03] sm:px-6"
                 >
                   <div>
@@ -336,7 +340,7 @@ export default function DailyTab({
                     </p>
 
                     <h3 className="mt-2 text-lg font-bold text-white">
-                      {section.title}
+                      {tDaily(`sections.${section.key}.title`)}
                     </h3>
 
                     <p className="mt-1 text-sm text-white/45">
@@ -366,6 +370,12 @@ export default function DailyTab({
                       <ItemRow
                         key={item.itemKey}
                         item={item}
+                        title={tDaily(
+                          `items.${item.sectionKey}.${item.key}.title`,
+                        )}
+                        description={tDaily(
+                          `items.${item.sectionKey}.${item.key}.description`,
+                        )}
                         canEdit={canEdit}
                         isToggling={savingKey === item.itemKey}
                         isSavingNote={savingKey === `${item.itemKey}.notes`}
@@ -396,6 +406,8 @@ export default function DailyTab({
 
 function ItemRow({
   item,
+  title,
+  description,
   canEdit,
   isToggling,
   isSavingNote,
@@ -403,6 +415,8 @@ function ItemRow({
   onSaveNote,
 }: {
   item: ItemView;
+  title: string;
+  description: string;
   canEdit: boolean;
   isToggling: boolean;
   isSavingNote: boolean;
@@ -446,12 +460,12 @@ function ItemRow({
                   item.completed ? "text-emerald-200" : "text-white"
                 }`}
               >
-                {item.title}
+                {title}
               </h4>
 
-              {item.description && (
+              {description && (
                 <p className="mt-2 max-w-4xl text-sm leading-6 text-white/45">
-                  {item.description}
+                  {description}
                 </p>
               )}
             </div>

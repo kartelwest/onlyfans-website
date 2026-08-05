@@ -1,7 +1,6 @@
 import "server-only";
 
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { getTranslations } from "next-intl/server";
 
 import {
   DAILY_SECTIONS,
@@ -143,12 +142,23 @@ export async function syncDailyItems({
   }
 }
 
+/**
+ * No `title` and no `description` here, on purpose.
+ *
+ * They used to be resolved server-side with getTranslations("daily"), which
+ * made the checklist's words depend on the locale the ROUTE resolved while
+ * every other word on the tab depended on the locale the BROWSER resolved.
+ * When those two disagreed — and they can, since one reads a cookie on a fetch
+ * and the other reads the rendered page — the panel came back in Portuguese
+ * wrapped around an English list. The keys travel instead, and the component
+ * looks them up in the reader's own catalogue.
+ */
 export type DailyItemView = {
   id: string;
   itemKey: string;
   sectionKey: string;
-  title: string;
-  description: string | null;
+  /** The step's own key within its section — `items.<sectionKey>.<key>`. */
+  key: string;
   completed: boolean;
   completedAt: string | null;
   /** Empty string when nobody has written one — the box starts closed. */
@@ -157,7 +167,6 @@ export type DailyItemView = {
 
 export type DailySectionView = {
   key: string;
-  title: string;
   order: number;
   items: DailyItemView[];
   completed: number;
@@ -210,10 +219,6 @@ export async function loadDaily({
   sections: DailySectionView[];
   summary: DailySummary;
 }> {
-  // Titles and descriptions are UI copy. The definition file owns the keys and
-  // the structure; the catalogue owns the words, keyed by the same keys.
-  const t = await getTranslations("daily");
-
   const { data: rows, error: rowsError } = await supabase
     .from("model_daily_checklist_items")
     .select(ITEM_COLUMNS)
@@ -249,8 +254,7 @@ export async function loadDaily({
         id: row.id,
         itemKey,
         sectionKey: section.key,
-        title: t(`items.${section.key}.${item.key}.title`),
-        description: t(`items.${section.key}.${item.key}.description`),
+        key: item.key,
         completed: row.completed === true,
         completedAt: row.completed_at,
         notes: row.notes ?? "",
@@ -268,7 +272,6 @@ export async function loadDaily({
 
     sections.push({
       key: section.key,
-      title: t(`sections.${section.key}.title`),
       order: sectionIndex + 1,
       items,
       completed: sectionDone,
