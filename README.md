@@ -117,6 +117,73 @@ Fails on: a key present in one catalog and missing from another, an empty value,
 a key that is an object in one locale and a string in the other, and ICU
 placeholder drift between locales. Safe to run in CI.
 
+## Database backups
+
+The Supabase project is on the **free plan: no automated backups and no
+point-in-time recovery**. `/api/cron/database-backup` runs nightly at 04:30 UTC
+(`vercel.json`) and is the only thing standing between a bad night and starting
+over. Buying Supabase Pro would give managed daily backups and PITR covering
+auth and storage as well, and is the better primary — this job is the off-site
+copy that survives losing the Supabase account itself.
+
+**What it does.** `public.export_database_backup()` walks `pg_class`, so every
+table in `public` is included the day it is created — a backup that named its
+tables would go stale the first time somebody added one, and would keep
+reporting success while skipping the new data. The payload is gzipped, then
+encrypted with AES-256-GCM, then written to **both** the private
+`database-backups` bucket (fast restores) and a Google Drive folder (survives
+Supabase). Old files are pruned after 30 days; anything the job does not
+recognise by name is left alone.
+
+**Required environment.**
+
+| Variable | Effect if missing |
+|---|---|
+| `CRON_SECRET` | Route answers 503. Already set for the other crons. |
+| `BACKUP_ENCRYPTION_KEY` | **The job refuses to run.** It will not write personal data unencrypted. |
+| `GOOGLE_DRIVE_BACKUP_FOLDER_ID` | Storage still gets its copy; Drive is reported as skipped. |
+
+Generate the key with
+`node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"` and
+store it **somewhere other than the Drive folder** — a key kept beside the
+backups protects nothing. Lose it and the backups are unreadable. Share the
+Drive folder with `GOOGLE_SERVICE_ACCOUNT_EMAIL` as an Editor; service accounts
+see nothing that has not been shared with them.
+
+**Checking on it.** Every run writes to `system_audit_log` — success or failure,
+under actor `Backup automático`. A backup job whose failures are invisible is
+worse than none, because it produces confidence without producing backups.
+
+```sql
+select created_at, action, summary from system_audit_log
+ where action like 'database_backup%' order by created_at desc limit 14;
+```
+
+A run that reached one destination but not the other answers `207` and says
+which one failed.
+
+**Restoring.**
+
+```bash
+node -e '
+  const {decryptBackup,resolveBackupKey}=require("./lib/backup/crypto");
+  const {gunzipSync}=require("zlib"), fs=require("fs");
+  fs.writeFileSync("backup.json", gunzipSync(decryptBackup(
+    fs.readFileSync(process.argv[1]), resolveBackupKey(process.env.BACKUP_ENCRYPTION_KEY))));
+' karay-backup-....json.gz.enc
+```
+
+That yields `{ tables, auth_users, schema }`. Rebuild structure from
+`supabase/migrations/`, load the tables, then recreate accounts from
+`auth_users` and issue password resets — hashes are deliberately not exported.
+Compare the restored schema against the `schema` key before trusting it:
+production has drifted from the migrations before (see `20260803020000` and
+`20260805070000`), which is why the live schema is captured alongside the data.
+
+**Not covered:** storage buckets (`model-documents`, `model-earnings`). Both are
+empty today, so nothing is missing yet — that stops being true the moment
+somebody uploads a document.
+
 ## Getting Started
 
 First, run the development server:

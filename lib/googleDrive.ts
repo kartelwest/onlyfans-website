@@ -84,3 +84,51 @@ export async function uploadFileToDriveFolder(
     webViewLink: response.data.webViewLink ?? null,
   };
 }
+
+/**
+ * The files in a folder, newest first. Used by the nightly backup to enforce
+ * its retention window; `namePrefix` keeps it to the job's own files, so a
+ * folder shared with anything else is left alone.
+ */
+export async function listDriveFolderFiles(
+  folderId: string,
+  namePrefix?: string,
+): Promise<{ id: string; name: string; createdTime: string | null }[]> {
+  const drive = getDriveClient();
+
+  // `name contains` is a prefix-and-substring match in Drive's query language,
+  // so the result is filtered again below rather than trusted as-is.
+  const query = [
+    `'${folderId}' in parents`,
+    "trashed = false",
+    namePrefix ? `name contains '${namePrefix.replace(/'/g, "\\'")}'` : null,
+  ]
+    .filter(Boolean)
+    .join(" and ");
+
+  const response = await drive.files.list({
+    q: query,
+    fields: "files(id, name, createdTime)",
+    orderBy: "createdTime desc",
+    pageSize: 1000,
+    supportsAllDrives: true,
+    includeItemsFromAllDrives: true,
+  });
+
+  return (response.data.files ?? [])
+    .filter((f): f is { id: string; name: string; createdTime?: string } =>
+      Boolean(f.id && f.name),
+    )
+    .filter((f) => (namePrefix ? f.name.startsWith(namePrefix) : true))
+    .map((f) => ({
+      id: f.id,
+      name: f.name,
+      createdTime: f.createdTime ?? null,
+    }));
+}
+
+export async function deleteDriveFile(fileId: string): Promise<void> {
+  const drive = getDriveClient();
+
+  await drive.files.delete({ fileId, supportsAllDrives: true });
+}
