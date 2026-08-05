@@ -1262,7 +1262,9 @@
       "invalidCompany": "Empresa inválida.",
       "invalidCountry": "País inválido.",
       "companyRequired": "Informe o nome da empresa do proxy.",
-      "saveFailed": "Erro interno ao salvar dados de proxy."
+      "saveFailed": "Erro interno ao salvar dados de proxy.",
+      "noteAssigned": "Novo proxy atribuído: {proxy}",
+      "noteRemoved": "Proxy removido — a modelo está sem proxy atribuído."
     },
     "historyApi": {
       "modelsNoAccess": "Modelos não têm acesso ao histórico de auditoria.",

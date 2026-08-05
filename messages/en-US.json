@@ -1262,7 +1262,9 @@
       "invalidCompany": "Invalid company.",
       "invalidCountry": "Invalid country.",
       "companyRequired": "Enter the proxy provider's name.",
-      "saveFailed": "Internal error while saving the proxy details."
+      "saveFailed": "Internal error while saving the proxy details.",
+      "noteAssigned": "New proxy assigned: {proxy}",
+      "noteRemoved": "Proxy removed — this model has no proxy assigned."
     },
     "historyApi": {
       "modelsNoAccess": "Models do not have access to the audit history.",
