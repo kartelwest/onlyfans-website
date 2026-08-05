@@ -27,12 +27,28 @@ comment on column public.models.daily_reset_on is
 grant select (daily_reset_on) on public.models to authenticated;
 
 -- ----- 2. A note the system writes -------------------------------------------
--- author_id was `not null references profiles(id)`, which assumes every note
--- has a person behind it. The "NÃO FOI TRABALHADO" note has none: it is the
--- absence of work, recorded. Nullable here, and null is what the job writes —
--- created_by_name carries the word "Sistema" so the Notes tab still reads.
-alter table public.model_notes
-  alter column author_id drop not null;
+-- The "NÃO FOI TRABALHADO" note has no person behind it: it is the absence of
+-- work, recorded. The job writes created_by = null and created_by_name =
+-- 'Sistema', and created_by is already nullable.
+--
+-- author_id is only a problem on a database built from 20260722000001, where
+-- it was declared `not null references profiles(id)`. The LIVE database never
+-- got the author_* columns at all — the app has always written the created_by_*
+-- trio — so this is conditional rather than a plain ALTER, which is what makes
+-- it apply to both shapes. (Same class of drift as the note at the top of
+-- 20260803000000: the migration files and the live schema are not identical.)
+do $$
+begin
+  if exists (
+    select 1
+      from information_schema.columns
+     where table_schema = 'public'
+       and table_name = 'model_notes'
+       and column_name = 'author_id'
+  ) then
+    alter table public.model_notes alter column author_id drop not null;
+  end if;
+end $$;
 
 alter table public.model_notes
   drop constraint if exists model_notes_source_check;

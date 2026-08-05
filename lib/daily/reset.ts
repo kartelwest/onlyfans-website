@@ -221,8 +221,10 @@ async function writeNotWorkedNote(
       source: "daily",
       rep_visible: true,
       created_context: "staff",
-      author_id: null,
-      author_name: SYSTEM_ACTOR_NAME,
+      // No author_id/author_name here: the live table never got the author_*
+      // columns the initial schema declared, and the whole app writes the
+      // created_by_* trio instead. created_by stays null — there is no person
+      // behind this note — and the name carries the word "Sistema".
       created_by: null,
       created_by_name: SYSTEM_ACTOR_NAME,
       updated_by: null,

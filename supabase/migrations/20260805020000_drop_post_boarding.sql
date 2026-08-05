@@ -23,27 +23,75 @@
 --      marketing columns). Restored verbatim to the 20260803000000 definition,
 --      which is the one this codebase's LINKED_FIELDS mirrors.
 --
--- Nine onboarding steps were deleted from model_onboarding_items by that
--- migration. They are NOT restored here and do not need to be:
--- syncOnboardingItems() re-seeds any canonical step a model is missing on the
--- next read of her Status tab. What cannot come back is whether those nine
--- were already ticked — that state was moved into the Post Boarding notes
--- being deleted above, and the affected models simply tick them again.
+-- Nine onboarding steps were also deleted from model_onboarding_items by that
+-- migration. The steps themselves need no rescue — syncOnboardingItems()
+-- re-seeds any canonical step a model is missing on the next read of her
+-- Status tab. Whether a step was already TICKED is the part re-seeding cannot
+-- know, so step 1 below reads that back out of the Post Boarding notes before
+-- they are deleted.
 -- =============================================================================
 
--- ----- 1. The tab's table ----------------------------------------------------
+-- ----- 1. Give the moved steps their tick back -------------------------------
+-- That migration wrote "Migrado do onboarding — concluído em … por …" for
+-- every step it moved that was already done. A model whose onboarding was
+-- complete kept her rows (the lock trigger refused the delete), so this only
+-- has work to do for the rest — hence the `not exists` guard, which also makes
+-- the whole statement safe to run twice.
+--
+-- The ordering metadata is copied from any other model's row for the same
+-- step, because those columns are NOT NULL and this migration has no business
+-- knowing the checklist's shape. If no model anywhere still has the step, the
+-- row is left for syncOnboardingItems() to seed unticked — better a lost tick
+-- than an invented one.
+insert into public.model_onboarding_items (
+  model_id, platform, item_key, section_key, section_title, section_order,
+  item_title, item_description, item_order, responsibility,
+  completed, completed_at
+)
+select distinct on (note.model_id, note.item_key)
+  note.model_id,
+  'onlyfans',
+  note.item_key,
+  note.section_key,
+  template.section_title,
+  template.section_order,
+  coalesce(note.item_title, template.item_title),
+  coalesce(note.item_description, template.item_description),
+  template.item_order,
+  template.responsibility,
+  true,
+  note.created_at
+from public.model_post_boarding_notes note
+join lateral (
+  select section_title, section_order, item_title, item_description,
+         item_order, responsibility
+    from public.model_onboarding_items
+   where item_key = note.item_key
+     and platform = 'onlyfans'
+   limit 1
+) template on true
+where note.body like 'Migrado do onboarding — concluído%'
+  and not exists (
+    select 1
+      from public.model_onboarding_items existing
+     where existing.model_id = note.model_id
+       and existing.platform = 'onlyfans'
+       and existing.item_key = note.item_key
+  );
+
+-- ----- 2. The tab's table ----------------------------------------------------
 drop table if exists public.model_post_boarding_notes cascade;
 
--- ----- 2. Its copies in the Notes tab ----------------------------------------
+-- ----- 3. Its copies in the Notes tab ----------------------------------------
 delete from public.model_notes where source = 'post_boarding';
 
--- ----- 3. The source allowlist -----------------------------------------------
+-- ----- 4. The source allowlist -----------------------------------------------
 alter table public.model_notes
   drop constraint if exists model_notes_source_check;
 alter table public.model_notes
   add constraint model_notes_source_check check (source in ('manual', 'ledger'));
 
--- ----- 4. The note-update policy ---------------------------------------------
+-- ----- 5. The note-update policy ---------------------------------------------
 -- Verbatim from 20260804000000_representative_notes.sql. The condition that
 -- matters is `deleted_at is null`: a soft-deleted note is not hers to edit.
 drop policy if exists notes_update on public.model_notes;
@@ -66,7 +114,7 @@ create policy notes_update on public.model_notes
     )
   );
 
--- ----- 5. The onboarding field allowlist -------------------------------------
+-- ----- 6. The onboarding field allowlist -------------------------------------
 -- Verbatim from 20260803000000_onboarding_checklist_rework.sql. The marketing
 -- columns are staff-only and the checklist has no business writing them.
 create or replace function public.set_onboarding_linked_field(
