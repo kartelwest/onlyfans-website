@@ -1717,7 +1717,8 @@
         "note_visibility_changed": "Visibilidade da nota alterada",
         "daily_update": "Daily atualizado",
         "daily_reset": "Daily reiniciado (novo dia)"
-      }
+      },
+      "showDaily": "Mostrar Daily"
     },
     "photoUpload": {
       "model": "Modelo",

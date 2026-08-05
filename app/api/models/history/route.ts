@@ -139,6 +139,21 @@ export async function GET(request: NextRequest) {
     }
 
     const action = request.nextUrl.searchParams.get("action");
+
+    /**
+     * The daily checklist writes an entry per tick and per note, every day, for
+     * every model — enough to bury the handful of events anyone opens this tab
+     * to find. They are hidden unless asked for, and nothing is deleted: the
+     * rows stay exactly where they were and one checkbox brings them back.
+     *
+     * Excluded only while the action dropdown is on "all". Picking a daily
+     * action there is an explicit request for those rows, and answering it with
+     * an empty list because a checkbox elsewhere is unticked would be absurd.
+     */
+    const includeDaily =
+      request.nextUrl.searchParams.get("includeDaily") === "true";
+
+    const DAILY_ACTIONS = ["daily_update", "daily_reset"];
     const fieldName = request.nextUrl.searchParams.get("fieldName");
     const actorId = request.nextUrl.searchParams.get("actorId");
     const pageStr = request.nextUrl.searchParams.get("page");
@@ -205,6 +220,12 @@ export async function GET(request: NextRequest) {
 
           if (action) {
             query = query.eq("action", action);
+          } else if (!includeDaily) {
+            query = query.not(
+              "action",
+              "in",
+              `(${DAILY_ACTIONS.join(",")})`,
+            );
           }
 
           if (fieldName) {

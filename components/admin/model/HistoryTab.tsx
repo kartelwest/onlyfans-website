@@ -162,6 +162,10 @@ export default function HistoryTab({
   const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [actionFilter, setActionFilter] = useState<string>("");
+  // Off by default. The daily checklist writes an entry per tick and per note,
+  // every day, for every model — left in, it buries everything else. The rows
+  // are never deleted, only left out of the list until this is ticked.
+  const [showDaily, setShowDaily] = useState(false);
 
   const fetchHistory = useCallback(async () => {
     setLoading(true);
@@ -176,6 +180,10 @@ export default function HistoryTab({
 
       if (actionFilter) {
         params.set("action", actionFilter);
+      }
+
+      if (showDaily) {
+        params.set("includeDaily", "true");
       }
 
       const res = await fetch(`/api/models/history?${params.toString()}`);
@@ -198,7 +206,7 @@ export default function HistoryTab({
     } finally {
       setLoading(false);
     }
-  }, [modelId, page, actionFilter]);
+  }, [modelId, page, actionFilter, showDaily]);
 
   useEffect(() => {
     fetchHistory();
@@ -221,8 +229,28 @@ export default function HistoryTab({
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
-          <label className="text-sm text-zinc-400">{t("filter")}</label>
+        <div className="flex flex-wrap items-center gap-4">
+          {/*
+            Its own control, deliberately outside the filter dropdown: the
+            dropdown narrows to one kind of event, this decides whether the
+            daily checklist's own traffic is in the list at all.
+          */}
+          <label className="flex cursor-pointer items-center gap-2 text-sm text-zinc-300">
+            <input
+              type="checkbox"
+              checked={showDaily}
+              onChange={(event) => {
+                setShowDaily(event.target.checked);
+                setPage(1);
+              }}
+              className="h-4 w-4 accent-pink-400"
+            />
+
+            {t("showDaily")}
+          </label>
+
+          <span className="flex items-center gap-2">
+            <label className="text-sm text-zinc-400">{t("filter")}</label>
           <select
             value={actionFilter}
             onChange={(e) => handleFilterChange(e.target.value)}
@@ -234,7 +262,8 @@ export default function HistoryTab({
                 {actionLabel(action)}
               </option>
             ))}
-          </select>
+            </select>
+          </span>
         </div>
       </div>
 
