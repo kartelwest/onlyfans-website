@@ -12,7 +12,7 @@ import type { ManagementRole, ModelStatus } from "@/types/model";
 import { getLocale, getTranslations } from "next-intl/server";
 
 import { formatCalendarDate } from "@/lib/earnings/period";
-import { toLocale } from "@/lib/i18n/config";
+import { toLocale, type Locale } from "@/lib/i18n/config";
 
 export const dynamic = "force-dynamic";
 
@@ -36,6 +36,16 @@ type PageviewModelRow = {
   profile: { full_name: string | null } | null;
 };
 
+type ProxyRow = {
+  model_id: string;
+  proxy_ip: string | null;
+  proxy_company: string | null;
+  proxy_company_other: string | null;
+  proxy_country: string | null;
+  /** When the proxy last changed, read from the audit trail. */
+  proxy_updated_at: string | null;
+};
+
 const statusStyles: Record<
   ModelStatus,
   { dot: string; text: string }
@@ -45,6 +55,75 @@ const statusStyles: Record<
   candidate: { dot: "bg-yellow-400", text: "text-yellow-300" },
   denied: { dot: "bg-red-400", text: "text-red-300" },
 };
+
+/**
+ * The model's proxy, under her stage name.
+ *
+ * Two facts, because a proxy nobody has touched in months is a different
+ * situation from the same address set yesterday: what the proxy IS, and when
+ * it last changed. The second comes from the audit trail — the proxy columns
+ * carry no timestamp of their own.
+ *
+ * Renders nothing at all when there is no proxy AND no record of one, so a
+ * model who was never given one does not carry an empty row on her card.
+ */
+function ProxyLine({
+  proxy,
+  labels,
+  locale,
+}: {
+  proxy: ProxyRow | null;
+  labels: {
+    proxy: string;
+    none: string;
+    updated: (when: string) => string;
+    neverUpdated: string;
+    company: (value: string) => string;
+  };
+  locale: Locale;
+}) {
+  const ip = proxy?.proxy_ip?.trim() || "";
+
+  const company =
+    proxy?.proxy_company === "other"
+      ? proxy.proxy_company_other?.trim() || labels.company("other")
+      : proxy?.proxy_company
+        ? labels.company(proxy.proxy_company)
+        : "";
+
+  const country = proxy?.proxy_country?.trim() || "";
+
+  // Everything known about the proxy, on one line, empties dropped.
+  const details = [ip, company, country].filter(Boolean).join(" · ");
+
+  if (!details && !proxy?.proxy_updated_at) {
+    return (
+      <p className="mt-2 text-[11px] font-semibold text-white/30">
+        {labels.proxy}: {labels.none}
+      </p>
+    );
+  }
+
+  return (
+    <div className="mt-2">
+      <p className="truncate text-[11px] font-semibold text-cyan-200/80">
+        <span className="text-white/35">{labels.proxy}: </span>
+        {details || labels.none}
+      </p>
+
+      <p className="mt-0.5 truncate text-[10px] text-white/30">
+        {proxy?.proxy_updated_at
+          ? labels.updated(
+              formatCalendarDate(
+                proxy.proxy_updated_at.slice(0, 10),
+                locale,
+              ),
+            )
+          : labels.neverUpdated}
+      </p>
+    </div>
+  );
+}
 
 export default async function AdminPageviewPage({
   searchParams,
@@ -133,6 +212,30 @@ export default async function AdminPageviewPage({
     ]),
   );
 
+  // models.proxy_* is not selectable by `authenticated` (20260729000000), so
+  // this goes through the SECURITY DEFINER RPC that self-checks is_staff().
+  // Read on its own and allowed to fail: a database that has not run the bulk
+  // migration yet loses the proxy line, not the page.
+  const modelIds = models.map((model) => model.id);
+
+  const { data: proxyRows, error: proxyError } =
+    modelIds.length > 0
+      ? await supabase.rpc("get_models_proxy_details", {
+          target_models: modelIds,
+        })
+      : { data: [], error: null };
+
+  if (proxyError) {
+    console.error(
+      "Failed to load proxy details (is the bulk proxy migration applied?):",
+      proxyError,
+    );
+  }
+
+  const proxyByModel = new Map<string, ProxyRow>(
+    ((proxyRows ?? []) as ProxyRow[]).map((row) => [row.model_id, row]),
+  );
+
   const needle = search.toLowerCase();
 
   const filteredModels = needle
@@ -154,6 +257,7 @@ export default async function AdminPageviewPage({
   const t = await getTranslations("admin.pageview");
   const tCommon = await getTranslations("common.actions");
   const tStatus = await getTranslations("enums.modelStatus");
+  const tProxyCompany = await getTranslations("enums.proxyCompany");
   const locale = toLocale(await getLocale());
 
   return (
@@ -269,6 +373,22 @@ export default async function AdminPageviewPage({
                               {model.stage_name}
                             </p>
                           )}
+
+                        <ProxyLine
+                          proxy={proxyByModel.get(model.id) ?? null}
+                          labels={{
+                            proxy: t("proxy"),
+                            none: t("proxyNone"),
+                            updated: (when: string) =>
+                              t("proxyUpdated", { when }),
+                            neverUpdated: t("proxyNeverUpdated"),
+                            company: (value: string) =>
+                              value === "proxy_empire" || value === "other"
+                                ? tProxyCompany(value)
+                                : value,
+                          }}
+                          locale={locale}
+                        />
                       </div>
 
                       <span className="shrink-0 text-sm font-bold text-pink-300">

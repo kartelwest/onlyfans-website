@@ -2082,7 +2082,11 @@
       "never": "Never",
       "viewModelScreen": "View the model's screen",
       "repScreen": "Rep's screen",
-      "adminPanel": "Admin panel"
+      "adminPanel": "Admin panel",
+      "proxy": "Proxy",
+      "proxyNone": "no proxy",
+      "proxyUpdated": "Updated {when}",
+      "proxyNeverUpdated": "No change on record"
     },
     "monthlyEarnings": {
       "title": "Monthly earnings",

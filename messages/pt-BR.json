@@ -2082,7 +2082,11 @@
       "never": "Nunca",
       "viewModelScreen": "Ver a tela da modelo",
       "repScreen": "Tela do rep.",
-      "adminPanel": "Painel admin"
+      "adminPanel": "Painel admin",
+      "proxy": "Proxy",
+      "proxyNone": "sem proxy",
+      "proxyUpdated": "Atualizado em {when}",
+      "proxyNeverUpdated": "Sem alteração registrada"
     },
     "monthlyEarnings": {
       "title": "Ganhos mensais",
