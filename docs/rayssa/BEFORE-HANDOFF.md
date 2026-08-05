@@ -49,8 +49,10 @@ is simply not a level of access the job requires.
 - [ ] **You apply migrations to production yourself**, or run them under your own account
       after reviewing the coder's migration file. The coder's deliverable is a `.sql` file
       in a pull request, not a change already applied to your live database.
-- [ ] **Two Vercel projects** — `rayssa-dev` pointed at the dev database, `rayssa` pointed at
-      production. Production environment variables are set by you and visible only to you.
+- [ ] **Two Vercel projects for RAYSSA**, both with Root Directory set to `rayssa/`:
+      `rayssa-dev` pointed at the dev database, `rayssa` pointed at production. Production
+      environment variables are set by you and visible only to you. Your existing
+      `karaymodels` project keeps Root Directory `.` and is not touched.
 
 If you later decide the coder is a long-term partner and this ceremony is slowing things
 down, you can relax it deliberately. Start tight; loosening is easy, and un-leaking data is
@@ -64,7 +66,7 @@ Each line: who creates it, who holds the credential.
 
 | # | Account | You create | Coder gets |
 |---|---|---|---|
-| 1 | GitHub repo `rayssa`, **private** | ✅ | Collaborator (write), not admin |
+| 1 | Existing karaymodels repo — RAYSSA is a `rayssa/` sibling app (spec 3.6) | Already exists | Write, with branch protection on `main` |
 | 2 | Vercel Pro team ($20/mo) | ✅ | Member on `rayssa-dev` only |
 | 3 | Supabase project `rayssa-dev` (free) | ✅ | Full keys — it holds fake data |
 | 4 | Supabase KARAY production | Already exists | **Nothing** |
@@ -244,10 +246,11 @@ they are proposals to trade your models' accounts for a shorter timeline.
 Once sections A–C are done, send exactly this:
 
 1. `docs/rayssa/BUILD-PROMPT.md`
-2. Read access to the KARAY repository — they need to read the existing migrations,
-   `lib/brand/ai/contentStudio.ts`, `lib/daily/definition.ts`, and the i18n setup. Section 9
-   of the spec depends on it, and reading that code is what turns a three-month build into a
-   one-month build.
+2. Nothing extra for repository access — RAYSSA lives in the karaymodels repo as a `rayssa/`
+   sibling app, so the existing migrations, `lib/brand/ai/contentStudio.ts`,
+   `lib/daily/definition.ts`, and the i18n setup are already readable. Section 9 of the spec
+   depends on that, and reading that code is what turns a three-month build into a
+   one-month build. Make the build-isolation commit from spec 3.6 first.
 3. The schema-only `.sql` export from section B
 4. Credentials from the section C table — dev only
 5. The spreadsheets and examples from section D

@@ -1,14 +1,39 @@
 <!--
-  Copy this file to the ROOT of the new `rayssa` repository as `AGENTS.md`.
+  Copy this file to `rayssa/AGENTS.md` in the karaymodels repository.
   It is the standing rules an agent reads every session. The full spec lives at
-  docs/BUILD-PROMPT.md — read that too, but these rules bind regardless.
+  docs/rayssa/BUILD-PROMPT.md — read that too, but these rules bind regardless.
 -->
 
 # RAYSSA — standing rules
 
 Internal marketing operations platform for a talent agency. The full specification is at
-`docs/BUILD-PROMPT.md`. **Read it before writing code.** These rules apply every session
-and override any instinct to the contrary.
+`docs/rayssa/BUILD-PROMPT.md`. **Read it before writing code.** These rules apply every
+session and override any instinct to the contrary.
+
+## Rule zero: stay inside `rayssa/`
+
+**This repository also contains karaymodels.com, a live production website serving real
+traffic.** It is everything outside the `rayssa/` directory.
+
+You may **read** any file in this repository — you are expected to, and section 9 of the spec
+depends on it. You may **write** only inside `rayssa/`.
+
+Do not edit, move, rename, refactor, reformat, or delete a single file outside `rayssa/`.
+Not to fix a type error. Not to update a dependency. Not to correct something that is
+genuinely wrong. If a change outside `rayssa/` appears necessary, stop and ask — do not make
+it and mention it afterwards.
+
+The three exceptions are the one-time build-isolation commit described in spec section 3.6
+(`tsconfig.json` exclude, `eslint.config.mjs` ignore, `.gitignore`), which the owner applies
+before your first session. After that commit, `rayssa/` is your entire writable surface.
+
+**Never import across the boundary.** No `import … from "../lib/..."`. The two applications
+have separate dependency trees and separate builds. Port the code you need into `rayssa/`
+instead — that is what spec section 9 means by reuse.
+
+Every pull request you open must show changes to `rayssa/` and nothing else. If `git diff
+--name-only` lists a path outside `rayssa/`, the pull request is wrong regardless of whether
+the tests pass.
 
 ## This is NOT the Next.js you may know
 

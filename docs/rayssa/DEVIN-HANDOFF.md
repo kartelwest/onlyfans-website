@@ -51,6 +51,41 @@ Also, before the first session:
 
 ---
 
+### 1b. Same repo means Devin has write access to your production site
+
+RAYSSA lives in the karaymodels repository as a sibling `rayssa/` application (spec section
+3.6). That is the right call for code reuse — Devin can read
+`lib/brand/ai/contentStudio.ts` directly instead of working from a copy — but it has one
+consequence worth stating plainly:
+
+**The repository Devin can write to also contains karaymodels.com.**
+
+With a separate repo, Devin could not touch your production site if it tried. With one repo
+it can, and it will be reading those files constantly, which means it is one confidently
+wrong edit away from them. Devin refactoring a shared-looking utility, "fixing" a type
+error outside its scope, or reformatting a file it passed through are all realistic.
+
+Three controls, all of which you set up once:
+
+- [ ] **Branch protection on `main`.** Require a pull request and require your review. This
+      is now protecting your live site, not just tidiness.
+- [ ] **`rayssa/AGENTS.md` rule zero** — read-anywhere, write-only-inside-`rayssa/`. It is
+      the first thing in the file for a reason.
+- [ ] **Check the file list on every pull request before reading the diff.** `git diff
+      --name-only` should show `rayssa/` paths and nothing else. One glance. If anything
+      outside appears, reject it without evaluating whether the change was good — a correct
+      edit made outside its scope is still a scope failure, and accepting one teaches the
+      pattern.
+
+The exception is the one-time build-isolation commit from spec section 3.6 — the
+`tsconfig.json` exclude, the `eslint.config.mjs` ignore, and the `.gitignore` lines. **You
+make that commit yourself, before Devin's first session.** It is three lines, and it is what
+stops the karaymodels production build from ever compiling RAYSSA's code. Confirm
+`npm run typecheck && npm run lint && npm test && npm run build` still passes at the root
+before you continue.
+
+---
+
 ### 2. Devin will fabricate anything you don't give it
 
 This is the single biggest AI-specific risk in this project, and it's quiet.
@@ -107,19 +142,21 @@ Ask for evidence, not assurance: the command, and its actual output pasted back.
 Devin burns compute discovering a broken toolchain, and a repo where `npm test` doesn't run
 produces sessions that end in "I couldn't verify the change."
 
-- [ ] **Scaffold the repo yourself first**, or make Phase 1 a single narrow session whose
-      only job is a working skeleton: Next.js + TypeScript + Tailwind + `next-intl`, and
-      `npm run dev`, `build`, `typecheck`, `lint`, `test` all exiting clean on an empty app.
-      Merge that before anything else starts.
-- [ ] **Put `BUILD-PROMPT.md` in the new repo** at `docs/BUILD-PROMPT.md`. Devin reads files
-      in the repo far more reliably than long pasted prompts, and it can re-read a file in a
-      later session.
-- [ ] **Add `AGENTS.md` at the repo root** — see `rayssa-AGENTS.md` in this folder, copy it
-      across. Devin reads it every session. The 800-line spec it will not re-read; a
-      100-line standing-rules file it will.
-- [ ] **Give Devin read access to the karaymodels repository.** Section 9 of the spec is
-      where most of the time savings are, and Devin is genuinely good at reading an existing
-      codebase when pointed at exact paths. The phase prompts below name the files.
+- [ ] **Make the build-isolation commit yourself** (section 1b above), then scaffold
+      `rayssa/` — or make Phase 1 a single narrow session whose only job is a working
+      skeleton: Next.js + TypeScript + Tailwind + `next-intl` inside `rayssa/`, with
+      `npm run dev`, `build`, `typecheck`, `lint`, `test` all exiting clean from within that
+      directory. Merge that before anything else starts.
+- [ ] **`BUILD-PROMPT.md` is already in the repo** at `docs/rayssa/BUILD-PROMPT.md`. Devin
+      reads files in the repo far more reliably than long pasted prompts, and it can re-read
+      a file in a later session. Reference it by path in every task prompt.
+- [ ] **Copy `rayssa-AGENTS.md` to `rayssa/AGENTS.md`.** Devin reads it every session. The
+      800-line spec it will not re-read; a short standing-rules file it will. Rule zero —
+      write only inside `rayssa/` — is the most important line in this whole package.
+- [ ] **Nothing to grant for cross-repo reading** — it is one repository, which is the main
+      benefit of the layout. Section 9 of the spec is where most of the time savings are, and
+      Devin is good at reading an existing codebase when pointed at exact paths. The phase
+      prompts below name the files.
 - [ ] **Load the standing rules into Devin's Knowledge / playbook** if your plan has it —
       the prohibitions, the migration conventions, the RLS pattern. Same content as
       `AGENTS.md`. Belt and braces.
@@ -141,7 +178,9 @@ Paste these one at a time. Each assumes `docs/BUILD-PROMPT.md` and `AGENTS.md` a
 repo.
 
 **Phase 1 — foundation**
-> Read `docs/BUILD-PROMPT.md` in full, then `AGENTS.md`. Implement Phase 1 only (section 12):
+> Read `docs/rayssa/BUILD-PROMPT.md` in full, then `rayssa/AGENTS.md`. Note rule zero: you
+> may read anything in this repository but write only inside `rayssa/`. Implement Phase 1
+> only (section 12), entirely inside `rayssa/`:
 > Next.js scaffold, Tailwind, `next-intl` with both `pt-BR` and `en-US` catalogues, Supabase
 > client, the `rayssa` schema, `rayssa.users` with RLS, login, middleware, forced password
 > change. Also write a seed script creating 5 fake models and brand profiles in the dev
@@ -163,8 +202,8 @@ repo.
 
 **Phase 4 — generation**
 > Implement Phase 4 only. Read `lib/brand/ai/contentStudio.ts` and
-> `lib/brand/ai/launchPacket.ts` in the karaymodels repository and port them rather than
-> writing new prompts. Build `daily_packets` and `packet_items`, and the overnight batch job
+> `lib/brand/ai/launchPacket.ts` at the repository root and **port copies into `rayssa/`** —
+> do not import across the boundary, and do not modify the originals. Build `daily_packets` and `packet_items`, and the overnight batch job
 > using the Anthropic Batch API with prompt caching as described in section 8. Report
 > `usage.cache_read_input_tokens` from a real run to prove caching is working.
 
@@ -200,6 +239,8 @@ repo.
 ## What Devin cannot do
 
 These stay yours no matter how capable the tool is:
+
+- The build-isolation commit (spec 3.6) and branch protection
 
 - Meta Business Verification and app review submission — business identity, not code
 - Converting Instagram accounts to Business/Creator

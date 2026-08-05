@@ -95,7 +95,7 @@ It does three things:
 | LLM | Anthropic API, `@anthropic-ai/sdk` |
 | Scheduler | Supabase `pg_cron` + `pg_net` (see 3.5) |
 | Hosting | Vercel Pro (see 3.2) |
-| Source control | GitHub, new repository `rayssa` |
+| Source control | GitHub — a sibling `rayssa/` app inside the karaymodels repository (see 3.6) |
 
 ### 3.2 Hosting — read this before choosing
 
@@ -241,6 +241,71 @@ select cron.schedule(
 The endpoint rejects any request without the matching `CRON_SECRET`, same as KARAY's
 existing ledger and backup crons. Keep every scheduled job behind such a route so the
 trigger source stays swappable.
+
+### 3.6 Repository layout — one repo, two applications
+
+RAYSSA lives **in the karaymodels repository**, as a sibling application with its own
+dependency tree and its own build. It is not a route inside the existing app.
+
+```
+karaymodels/                 ← repository root
+├── app/                     ← the existing marketing site + admin. UNCHANGED.
+├── lib/  components/  i18n/  messages/  supabase/
+├── proxy.ts                 ← the existing app's request interception
+├── package.json             ← the existing app's dependencies
+├── tsconfig.json
+└── rayssa/                  ← RAYSSA. Self-contained.
+    ├── app/
+    ├── lib/  components/  i18n/  messages/
+    ├── proxy.ts             ← RAYSSA's own auth gate
+    ├── package.json         ← RAYSSA's own dependencies
+    ├── tsconfig.json
+    ├── next.config.ts
+    └── AGENTS.md
+```
+
+**Nesting RAYSSA as routes inside the existing app (`app/rayssa/*`) is explicitly rejected.**
+Directory depth provides no isolation in a Next.js application. Routes under `app/` share one
+`package.json`, one build, one deployment, one `next.config.ts`, one i18n configuration, and
+— most sharply — **one request-interception file**, since Next.js permits a single `proxy.ts`
+per application. Under that layout a TypeScript error in RAYSSA fails the karaymodels
+production build, a RAYSSA deployment redeploys the public marketing site, and RAYSSA's
+authentication gate has to be merged into the same file that serves the public site's
+requests. That is the opposite of separation.
+
+The sibling layout gives real isolation because **Vercel's Root Directory setting points a
+project at a subdirectory**:
+
+| Vercel project | Root Directory | Domain | Deploys |
+|---|---|---|---|
+| `karaymodels` | `.` | karaymodels.com | The existing site, unchanged |
+| `rayssa` | `rayssa/` | rayssa.karaymodels.com | RAYSSA only |
+
+Two builds, two deployments, two sets of environment variables, two `proxy.ts` files. A
+RAYSSA build failure cannot break karaymodels.com, because karaymodels.com's build never
+compiles RAYSSA's code.
+
+**Three edits to the existing repository are required — and they are the only ones.** Without
+them the root build type-checks and lints `rayssa/`, which reintroduces the coupling the
+layout exists to prevent:
+
+1. `tsconfig.json` — add `"rayssa"` to `exclude`:
+   ```json
+   "exclude": ["node_modules", "rayssa"]
+   ```
+2. `eslint.config.mjs` — add `"rayssa/**"` to the `globalIgnores([...])` list.
+3. `.gitignore` — add `rayssa/node_modules` and `rayssa/.next`.
+
+Make these three edits in their own commit, before any RAYSSA code is written, and confirm
+`npm run typecheck && npm run lint && npm test && npm run build` still passes at the root.
+**Nothing else in the existing application may be modified at any point in this build.**
+
+**Do not import across the boundary.** RAYSSA must never `import` from `../lib/...`. The two
+applications have separate dependency trees and separate builds; a cross-boundary import
+couples them again and breaks both. Where the spec says to reuse KARAY code — section 9 —
+that means *read it and port a copy into `rayssa/`*, not import it. If the duplication later
+becomes painful, extract the shared code into a proper workspace package deliberately; do not
+arrive there by accident through a relative import.
 
 ---
 
