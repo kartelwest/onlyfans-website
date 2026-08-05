@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { getTranslations } from "next-intl/server";
 
 import { createClient } from "@/lib/supabase/server";
@@ -128,6 +129,15 @@ export async function PATCH(request: Request) {
       source: "api:/api/models/proxy",
       summary: `Dados de proxy atualizados (IP: ${proxyIp ?? "—"}, empresa: ${proxyCompany ?? "—"}, país: ${proxyCountry ?? "—"})`,
     });
+
+    // The proxy is shown in two places now: the panel it was typed into, and
+    // the card on /admin/pageview. Both are dynamic renders, but a render
+    // already sitting in the router cache would keep showing the old address
+    // after a navigation. Dropping them here is what makes the Pageview card
+    // agree with the panel as soon as Save is pressed, rather than whenever
+    // the cache happened to expire.
+    revalidatePath("/admin/pageview");
+    revalidatePath("/admin/models/[slug]", "page");
 
     return NextResponse.json({ success: true });
   } catch (error) {
