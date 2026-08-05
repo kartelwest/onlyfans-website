@@ -1077,7 +1077,7 @@ function RemoveNoteModal({
                         type="button"
                         onClick={onCancel}
                         disabled={isWorking}
-                        className="rounded-xl border border-white/15 px-5 py-3 text-xs font-bold uppercase tracking-wider text-white/70 transition hover:bg-white/10 disabled:opacity-50"
+                        className="rounded-xl border border-white/15 px-5 py-3 text-xs font-bold uppercase tracking-wider text-white transition hover:bg-white/10 disabled:opacity-50"
                     >
                         {tCommon("cancel")}
                     </button>
@@ -1218,7 +1218,7 @@ function NoteCard({
 
                     {canShareWithRep &&
                         !note.deletedAt && (
-                            <label className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-xs font-semibold text-white/70 transition hover:bg-white/10">
+                            <label className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-xs font-semibold text-white transition hover:bg-white/10">
                                 <input
                                     type="checkbox"
                                     checked={
@@ -1571,7 +1571,7 @@ function EditConfirmationModal({
                         type="button"
                         onClick={onCancel}
                         disabled={isSaving}
-                        className="rounded-xl border border-white/10 bg-white/5 px-5 py-3 text-sm font-semibold text-white/70 transition hover:bg-white/10 disabled:opacity-40"
+                        className="rounded-xl border border-white/10 bg-white/5 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/10 disabled:opacity-40"
                     >
                         {tCommon("cancel")}
                     </button>
@@ -1609,7 +1609,7 @@ function ActionButton({
             type="button"
             disabled={disabled}
             onClick={onClick}
-            className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs font-semibold text-white/60 transition hover:border-pink-400/30 hover:bg-pink-500/10 hover:text-pink-200 disabled:cursor-not-allowed disabled:opacity-35"
+            className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs font-semibold text-white transition hover:border-pink-400/30 hover:bg-pink-500/10 hover:text-pink-200 disabled:cursor-not-allowed disabled:opacity-35"
         >
             {children}
         </button>

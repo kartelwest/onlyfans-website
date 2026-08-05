@@ -245,7 +245,7 @@ export default function RepresentativesClient({
                             type="button"
                             disabled={isPending}
                             onClick={() => handleStatusChange(rep.id, "arquivada")}
-                            className="rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-xs font-bold text-white/70 transition hover:bg-white/10 disabled:opacity-40"
+                            className="rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-xs font-bold text-white transition hover:bg-white/10 disabled:opacity-40"
                           >
                             {t("archive")}
                           </button>
@@ -264,7 +264,7 @@ export default function RepresentativesClient({
 
                         <Link
                           href={`/admin/representatives/${rep.id}`}
-                          className="rounded-lg border border-white/15 px-3 py-2 text-xs font-bold text-white/70 transition hover:bg-white/10"
+                          className="rounded-lg border border-white/15 px-3 py-2 text-xs font-bold text-white transition hover:bg-white/10"
                         >
                           {t("openProfile")}
                         </Link>

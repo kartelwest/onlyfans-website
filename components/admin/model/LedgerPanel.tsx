@@ -388,7 +388,7 @@ export default function LedgerPanel({ modelId }: LedgerPanelProps) {
                 setEditingId(null);
                 setForm(emptyForm);
               }}
-              className="rounded-xl border border-white/15 px-5 py-3 text-xs font-black uppercase tracking-[0.12em] text-white/70 transition hover:bg-white/5"
+              className="rounded-xl border border-white/15 px-5 py-3 text-xs font-black uppercase tracking-[0.12em] text-white transition hover:bg-white/5"
             >
               {tCommon("cancel")}
             </button>
@@ -528,7 +528,7 @@ export default function LedgerPanel({ modelId }: LedgerPanelProps) {
                       <button
                         type="button"
                         onClick={() => startEditing(entry)}
-                        className="rounded-lg border border-white/15 px-3 py-1.5 text-xs font-bold text-white/70 transition hover:bg-white/5"
+                        className="rounded-lg border border-white/15 px-3 py-1.5 text-xs font-bold text-white transition hover:bg-white/5"
                       >
                         {tCommon("edit")}
                       </button>

@@ -323,7 +323,7 @@ export default function MonthlyEarningsPanel({
                   <button
                     type="button"
                     onClick={() => editMonth(month)}
-                    className="rounded-xl border border-white/15 px-4 py-2 text-xs font-bold text-white/70 transition hover:bg-white/5"
+                    className="rounded-xl border border-white/15 px-4 py-2 text-xs font-bold text-white transition hover:bg-white/5"
                   >
                     {tCommon("edit")}
                   </button>
@@ -331,7 +331,7 @@ export default function MonthlyEarningsPanel({
                   <button
                     type="button"
                     onClick={() => void togglePublished(month)}
-                    className="rounded-xl border border-white/15 px-4 py-2 text-xs font-bold text-white/70 transition hover:bg-white/5"
+                    className="rounded-xl border border-white/15 px-4 py-2 text-xs font-bold text-white transition hover:bg-white/5"
                   >
                     {month.published ? t("unpublish") : t("publish")}
                   </button>

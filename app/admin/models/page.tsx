@@ -940,7 +940,7 @@ function ProfileListSection({
                             ) : (
                               <Link
                                 href={`/owner/users/${profile.id}`}
-                                className="rounded-lg border border-white/15 px-4 py-2 text-center text-xs font-bold text-white/70 transition hover:bg-white/10"
+                                className="rounded-lg border border-white/15 px-4 py-2 text-center text-xs font-bold text-white transition hover:bg-white/10"
                               >
                                 {t("manageAccount")}
                               </Link>

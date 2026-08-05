@@ -309,7 +309,7 @@ export default function RepresentativeCredentialsPanel({
             type="button"
             onClick={() => setStep("form")}
             disabled={isSubmitting}
-            className="rounded-xl border border-white/15 bg-white/5 px-5 py-2.5 text-sm font-bold text-white/70 transition hover:bg-white/10 disabled:opacity-50"
+            className="rounded-xl border border-white/15 bg-white/5 px-5 py-2.5 text-sm font-bold text-white transition hover:bg-white/10 disabled:opacity-50"
           >
             {tCommon("back")}
           </button>
@@ -373,7 +373,7 @@ export default function RepresentativeCredentialsPanel({
             <button
               type="button"
               onClick={() => setGeneratedPassword(generatePassword())}
-              className="rounded-lg border border-white/15 bg-white/5 px-3 py-1.5 text-xs font-bold text-white/80 transition hover:bg-white/10"
+              className="rounded-lg border border-white/15 bg-white/5 px-3 py-1.5 text-xs font-bold text-white transition hover:bg-white/10"
             >
               {t("generateAnother")}
             </button>
@@ -500,7 +500,7 @@ function CredentialRow({ label, value }: { label: string; value: string }) {
         <button
           type="button"
           onClick={copy}
-          className="shrink-0 rounded-lg border border-white/15 bg-white/5 px-3 py-1.5 text-xs font-bold text-white/80 transition hover:bg-white/10"
+          className="shrink-0 rounded-lg border border-white/15 bg-white/5 px-3 py-1.5 text-xs font-bold text-white transition hover:bg-white/10"
         >
           {copied ? "Copiado!" : "Copiar"}
         </button>

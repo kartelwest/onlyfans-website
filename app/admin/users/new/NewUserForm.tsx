@@ -1011,7 +1011,7 @@ export default function NewUserForm({
           onClick={() =>
             router.push("/admin/models")
           }
-          className="rounded-xl border border-white/10 bg-white/5 px-6 py-3 text-sm font-semibold text-white/70 transition hover:bg-white/10"
+          className="rounded-xl border border-white/10 bg-white/5 px-6 py-3 text-sm font-semibold text-white transition hover:bg-white/10"
         >
           {tCommon("cancel")}
         </button>

@@ -152,7 +152,7 @@ export default async function NewUserPage({
 
           <Link
             href="/admin/models"
-            className="w-fit rounded-xl border border-white/10 bg-white/5 px-5 py-3 text-sm font-semibold text-white/80 transition hover:bg-white/10"
+            className="w-fit rounded-xl border border-white/10 bg-white/5 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/10"
           >
             {t("backToModels")}
           </Link>

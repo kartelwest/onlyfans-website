@@ -131,7 +131,7 @@ async function ClientRow({
       <td className="px-6 py-4 text-right">
         <Link
           href={`/admin/socialmediamodels/models/${client.talentId}`}
-          className="rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-xs font-semibold text-white/80 transition hover:bg-white/10"
+          className="rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-xs font-semibold text-white transition hover:bg-white/10"
         >
           {t("open")}
         </Link>

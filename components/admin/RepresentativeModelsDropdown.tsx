@@ -48,7 +48,7 @@ export default function RepresentativeModelsDropdown({
 
   return (
     <details className="group/models w-full min-w-[220px]">
-      <summary className="flex cursor-pointer list-none items-center justify-between gap-2 rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-xs font-bold text-white/80 transition hover:bg-white/10 [&::-webkit-details-marker]:hidden">
+      <summary className="flex cursor-pointer list-none items-center justify-between gap-2 rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-xs font-bold text-white transition hover:bg-white/10 [&::-webkit-details-marker]:hidden">
         <span>
           {t("modelCount", { count: models.length })}
         </span>

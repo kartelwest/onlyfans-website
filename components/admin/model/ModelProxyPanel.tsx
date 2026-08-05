@@ -136,7 +136,7 @@ export default function ModelProxyPanel({
           <button
             type="button"
             onClick={startEditing}
-            className="rounded-lg border border-white/15 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.12em] text-white/70 transition hover:bg-white/10"
+            className="rounded-lg border border-white/15 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.12em] text-white transition hover:bg-white/10"
           >
             {tCommon("edit")}
           </button>

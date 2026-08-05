@@ -279,14 +279,14 @@ export default async function AdminPageviewPage({
           <div className="flex flex-wrap gap-3">
             <Link
               href="/admin/models"
-              className="rounded-xl border border-white/10 bg-white/5 px-5 py-3 text-sm font-semibold text-white/80 transition hover:bg-white/10"
+              className="rounded-xl border border-white/10 bg-white/5 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/10"
             >
               {t("modelList")}
             </Link>
 
             <Link
               href="/admin/representatives"
-              className="rounded-xl border border-white/10 bg-white/5 px-5 py-3 text-sm font-semibold text-white/80 transition hover:bg-white/10"
+              className="rounded-xl border border-white/10 bg-white/5 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/10"
             >
               {t("representatives")}
             </Link>
@@ -322,7 +322,7 @@ export default async function AdminPageviewPage({
           {search && (
             <Link
               href="/admin/pageview"
-              className="rounded-lg border border-white/15 px-4 py-2 text-xs font-bold uppercase tracking-wider text-white/70 transition hover:bg-white/10"
+              className="rounded-lg border border-white/15 px-4 py-2 text-xs font-bold uppercase tracking-wider text-white transition hover:bg-white/10"
             >
               {tCommon("clear")}
             </Link>
