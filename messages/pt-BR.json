@@ -1400,7 +1400,9 @@
       "unexpectedLoad": "Ocorreu um erro inesperado ao carregar as notas.",
       "unexpectedAdd": "Ocorreu um erro inesperado ao adicionar a nota.",
       "unexpectedUpdate": "Ocorreu um erro inesperado ao atualizar a nota.",
-      "unexpectedDelete": "Ocorreu um erro inesperado ao excluir a nota."
+      "unexpectedDelete": "Ocorreu um erro inesperado ao excluir a nota.",
+      "noSharePermission": "Você não tem permissão para compartilhar notas com o representante.",
+      "shareFailed": "Não foi possível alterar quem pode ler esta nota."
     },
     "parseClaude": {
       "noPermission": "Você não tem permissão para usar esta funcionalidade.",
@@ -1721,7 +1723,8 @@
         "note_pinned": "Nota fixada",
         "note_unpinned": "Nota desafixada",
         "note_archived": "Nota arquivada",
-        "note_restored": "Nota restaurada"
+        "note_restored": "Nota restaurada",
+        "note_visibility_changed": "Visibilidade da nota alterada"
       }
     },
     "photoUpload": {
@@ -2656,7 +2659,10 @@
       "emptyActiveTitle": "Nenhuma nota ativa",
       "updateFailed": "Não foi possível atualizar a nota.",
       "hardDeleteTitle": "Excluir esta nota em definitivo?",
-      "softDeleteTitle": "Excluir esta nota?"
+      "softDeleteTitle": "Excluir esta nota?",
+      "readableByRep": "Visível ao representante",
+      "shareFailed": "Não foi possível alterar quem pode ler esta nota.",
+      "createdBy": "Criada por"
     },
     "brandGrowth": {
       "enrollFailed": "Erro ao matricular.",

@@ -61,12 +61,14 @@ const ACTION_KEYS: Record<string, string> = {
   note_unpinned: "note_unpinned",
   note_archived: "note_archived",
   note_restored: "note_restored",
+  note_visibility_changed: "note_visibility_changed",
 };
 
 const ACTION_COLORS: Record<string, string> = {
   field_update: "text-blue-300",
   status_change: "text-yellow-300",
   proxy_update: "text-purple-300",
+  note_visibility_changed: "text-pink-300",
   avatar_update: "text-green-300",
   checklist_update: "text-cyan-300",
   marketing_update: "text-indigo-300",

@@ -19,6 +19,19 @@ const DEFAULT_PAGE_SIZE = 25;
 // history can tell them apart from profile changes in `model_audit_history`.
 const NOTE_ACTION_PREFIX = "note_";
 
+/**
+ * The audit actions a representative may read — the onboarding checklist, which
+ * is the work she does. Mirrors public.rep_visible_audit_action() in
+ * 20260804020000_representative_note_visibility.sql; RLS is what actually
+ * enforces it, and this filter only spares the database rows it would refuse
+ * anyway (and keeps the paging counts honest, which RLS alone would not).
+ * Change one and change the other.
+ */
+const REP_VISIBLE_AUDIT_ACTIONS = [
+  "onboarding_update",
+  "checklist_update",
+];
+
 /** Catalogue keys under `admin.notes.actions`, keyed by the stored action. */
 const NOTE_ACTION_KEYS: Record<string, string> = {
   created: "noteCreated",
@@ -184,6 +197,10 @@ export async function GET(request: NextRequest) {
             .or("source.is.null,source.neq.post_boarding")
             .order("created_at", { ascending: false })
             .range(0, upperBound);
+
+          if (!isStaff) {
+            query = query.in("action", REP_VISIBLE_AUDIT_ACTIONS);
+          }
 
           if (action) {
             query = query.eq("action", action);
