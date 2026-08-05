@@ -33,6 +33,13 @@ judgement.
 One screen per day per model that answers: *what do we post, where, with what media, and
 what happened to yesterday's posts?*
 
+**Scale.** RAYSSA operates on every model where `active = true` — the roster is read from
+the database, never hardcoded, and models are added and deactivated without a code change.
+Design and load-test for **up to 30 active models**. Nothing may assume a fixed count, and
+nothing may degrade non-linearly as the roster grows toward that ceiling: the overnight
+preparation job in particular must batch the whole roster in one pass rather than looping
+one model at a time (see 7 and 8).
+
 It does three things:
 
 1. **Prepares** — overnight, for every active model, generates the full day's marketing
@@ -276,7 +283,7 @@ usage-based rates are **$0.015 per post created**, rising to **$0.20 if the post
 URL**, plus $0.005 per post read and $0.010 per user read.
 
 For 3 posts/day with two plain posts and one link CTA, that is roughly $6.90 per model per
-month — about **$221/month across 32 models**, before any read operations. That is a real
+month — about **$207/month across 30 models**, before any read operations. That is a real
 number, and it is the reason X publishing is manual by default.
 
 So: RAYSSA generates the hook, the preview, and the CTA, picks the approved asset, shows
@@ -545,8 +552,9 @@ create table rayssa.packet_items (
 Every status transition writes an audit row: who, what, when, before, after. Mirror KARAY's
 `model_audit_history` pattern rather than inventing a second one.
 
-**Preparation is a batch job over all active models, not a per-model button.** With 32
-models, a rep must not click "prepare" 32 times. The overnight job builds every packet; the
+**Preparation is a batch job over all active models, not a per-model button.** With a roster
+in the twenties, a rep must not click "prepare" once per model. The overnight job builds
+every packet for every model where `active = true`; the
 per-model screen shows a prepared packet and offers a "regenerate this item" action for the
 cases where the generated copy misses.
 
@@ -567,18 +575,18 @@ genuine per-instance writing earns its price:
 - Ten individually personalized outreach messages
 - OnlyFans DM reply drafts
 
-At roughly 3,000 input and 2,500 output tokens per model per day across 32 models:
+At roughly 3,000 input and 2,500 output tokens per model per day across 30 models:
 
 | Configuration | Approx. monthly |
 |---|---|
-| Sonnet 5, direct | ~$45 |
+| Sonnet 5, direct | ~$42 |
 | Sonnet 5 + prompt caching + Batch API | ~$20 |
 | Haiku 4.5 + prompt caching + Batch API | ~$6 |
 
 Sonnet 5 lists at $3 per million input tokens and $15 per million output (introductory
 $2/$10 through 2026-08-31); Haiku 4.5 at $1/$5. The **Batch API halves all token costs** and
 is a perfect fit here — packet preparation is an overnight job with no latency requirement,
-so submit all 32 models as one batch and collect results before the workday starts. **Prompt
+so submit the whole roster as one batch and collect results before the workday starts. **Prompt
 caching** cuts input cost by roughly 90% on cache hits: the system prompt, the brand voice
 guidance, and the subreddit rule text are identical across every model in the run, so put
 them at the front of the prompt with a cache breakpoint and put the per-model variables
@@ -673,7 +681,8 @@ The build is not done until every one of these passes:
    confirming the database rejects it.
 6. An asset rated `needs_review` cannot be attached to any packet item.
 7. The overnight job produces a complete packet for every active model, and a failure on
-   one model does not prevent the other 31 from completing. The failed packet's `error` is
+   one model does not prevent the rest of the roster from completing. The failed packet's
+   `error` is
    populated and the status is `failed`.
 8. Reddit selection never returns a subreddit within its cooldown for that model, never
    returns one where the model is banned, and never returns the same title twice within one
@@ -763,7 +772,7 @@ Answer these before phase 4; they do not block phases 1–3.
    named set of top-earning models from day one, at roughly $7/model/month?
 4. **Which models are in scope at launch** — all active models, or a pilot group of 3–5?
    A pilot is strongly recommended: it surfaces the asset-rating workload, which is the
-   real bottleneck, before it is 32 models deep.
+   real bottleneck, before it is the whole roster deep.
 5. **Timezone for the overnight job.** `America/Sao_Paulo` is assumed above.
 
 ---
@@ -782,4 +791,4 @@ Answer these before phase 4; they do not block phases 1–3.
 
 The Cloudflare route removes the $20 hosting line at the cost of a migration and ongoing
 runtime divergence from KARAY. The LLM line is irreducible without dropping generation
-quality, and $20/month against 32 models is not where cost optimization should start.
+quality, and $20/month against the whole roster is not where cost optimization should start.
