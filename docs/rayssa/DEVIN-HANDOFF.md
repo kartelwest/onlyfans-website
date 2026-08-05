@@ -51,44 +51,31 @@ Also, before the first session:
 
 ---
 
-### 1b. Same repo means Devin has write access to your production site
+### 1b. Separate repo — what that does and does not buy you
 
-RAYSSA lives in the karaymodels repository as a sibling `rayssa/` application (spec section
-3.6). That is the right call for code reuse — Devin can read
-`lib/brand/ai/contentStudio.ts` directly instead of working from a copy — but it has one
-consequence worth stating plainly:
+RAYSSA is its own repository and its own Supabase project (spec 3.3, 3.6). Devin has no
+access to the karaymodels repository and no connection string for KARAY's database. That is
+a structural boundary, not a policy one: it holds whether or not anyone is paying attention,
+which is exactly the property you wanted.
 
-**The repository Devin can write to also contains karaymodels.com.**
+It is not total, and the gap is worth knowing:
 
-With a separate repo, Devin could not touch your production site if it tried. With one repo
-it can, and it will be reading those files constantly, which means it is one confidently
-wrong edit away from them. Devin refactoring a shared-looking utility, "fixing" a type
-error outside its scope, or reformatting a file it passed through are all realistic.
+- **You still review every pull request.** Devin can wreck RAYSSA's own database, and RAYSSA
+  is the thing that will run your daily operations.
+- **Branch protection on `rayssa`'s `main`.** PR required, your review required. Devin must
+  never merge its own work.
+- **The integration API is written in karaymodels, and Devin never touches it.** Those three
+  endpoints are your work (or a separate scoped change reviewed on its own). Devin codes
+  against the contract and the mock. If it ever asks for karaymodels access or a KARAY
+  connection string, the answer is no — rule zero in `AGENTS.md` says so, and that request
+  itself means it has misread the task.
 
-Three controls, all of which you set up once:
-
-- [ ] **Branch protection on `main`.** Require a pull request and require your review. This
-      is now protecting your live site, not just tidiness.
-- [ ] **`rayssa/AGENTS.md` rule zero** — read-anywhere, write-only-inside-`rayssa/`. It is
-      the first thing in the file for a reason.
-- [ ] **Check the file list on every pull request before reading the diff.** `git diff
-      --name-only` should show `rayssa/` paths, plus **new** files in `supabase/migrations/`,
-      and nothing else. One glance. If anything else appears, reject it without evaluating
-      whether the change was good — a correct edit made outside its scope is still a scope
-      failure, and accepting one teaches the pattern.
-- [ ] **On migrations specifically: confirm the file is new, not an edit.** RAYSSA and KARAY
-      share one migration timeline (spec 3.6). A *new* timestamped file cannot hurt KARAY. A
-      *modified* existing migration desynchronises the recorded schema history from what
-      actually ran against production, and you will not find out until the next restore or
-      the next environment rebuild. In the PR's file list these look nearly identical —
-      check for `M` versus `A`.
-
-The exception is the one-time build-isolation commit from spec section 3.6 — the
-`tsconfig.json` exclude, the `eslint.config.mjs` ignore, and the `.gitignore` lines. **You
-make that commit yourself, before Devin's first session.** It is three lines, and it is what
-stops the karaymodels production build from ever compiling RAYSSA's code. Confirm
-`npm run typecheck && npm run lint && npm test && npm run build` still passes at the root
-before you continue.
+**Export `docs/reference/` before session one.** This is the cost of the separation and the
+easiest thing to skip: with two repositories Devin cannot read `contentStudio.ts`,
+`launchPacket.ts`, `lib/daily/definition.ts`, your RLS policies, or a well-formed migration.
+Copy those six files into `rayssa/docs/reference/` (spec 3.6 lists them). Ten minutes. Skip
+it and Devin writes generation prompts from scratch and reinvents your RLS conventions, and
+you lose most of the head start that makes this a one-month build.
 
 ---
 
@@ -127,7 +114,7 @@ Devin says a task is complete when it believes it is. Sometimes it's right. It w
 report green after writing a test that asserts the thing it just implemented, which proves
 nothing about whether the thing is correct.
 
-The thirteen acceptance criteria in section 11 of the spec are your verification list. Three
+The sixteen acceptance criteria in section 11 of the spec are your verification list. Four
 of them you should run personally rather than read about:
 
 - **#5 — the media gate.** Ask Devin to give you the raw SQL and run it yourself against
@@ -138,6 +125,9 @@ of them you should run personally rather than read about:
   to login, not a rendered page.
 - **#10 — no `anon` grants.** One query against `information_schema.role_table_grants`.
   Devin can hand you the query; you run it.
+- **#14 — KARAY unreachable.** Point `KARAY_API_BASE_URL` at a dead host and load every
+  screen. Cached roster renders, staleness warning shows, sync alert fires, nothing errors.
+  This is the test that proves the separation you chose actually bought you something.
 
 Ask for evidence, not assurance: the command, and its actual output pasted back.
 
@@ -148,21 +138,22 @@ Ask for evidence, not assurance: the command, and its actual output pasted back.
 Devin burns compute discovering a broken toolchain, and a repo where `npm test` doesn't run
 produces sessions that end in "I couldn't verify the change."
 
-- [ ] **Make the build-isolation commit yourself** (section 1b above), then scaffold
-      `rayssa/` — or make Phase 1 a single narrow session whose only job is a working
-      skeleton: Next.js + TypeScript + Tailwind + `next-intl` inside `rayssa/`, with
-      `npm run dev`, `build`, `typecheck`, `lint`, `test` all exiting clean from within that
-      directory. Merge that before anything else starts.
-- [ ] **`BUILD-PROMPT.md` is already in the repo** at `docs/rayssa/BUILD-PROMPT.md`. Devin
+- [ ] **Build the integration API first** (spec Phase 0) — the three endpoints in
+      karaymodels, plus `API-CONTRACT.md` copied into both repositories. RAYSSA's Phase 2
+      has nothing to point at until this exists.
+- [ ] **Scaffold the `rayssa` repo yourself**, or make Phase 1 a single narrow session whose
+      only job is a working skeleton: Next.js + TypeScript + Tailwind + `next-intl`, with
+      `npm run dev`, `build`, `typecheck`, `lint`, `test` all exiting clean on an empty app.
+      Merge that before anything else starts.
+- [ ] **Put `BUILD-PROMPT.md` and `API-CONTRACT.md` in the new repo** under `docs/`. Devin
       reads files in the repo far more reliably than long pasted prompts, and it can re-read
       a file in a later session. Reference it by path in every task prompt.
 - [ ] **Copy `rayssa-AGENTS.md` to `rayssa/AGENTS.md`.** Devin reads it every session. The
       800-line spec it will not re-read; a short standing-rules file it will. Rule zero —
       write only inside `rayssa/` — is the most important line in this whole package.
-- [ ] **Nothing to grant for cross-repo reading** — it is one repository, which is the main
-      benefit of the layout. Section 9 of the spec is where most of the time savings are, and
-      Devin is good at reading an existing codebase when pointed at exact paths. The phase
-      prompts below name the files.
+- [ ] **Export `docs/reference/`** — the six files from spec 3.6. This replaces the
+      cross-repo reading you gave up, and section 9 of the spec is where most of the time
+      savings are.
 - [ ] **Load the standing rules into Devin's Knowledge / playbook** if your plan has it —
       the prohibitions, the migration conventions, the RLS pattern. Same content as
       `AGENTS.md`. Belt and braces.
@@ -184,9 +175,9 @@ Paste these one at a time. Each assumes `docs/BUILD-PROMPT.md` and `AGENTS.md` a
 repo.
 
 **Phase 1 — foundation**
-> Read `docs/rayssa/BUILD-PROMPT.md` in full, then `rayssa/AGENTS.md`. Note rule zero: you
-> may read anything in this repository but write only inside `rayssa/`. Implement Phase 1
-> only (section 12), entirely inside `rayssa/`:
+> Read `docs/BUILD-PROMPT.md` in full, then `AGENTS.md` and `docs/API-CONTRACT.md`. Note
+> rule zero: this repository is the whole world — no karaymodels access, no KARAY database
+> connection, build against the mock. Implement Phase 1 only (section 12):
 > Next.js scaffold, Tailwind, `next-intl` with both `pt-BR` and `en-US` catalogues, Supabase
 > client, the `rayssa` schema, `rayssa.users` with RLS, login, middleware, forced password
 > change. Also write a seed script creating 5 fake models and brand profiles in the dev
@@ -194,11 +185,13 @@ repo.
 > Do not implement any later phase. Acceptance criteria 1, 2, 3, 4, 12 must pass; paste the
 > actual command output for each.
 
-**Phase 2 — roster**
-> Implement Phase 2 only. Create the read-only views over KARAY data described in section
-> 3.3 — every view must use `security_invoker = true`, and do not create views exposing
-> earnings, payments, documents, proxy details, or notes. Build the dashboard listing active
-> models with their DAILY percentage.
+**Phase 2 — roster and the integration seam**
+> Implement Phase 2 only. Build the integration client against `docs/API-CONTRACT.md`, the
+> mock (including its `timeout`, `500`, `401` and `empty` failure modes), the
+> `public.karay_models` cache, the 15-minute sync with staleness reporting and failure
+> alerting, and the dashboard. Develop and test entirely against the mock. Acceptance
+> criteria 14 and 15 must pass — demonstrate 14 by pointing the base URL at a dead host and
+> showing every screen still renders from cache with the staleness warning.
 
 **Phase 3 — assets and the media gate**
 > Implement Phase 3 only: Drive sync, the assets table with the rating enum, the rating UI
@@ -207,9 +200,9 @@ repo.
 > running the SQL insert directly and pasting the rejection error.
 
 **Phase 4 — generation**
-> Implement Phase 4 only. Read `lib/brand/ai/contentStudio.ts` and
-> `lib/brand/ai/launchPacket.ts` at the repository root and **port copies into `rayssa/`** —
-> do not import across the boundary, and do not modify the originals. Build `daily_packets` and `packet_items`, and the overnight batch job
+> Implement Phase 4 only. Read `docs/reference/contentStudio.ts` and
+> `docs/reference/launchPacket.ts` and port them rather than writing new prompts — they are
+> reference material, not runnable code in this project. Build `daily_packets` and `packet_items`, and the overnight batch job
 > using the Anthropic Batch API with prompt caching as described in section 8. Report
 > `usage.cache_read_input_tokens` from a real run to prove caching is working.
 
@@ -246,7 +239,8 @@ repo.
 
 These stay yours no matter how capable the tool is:
 
-- The build-isolation commit (spec 3.6) and branch protection
+- The integration API in karaymodels (spec Phase 0), and branch protection
+- Exporting `docs/reference/` (spec 3.6)
 
 - Meta Business Verification and app review submission — business identity, not code
 - Converting Instagram accounts to Business/Creator

@@ -2,10 +2,10 @@
 
 **Read this whole document before writing any code.**
 
-RAYSSA is a **separate platform** from karaymodels.com. Separate repository, separate
-deployment, separate domain, password-protected end to end. It reads model data from the
-karaymodels Supabase database and writes its own marketing data alongside it. It is never
-mounted inside the existing Next.js site, and no part of it is publicly reachable.
+RAYSSA is a **fully separate platform** from karaymodels.com: its own repository, its own
+Supabase project, its own deployment, its own domain, password-protected end to end. Nothing
+it does can reach karaymodels.com's database. It obtains the model roster and brand profiles
+through a small read-only API that KARAY exposes (see 3.3), and owns everything else itself.
 
 This document is the specification. It states what to build, what NOT to build, and why.
 The "why nots" are load-bearing — several obvious-looking features would get the agency's
@@ -20,8 +20,8 @@ judgement.
 |---|---|
 | **KARAY** | The existing agency platform at karaymodels.com. Source of truth for models, representatives, brand profiles, earnings. |
 | **RAYSSA** | The new marketing command center. This document. |
-| **Model** | A creator the agency manages. Row in `public.models` on KARAY. |
-| **Rep** | Representative assigned to a model. Row in `public.profiles` with a representative role. |
+| **Model** | A creator the agency manages. Owned by KARAY; reaches RAYSSA through the integration API and is cached locally in `public.karay_models`. |
+| **Rep** | Representative assigned to a model. Lives in KARAY. RAYSSA reads the assignment, never the person's record. |
 | **Packet** | One model's full prepared marketing output for one day, across all channels. |
 | **Channel** | X, Reddit, Instagram, TikTok, Outreach, OnlyFans. |
 | **Asset** | A photo or video, stored in Google Drive, classified for where it may be published. |
@@ -89,13 +89,14 @@ It does three things:
 | Language | TypeScript, strict |
 | UI | Tailwind v4, React 19, `react-icons` — mirror KARAY's component idiom |
 | i18n | `next-intl`, locales `pt-BR` and `en-US`, same message-catalogue layout as KARAY |
-| Database | Supabase — **the same project as KARAY** (see 3.3) |
-| Auth | Supabase Auth, email + password, allowlist-gated |
+| Database | Supabase — **RAYSSA's own project**, separate from KARAY's (see 3.3) |
+| Auth | Supabase Auth — RAYSSA's own instance. No KARAY credential reaches it (see 3.4) |
 | Media | Google Drive (service account), same pattern as KARAY's nightly backup |
+| Integration | Read-only HTTP API exposed by KARAY, frozen in `docs/rayssa/API-CONTRACT.md` |
 | LLM | Anthropic API, `@anthropic-ai/sdk` |
 | Scheduler | Supabase `pg_cron` + `pg_net` (see 3.5) |
 | Hosting | Vercel Pro (see 3.2) |
-| Source control | GitHub — a sibling `rayssa/` app inside the karaymodels repository (see 3.6) |
+| Source control | GitHub — a separate private repository, `rayssa` (see 3.6) |
 
 ### 3.2 Hosting — read this before choosing
 
@@ -119,89 +120,118 @@ Supabase's free tier has no non-commercial restriction. Its limits (500 MB datab
 egress, 1 GB storage) are the real constraint, and keeping media in Drive rather than
 Supabase is what keeps RAYSSA inside them.
 
-### 3.3 Data access — same Supabase project, isolated by schema
+### 3.3 Data access — separate database, read-only integration API
 
-RAYSSA needs the model roster, brand profiles, rep assignments, and daily-checklist state
-that KARAY already owns. Do **not** build an HTTP API between the two apps and do **not**
-stand up a second database that syncs.
+**RAYSSA has its own Supabase project.** It does not share KARAY's. The two systems have
+separate databases, separate auth, separate migration histories, and separate failure
+domains: nothing RAYSSA does — a bad migration, a runaway insert, a filled disk — can reach
+karaymodels.com's data.
 
-- A second database means a sync job, and a sync job means RAYSSA is always showing
-  yesterday's roster and silently diverging the moment the job fails.
-- An HTTP API between two apps the same owner controls is a serialization layer with
-  authentication bolted on, invented to solve a problem that row-level security already
-  solves.
+That isolation is bought, not free. RAYSSA still needs the model roster and the brand
+profiles, and getting them across a database boundary costs three things. Build all three
+deliberately.
 
-**Build it this way instead:**
+#### The integration API (lives in the KARAY codebase)
 
-1. RAYSSA points at the **same Supabase project** — same `NEXT_PUBLIC_SUPABASE_URL`, same
-   anon key. Different app, different domain, same database.
-2. All RAYSSA tables live in a dedicated `rayssa` schema, never in `public`. This keeps the
-   two apps' migrations from colliding and makes the boundary auditable.
-3. RAYSSA reads KARAY data through **read-only views** in the `rayssa` schema, not by
-   selecting from `public.models` directly. Create exactly the views RAYSSA needs:
+KARAY exposes a small, versioned, read-only API that only RAYSSA calls:
 
-   ```sql
-   create schema if not exists rayssa;
+| Method | Path | Returns |
+|---|---|---|
+| `GET` | `/api/integrations/rayssa/v1/models` | Active model roster |
+| `GET` | `/api/integrations/rayssa/v1/models/:id/brand-profile` | Niches, positioning, voice, targeting |
+| `POST` | `/api/integrations/rayssa/v1/models/:id/checklist` | Tick one daily-checklist item |
 
-   create or replace view rayssa.model_roster
-     with (security_invoker = true) as
-   select
-     m.id,
-     m.stage_name,
-     m.status,
-     m.active,
-     m.representative_id,
-     m.daily_percentage
-   from public.models m
-   where m.active;
-   ```
+Rules for these endpoints, all non-negotiable:
 
-   `security_invoker = true` is required. Without it the view runs as its owner and
-   bypasses the caller's RLS — silently handing RAYSSA users rows that KARAY's policies
-   deny them.
+- **Bearer token auth** via `RAYSSA_INTEGRATION_TOKEN`, compared in constant time. Reject
+  with 401 and log every failure. Rotate the token on any suspicion.
+- **Read-only except the one checklist write**, which is idempotent — the same call twice
+  must not double-count.
+- **They return only what the contract lists.** Never earnings, payments, identity
+  documents, proxy credentials, phone numbers, addresses, or `notes`. A field that is not in
+  the contract is not in the response, and the endpoints select explicit columns rather than
+  `select *` — so a new sensitive column added to KARAY later cannot silently start
+  flowing out.
+- **Rate limited**, and every request logged with timestamp, endpoint, and outcome.
+- The response shape is frozen in `docs/rayssa/API-CONTRACT.md` and both sides code against
+  it. Changing it is a `v2` path, never an edit to `v1`.
 
-   Add similar views for brand profiles (niches, positioning, voice, target audience,
-   markets to avoid) and social accounts. **Never create a view exposing earnings,
-   payments, personal documents, proxy credentials, or `notes`.** RAYSSA has no business
-   with any of them, and a view that does not exist cannot leak.
+**These endpoints are written in the karaymodels repository by the owner, not by RAYSSA's
+implementer.** That is what keeps the isolation real — see 3.6.
 
-4. RAYSSA **never writes to `public`.** Every write goes to a `rayssa.*` table. The one
-   permitted exception is ticking `public.model_daily_checklist_items` when a channel task
-   completes, so the DAILY badge on KARAY's `/admin/models` stays truthful — and that goes
-   through a `security definer` function with a narrow signature, not a direct table grant.
+#### The local cache (lives in RAYSSA's database)
 
-If the agency ever hires an outside developer for RAYSSA who must not see KARAY's data at
-all, revisit this: at that point a separate project plus a read API becomes worth its cost.
-Until then it is expense without benefit.
+RAYSSA must not call KARAY on every page render. If it did, karaymodels.com going down
+would take RAYSSA with it, and every screen would carry a network round trip. Instead
+RAYSSA syncs the roster into its own table:
+
+```sql
+create table public.karay_models (
+  karay_model_id  uuid primary key,          -- KARAY's id. NOT a foreign key.
+  stage_name      text not null,
+  status          text,
+  active          boolean not null default true,
+  brand_profile   jsonb,                     -- as returned by the contract
+  synced_at       timestamptz not null default now(),
+  missing_since   timestamptz                -- set when KARAY stops returning it
+);
+```
+
+- Sync every 15 minutes, and immediately before the overnight preparation job.
+- **Every screen that reads model data shows `synced_at` when it is more than an hour old.**
+  Stale data that announces itself is a manageable problem; stale data that looks fresh is
+  how someone posts for a model who was deactivated yesterday.
+- **A model that stops appearing in the API is marked `missing_since`, never deleted.**
+  Deleting would orphan every packet, asset, and tracked link that references it.
+- If a sync fails, keep the last good data, raise an alert, and keep serving. Never blank
+  the roster because one request timed out.
+
+#### No foreign keys across the boundary
+
+Every RAYSSA table references a model by `karay_model_id uuid` — a plain column with an
+index, **not** a foreign key, because the target lives in a different database. Postgres
+therefore enforces nothing here. Two consequences to handle explicitly:
+
+- **Validate on write.** Before inserting any row carrying a `karay_model_id`, confirm it
+  exists in `public.karay_models`. A trigger is the reliable place for this; application-level
+  checks get bypassed by the next code path someone adds.
+- **Reconcile weekly.** A scheduled job reports rows referencing models that are
+  `missing_since` or absent entirely. It reports; it does not delete. Deletion is a human
+  decision.
+
+This is the price of the separation, and it is worth naming plainly: you are trading
+Postgres-enforced referential integrity for a hard blast-radius boundary between the two
+systems. The trigger and the reconciliation job are what keep that trade honest.
 
 ### 3.4 Auth and users
 
-The KARAY and RAYSSA apps share one `auth.users` pool, so every model and rep with a KARAY
-login technically has credentials that reach RAYSSA's domain. Gate on top of that:
+RAYSSA has its own Supabase Auth instance. No KARAY user — no model, no representative —
+has any credential that reaches RAYSSA. There is no shared `auth.users` pool to gate
+against, which makes this simpler than it would otherwise be: if you are not in RAYSSA's
+own auth, you do not exist.
 
 ```sql
-create table rayssa.users (
+create table public.users (
   id          uuid primary key references auth.users(id) on delete cascade,
   full_name   text not null,
   role        text not null check (role in ('owner','operator')),
   locale      text not null default 'pt-BR' check (locale in ('pt-BR','en-US')),
   must_change_password boolean not null default true,
   active      boolean not null default true,
-  invited_by  uuid references rayssa.users(id) on delete set null,
+  invited_by  uuid references public.users(id) on delete set null,
   created_at  timestamptz not null default now()
 );
 ```
 
-- **Middleware rule:** every route except `/login` requires a session whose `auth.uid()`
-  has an `active` row in `rayssa.users`. A model or rep who logs in with valid KARAY
-  credentials but has no RAYSSA row gets a clean "no access" page — never a partial
-  dashboard, never a 500.
-- **Every `rayssa.*` table gets RLS**, with policies keyed on `rayssa.is_rayssa_user()` and
-  `rayssa.is_rayssa_owner()` — the same helper-predicate pattern KARAY uses. `revoke all
-  … from anon` on every table, exactly as KARAY's migrations do.
-- **Roles:** `owner` can create and deactivate users and delete records. `operator` can do
+- **Middleware rule:** every route except `/login` and `/r/[code]` requires a session whose
+  `auth.uid()` has an `active` row in `public.users`. Anything else gets a clean no-access
+  page — never a partial dashboard, never a 500.
+- **Every table gets RLS**, keyed on `public.is_active_user()` and `public.is_owner()`
+  helper predicates. Follow the pattern in KARAY's `20260722000002_rls_policies.sql`, which
+  is a good implementation of exactly this. `revoke all … from anon` on every table.
+- **Roles:** `owner` creates and deactivates users and deletes records. `operator` does
   everything else. Both seed users are `owner`.
-- **Seed users** — create through the Supabase admin API in a one-off script, never in a
+- **Seed users** — created through the Supabase admin API in a one-off script, never in a
   committed migration and never with the password in the repository:
 
   | Name | Role | Temporary password |
@@ -210,14 +240,13 @@ create table rayssa.users (
   | Raissa Vieira | owner | `Eira1234` |
 
   Both are last-four-letters-of-surname + `1234`, as specified. Both rows are created with
-  `must_change_password = true`, and middleware forces a redirect to `/change-password`
-  until it is cleared. Rotate both immediately after first login — they have been written
-  down in a spec file and a chat log, which means they are already compromised for any
-  purpose stronger than first-run.
+  `must_change_password = true`, and middleware redirects to `/change-password` until it is
+  cleared. **Rotate both immediately after first login** — they have been written down in a
+  specification file, which means they are already unsuitable for anything beyond first run.
 - **No public signup.** The only way to create a user is an owner inviting one from
   `/settings/users`.
-- Add rate limiting on `/login` (5 attempts per IP per 15 minutes) and enable Supabase's
-  leaked-password protection.
+- Rate limit `/login` (5 attempts per IP per 15 minutes) and enable Supabase's leaked-password
+  protection.
 
 ### 3.5 Scheduler
 
@@ -242,99 +271,61 @@ The endpoint rejects any request without the matching `CRON_SECRET`, same as KAR
 existing ledger and backup crons. Keep every scheduled job behind such a route so the
 trigger source stays swappable.
 
-### 3.6 Repository layout — one repo, two applications
+### 3.6 Repository layout — a separate repository
 
-RAYSSA lives **in the karaymodels repository**, as a sibling application with its own
-dependency tree and its own build. It is not a route inside the existing app.
+RAYSSA is its own GitHub repository, `rayssa`, private. It shares no code, no build, no
+deployment, and no database with karaymodels.
 
-**The reason is the database, not the convenience.** Section 3.3 puts RAYSSA and KARAY on
-one Supabase project. A Postgres database has exactly one schema history, and
-`supabase/migrations/` is the file that records it. Split across two repositories, two
-migration directories apply to one database and neither knows what the other has run:
-timestamps interleave in ways no checkout reflects, `supabase migration list` disagrees with
-reality, drift detection is meaningless, and rolling back means reconstructing the true
-order by hand from two histories. That is not a process problem to be managed carefully —
-it is a structurally broken setup, and the failure surfaces as a production migration that
-half-applies.
+| | karaymodels | rayssa |
+|---|---|---|
+| Repository | `kartelwest/onlyfans-website` | `kartelwest/rayssa` |
+| Supabase project | KARAY production | RAYSSA production |
+| Vercel project | karaymodels.com | rayssa.karaymodels.com |
+| Migrations | `supabase/migrations/` | its own `supabase/migrations/` |
+| Auth | KARAY's `auth.users` | RAYSSA's own `auth.users` |
 
-One repository makes `supabase/migrations/` a single ordered timeline for the one database
-that exists. The code-reuse benefits below are real but secondary; this is the load-bearing
-argument.
+Two independent migration timelines are correct here **because there are two databases.**
+Each repository's `supabase/migrations/` is the complete, ordered history of the one database
+it owns. (This is the direct consequence of 3.3, and the reason the separate-repository shape
+follows from the separate-database decision rather than being an independent choice.)
+
+**The one seam is the integration API in 3.3, and it lives in the karaymodels repository.**
+Three route handlers, a token check, and explicit column selection. The RAYSSA implementer
+never opens that repository:
+
+- **The owner writes the KARAY-side endpoints** — or has them written in a separate, scoped
+  change to karaymodels, reviewed on its own.
+- **The RAYSSA implementer codes against `docs/rayssa/API-CONTRACT.md`** and a local mock
+  that returns contract-shaped fixtures. RAYSSA must be fully developable and testable with
+  KARAY entirely unreachable; if the build ever requires a live KARAY to make progress, the
+  mock is wrong.
+- **The contract file is copied into both repositories** and they must match byte for byte.
+  When it changes, both copies change in the same sitting, or the next drift becomes a
+  production bug nobody can reproduce.
+
+#### What you give up, stated plainly
+
+Section 9 of this document lists KARAY code worth reusing — `contentStudio.ts`,
+`launchPacket.ts`, the migration conventions, the RLS predicate pattern, the i18n setup.
+With separate repositories the implementer cannot read it directly.
+
+**Therefore the owner exports the relevant files into the `rayssa` repository at
+`docs/reference/` before the first session**, as read-only reference material:
 
 ```
-karaymodels/                 ← repository root
-├── app/                     ← the existing marketing site + admin. UNCHANGED.
-├── lib/  components/  i18n/  messages/  supabase/
-├── proxy.ts                 ← the existing app's request interception
-├── package.json             ← the existing app's dependencies
-├── tsconfig.json
-└── rayssa/                  ← RAYSSA. Self-contained.
-    ├── app/
-    ├── lib/  components/  i18n/  messages/
-    ├── proxy.ts             ← RAYSSA's own auth gate
-    ├── package.json         ← RAYSSA's own dependencies
-    ├── tsconfig.json
-    ├── next.config.ts
-    └── AGENTS.md
+rayssa/docs/reference/
+├── contentStudio.ts          # generation prompt structure — port, do not import
+├── launchPacket.ts
+├── daily-definition.ts       # the 11-section daily routine and its permanent keys
+├── rls-policies.sql          # the predicate-helper pattern to follow
+├── daily-checklist.sql       # a well-formed migration to imitate
+└── README.md                 # "reference only; port, never copy blindly"
 ```
 
-**Nesting RAYSSA as routes inside the existing app (`app/rayssa/*`) is explicitly rejected.**
-Directory depth provides no isolation in a Next.js application. Routes under `app/` share one
-`package.json`, one build, one deployment, one `next.config.ts`, one i18n configuration, and
-— most sharply — **one request-interception file**, since Next.js permits a single `proxy.ts`
-per application. Under that layout a TypeScript error in RAYSSA fails the karaymodels
-production build, a RAYSSA deployment redeploys the public marketing site, and RAYSSA's
-authentication gate has to be merged into the same file that serves the public site's
-requests. That is the opposite of separation.
-
-The sibling layout gives real isolation because **Vercel's Root Directory setting points a
-project at a subdirectory**:
-
-| Vercel project | Root Directory | Domain | Deploys |
-|---|---|---|---|
-| `karaymodels` | `.` | karaymodels.com | The existing site, unchanged |
-| `rayssa` | `rayssa/` | rayssa.karaymodels.com | RAYSSA only |
-
-Two builds, two deployments, two sets of environment variables, two `proxy.ts` files. A
-RAYSSA build failure cannot break karaymodels.com, because karaymodels.com's build never
-compiles RAYSSA's code.
-
-**Three edits to the existing repository are required — and they are the only ones.** Without
-them the root build type-checks and lints `rayssa/`, which reintroduces the coupling the
-layout exists to prevent:
-
-1. `tsconfig.json` — add `"rayssa"` to `exclude`:
-   ```json
-   "exclude": ["node_modules", "rayssa"]
-   ```
-2. `eslint.config.mjs` — add `"rayssa/**"` to the `globalIgnores([...])` list.
-3. `.gitignore` — add `rayssa/node_modules` and `rayssa/.next`.
-
-Make these three edits in their own commit, before any RAYSSA code is written, and confirm
-`npm run typecheck && npm run lint && npm test && npm run build` still passes at the root.
-**Nothing else in the existing application may be modified at any point in this build.**
-
-**Migrations are the one exception to the `rayssa/` boundary.** RAYSSA's migrations go in the
-**root** `supabase/migrations/` directory alongside KARAY's — that is the whole point of the
-single timeline above. There is no `rayssa/supabase/` directory. Two rules make this safe:
-
-- **Only ever add new timestamped files.** Appending a migration cannot affect KARAY.
-- **Never edit, reorder, or delete an existing migration.** Those have already run against
-  production; changing one silently desynchronises the recorded history from the real schema.
-
-Name RAYSSA's migrations so the boundary is legible at a glance —
-`20260812000000_rayssa_users.sql`, `20260813000000_rayssa_assets.sql` — and keep every object
-they create inside the `rayssa` schema, except the one `security definer` checklist function
-described in 3.3.
-
-**Do not import across the boundary.** RAYSSA must never `import` from `../lib/...`. The two
-applications have separate dependency trees and separate builds; a cross-boundary import
-couples them again and breaks both. Where the spec says to reuse KARAY code — section 9 —
-that means *read it and port a copy into `rayssa/`*, not import it. If the duplication later
-becomes painful, extract the shared code into a proper workspace package deliberately; do not
-arrive there by accident through a relative import.
-
----
+Without this the implementer writes generation prompts from scratch and reinvents the RLS
+conventions, and you lose most of the head start that made this project a one-month build
+rather than a three-month one. Copying six files is a ten-minute task that is easy to skip
+and expensive to skip.
 
 ## 4. The channel matrix
 
@@ -393,7 +384,7 @@ The value here is not automation; it is institutional memory. Reps burn out re-r
 subreddit rules and get models banned by forgetting a cooldown. Store it once:
 
 ```sql
-create table rayssa.subreddits (
+create table public.subreddits (
   id                    uuid primary key default gen_random_uuid(),
   name                  text not null unique,          -- without r/
   nsfw_allowed          boolean not null default false,
@@ -413,15 +404,15 @@ create table rayssa.subreddits (
   updated_at            timestamptz not null default now()
 );
 
-create table rayssa.model_subreddit_state (
-  model_id       uuid not null,        -- FK to public.models
-  subreddit_id   uuid not null references rayssa.subreddits(id) on delete cascade,
+create table public.model_subreddit_state (
+  karay_model_id uuid not null references public.karay_models(karay_model_id) on delete cascade,
+  subreddit_id   uuid not null references public.subreddits(id) on delete cascade,
   is_verified    boolean not null default false,
   last_posted_at timestamptz,
   warning_count  integer not null default 0,
   banned         boolean not null default false,
   banned_reason  text,
-  primary key (model_id, subreddit_id)
+  primary key (karay_model_id, subreddit_id)
 );
 ```
 
@@ -438,9 +429,9 @@ subreddit rules change and stale rules are how bans happen.
 ### 4.4 Outreach — automate the research and the writing, never the Send
 
 ```sql
-create table rayssa.outreach_prospects (
+create table public.outreach_prospects (
   id             uuid primary key default gen_random_uuid(),
-  model_id       uuid not null,
+  karay_model_id uuid not null references public.karay_models(karay_model_id) on delete cascade,
   handle         text not null,
   platform       text not null,
   profile_url    text,
@@ -455,9 +446,9 @@ create table rayssa.outreach_prospects (
   contacted_at   timestamptz,
   follow_up_at   timestamptz,
   notes          text,
-  created_by     uuid references rayssa.users(id),
+  created_by     uuid references public.users(id),
   created_at     timestamptz not null default now(),
-  unique (model_id, handle, platform)
+  unique (karay_model_id, handle, platform)
 );
 ```
 
@@ -485,7 +476,7 @@ A single explicit asset auto-published to Instagram ends that account. This gate
 optional and must be enforced in the database, not only in the UI.
 
 ```sql
-create type rayssa.asset_rating as enum (
+create type public.asset_rating as enum (
   'instagram_tiktok_safe',   -- fully clothed, platform-compliant
   'x_reddit_safe',           -- adult content permitted on X and Reddit
   'onlyfans_only',           -- explicit; never leaves OnlyFans
@@ -493,9 +484,9 @@ create type rayssa.asset_rating as enum (
   'do_not_use'
 );
 
-create table rayssa.assets (
+create table public.assets (
   id             uuid primary key default gen_random_uuid(),
-  model_id       uuid not null,
+  karay_model_id uuid not null references public.karay_models(karay_model_id) on delete cascade,
   drive_file_id  text not null,
   drive_preview_url text,
   filename       text not null,
@@ -504,13 +495,13 @@ create table rayssa.assets (
   width          integer,
   height         integer,
   duration_secs  numeric,
-  rating         rayssa.asset_rating not null default 'needs_review',
-  rated_by       uuid references rayssa.users(id),
+  rating         public.asset_rating not null default 'needs_review',
+  rated_by       uuid references public.users(id),
   rated_at       timestamptz,
   has_watermark  boolean not null default false,
   tags           text[] not null default '{}',
   created_at     timestamptz not null default now(),
-  unique (model_id, drive_file_id)
+  unique (karay_model_id, drive_file_id)
 );
 ```
 
@@ -536,9 +527,9 @@ Rules, enforced at the database layer:
 Also record usage, so the same photo does not go out three times in a week:
 
 ```sql
-create table rayssa.asset_usage (
+create table public.asset_usage (
   id         uuid primary key default gen_random_uuid(),
-  asset_id   uuid not null references rayssa.assets(id) on delete cascade,
+  asset_id   uuid not null references public.assets(id) on delete cascade,
   channel    text not null,
   used_at    timestamptz not null default now(),
   packet_item_id uuid
@@ -555,21 +546,21 @@ Without it, RAYSSA automates *activity*. With it, RAYSSA does *marketing*. This 
 thing the agency cannot get from any off-the-shelf scheduler, and it is cheap to build.
 
 ```sql
-create table rayssa.tracked_links (
+create table public.tracked_links (
   id              uuid primary key default gen_random_uuid(),
   code            text not null unique,        -- short, URL-safe, e.g. 7 chars
-  model_id        uuid not null,
+  karay_model_id  uuid not null references public.karay_models(karay_model_id) on delete cascade,
   channel         text not null,
   packet_item_id  uuid,
-  subreddit_id    uuid references rayssa.subreddits(id) on delete set null,
-  prospect_id     uuid references rayssa.outreach_prospects(id) on delete set null,
+  subreddit_id    uuid references public.subreddits(id) on delete set null,
+  prospect_id     uuid references public.outreach_prospects(id) on delete set null,
   destination_url text not null,
   created_at      timestamptz not null default now()
 );
 
-create table rayssa.link_clicks (
+create table public.link_clicks (
   id          bigserial primary key,
-  link_id     uuid not null references rayssa.tracked_links(id) on delete cascade,
+  link_id     uuid not null references public.tracked_links(id) on delete cascade,
   clicked_at  timestamptz not null default now(),
   ip_hash     text,                 -- salted hash, never the raw address
   user_agent  text,
@@ -577,7 +568,7 @@ create table rayssa.link_clicks (
   referrer    text
 );
 
-create index link_clicks_link_time_idx on rayssa.link_clicks (link_id, clicked_at desc);
+create index link_clicks_link_time_idx on public.link_clicks (link_id, clicked_at desc);
 ```
 
 `GET /r/[code]` looks up the destination, writes a click row without blocking, and 302s.
@@ -602,37 +593,37 @@ what frees up twenty-five minutes a day.
 ## 7. Packets and status
 
 ```sql
-create table rayssa.daily_packets (
+create table public.daily_packets (
   id           uuid primary key default gen_random_uuid(),
-  model_id     uuid not null,
+  karay_model_id uuid not null references public.karay_models(karay_model_id) on delete cascade,
   packet_date  date not null,
   status       text not null default 'preparing'
                check (status in ('preparing','ready','partial','failed')),
   prepared_at  timestamptz,
   error        text,
   created_at   timestamptz not null default now(),
-  unique (model_id, packet_date)
+  unique (karay_model_id, packet_date)
 );
 
-create table rayssa.packet_items (
+create table public.packet_items (
   id            uuid primary key default gen_random_uuid(),
-  packet_id     uuid not null references rayssa.daily_packets(id) on delete cascade,
+  packet_id     uuid not null references public.daily_packets(id) on delete cascade,
   channel       text not null,
   slot_index    integer not null default 1,      -- X post 1/2/3, subreddit 1..5
-  asset_id      uuid references rayssa.assets(id) on delete set null,
+  asset_id      uuid references public.assets(id) on delete set null,
   title         text,                            -- Reddit
   body          text,                            -- caption / post text / DM draft
   hashtags      text[],
-  subreddit_id  uuid references rayssa.subreddits(id) on delete set null,
-  prospect_id   uuid references rayssa.outreach_prospects(id) on delete set null,
-  tracked_link_id uuid references rayssa.tracked_links(id) on delete set null,
+  subreddit_id  uuid references public.subreddits(id) on delete set null,
+  prospect_id   uuid references public.outreach_prospects(id) on delete set null,
+  tracked_link_id uuid references public.tracked_links(id) on delete set null,
   scheduled_for timestamptz,
   status        text not null default 'prepared'
                 check (status in ('prepared','approved','scheduled','published_auto',
                                   'manual_required','completed_manual','failed','skipped')),
   published_url text,
   published_at  timestamptz,
-  completed_by  uuid references rayssa.users(id),
+  completed_by  uuid references public.users(id),
   skip_reason   text,
   error         text,
   created_at    timestamptz not null default now(),
@@ -698,39 +689,29 @@ which is what keeps the Instagram-bound output publishable.
 
 ---
 
-## 9. Reuse — read this before designing a schema
+## 9. Reuse — read `docs/reference/` before designing a schema
 
-**KARAY has already built most of this.** Migration
-`supabase/migrations/20260725000001_amplia_brand_growth_schema.sql` (1,436 lines) defines,
-among others: `social_accounts`, `social_account_tokens`, `social_account_connections`,
-`content_assets`, `asset_usage`, `content_items`, `content_versions`, `content_approvals`,
-`publishing_jobs`, `publishing_attempts`, `content_calendar_entries`, `platform_metrics`,
-`content_metrics`, `daily_account_metrics`, `automation_rules`, `automation_runs`,
-`alerts`, `prompt_templates`, `prompt_versions`, `ai_generations`, `integration_events`,
-`audit_logs`, and `daily_ai_directives` — plus the enums `platform`, `content_status`,
-`content_type`, `automation_mode`, and `content_source`.
+KARAY has already solved much of this, and the owner has exported the relevant files into
+this repository at `docs/reference/` (see 3.6). **Read them before writing a schema or a
+generation prompt.** They are reference material: port the ideas and the conventions, do not
+copy blindly, and never treat them as runnable code in this project.
 
-`20260725000002_amplia_admin_only_rls.sql` already locks all of it to staff.
+| File | What it gives you |
+|---|---|
+| `contentStudio.ts` | A working Anthropic generation call: brand profile, niches, positioning, voice, target demographics and markets-to-avoid threaded into a platform-specific prompt, returning strict JSON. Its system prompt refuses sexual content and fabricated personal experience — that refusal is what keeps Instagram-bound output publishable. **Port this; do not write new prompts from scratch.** |
+| `launchPacket.ts` | The multi-item generation shape the daily packet follows. |
+| `daily-definition.ts` | The daily routine as 11 sections of permanent keys — war plan, OnlyFans page, chat shift, retention, per-platform, collabs, safety. RAYSSA's channels map onto these keys; reuse the keys so the two systems describe the same work with the same words. |
+| `rls-policies.sql` | The predicate-helper pattern (`is_staff()`, `is_owner()`, per-table policies, explicit grants, `revoke all … from anon`). Follow it exactly — adapted to `public.is_active_user()` and `public.is_owner()`. |
+| `daily-checklist.sql` | A well-formed migration: header comment explaining what and why, `security definer set search_path = public`, trigger-maintained projections, `drop policy if exists` before each `create policy`, per-role grants. Imitate its structure. |
 
-`lib/brand/ai/contentStudio.ts` and `lib/brand/ai/launchPacket.ts` already generate
-platform-specific content from a brand profile using the Anthropic SDK.
-`lib/daily/definition.ts` already encodes the entire daily routine as 11 sections of
-permanent keys, and `20260805030000_daily_marketing_checklist.sql` already tracks per-model
-completion with a trigger-maintained percentage.
+For the record, KARAY also contains a 1,400-line brand-growth schema covering social
+accounts, content items, publishing jobs, metrics and audit logs. **RAYSSA does not inherit
+it** — separate databases mean separate schemas, and RAYSSA needs a much smaller surface than
+that migration defines. It is mentioned so nobody goes looking for a shortcut that does not
+exist across the boundary. Design RAYSSA's schema from this document.
 
-**Before writing a single `create table`, read all of it.** Then decide, per table, whether
-RAYSSA extends what exists or genuinely needs something new. The tables specified in this
-document (`subreddits`, `model_subreddit_state`, `outreach_prospects`, `tracked_links`,
-`link_clicks`, `assets` with the rating enum, `daily_packets`, `packet_items`) are the ones
-that plausibly do not exist yet. Everything else is very likely already built, tested, and
-RLS'd — reinventing it would cost weeks and produce two schemas that drift.
-
-Match KARAY's migration conventions exactly: a header comment explaining what and why,
-`security definer set search_path = public` on every function, explicit
-`grant`/`revoke` per role, `revoke all … from anon`, and a `drop policy if exists` before
-every `create policy`.
-
----
+If a file you need is missing from `docs/reference/`, ask for it. Do not request access to
+the karaymodels repository — that boundary is deliberate (3.6).
 
 ## 10. Screens
 
@@ -762,8 +743,8 @@ The build is not done until every one of these passes:
 
 1. An anonymous request to any route except `/login` and `/r/[code]` returns a redirect to
    login. Verified with `curl`, not just in a browser.
-2. A user with valid KARAY credentials but no `rayssa.users` row sees a clean no-access
-   page. Not a 500, not a partial dashboard.
+2. A KARAY credential — any model's or representative's login — does not authenticate
+   against RAYSSA at all. Separate auth instances; verify by attempting one.
 3. Both seed users can log in with the temporary passwords and are forced to change them
    before reaching any other route.
 4. Every string on every screen renders correctly in both `pt-BR` and `en-US`. `i18n:check`
@@ -781,7 +762,7 @@ The build is not done until every one of these passes:
    packet.
 9. Clicking a tracked link writes exactly one `link_clicks` row and redirects in under
    300 ms.
-10. No table in `rayssa` grants anything to `anon`. Verify by querying
+10. No table grants anything to `anon`. Verify by querying
     `information_schema.role_table_grants`.
 11. No code path anywhere in the repository stores an OnlyFans credential. Verify by
     grepping the schema and the codebase.
@@ -795,11 +776,18 @@ The build is not done until every one of these passes:
 Ship in this sequence. Each phase is independently useful, so the agency gets value before
 the whole thing is finished.
 
+0. **The integration API** — *owner-side, in the karaymodels repository, before Phase 1.*
+   The three endpoints in 3.3, the token check, explicit column selection, rate limiting,
+   request logging. Deliverable: a working API plus `API-CONTRACT.md` copied into both
+   repositories.
 1. **Foundation** — repo, Next.js, Tailwind, `next-intl` with both catalogues, Supabase
-   client, `rayssa` schema, `rayssa.users` and its RLS, login, middleware, forced password
-   change, seed script, both users created.
-2. **Roster** — the read-only views over KARAY data, the dashboard listing all active
-   models with their DAILY %. This alone proves the cross-app data access works.
+   client against RAYSSA's own project, `public.users` and its RLS, login, middleware,
+   forced password change, seed script, both users created.
+2. **Roster** — the integration client, the contract-shaped mock, `public.karay_models`, the
+   15-minute sync with staleness reporting and failure alerting, and the dashboard listing
+   active models. Build and test the whole phase against the mock first; only then point it
+   at the real API. This phase proves the seam works, and it is the phase most likely to hide
+   a defect that surfaces months later.
 3. **Assets** — Drive sync, the asset table, the rating UI, and the database-level channel
    gate. **Build this before any generation**, because generation selects assets and the
    gate must exist before anything can select the wrong one.
@@ -824,9 +812,14 @@ blocked by someone else's decision.
 ## 13. Environment variables
 
 ```
-NEXT_PUBLIC_SUPABASE_URL=          # same project as KARAY
+NEXT_PUBLIC_SUPABASE_URL=          # RAYSSA's OWN project — never KARAY's
 NEXT_PUBLIC_SUPABASE_ANON_KEY=
 SUPABASE_SERVICE_ROLE_KEY=
+
+# KARAY integration API (see 3.3). Read-only except the checklist tick.
+KARAY_API_BASE_URL=https://karaymodels.com/api/integrations/rayssa/v1
+KARAY_API_TOKEN=                   # bearer token; the KARAY side holds the same value
+KARAY_API_MOCK=false               # true serves contract fixtures with no network call
 
 ANTHROPIC_API_KEY=
 
@@ -874,7 +867,7 @@ Answer these before phase 4; they do not block phases 1–3.
 | Item | Monthly |
 |---|---|
 | Vercel Pro | $20 |
-| Supabase | $0 on free tier; $25 if it outgrows it |
+| Supabase (RAYSSA's own project) | $0 on free tier; $25 if it outgrows it |
 | Google Drive | Existing |
 | Anthropic API | ~$20 (Sonnet 5, batched + cached) |
 | Instagram API | $0 |

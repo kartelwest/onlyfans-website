@@ -1,57 +1,39 @@
 <!--
-  Copy this file to `rayssa/AGENTS.md` in the karaymodels repository.
+  Copy this file to the ROOT of the new `rayssa` repository as `AGENTS.md`.
   It is the standing rules an agent reads every session. The full spec lives at
-  docs/rayssa/BUILD-PROMPT.md — read that too, but these rules bind regardless.
+  docs/BUILD-PROMPT.md — read that too, but these rules bind regardless.
 -->
 
 # RAYSSA — standing rules
 
 Internal marketing operations platform for a talent agency. The full specification is at
-`docs/rayssa/BUILD-PROMPT.md`. **Read it before writing code.** These rules apply every
-session and override any instinct to the contrary.
+`docs/BUILD-PROMPT.md`, and the integration seam at `docs/API-CONTRACT.md`. **Read both
+before writing code.** These rules apply every session and override any instinct to the
+contrary.
 
-## Rule zero: stay inside `rayssa/`
+## Rule zero: this repository is the whole world
 
-**This repository also contains karaymodels.com, a live production website serving real
-traffic.** It is everything outside the `rayssa/` directory.
+RAYSSA is a standalone application with its own Supabase project, its own auth, and its own
+migration history. It has **no database connection to karaymodels.com and no access to its
+codebase**, and it must never acquire one.
 
-You may **read** any file in this repository — you are expected to, and section 9 of the spec
-depends on it. You may **write** only inside `rayssa/`.
+- **Never request access to the karaymodels repository.** The boundary is deliberate.
+  Everything you need from it has been exported to `docs/reference/` as read-only material —
+  port from it, and ask the owner if something is missing.
+- **Never connect to KARAY's database.** There is no connection string for it, and a task
+  that seems to need one is a task you have misread.
+- **The only seam is the HTTP integration API** in `docs/API-CONTRACT.md`. Two `GET`s and one
+  narrow `POST`. Do not add endpoints to it, do not call anything not in the contract, and do
+  not change the contract — if v1 is insufficient, say so and stop.
+- **Build against the mock.** `KARAY_API_MOCK=true` must be enough to develop, run and test
+  every feature. If you find yourself needing a live KARAY to make progress, the mock is
+  incomplete — extend the mock. Never ask for production integration credentials.
 
-Do not edit, move, rename, refactor, reformat, or delete a single file outside `rayssa/`.
-Not to fix a type error. Not to update a dependency. Not to correct something that is
-genuinely wrong. If a change outside `rayssa/` appears necessary, stop and ask — do not make
-it and mention it afterwards.
-
-**One standing exception: `supabase/migrations/` at the repository root.** RAYSSA and KARAY
-share a single database, so they share a single migration timeline — there is no
-`rayssa/supabase/` directory. You may **add** new timestamped migration files there, named
-`<timestamp>_rayssa_<thing>.sql`. You may **never** edit, reorder, or delete an existing
-migration: those have already run against production, and changing one desynchronises the
-recorded history from the real schema. Every object you create belongs to the `rayssa`
-schema, with the single `security definer` checklist function from spec 3.3 as the only
-exception.
-
-The other exception is one-time and not yours: the build-isolation commit in spec 3.6
-(`tsconfig.json` exclude, `eslint.config.mjs` ignore, `.gitignore`), which the owner applies
-before your first session.
-
-So your writable surface is: everything under `rayssa/`, plus new files in
-`supabase/migrations/`. Nothing else, ever.
-
-**Never import across the boundary.** No `import … from "../lib/..."`. The two applications
-have separate dependency trees and separate builds. Port the code you need into `rayssa/`
-instead — that is what spec section 9 means by reuse.
-
-Every pull request you open must show changes to `rayssa/` and nothing else. If `git diff
---name-only` lists a path outside `rayssa/`, the pull request is wrong regardless of whether
-the tests pass.
-
-## This is NOT the Next.js you may know
-
-This version has breaking changes — APIs, conventions, and file structure may differ from
-your training data. Read the relevant guide in `node_modules/next/dist/docs/` before writing
-routing or data-fetching code. Heed deprecation notices.
+**Model ids are foreign, and nothing enforces them.** Every reference to a model is
+`karay_model_id uuid`, cached in `public.karay_models`, with no cross-database foreign key
+and therefore no help from Postgres. Validate on write with a trigger; never delete a model
+row because the API stopped returning it — mark `missing_since` and keep everything that
+points at it.
 
 ## Hard prohibitions
 
@@ -86,21 +68,20 @@ Fake *models* for local development are the one exception, and only in the dev s
 
 ## Database rules
 
-- **All RAYSSA tables live in the `rayssa` schema.** Never `public`. `public` belongs to the
-  separate KARAY application and a collision there hits a live production system.
-- **Read KARAY data only through views in `rayssa`, always with `security_invoker = true`.**
-  Without it the view bypasses the caller's row-level security.
-- **Never create a view exposing earnings, payments, identity documents, proxy credentials,
-  or notes.** RAYSSA has no use for them. A view that does not exist cannot leak.
-- **RAYSSA never writes to `public`** except ticking the daily checklist, and that goes
-  through a narrow `security definer` function — not a table grant.
+- **This database is entirely RAYSSA's.** Tables go in `public`; `supabase/migrations/` is
+  its complete history. There is no other application in it.
+- **Model references are `karay_model_id uuid`** against `public.karay_models`, the local
+  cache of the roster. Validate on write with a trigger — no cross-database foreign key
+  exists to do it for you.
+- **Never delete a cached model** because the integration API stopped returning it. Set
+  `missing_since`. Deletion orphans every packet, asset and tracked link that references it.
 - **RLS on every table, from the first migration.** Not "added at the end." Follow the
-  predicate-helper pattern in the KARAY repository's existing migrations.
+  predicate-helper pattern in `docs/reference/rls-policies.sql`.
 - **`revoke all … from anon` on every table.** Every one.
 - Migrations carry a header comment saying what and why. `security definer set search_path =
   public` on every function. `drop policy if exists` before every `create policy`.
 - **Never apply a migration to production.** Deliver `.sql` in a pull request; the owner
-  applies it.
+  applies it. This holds even though the database is RAYSSA's own.
 
 ## The media classification gate
 

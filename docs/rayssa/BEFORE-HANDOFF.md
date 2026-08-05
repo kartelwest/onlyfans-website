@@ -29,23 +29,23 @@ underestimate and the one that determines whether the output is good or generic.
 
 ## B. Environments — the decision that protects you
 
-`BUILD-PROMPT.md` specifies that RAYSSA runs against the same Supabase project as KARAY.
-That is correct **in production**. It is not how the coder should develop.
+RAYSSA has its own Supabase project (spec 3.3), so the coder never needs KARAY's database at
+all — that boundary is now structural rather than a matter of discipline. Two things still
+need setting up, and one still needs withholding.
 
-Handing an outside developer the KARAY service-role key gives them unrestricted read access
-to every model's personal data. You do not need to distrust anyone to refuse to do that; it
-is simply not a level of access the job requires.
+**Do this:**
 
-**Do this instead:**
-
-- [ ] **Create a second, free Supabase project** named `rayssa-dev`. Free tier is fine — it
-      holds nothing real.
-- [ ] **Export the KARAY schema with no data** and give the coder the `.sql` file. From the
-      Supabase dashboard, or `supabase db dump --schema public --data-only=false`. They need
-      the *shape* of `models`, `profiles`, `brand_profiles` and the daily-checklist tables so
-      their views and joins compile. They do not need one real row.
+- [ ] **Create `rayssa-prod`** — RAYSSA's own production Supabase project. You hold the keys.
+- [ ] **Create `rayssa-dev`** — a second free project the coder develops against. It holds
+      nothing real.
+- [ ] **No KARAY schema export is needed any more.** RAYSSA designs its own schema from the
+      spec; model data arrives over the API, not by joining to KARAY's tables.
 - [ ] **Have the coder write a seed script** that creates 5 fake models with fake brand
-      profiles in `rayssa-dev`. First task of Phase 1. Their entire build runs against this.
+      profiles in `rayssa-dev`. First task of Phase 1. Their entire build runs against this,
+      alongside the API mock.
+- [ ] **Withhold the production integration token.** The mock needs no token; a dev token
+      against a staging KARAY is optional. The production token goes in Vercel's production
+      environment, set by you, and nowhere else.
 - [ ] **You apply migrations to production yourself**, or run them under your own account
       after reviewing the coder's migration file. The coder's deliverable is a `.sql` file
       in a pull request, not a change already applied to your live database.
@@ -66,9 +66,11 @@ Each line: who creates it, who holds the credential.
 
 | # | Account | You create | Coder gets |
 |---|---|---|---|
-| 1 | Existing karaymodels repo — RAYSSA is a `rayssa/` sibling app (spec 3.6) | Already exists | Write, with branch protection on `main` |
+| 1 | GitHub repo `rayssa`, **private**, separate from karaymodels | ✅ | Write, with branch protection on `main` |
 | 2 | Vercel Pro team ($20/mo) | ✅ | Member on `rayssa-dev` only |
 | 3 | Supabase project `rayssa-dev` (free) | ✅ | Full keys — it holds fake data |
+| 3b | Supabase project `rayssa-prod` — RAYSSA's own production database | ✅ | **Nothing** |
+| 3c | `RAYSSA_INTEGRATION_TOKEN` — the API bearer token | ✅ | A **dev-only** token, or none (the mock needs none) |
 | 4 | Supabase KARAY production | Already exists | **Nothing** |
 | 5 | Anthropic API key — **new, separate from KARAY's** | ✅ | The dev key only |
 | 6 | Google Cloud service account + Drive folder | ✅ | Service-account JSON for a *test* folder |
@@ -192,12 +194,13 @@ The coder will ask. Have answers ready.
 
 ## F. How to run the engagement
 
-`BUILD-PROMPT.md` has nine phases and thirteen acceptance criteria. Use them.
+`BUILD-PROMPT.md` has ten phases and sixteen acceptance criteria. Use them.
 
 - [ ] **Do not accept one large delivery at the end.** Pay per phase. Each is independently
       useful — you get a working login and roster from Phases 1–2 whether or not Phase 9
       ever ships.
-- [ ] **Hard review gates at Phase 3, Phase 6, and Phase 9.** Phase 3 is the media
+- [ ] **Hard review gates at Phase 2, Phase 3, Phase 6, and Phase 9.** Phase 2 is the
+      integration seam — a defect there surfaces months later as mysteriously stale data. Phase 3 is the media
       classification gate and the most safety-critical code in the build. Phase 6 is
       attribution, which is where the product starts paying for itself.
 - [ ] **Every pull request must include:** `npm run typecheck`, `npm run lint`,
@@ -246,11 +249,11 @@ they are proposals to trade your models' accounts for a shorter timeline.
 Once sections A–C are done, send exactly this:
 
 1. `docs/rayssa/BUILD-PROMPT.md`
-2. Nothing extra for repository access — RAYSSA lives in the karaymodels repo as a `rayssa/`
-   sibling app, so the existing migrations, `lib/brand/ai/contentStudio.ts`,
-   `lib/daily/definition.ts`, and the i18n setup are already readable. Section 9 of the spec
-   depends on that, and reading that code is what turns a three-month build into a
-   one-month build. Make the build-isolation commit from spec 3.6 first.
+2. **`docs/reference/` — the six exported files from spec 3.6.** `contentStudio.ts`,
+   `launchPacket.ts`, `lib/daily/definition.ts`, your RLS policies, a well-formed migration.
+   With separate repositories the coder cannot read these directly, and section 9 of the spec
+   is where most of the time savings live. Ten minutes to copy; skipping it costs weeks.
+3. **`API-CONTRACT.md`**, and the integration API built and deployed (spec Phase 0).
 3. The schema-only `.sql` export from section B
 4. Credentials from the section C table — dev only
 5. The spreadsheets and examples from section D
@@ -282,7 +285,7 @@ Once sections A–C are done, send exactly this:
 > creating about five fake models. You won't have production credentials; migrations come to
 > me as `.sql` files in a pull request and I apply them.
 >
-> The spec has nine phases and thirteen acceptance criteria. I'd like to work phase by phase,
+> The spec has ten phases and sixteen acceptance criteria. I'd like to work phase by phase,
 > with a short screen-share walkthrough at the end of each. Payment tracks the phases.
 >
 > Before you start, please confirm:
