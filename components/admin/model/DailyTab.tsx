@@ -102,7 +102,10 @@ async function fetchDaily(modelId: string): Promise<DailyResponse> {
   const result = (await response.json()) as DailyResponse;
 
   if (!response.ok) {
-    throw new Error(result.error ?? "Failed to load the daily checklist.");
+    // The route's own message is already in the reader's language. When it did
+    // not send one, the message is left empty on purpose: the caller fills it
+    // from the catalogue, because this function has no translator.
+    throw new Error(result.error ?? "");
   }
 
   return result;
@@ -154,7 +157,7 @@ export default function DailyTab({
         if (!active) return;
 
         setErrorMessage(
-          error instanceof Error ? error.message : t("loadFailed"),
+          (error instanceof Error && error.message) || t("loadFailed"),
         );
         setIsLoading(false);
       });

@@ -1332,7 +1332,8 @@
       "loadFailed": "Erro interno ao carregar o onboarding.",
       "unknownStep": "Etapa de onboarding desconhecida.",
       "stepLookupFailed": "Erro interno ao buscar a etapa.",
-      "unknownField": "Campo de onboarding desconhecido."
+      "unknownField": "Campo de onboarding desconhecido.",
+      "fillFirst": "Preencha antes: {fields}."
     },
     "modelCredentials": {
       "noPermission": "Você não tem permissão para alterar o acesso desta modelo.",
@@ -1960,7 +1961,9 @@
       "openFolder": "Abrir pasta",
       "notConfigured": "Não configurada",
       "errorEyebrow": "Erro",
-      "loadFailed": "Não foi possível carregar a modelo"
+      "loadFailed": "Não foi possível carregar a modelo",
+      "stageNameLine": "Nome artístico: {name}",
+      "modelNumberLine": "Modelo #{number}"
     },
     "amplia": {
       "portal": "PORTAL DA AMPLIA",
@@ -2412,7 +2415,9 @@
       "linkedFieldHint": "Este campo é o mesmo de {location} — salvar aqui atualiza lá, e vice-versa.",
       "alsoIn": "também em {location}",
       "readOnlyHint": "Somente leitura aqui — o onboarding nunca altera este campo. Edite em {location}.",
-      "readOnlyIn": "somente leitura — edite em {location}"
+      "readOnlyIn": "somente leitura — edite em {location}",
+      "step": "Etapa {order}",
+      "sectionProgress": "{done} de {total} concluídas"
     },
     "importer": {
       "autoSave": "Salvar automaticamente",

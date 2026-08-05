@@ -243,7 +243,7 @@ export async function PATCH(request: Request) {
 
     const actor = {
       id: auth.profile.id,
-      fullName: auth.profile.full_name || "Usuário",
+      fullName: auth.profile.full_name || t("unknownUser"),
       role: auth.profile.role,
     };
 
@@ -474,7 +474,9 @@ export async function PATCH(request: Request) {
 
       if (body.completed && current && current.missingRequired.length > 0) {
         return fail(
-          `Preencha antes: ${current.missingRequired.join(", ")}.`,
+          tRoute("fillFirst", {
+            fields: current.missingRequired.join(", "),
+          }),
           400,
         );
       }

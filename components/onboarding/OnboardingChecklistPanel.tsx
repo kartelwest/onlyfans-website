@@ -98,7 +98,9 @@ async function fetchOnboarding(
   const result = (await response.json()) as OnboardingResponse;
 
   if (!response.ok) {
-    throw new Error(result.error ?? "Failed to load the onboarding checklist.");
+    // Empty on purpose when the route sent no message: the caller fills it
+    // from the catalogue, because this function has no translator.
+    throw new Error(result.error ?? "");
   }
 
   return result;
@@ -165,9 +167,7 @@ export default function OnboardingChecklistPanel({
         if (!active) return;
 
         setErrorMessage(
-          error instanceof Error
-            ? error.message
-            : t("loadFailed"),
+          (error instanceof Error && error.message) || t("loadFailed"),
         );
         setIsLoading(false);
       });
@@ -371,7 +371,7 @@ export default function OnboardingChecklistPanel({
                 >
                   <div>
                     <p className="text-xs font-bold uppercase tracking-[0.16em] text-pink-300">
-                      Etapa {section.order}
+                      {t("step", { order: section.order })}
                     </p>
 
                     <h3 className="mt-2 text-lg font-bold text-white">
@@ -379,7 +379,10 @@ export default function OnboardingChecklistPanel({
                     </h3>
 
                     <p className="mt-1 text-sm text-white/45">
-                      {section.completed} de {section.total} concluídas
+                      {t("sectionProgress", {
+                        done: section.completed,
+                        total: section.total,
+                      })}
                     </p>
                   </div>
 
@@ -482,7 +485,9 @@ function ItemRow({
               : item.locked
                 ? t("lockedForRep")
                 : blocked
-                  ? `Preencha antes: ${item.missingRequired.join(", ")}`
+                  ? t("missingRequired", {
+                      fields: item.missingRequired.join(", "),
+                    })
                   : undefined
           }
           className={`mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border text-sm font-black transition ${

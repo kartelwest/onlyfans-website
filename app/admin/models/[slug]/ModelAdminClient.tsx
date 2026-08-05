@@ -144,12 +144,17 @@ export default function ModelAdminClient({
 
                                         <p className="mt-2 text-sm text-white/70">
                                             {model.stageName
-                                                ? `Nome artístico: ${model.stageName}`
+                                                ? t("stageNameLine", {
+                                                    name: model.stageName,
+                                                })
                                                 : t("noStageName")}
                                         </p>
 
                                         <p className="mt-1 text-sm text-white/50">
-                                            Modelo #{model.modelNumber ?? "—"}
+                                            {t("modelNumberLine", {
+                                                number:
+                                                    model.modelNumber ?? "—",
+                                            })}
                                         </p>
                                     </div>
 

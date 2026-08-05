@@ -1332,7 +1332,8 @@
       "loadFailed": "Internal error while loading the onboarding.",
       "unknownStep": "Unknown onboarding step.",
       "stepLookupFailed": "Internal error while looking up the step.",
-      "unknownField": "Unknown onboarding field."
+      "unknownField": "Unknown onboarding field.",
+      "fillFirst": "Fill these in first: {fields}."
     },
     "modelCredentials": {
       "noPermission": "You do not have permission to change this model's access.",
@@ -1960,7 +1961,9 @@
       "openFolder": "Open folder",
       "notConfigured": "Not configured",
       "errorEyebrow": "Error",
-      "loadFailed": "Could not load the model"
+      "loadFailed": "Could not load the model",
+      "stageNameLine": "Stage name: {name}",
+      "modelNumberLine": "Model #{number}"
     },
     "amplia": {
       "portal": "AMPLIA PORTAL",
@@ -2412,7 +2415,9 @@
       "linkedFieldHint": "This is the same field as in {location} — saving here updates it there, and the other way round.",
       "alsoIn": "also in {location}",
       "readOnlyHint": "Read-only here — onboarding never changes this field. Edit it in {location}.",
-      "readOnlyIn": "read-only — edit in {location}"
+      "readOnlyIn": "read-only — edit in {location}",
+      "step": "Step {order}",
+      "sectionProgress": "{done} of {total} done"
     },
     "importer": {
       "autoSave": "Save automatically",
