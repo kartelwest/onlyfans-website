@@ -155,6 +155,10 @@ export async function createApplicationNotes(
       body,
       priority: "normal",
       created_by_name: authorName,
+      // The applicant's own answers, and the record the representative
+      // onboards her from. Shared by default rather than by a tick, unlike a
+      // hand-typed note — see 20260804020000_representative_note_visibility.
+      rep_visible: true,
     })
     .select("id")
     .single();

@@ -114,6 +114,23 @@ describe("note sharing", () => {
     assert.match(policy, /deleted_at is null/);
   });
 
+  it("shares intake notes without anyone having to tick them", () => {
+    // The write path, so new applicants are shared on arrival...
+    const intake = readFileSync(
+      join(ROOT, "lib/models/applicantIntake.ts"),
+      "utf8",
+    );
+
+    assert.match(intake, /rep_visible: true/);
+
+    // ...and the backfill, for the ones already in the database.
+    const backfill = MIGRATION.split("set rep_visible = true")[1];
+
+    assert.ok(backfill, "the intake backfill is missing");
+    assert.match(backfill, /'NOVO CANDIDATO%'/);
+    assert.match(backfill, /'CANDIDATA IMPORTADA%'/);
+  });
+
   it("refuses the flag to anyone who is not staff", () => {
     const guard = MIGRATION.split("function public.guard_note_rep_visible")[1];
 

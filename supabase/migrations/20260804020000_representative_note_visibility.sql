@@ -2,15 +2,21 @@
 -- KARAY Models — What a representative sees on her client's page
 --
 -- NOTE ON DRIFT (same caveat as 20260803000001 / 20260804000000): written
--- against the LIVE schema. The audit policy from 20260730000000 uses
--- public.is_assigned_rep(uuid); the note policies use
--- public.is_assigned_representative(uuid). Both exist, and each policy below
--- keeps the predicate it already had, so neither name has to be reconciled.
+-- against the LIVE schema, and verified against it before being applied.
+-- 20260730000000 declares audit_history_select in terms of
+-- public.is_assigned_rep(uuid), but that function does not exist in
+-- production — the live policy already reads is_assigned_representative(uuid),
+-- which is the only one of the two the database has. That is the name used
+-- throughout below, and the argument is passed positionally, because
+-- production declares it as is_assigned_representative(target_model_id uuid)
+-- while a fresh database built from the migration files gets
+-- is_assigned_representative(target_model uuid).
 --
 -- WHERE THIS STARTS FROM
 --
 --   audit_history_select (20260730000000):
 --       using ( public.is_staff() or public.is_assigned_rep(model_id) )
+--   as written; live, that predicate is is_assigned_representative(model_id).
 --
 --   That is every row. A representative could already read the whole audit
 --   trail for a model assigned to her — including model_credentials_updated,
@@ -33,7 +39,11 @@
 --   2. Only staff may set that flag. The guard trigger below is what enforces
 --      it — RLS alone cannot, because a rep legitimately updates her own note's
 --      text and a WITH CHECK clause cannot see the row's previous value.
---   3. A representative's audit read narrows to the onboarding checklist.
+--   3. Intake notes are the exception to "off by default": the applicant's own
+--      answers from /aplicar, and the importer's extraction, are the record a
+--      representative onboards from. They are shared on sight — written that
+--      way by lib/models/applicantIntake.ts and backfilled below.
+--   4. A representative's audit read narrows to the onboarding checklist.
 --      public.rep_visible_audit_action() is the single source of truth, and
 --      app/api/models/history/route.ts mirrors it rather than keeping a second
 --      copy of the list.
@@ -54,6 +64,20 @@ comment on column public.model_notes.rep_visible is
 create index if not exists model_notes_rep_visible_idx
   on public.model_notes (model_id)
   where rep_visible;
+
+-- ----- 1b. Intake notes were always the representative's to read -------------
+--
+-- Matched on the header the writer stamps on the first line: applicantIntake
+-- ("NOVO CANDIDATO") and the PDF/image importer ("CANDIDATA IMPORTADA"), both
+-- of which go through buildApplicationNote. Nothing else is touched, so a
+-- hand-typed note is never shared by accident — those stay behind the tick.
+update public.model_notes
+set rep_visible = true
+where rep_visible = false
+  and (
+    body like 'NOVO CANDIDATO%'
+    or body like 'CANDIDATA IMPORTADA%'
+  );
 
 -- ----- 2. Only staff may share a note ----------------------------------------
 --
@@ -129,7 +153,7 @@ create policy audit_history_select on public.model_audit_history
   using (
     public.is_staff()
     or (
-      public.is_assigned_rep(model_id)
+      public.is_assigned_representative(model_id)
       and public.rep_visible_audit_action(action)
     )
   );
