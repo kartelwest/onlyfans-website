@@ -62,11 +62,6 @@ type ModelRow = {
    * model_checklist is legacy and no longer written.
    */
   onboarding_percentage: number | null;
-  /**
-   * Trigger-maintained projection of the daily marketing checklist. Cleared to
-   * 0 every midnight in São Paulo by the nightly job.
-   */
-  daily_percentage: number | null;
   profile: { full_name: string | null } | null;
 };
 
@@ -76,6 +71,12 @@ type NoteSummaryRow = {
 };
 
 type DashboardModel = ModelRow & {
+  /**
+   * Trigger-maintained projection of the daily marketing checklist, read
+   * separately so a database without that column still renders the list.
+   * Cleared to 0 every midnight in São Paulo by the nightly job.
+   */
+  daily_percentage: number;
   checklist: ChecklistRow | null;
   latest_note_summary: string | null;
 };
@@ -147,7 +148,6 @@ export default async function AdminModelsPage({
         status,
         active,
         onboarding_percentage,
-        daily_percentage,
         representative_id,
         profile:profiles!profile_id ( full_name )
       `,
@@ -162,6 +162,34 @@ export default async function AdminModelsPage({
 
   if (modelsError) {
     console.error("Failed to load models:", modelsError);
+  }
+
+  // Read on its own, and allowed to fail.
+  //
+  // PostgREST rejects the WHOLE select when one column in it is unknown, so
+  // asking for daily_percentage above meant that a database which had not yet
+  // run 20260805030000 returned nothing at all — and this screen, which is how
+  // the agency finds every model, rendered "no models". A decorative column
+  // must never be able to do that. When this read fails the badges show 0%
+  // and the list is still the list.
+  const { data: dailyRows, error: dailyError } = await supabase
+    .from("models")
+    .select("id, daily_percentage");
+
+  if (dailyError) {
+    console.error(
+      "Failed to load the daily percentages (is the daily checklist migration applied?):",
+      dailyError,
+    );
+  }
+
+  const dailyMap = new Map<string, number>();
+
+  for (const row of (dailyRows ?? []) as {
+    id: string;
+    daily_percentage: number | null;
+  }[]) {
+    dailyMap.set(row.id, row.daily_percentage ?? 0);
   }
 
   // latest_note_summary is an excerpt of the model's most recent internal
@@ -244,6 +272,7 @@ export default async function AdminModelsPage({
   const models: DashboardModel[] = sortByModelStatus(
     (modelRows ?? []).map((model) => ({
       ...(model as unknown as ModelRow),
+      daily_percentage: dailyMap.get(model.id) ?? 0,
       checklist: checklistMap.get(model.id) ?? null,
       latest_note_summary: noteSummaryMap.get(model.id) ?? null,
     })),
