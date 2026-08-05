@@ -446,10 +446,12 @@ export default async function AdminModelsPage({
           </div>
         </section>
 
-        <details
-          open
-          className="group mt-6 overflow-hidden rounded-2xl border border-white/10 bg-[#111115]"
-        >
+        {/*
+          Collapsed by default, like every other foldable block in the admin.
+          The summary keeps the heading and the count, so the list reads as
+          folded rather than missing.
+        */}
+        <details className="group mt-6 overflow-hidden rounded-2xl border border-white/10 bg-[#111115]">
           <summary className="flex cursor-pointer list-none items-center justify-between gap-4 border-b border-pink-400/20 bg-[#2a1521] px-6 py-4 [&::-webkit-details-marker]:hidden">
             <span className="text-sm font-bold uppercase tracking-[0.14em] text-pink-100">
               {t("modelsHeading")}{" "}
