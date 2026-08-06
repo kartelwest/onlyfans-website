@@ -82,7 +82,7 @@
       "highlight": "Yes, you can block Brazil (or any other country) on OnlyFans to protect your privacy.",
       "body": "Strategy, management, marketing and professional support for creators who want to build a strong brand, grow their earnings and reach financial freedom.",
       "ctaPrimary": "I Want to Join",
-      "ctaSecondary": "Meet Our Agency",
+      "ctaSecondary": "Book a Meeting",
       "stats": {
         "activeModels": "Active models at most",
         "attention": "Personalized strategic attention",
@@ -167,6 +167,13 @@
         }
       }
     },
+    "booking": {
+      "metaTitle": "Book a Meeting | KARAY Models",
+      "metaDescription": "Schedule a meeting with the KARAY Models team.",
+      "eyebrow": "Talk to our team",
+      "headline": "Book a meeting with KARAY Models",
+      "body": "Choose the best time and talk to our team. We are here to answer your questions and show you how the partnership works."
+    },
     "footer": {
       "aboutTitle": "About Us",
       "aboutBody": "KARAY Models is an agency specializing in the complete management of content creators. Our goal is to turn talent into a profitable business through professional marketing strategies, brand positioning, account management, subscriber care and sustainable growth.",
@@ -203,7 +210,7 @@
       "ctaHeadline": "Talk to our team before you decide.",
       "ctaBody": "We want you to fully understand how the partnership works before you commit to anything.",
       "ctaApply": "Apply now",
-      "ctaContact": "Contact Us",
+      "ctaContact": "Book a Meeting",
       "groups": [
         {
           "category": "Privacy and identity",

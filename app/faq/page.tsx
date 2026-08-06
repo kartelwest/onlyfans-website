@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { getTranslations } from "next-intl/server";
 
@@ -158,12 +159,12 @@ export default function FAQPage() {
               {t("ctaApply")}
             </a>
 
-            <a
-              href="/login"
+            <Link
+              href="/agendar"
               className="rounded-full border border-[#b85f79] px-9 py-4 text-sm font-bold uppercase tracking-[0.1em] text-[#9d4861] transition hover:bg-[#b85f79] hover:text-white"
             >
               {t("ctaContact")}
-            </a>
+            </Link>
           </div>
         </div>
       </section>

@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 import { useTranslations } from "next-intl";
 
 /**
@@ -49,19 +50,19 @@ export default function Hero() {
           </p>
 
           <div className="mt-10 flex flex-col gap-4 sm:flex-row">
-            <a
+            <Link
               href="/aplicar"
               className="rounded-full bg-[#c95f7d] px-8 py-4 text-center text-sm font-bold uppercase tracking-[0.12em] text-white transition duration-300 hover:-translate-y-0.5 hover:bg-[#ae4e69]"
             >
               {t("ctaPrimary")}
-            </a>
+            </Link>
 
-            <a
-              href="/por-que-nos"
+            <Link
+              href="/agendar"
               className="rounded-full border border-white/70 bg-white/5 px-8 py-4 text-center text-sm font-bold uppercase tracking-[0.12em] text-white backdrop-blur-sm transition duration-300 hover:bg-white hover:text-[#3f2631]"
             >
               {t("ctaSecondary")}
-            </a>
+            </Link>
           </div>
         </div>
       </div>
