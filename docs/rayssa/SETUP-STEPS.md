@@ -43,6 +43,43 @@ You can still do both steps by hand — they are written out in full below — b
 copying in Step 11 is exactly the kind of thing that gets half-done, and a missing reference
 file costs weeks without announcing itself.
 
+### Using an AI assistant as a walk-through companion
+
+This document works well pasted into ChatGPT (or any assistant) as a patient guide that holds
+your hand screen by screen — "I'm looking at the Supabase dashboard, what now", "I got this
+error, what does it mean". That is a good use of it.
+
+Two failure modes to head off, because both are quiet:
+
+- **It will summarize.** Asked to help, an assistant compresses. The details that get dropped
+  are the ones that matter: sharing the Drive folder with the service-account email (8g),
+  `KARAY_API_MOCK = true` in the dev environment (13), branch protection (4e). A summarized
+  version of this document is a broken version.
+- **It will invent menu paths.** Dashboard navigation changes, and training data goes stale.
+  If the assistant's menu path disagrees with this document, trust what is on your screen —
+  and if neither matches, search the vendor's current docs rather than guessing.
+
+Paste this alongside the file:
+
+> I'm attaching a setup guide for a project I'm building. Please walk me through it **one
+> step at a time**, in the order written.
+>
+> Rules:
+> - **Do not summarize, condense, or reorder the steps.** Every sub-step matters; some of them
+>   prevent security problems or silent failures that surface weeks later.
+> - Give me **one step at a time**, then wait for me to say I'm done before the next.
+> - When a step says 📋 SAVE, remind me to save that value before moving on.
+> - If I hit an error or something on my screen doesn't match, help me troubleshoot — but if
+>   the interface differs from the guide, tell me plainly rather than guessing a menu path.
+> - **Never ask me to paste an API key, token, password, or secret into this chat.** If a step
+>   produces one, just tell me where it goes.
+>
+> Start with Step 1.
+
+**The last rule is the important one.** Steps 9 and 13 produce credentials that grant full
+access to your database, your AI spend, and your file storage. They travel from your password
+manager to a Vercel form and touch nothing else — no chat window, mine included.
+
 ---
 
 ## Step 1 — Lock your decisions (10 minutes)
