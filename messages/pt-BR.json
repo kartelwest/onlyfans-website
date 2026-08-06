@@ -1337,6 +1337,30 @@
       "unknownField": "Campo de onboarding desconhecido.",
       "fillFirst": "Preencha antes: {fields}."
     },
+    "postBoardingApi": {
+      "noViewPermission": "Sem permissão para ver o pós-embarque desta modelo.",
+      "noEditPermission": "Sem permissão para editar o pós-embarque desta modelo.",
+      "invalidNote": "Nota, item e modelo são obrigatórios.",
+      "noteTooLong": "A nota não pode ultrapassar 5000 caracteres.",
+      "unknownItem": "Item de pós-embarque desconhecido.",
+      "noteNotFound": "Nota de pós-embarque não encontrada.",
+      "editOwnNotesOnly": "Representantes só podem editar as próprias notas.",
+      "loadFailed": "Não foi possível carregar o pós-embarque.",
+      "saveFailed": "Não foi possível salvar a nota de pós-embarque.",
+      "unexpected": "Erro interno ao salvar a nota de pós-embarque."
+    },
+    "postBoarding": {
+      "loading": "Carregando pós-embarque…",
+      "loadFailed": "Não foi possível carregar o pós-embarque.",
+      "saveFailed": "Não foi possível salvar a nota.",
+      "emptyNotes": "Nenhuma anotação ainda.",
+      "placeholder": "Escreva o que foi feito, observações, atualizações de marketing, melhorias ou follow-ups…",
+      "addNote": "Adicionar anotação",
+      "edit": "Editar",
+      "save": "Salvar",
+      "cancel": "Cancelar",
+      "unknownUser": "Usuário"
+    },
     "modelCredentials": {
       "noPermission": "Você não tem permissão para alterar o acesso desta modelo.",
       "loginRequired": "Informe um e-mail ou um nome de usuário para criar o acesso desta modelo.",
@@ -1839,6 +1863,7 @@
         "payments": "Pagamentos",
         "notes": "Notas",
         "history": "Histórico",
+        "post_boarding": "Pós-embarque",
         "brand_growth": "Amplia"
       },
       "fields": {
@@ -3187,6 +3212,10 @@
       "instagram": {
         "label": "Instagram",
         "location": "Aba Plataformas"
+      },
+      "instagram_marketing": {
+        "label": "Instagram (Marketing)",
+        "location": "Aba Resumo"
       },
       "twitter": {
         "label": "X / Twitter",

@@ -228,9 +228,9 @@ declare
   model_columns text[] := array[
     'stage_name', 'birthday', 'email', 'whatsapp', 'nationality', 'city',
     'language', 'country_code', 'preferred_currency', 'content_frequency',
-    'referral_source', 'onlyfans', 'fansly', 'instagram', 'twitter', 'reddit',
-    'tiktok', 'youtube', 'facebook', 'drive_onlyfans', 'drive_instagram',
-    'drive_twitter', 'content_drive_url'
+    'referral_source', 'onlyfans', 'fansly', 'instagram', 'instagram_marketing',
+    'twitter', 'reddit', 'tiktok', 'youtube', 'facebook', 'drive_onlyfans',
+    'drive_instagram', 'drive_twitter', 'content_drive_url'
   ];
   -- The columns public.model_payments actually has. The names in
   -- 20260722000001_initial_schema.sql (pix_type, bank_agency, bank_account,
@@ -263,6 +263,13 @@ begin
 
   if coalesce(locked, false) and not public.is_owner() then
     raise exception 'Onboarding concluído: apenas o proprietário pode alterá-lo.'
+      using errcode = '42501';
+  end if;
+
+  -- Marketing accounts are internal and owner/administrator-only.
+  if field_key = any (array['instagram_marketing', 'twitter_marketing'])
+     and not public.is_staff() then
+    raise exception 'Contas de marketing só podem ser editadas pela administração.'
       using errcode = '42501';
   end if;
 

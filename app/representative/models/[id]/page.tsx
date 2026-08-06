@@ -4,6 +4,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import ModelDashboardView from "@/components/model-dashboard/ModelDashboardView";
 import NotesTab from "@/components/admin/model/NotesTab";
+import PostBoardingTab from "@/components/admin/model/PostBoardingTab";
 import HistoryTab from "@/components/admin/model/HistoryTab";
 import { isStaffRole } from "@/lib/auth/roles";
 import { loadProfileWithStatus } from "@/lib/staff/profileLifecycle";
@@ -85,6 +86,13 @@ export default async function RepresentativeModelDashboardPage({
     >
       <div className="mt-6">
         <NotesTab
+          modelId={id}
+          currentUserRole="representative"
+        />
+      </div>
+
+      <div className="mt-6">
+        <PostBoardingTab
           modelId={id}
           currentUserRole="representative"
         />

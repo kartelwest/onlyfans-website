@@ -16,6 +16,7 @@ import EarningsTab from "@/components/admin/model/EarningsTab";
 import PaymentsTab from "@/components/admin/model/PaymentsTab";
 import BrandGrowthTab from "@/components/brand/BrandGrowthTab";
 import HistoryTab from "@/components/admin/model/HistoryTab";
+import PostBoardingTab from "@/components/admin/model/PostBoardingTab";
 
 import { useState } from "react";
 import Link from "next/link";
@@ -61,6 +62,7 @@ type TabId =
     | "payments"
     | "notes"
     | "history"
+    | "post_boarding"
     | "brand_growth";
 
 /** The id doubles as the key under `admin.modelPage.tabs`. */
@@ -78,6 +80,7 @@ const tabs: {
         { id: "payments" },
         { id: "notes" },
         { id: "history" },
+        { id: "post_boarding" },
         { id: "brand_growth" },
     ];
 
@@ -333,6 +336,13 @@ export default function ModelAdminClient({
 
                         {activeTab === "history" && (
                             <HistoryTab
+                                modelId={model.id}
+                                currentUserRole={currentUserRole}
+                            />
+                        )}
+
+                        {activeTab === "post_boarding" && (
+                            <PostBoardingTab
                                 modelId={model.id}
                                 currentUserRole={currentUserRole}
                             />

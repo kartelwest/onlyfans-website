@@ -1337,6 +1337,30 @@
       "unknownField": "Unknown onboarding field.",
       "fillFirst": "Fill these in first: {fields}."
     },
+    "postBoardingApi": {
+      "noViewPermission": "You do not have permission to view this model's post boarding.",
+      "noEditPermission": "You do not have permission to edit this model's post boarding.",
+      "invalidNote": "Note, item and model are required.",
+      "noteTooLong": "The note cannot exceed 5000 characters.",
+      "unknownItem": "Unknown post boarding item.",
+      "noteNotFound": "Post boarding note not found.",
+      "editOwnNotesOnly": "Representatives may only edit their own notes.",
+      "loadFailed": "Could not load post boarding.",
+      "saveFailed": "Could not save the post boarding note.",
+      "unexpected": "Internal error while saving the post boarding note."
+    },
+    "postBoarding": {
+      "loading": "Loading post boarding…",
+      "loadFailed": "Could not load post boarding.",
+      "saveFailed": "Could not save the note.",
+      "emptyNotes": "No notes yet.",
+      "placeholder": "Write what was done, observations, marketing updates, improvements, or follow-ups…",
+      "addNote": "Add note",
+      "edit": "Edit",
+      "save": "Save",
+      "cancel": "Cancel",
+      "unknownUser": "User"
+    },
     "modelCredentials": {
       "noPermission": "You do not have permission to change this model's access.",
       "loginRequired": "Enter an e-mail address or a username to create this model's access.",
@@ -1839,6 +1863,7 @@
         "payments": "Payments",
         "notes": "Notes",
         "history": "History",
+        "post_boarding": "Post Boarding",
         "brand_growth": "Amplia"
       },
       "fields": {
@@ -3187,6 +3212,10 @@
       "instagram": {
         "label": "Instagram",
         "location": "Platforms tab"
+      },
+      "instagram_marketing": {
+        "label": "Instagram (Marketing)",
+        "location": "Overview tab"
       },
       "twitter": {
         "label": "X / Twitter",
