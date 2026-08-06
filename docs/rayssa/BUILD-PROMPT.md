@@ -715,7 +715,60 @@ the karaymodels repository — that boundary is deliberate (3.6).
 
 ## 10. Screens
 
-1. `/login` — email + password, bilingual, rate-limited. No signup link.
+1. `/login` — see the specification below.
+
+### The login screen
+
+RAYSSA is an internal command center, not a product with visitors. The login screen should
+look like a control room: dark, typographic, nothing decorative. No logo file, no imagery, no
+marketing copy — the wordmark *is* the design.
+
+```
+        ┌────────────────────────────────┐
+        │                                │
+        │      R A Y S S A               │   ← 64px, weight 700, tracking 0.28em
+        │      COMMAND CENTER            │   ← 11px, tracking 0.35em, muted
+        │      ──────────────────        │
+        │                                │
+        │      Email                     │
+        │      [                     ]   │
+        │                                │
+        │      Senha / Password          │
+        │      [                     ]   │
+        │                                │
+        │      [      ENTRAR       ]     │
+        │                                │
+        │      PT · EN                   │
+        └────────────────────────────────┘
+```
+
+- **Layout:** full viewport, single centered column, `max-width: 380px`. Vertically centered
+  on desktop; top-aligned with generous padding on mobile.
+- **Palette:** background `#0B0B0C`, primary text `#FFFFFF`, muted text `#6B6B70`, input
+  background `#141416` with a `#26262A` border, focus ring `#FFFFFF` at 40% opacity. One
+  palette only — this screen does not follow the system light/dark preference.
+- **Wordmark:** `RAYSSA`, uppercase, 64px desktop / 44px below 480px, weight 700,
+  `letter-spacing: 0.28em`. Because tracking adds trailing space, offset with
+  `margin-right: -0.28em` so it reads as optically centered.
+- **Subtitle:** `COMMAND CENTER`, 11px, weight 500, `letter-spacing: 0.35em`, muted. Same in
+  both locales — it is a name, not a translated string.
+- **Fields:** email and password, 44px tall, 15px text, 2px radius. Labels above the field,
+  12px, muted, translated. `autocomplete="email"` and `"current-password"`.
+- **Button:** full width, 44px, white background, black text, uppercase, tracking 0.1em.
+  Shows a spinner and disables while submitting.
+- **Language toggle:** `PT · EN` beneath the button, 12px, muted, active locale in white.
+  Switching re-renders in place and persists the choice.
+- **Errors:** inline above the button, 13px, `#FF6B6B`, in the active locale. Always the same
+  generic message — never reveal whether an email exists.
+- **No signup link, no "forgot password", no marketing copy, no footer.** An owner creates
+  users; there is nothing else to do on this page.
+- After sign-in, a user with `must_change_password = true` lands on `/change-password` and
+  cannot navigate away until it is cleared.
+
+Every other screen inherits this palette and the same restraint: dense tables, generous
+whitespace, no decoration. This is a tool for two people who will use it every morning.
+
+
 2. `/` — today across all models: a table of model, DAILY %, packet status, and per-channel
    status chips. Sorted with the models needing action at the top.
 3. `/model/[id]` — the day's packet, one section per channel. Each item shows the caption,

@@ -49,10 +49,11 @@ need setting up, and one still needs withholding.
 - [ ] **You apply migrations to production yourself**, or run them under your own account
       after reviewing the coder's migration file. The coder's deliverable is a `.sql` file
       in a pull request, not a change already applied to your live database.
-- [ ] **Two Vercel projects for RAYSSA**, both with Root Directory set to `rayssa/`:
-      `rayssa-dev` pointed at the dev database, `rayssa` pointed at production. Production
-      environment variables are set by you and visible only to you. Your existing
-      `karaymodels` project keeps Root Directory `.` and is not touched.
+- [ ] **Two Vercel projects for RAYSSA**, both importing the separate `rayssa` repository:
+      `rayssa-dev` pointed at the dev database with `KARAY_API_MOCK=true`, and `rayssa`
+      pointed at production. Production environment variables are set by you and visible only
+      to you. Your existing `karaymodels` project is not touched, other than adding the one
+      `RAYSSA_INTEGRATION_TOKEN` variable the API needs.
 
 If you later decide the coder is a long-term partner and this ceremony is slowing things
 down, you can relax it deliberately. Start tight; loosening is easy, and un-leaking data is
