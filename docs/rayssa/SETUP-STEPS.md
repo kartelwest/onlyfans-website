@@ -6,9 +6,42 @@ order, not importance order.
 **Keep a scratch file open.** Many steps produce a value a later step consumes. Every one of
 those is marked 📋 **SAVE**. Use a password manager, not a text file on your desktop.
 
-Rough timings: Steps 1–11 are about three focused hours. Step 2 takes weeks of *waiting* but
-ten minutes of *doing*, which is why it is near the top. Step 15 is the one that can take
-days and is the one people underestimate.
+Rough timings: the manual steps are about **two focused hours** of real work. Step 2 takes
+weeks of *waiting* but ten minutes of *doing*, which is why it is near the top. Step 15 is
+the one that can take days and is the one people underestimate.
+
+## Who does what
+
+Not all sixteen steps are yours.
+
+| Steps | Owner | Why |
+|---|---|---|
+| 1, 2, 3, 4, 5, 6, 7, 8 | **You** | Account creation, billing, and identity verification. Nobody can do these on your behalf — they are tied to your business identity and your payment methods. ~2 hours total. |
+| **9, 11** | **A script** | `bash scripts/rayssa-bootstrap.sh <repo-url>` generates every secret and seeds the whole repository in one run. See below. |
+| **10** | **Claude Code** | The integration API is code in the karaymodels repository. Ask for it as a scoped pull request; you review and merge. |
+| 12, 13, 14 | **You** | Vercel projects, environment variables, DNS. ~35 minutes, and the env vars are the part worth doing slowly. |
+| **15** | **You, and only you** | The subreddit knowledge, the brand positioning, the asset ratings. This is the critical path and the reason projects like this disappoint. |
+| 16 | **You** | Paste the prompt. |
+
+### The script that does Steps 9 and 11
+
+After Step 4 (the empty repo exists), run this from the root of the karaymodels repository:
+
+```sh
+bash scripts/rayssa-bootstrap.sh git@github.com:kartelwest/rayssa.git
+```
+
+It generates the production and development secrets and prints them to your terminal —
+they are never written to disk — then waits for you to save them. Then it clones the repo,
+copies the specification, the contract and `AGENTS.md` into place, exports the five reference
+files with a README explaining what they are, commits and pushes.
+
+It refuses to run from the wrong directory and refuses to touch a repository that already has
+content, so a mistaken second run cannot overwrite anything.
+
+You can still do both steps by hand — they are written out in full below — but the file
+copying in Step 11 is exactly the kind of thing that gets half-done, and a missing reference
+file costs weeks without announcing itself.
 
 ---
 
