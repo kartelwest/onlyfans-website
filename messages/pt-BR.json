@@ -172,7 +172,9 @@
       "metaDescription": "Agende uma reunião com a equipe da KARAY Models.",
       "eyebrow": "Fale com nossa equipe",
       "headline": "Agende uma reunião com a KARAY Models",
-      "body": "Escolha o melhor horário e converse com nossa equipe. Estamos aqui para tirar suas dúvidas e mostrar como funciona a parceria."
+      "body": "Escolha o melhor horário e converse com nossa equipe. Estamos aqui para tirar suas dúvidas e mostrar como funciona a parceria.",
+      "notConfiguredTitle": "Link do Cal.com não configurado",
+      "notConfiguredBody": "Defina <code>NEXT_PUBLIC_CAL_LINK</code> com seu usuário ou caminho do evento do Cal.com para exibir o calendário aqui."
     },
     "footer": {
       "aboutTitle": "Sobre Nós",
