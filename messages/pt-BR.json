@@ -82,7 +82,7 @@
       "highlight": "Sim, você pode bloquear o Brasil (ou qualquer outro país) no OnlyFans para proteger sua privacidade.",
       "body": "Estratégia, gerenciamento, marketing e suporte profissional para criadoras que desejam construir uma marca forte, aumentar seus ganhos e alcançar liberdade financeira.",
       "ctaPrimary": "Quero Fazer Parte",
-      "ctaSecondary": "Conheça Nossa Agência",
+      "ctaSecondary": "Agende uma Reunião",
       "stats": {
         "activeModels": "Modelos ativas no máximo",
         "attention": "Atenção estratégica personalizada",
@@ -167,6 +167,13 @@
         }
       }
     },
+    "booking": {
+      "metaTitle": "Agende uma Reunião | KARAY Models",
+      "metaDescription": "Agende uma reunião com a equipe da KARAY Models.",
+      "eyebrow": "Fale com nossa equipe",
+      "headline": "Agende uma reunião com a KARAY Models",
+      "body": "Escolha o melhor horário e converse com nossa equipe. Estamos aqui para tirar suas dúvidas e mostrar como funciona a parceria."
+    },
     "footer": {
       "aboutTitle": "Sobre Nós",
       "aboutBody": "KARAY Models é uma agência especializada na gestão completa de criadoras de conteúdo. Nosso objetivo é transformar talento em um negócio lucrativo através de estratégias profissionais de marketing, posicionamento de marca, gerenciamento de contas, atendimento aos assinantes e crescimento sustentável.",
@@ -203,7 +210,7 @@
       "ctaHeadline": "Converse com nossa equipe antes de tomar sua decisão.",
       "ctaBody": "Queremos que você compreenda totalmente como a parceria funciona antes de assumir qualquer compromisso.",
       "ctaApply": "Candidate-se",
-      "ctaContact": "Fale Conosco",
+      "ctaContact": "Agende uma Reunião",
       "groups": [
         {
           "category": "Privacidade e identidade",
