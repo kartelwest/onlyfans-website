@@ -172,7 +172,9 @@
       "metaDescription": "Schedule a meeting with the KARAY Models team.",
       "eyebrow": "Talk to our team",
       "headline": "Book a meeting with KARAY Models",
-      "body": "Choose the best time and talk to our team. We are here to answer your questions and show you how the partnership works."
+      "body": "Choose the best time and talk to our team. We are here to answer your questions and show you how the partnership works.",
+      "notConfiguredTitle": "Cal.com link not configured",
+      "notConfiguredBody": "Set <code>NEXT_PUBLIC_CAL_LINK</code> to your Cal.com username or event path to show the calendar here."
     },
     "footer": {
       "aboutTitle": "About Us",
@@ -942,6 +944,7 @@
     "home": "Home",
     "whyUs": "Why Us",
     "faq": "FAQ",
+    "booking": "Book",
     "login": "Login",
     "amplia": "AMPLIA",
     "apply": "Apply now",

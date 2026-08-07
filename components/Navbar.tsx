@@ -42,6 +42,7 @@ const menuLinks = [
   { key: "home", href: "/" },
   { key: "whyUs", href: "/por-que-nos" },
   { key: "faq", href: "/faq" },
+  { key: "booking", href: "/agendar" },
   { key: "login", href: "/login" },
   { key: "amplia", href: "/admin/socialmediamodels" },
 ] as const;
